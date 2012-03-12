@@ -1,0 +1,699 @@
+/* screen css
+ *
+ * This file is built with compass 0.11.7.
+ * Don't forget to set `lang=ja_JP.utf-8`.
+ */
+
+@charset "utf-8";
+@import "compass/reset";
+@import "compass/css3/box-shadow";
+@import "compass/css3/border-radius";
+@import "compass/css3/gradient";
+@import "compass/css3/text-shadow";
+@import "compass/utilities/general/clearfix";
+
+// font
+$serif: "Warnock Pro", "Goudy Old Style", "Palatino", "Book Antiqua", Georgia, serif;
+$mincho: "ヒラギノ明朝 Pro W6","Hiragino Mincho Pro",Times,"HGS明朝E","ＭＳ Ｐ明朝", serif;
+$gothic: "Hiragino Kaku Gothic Pro","ヒラギノ角ゴ Pro W3","メイリオ",Meiryo,"ＭＳ Ｐゴシック",Helvetica,Arial,Verdana,sans-serif;
+$console: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,serif;
+$code: "Courier New","Andale Mono",monospace,serif;
+
+// size
+$width: 45em;
+
+// color
+$textcolor: #000000;
+$subcolor:  #336699;
+$quiet-color: #888888;
+$footerbgcolor: #e9e9e9;
+
+// HTML5
+$page_header: "div#header";
+$page_footer: "div#footer";
+$navi: ".navi";
+$entry: "div.section";
+
+// CSS arrow
+// https://github.com/chriseppstein/sass-recipes/tree/master/css-arrow
+@mixin arrow($direction, $bg-color, $border-color, $border-width, $top, $left, $width: 10px){
+  position: relative;
+  &:before{
+    content: "\00a0";
+    // reduce the damage in FF3.0:
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: $top;
+    left: $left;
+    bottom: auto;
+    border-width: floor($width / 2);
+    border-style: solid;
+    @if $direction == "south"{
+      border-color: $border-color transparent transparent transparent;
+    }
+    @if $direction == "north"{
+      border-color: transparent transparent $border-color transparent;
+    }
+    @if $direction == "east"{
+      border-color: transparent transparent transparent $border-color;
+    }
+    @if $direction == "west"{
+      border-color: transparent $border-color transparent transparent;
+    }
+  }
+  // creates the smaller triangle
+  &:after{
+    content: "\00a0";
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+    @if $direction == "south"{
+      top: $top - $border-width;
+    }
+    @else if $direction == "north"{
+      top: $top + $border-width;
+    }
+    @else{
+      top: $top;
+    }
+    @if $direction == "east"{
+      left: $left - $border-width;
+    }
+    @else if $direction == "west"{
+      left: $left + $border-width;
+    }
+    @else{
+      left: $left;
+    }
+    bottom: auto;
+    border-width: floor($width / 2);
+    border-style: solid;
+    @if $direction == "south"{
+      border-color: $bg-color transparent transparent transparent
+    }
+    @if $direction == "north"{
+      border-color: transparent transparent $bg-color transparent;
+    }
+    @if $direction == "east"{
+      border-color: transparent transparent transparent $bg-color;
+    }
+    @if $direction == "west"{
+      border-color: transparent $bg-color transparent transparent;
+    }
+  }
+}
+
+//////////////////////////////// common ////////////////////////////////
+body{
+	font-family: $gothic;
+	background: #fef9ef;
+}
+
+code{
+	font-family: $code;
+	background: #f2f2f2;
+}
+
+.synIdentifier{color:#900;}
+.synStatement{color:#00f;}
+.synComment{color:#080;}
+.synConstant{color:#f00;}
+.synType{color:#00f;}
+
+strong{
+	font-weight: normal;
+	background: yellow;
+}
+
+a.keyword{
+	color: inherit;
+	text-decoration: none;
+}
+
+h1{
+	display: none;
+}
+
+.clearfix{
+	@include clearfix;
+}
+
+//////////////////////////////// layout ////////////////////////////////
+.wrap {
+	text-align: center;
+	clear: both;
+
+	.wrapped {
+		margin: 0 auto 0 auto;
+		padding: 0;
+		width: $width;
+		text-align: left;
+	}
+}
+
+// seemore
+p.seemore {
+	a {
+		padding-left: 22px;
+		background: url('http://tech.nitoyon.com/img/icon/play_on.gif') center left no-repeat;
+	}
+}
+
+//////////////////////////////// specific ////////////////////////////////
+#{$page_header}{
+	background: white;
+	margin-bottom: 2em;
+	@include single-box-shadow(#dddddd, 0px, 0px, 20px);
+
+	.wrapped{
+		padding: 3em 0 3em 0;
+		position: relative;
+
+		#logo img{
+			width: 421px;
+			height: 110px;
+		}
+	}
+
+	#{$navi}{
+		ul{
+			position: absolute;
+			right: 0;
+			top: 0.2em;
+			&:hover a{
+				color: #666666
+			}
+
+			li{
+				display: inline;
+				a{
+					color: $quiet-color;
+					padding: 0 0.5em;
+					font-size: 0.9em;
+					font-family: serif;
+					text-decoration: none;
+
+					&:hover{
+						color: #000000;
+						@include single-text-shadow(#999999, 0, 0, .1em);
+					}
+				}
+			}
+		}
+	}
+}
+
+// day container
+div.day{
+	margin-bottom: 8em;
+
+	h2 {
+		margin: 2em 0 0.8em 0;
+		a{
+			color: #666666;
+			text-decoration: none;
+		}
+	}
+
+	// comment, trackback, referer
+	div.caption{
+		margin-top: 3em;
+		font-size: 1em;
+		color: $subcolor;
+	}
+
+	div.comment{
+		margin-top: 2em;
+
+		div.commentshort{
+			margin-top: 1em;
+		}
+
+		p{
+			line-height: 1.5;
+			position: relative;
+
+			span.commentator a{
+				color: $textcolor;
+			}
+			img.hatena-id-icon{
+				margin-right: 4px;
+			}
+			span.timestamp{
+				position: absolute;
+				top: 0;
+				right: 0;
+				a{
+					color: $quiet-color;
+					text-decoration: none;
+				}
+			}
+			span.commentbody{
+				display: block;
+				margin: .8em 0 2em 0;
+				padding: 1em;
+				@include border-radius(1em, 1em);
+				@include arrow("north", white, #cccccc, .2em, -2em, .8em, 2em);
+				background-color: white;
+				border: .2em solid #cccccc;
+			}
+		}
+		div.captcha{
+			margin: .5em 0;
+		}
+	}
+
+	div.refererlist{
+		margin: 2em 0;
+
+		ul{
+			margin: .5em 0 0 2em;
+			list-style: disc outside;
+			line-height: 1.2;
+			li{
+				margin-bottom: .2em;
+			}
+		}
+	}
+}
+
+div.body{
+	p.footnote{
+		lineheight: 1.5;
+	}
+
+	div.ad{
+		margin: 1em 0;
+	}
+}
+
+// entry container
+#{$entry}{
+	margin-top: 8em;
+	&:first-child{
+		margin-top: 0;
+	}
+
+	h3,h4,h5{
+		font-family: $mincho;
+	}
+
+	// entry title
+	h3{
+		margin-bottom: 3em;
+
+		a{
+			@include single-text-shadow(#cccccc, .03em, 0, .08em);
+			font-size: 2.4em;
+			color: black;
+			text-decoration: none;
+		}
+		span.hatena-star-comment-container{
+			padding-left: 1em;
+		}
+	}
+
+	// tag container
+	p.sectionheader{
+		text-align: right;
+		margin: 0;
+		color: #696;
+		font-size: 0.9em;
+		position: relative;
+		top: -2em;
+
+		// tag
+		a.sectioncategory{
+			color: #696;
+			background: url('http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070123/20070123095201.gif') no-repeat center left;
+			padding: 0 0 0 20px;
+			text-decoration: none;
+		}
+	}
+
+	// seemore
+	p.seemore {
+		margin: 1.5em 0 0 0;
+	}
+
+	// entry footer
+	p.sectionfooter{
+		margin-top: 0;
+		text-align: right;
+		img{
+			padding: 0;
+			background: transparent;
+			border: 0;
+			@include border-radius(0, 0);
+			@include single-box-shadow(#cccccc, 0, 0, 0);
+		}
+		a{
+			color: #666666;
+		}
+	}
+	p.sectionfooter.share-button{
+		text-align: right;
+		margin: 1em 0 0 0;
+	}
+
+	// *
+	h4{
+		font-size: 1.8em;
+		font-weight: bold;
+		margin: 1.5em 0 0 0;
+	}
+
+	// **
+	h5{
+		font-size: 1.2em;
+		font-weight: bold;
+		color: #336699;
+		margin: 2em 0 0 0;
+		position: relative;
+		left: -0.15em;
+	}
+	h4+h5{
+		margin-top: .5em;
+	}
+	
+	p, center{
+		margin: 1em 0;
+		line-height: 1.5;
+	}
+
+	p+p{
+		margin-top: 1.3em;
+	}
+
+	p img, center img, embed{
+		padding: 10px;
+		background: white;
+		border: 1px solid #cccccc;
+		@include border-radius(6px, 6px);
+		@include single-box-shadow(#cccccc, 0px, 4px, 10px);
+	}
+
+	ul, ol{
+		margin: 1em 0 1em 1.5em;
+	}
+	li ul, li ol{
+		margin: 0 0 0 1em;
+	}
+	ol{
+		list-style: decimal outside;
+	}
+	ul{
+		list-style: disc outside;
+		ul{
+			list-style: circle outside;
+		}
+	}
+	li{
+		margin: .4em 0 .4em 1.0em;
+		line-height: 1.5;
+	}
+
+	dl{
+		margin: 1em;
+		dt{
+			color: #336699;
+			font-weight: bold;
+			margin: 0.2em 0;
+		}
+		dd{
+			margin: 0.2em 0 0.2em 2em;
+			line-height: 1.5;
+		}
+	}
+
+	blockquote{
+		margin: 1em 0;
+		background: white;
+		border: .4em solid #cccccc;
+		@include border-radius(1em, 1em);
+		padding: 0 1em;
+
+		cite{
+			display: block;
+			font-size: 0.9em;
+			text-align: right;
+			padding-bottom: 0.5em;
+		}
+	}
+
+	pre{
+		font-family: $console;
+		margin: 1em 0;
+		background: white;
+		border: .4em solid #cccccc;
+		@include border-radius(1em, 1em);
+		padding: 1em;
+		overflow: visible;
+		/*\*/
+		overflow: auto;
+		/**/
+	}
+
+	div.fix-height-syntax pre {
+		height: 20em;
+	}
+
+	table{
+		border: 1px solid #666666;
+		border-collapse: collapse;
+		@include single-box-shadow(#cccccc, 0px, 4px, 10px);
+		border-spacing: 0;
+		margin-left: 2em;
+
+		th,td{
+			 padding: 0.5em 1em;
+			 border: 1px solid #666666;
+		}
+		th{
+			font-weight: bold;
+			background: #eeeee9;
+		}
+		td{
+			background: white;
+		}
+	}
+
+	// seealso
+	div.seealso{
+		h4{
+			background:#e6e6e6;
+			border: 0;
+			padding: .4em;
+			margin: 2em 0 .5em 0;
+			color: black;
+			font-weight: normal;
+			font-size: 100%;
+			font-family: selif;
+		}
+
+		ul{
+			margin: 0;
+			padding: 0;
+
+			li{
+				background:url('http://tech.nitoyon.com/img/icon/item.gif') no-repeat 4px top;
+				display: block;
+				padding-left: 24px;
+				margin: .2em 0;
+			}
+		}
+	}
+
+	// amazon
+	div.hatena-asin-detail {
+		margin: 1em;
+		padding: 1em;
+		border: .4em solid #cccccc;
+		@include border-radius(1em, 1em);
+		background: white;
+
+		img.hatena-asin-detail-image {
+			float: left;
+			border: 0;
+			margin: 0 10px 0 0 ;
+		}
+
+		div.hatena-asin-detail-info{
+			margin: 0 0 0 140px;
+			word-break: break-all;
+
+			p.hatena-asin-detail-title{
+				font-weight: bold;
+				width: 100%;
+				margin: 0;
+			}
+
+			ul {
+				list-style-type: none;
+				margin: 5px 0 0 0;
+				padding: 0;
+				li {
+					margin: 0;
+					padding: 0;
+				}
+			}
+		}
+		p a{
+			border: 0;
+		}
+	}
+
+	// twitter
+	div.twitter-detail {
+		margin: 1em;
+		padding: 1em 1em 0.5em 1em;
+		border: .4em solid #cccccc;
+		@include border-radius(1em, 1em);
+		background: white;
+
+		.twitter-detail-user {
+			float: left;
+			border: 0;
+			margin: 0 10px 0 0 ;
+		}
+
+		div.twitter-detail-tweet{
+			margin: 0 0 0 60px;
+
+			p.twitter-detail-text{
+				margin: 0;
+			}
+			p.twitter-detail-info{
+				font-size: 0.9em;
+				text-align: right;
+				margin: 1em 0 0 0;
+				color: $quiet-color;
+
+				a{
+					color: $quiet-color;
+				}
+			}
+		}
+	}
+}
+
+div#pager-top{
+	display: none;
+}
+
+div#pager-bottom{
+	margin-top: -2em;
+}
+
+#{$page_footer}{
+	margin-top: 2em;
+	background: $footerbgcolor;
+	@include single-box-shadow(#aaaaaa, 0px, 0px, 20px);
+
+	div.wrapped{
+		width: $width;
+		padding: 2em 1em 0 1em;
+	}
+
+	h3{
+		font-size: 1.1em;
+		color: $subcolor;
+		font-family: $serif;
+		font-weight: bold;
+		margin-bottom: .4em;
+		@include text-shadow(white 0 1px 1px, darken($subcolor, 30%) 0 -1px 1px);
+	}
+
+	$column_gap: 2em;
+	$column_width: ($width - $column_gap) / 2;
+	#recententries{
+		width: $column_width;
+		@include legacy-pie-clearfix;
+
+		div.hatena-module-section{
+			div.hatena-moduletitle{
+				a{
+					display: none;
+				}
+			}
+			ul li{
+				border-bottom: darken($footerbgcolor, 5%) solid 1px;
+
+				a{
+					display: block;
+					color: black;
+					text-decoration: none;
+
+					padding: .4em .4em .4em 24px;
+					line-height: 1.2;
+					background: url('http://tech.nitoyon.com/img/icon/item.gif') no-repeat 4px 4px;
+					@include border-radius(.5em, .5em);
+
+					&:hover{
+						text-decoration: underline;
+						background-color: white;
+					}
+				}
+			}
+		}
+	}
+
+	#profile{
+		width: $column_width;
+		float: right;
+
+		a#prof_pic{
+			img{
+				width: 64px;
+				height: 56px;
+				float: left;
+			}
+		}
+		p{
+			margin: 0 0 .7em 74px;
+			line-height: 1.3;
+		}
+	}
+
+	.calendar{
+		line-height: 1.8;
+
+		span.year{
+			color: $quiet-color;
+			font-weight: bold;
+			&:after{
+				content: "年: ";
+			}
+		}
+		a.month{
+			color: #000000;
+			text-decoration: none;
+			padding: 0 0.3em;
+
+			&:hover{
+				background: white;
+				@include border-radius(.5em, .5em);
+				text-decoration: underline;
+			}
+			&:after{
+				content: "月";
+			}
+		}
+		span.delimiter{
+			display: none;
+		}
+	}
+
+	div.copy{
+		margin-top: 2em;
+		padding: 1em 0;
+        font-size: 0.8em;
+        font-weight: bold;
+		background: darken($footerbgcolor, 60%);
+		color: white;
+		@include single-box-shadow(#888888, 0px, 0px, 20px);
+	}
+}
