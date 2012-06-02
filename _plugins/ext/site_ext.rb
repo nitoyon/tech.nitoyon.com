@@ -28,15 +28,20 @@ module Jekyll
       self.generate
       puts "process: rendering"
       self.render
+      puts "process: archives"
+      self.generate_archives
       puts "process: cleanuping"
       self.cleanup
       puts "process: writing"
       self.write
       puts "process: completed"
+    rescue Exception => e
+      puts e
+      raise e
     end
 
     def reload_plugin
-      unless self.safe
+      if self.config['server']
         Dir[File.join(self.plugins, "**/*.rb")].each do |f|
           load f
         end
@@ -49,12 +54,11 @@ module Jekyll
     #
     # Render only modified file.
     def render
-      puts self.config['auto']
       self.posts.each do |post|
         src_mtime = File::mtime(File.join(post.base, post.name))
         dst_path = post.destination(self.dest)
         dst_mtime = File::mtime(post.destination(self.dest)) if FileTest.exists?(dst_path)
-        if dst_mtime && src_mtime <= dst_mtime
+        if dst_mtime && src_mtime <= dst_mtime and self.config['server']
           puts "skipping #{post.name}"
           post.skipped = true
         else

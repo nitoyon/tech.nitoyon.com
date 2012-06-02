@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby19
-# refered https://github.com/Bilalh/bilalh.github.com/blob/source/_plugins/sass_converter.rb
-# refered load_compass method at lib/sass/exec.rb
+# referred https://gist.github.com/960150
+# referred load_compass method at lib/sass/exec.rb
 
 require 'sass'
 

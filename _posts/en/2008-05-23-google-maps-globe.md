@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Google Maps API for Flash without MXML
+title: Google Maps Globe
 lang: en
 tag: [ActionScript, Google Maps]
 ---

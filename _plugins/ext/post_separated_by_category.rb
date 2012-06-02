@@ -5,12 +5,23 @@
 
 module Jekyll
   class Post
-    def next
-      if self.categories.length != 1
-        warn "category(=lang) value is invalid"
-        return nil
+    # returns 'lang' attribute in YAML header.
+    def lang
+      if self.data.has_key?('lang')
+        self.data['lang']
+      else
+        warn "#{self.slug} has no lang!!!"
+        "en"
       end
-      category = self.site.categories[self.categories[0]]
+    end
+
+    # override default `categories' accessor
+    def categories
+      [self.lang]
+    end
+
+    def next
+      category = self.site.categories[self.lang]
       pos = category.index(self)
 
       if pos && pos < category.length-1
@@ -21,11 +32,7 @@ module Jekyll
     end
 
     def previous
-      if self.categories.length != 1
-        warn "category(=lang) value is invalid"
-        return nil
-      end
-      category = self.site.categories[self.categories[0]]
+      category = self.site.categories[self.lang]
       pos = category.index(self)
 
       if pos && pos > 0

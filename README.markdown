@@ -5,3 +5,13 @@ tech-ni source code
 
   - http://tech.nitoyon.com/ (てっく煮)
   - http://d.hatena.ne.jp/nitoyon/ (てっく煮ブログ)
+
+Build Requirements
+------------------
+
+* Ruby 1.9.3
+  * [Jekyll](https://github.com/mojombo/jekyll)
+  * (Windows only) [Make Jekyll play nice with Windows again post Albino + posix-spawn refactor - gist](https://gist.github.com/1166390)
+* Python 2.7
+  * Pygments
+
