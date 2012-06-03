@@ -30,13 +30,5 @@ module Jekyll
         "(ERROR: #{input} for #{lang} #{e.message})"
       end
     end
-
-    # Convert text to JSON string.
-    #
-    # "ab\"c" -> "
-    def json(input)
-      require 'json'
-      input.to_json
-    end
   end
 end
