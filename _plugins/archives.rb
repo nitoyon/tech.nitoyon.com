@@ -32,11 +32,11 @@ module Jekyll
       time = Time.new(year, month, day)
       
       if day
-        dir = time.strftime('en/blog/%Y/%m/%d')
+        dir = time.strftime('/en/blog/%Y/%m/%d')
       elsif month
-        dir = time.strftime('en/blog/%Y/%m')
+        dir = time.strftime('/en/blog/%Y/%m')
       else
-        dir = time.strftime('en/blog/%Y')
+        dir = time.strftime('/en/blog/%Y')
       end
       
       super site, base, dir, 'archive'
