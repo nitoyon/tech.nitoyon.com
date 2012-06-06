@@ -35,3 +35,23 @@ $(function(){
 			.appendTo(year_li);
 	}
 });
+
+var _gaq = window._gaq || [];
+_gaq.push(['_setAccount', 'UA-1616138-1']);
+_gaq.push(['_trackPageview']);
+(function(d,e){
+	var js,
+	fjs=d.getElementsByTagName(e)[0],
+	add = function(src, id){
+		if(d.getElementById(id)) return;
+		js = d.createElement(e);
+		js.id = id;
+		js.src = src;
+		js.async = true;
+		fjs.parentNode.insertBefore(js,fjs);
+	};
+
+	add(('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js');
+	add('//platform.twitter.com/widgets.js', 'twitter-wjs');
+	add('//connect.facebook.net/en_US/all.js#xfbml=1', 'facebook-jssdk');
+}(document,'script'));
