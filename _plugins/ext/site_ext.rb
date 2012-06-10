@@ -1,6 +1,6 @@
 # This plugin modifies Site class and adds following functions.
-#  - Reload modified plugin in --server mode.
-#  - Generate only modified post in --server mode.
+#  - Reload modified plugin in --server and --auto mode.
+#  - Generate only modified post in --server and --auto mode.
 
 module Jekyll
   class Post
@@ -30,6 +30,8 @@ module Jekyll
       self.render
       puts "process: archives"
       self.generate_archives
+      puts "process: languages"
+      self.generate_languages
       puts "process: cleanuping"
       self.cleanup
       puts "process: writing"
@@ -41,7 +43,7 @@ module Jekyll
     end
 
     def reload_plugin
-      if self.config['server']
+      if self.config['server'] && self.config['auto']
         Dir[File.join(self.plugins, "**/*.rb")].each do |f|
           load f
         end
@@ -58,7 +60,7 @@ module Jekyll
         src_mtime = File::mtime(File.join(post.base, post.name))
         dst_path = post.destination(self.dest)
         dst_mtime = File::mtime(post.destination(self.dest)) if FileTest.exists?(dst_path)
-        if dst_mtime && src_mtime <= dst_mtime and self.config['server']
+        if dst_mtime && src_mtime <= dst_mtime && self.config['server'] && self.config['auto']
           puts "skipping #{post.name}"
           post.skipped = true
         else
@@ -140,6 +142,7 @@ module Jekyll
       end
       self.pages.each do |page|
         page.write(self.dest)
+        puts "writing " + page.destination('/')
       end
       self.static_files.each do |sf|
         sf.write(self.dest)
