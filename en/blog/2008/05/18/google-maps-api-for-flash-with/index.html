@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Google Maps API for Flash without MXML - TECH-NI Blog</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Google Maps API for Flash without MXML"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/en/blog/2008/05/18/google-maps-api-for-flash-with/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="In the Google Maps API for Flash tutorial, a sample using MXML is introduced. But MXML is not required, because com.google.maps.Map class derives from Sprite class.The following sample demonstrates how to rotate and blur the map without MXML. (Flash Player..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="TECH-NI Blog"/>
+	<meta property="fb:admins" content="1297551349" />
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/en/blog/index.xml" />
+</head>
+<body class="en">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/en/blog/" id="logo-blog-en">TECH-NI Blog</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/en/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="http://d.hatena.ne.jp/nitoyon/" class="current">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>18 May 2008</h2>
+<h1>Google Maps API for Flash without MXML</h1>
+</hgroup>
+
+<div class="share">
+<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-size="horizontal" text="Google Maps API for Flash without MXML - TECH-NI Blog" data-dnt="true">Tweet</a>
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry-body">
+
+<p>In the <a href='http://code.google.com/apis/maps/documentation/flash/index.html'>Google Maps API for Flash</a> tutorial, a sample using MXML is introduced. But MXML is not required, because <code>com.google.maps.Map</code> class derives from <code>Sprite</code> class.</p>
+
+<p>The following sample demonstrates how to rotate and blur the map without MXML.</p>
+<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='300' width='400'>
+	<param name='src' value='http://tech.nitoyon.com/misc/swf/GoogleGuruGuru.swf' />
+	<param name='play' value='true' />
+	<param name='loop' value='true' />
+	<param name='bgcolor' value='#ffffff' />
+	<param name='quality' value='high' />
+	<embed bgcolor='#ffffff' height='300' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/GoogleGuruGuru.swf' width='400'>
+	</embed>
+</object><noscript>(Flash Player 9 or above required)</noscript>
+<p>Here is the code:</p>
+<div class='highlight'><pre><code class='actionscript'><span class='kd'>package</span> <span class='p'>{</span>
+    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>events</span><span class='p'>.</span><span class='nb'>Event</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>geom</span><span class='p'>.</span><span class='nb'>Matrix</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>filters</span><span class='p'>.</span><span class='nb'>BlurFilter</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>com</span><span class='p'>.</span><span class='nx'>google</span><span class='p'>.</span><span class='nx'>maps</span><span class='p'>.</span><span class='nx'>Map</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>com</span><span class='p'>.</span><span class='nx'>google</span><span class='p'>.</span><span class='nx'>maps</span><span class='p'>.</span><span class='nx'>MapEvent</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>com</span><span class='p'>.</span><span class='nx'>google</span><span class='p'>.</span><span class='nx'>maps</span><span class='p'>.</span><span class='nx'>MapType</span><span class='o'>;</span>
+    <span class='kd'>import</span> <span class='nx'>com</span><span class='p'>.</span><span class='nx'>google</span><span class='p'>.</span><span class='nx'>maps</span><span class='p'>.</span><span class='nx'>LatLng</span><span class='o'>;</span>
+
+    <span class='kd'>public</span> <span class='kd'>class</span> <span class='nx'>GoogleGuruGuru</span> <span class='kd'>extends</span> <span class='nx'>Map</span> <span class='p'>{</span>
+        <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>GoogleGuruGuru</span><span class='p'>()</span> <span class='p'>{</span>
+            <span class='kd'>super</span><span class='p'>();</span>
+            <span class='nx'>key</span> <span class='o'>=</span> <span class='s2'>&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class='o'>;</span>
+
+            <span class='nx'>addEventListener</span><span class='p'>(</span><span class='nx'>MapEvent</span><span class='p'>.</span><span class='nx'>MAP_READY</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:</span><span class='nb'>Event</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
+                <span class='nx'>setCenter</span><span class='p'>(</span><span class='k'>new</span> <span class='nx'>LatLng</span><span class='p'>(</span><span class='mf'>35.003759</span><span class='o'>,</span> <span class='mf'>135.769322</span><span class='p'>)</span><span class='o'>,</span> <span class='mi'>18</span><span class='o'>,</span> <span class='nx'>MapType</span><span class='p'>.</span><span class='nx'>NORMAL_MAP_TYPE</span><span class='p'>);</span>
+            <span class='p'>});</span>
+
+            <span class='k'>var</span> <span class='nx'>r</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
+            <span class='k'>var</span> <span class='nx'>scale</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='mi'>1</span><span class='o'>;</span>
+            <span class='nx'>addEventListener</span><span class='p'>(</span><span class='s2'>&quot;enterFrame&quot;</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:</span><span class='nb'>Event</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
+                <span class='nx'>r</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>r</span> <span class='o'>+</span> <span class='mi'>1</span><span class='p'>)</span> <span class='o'>%</span> <span class='mi'>360</span><span class='o'>;</span>
+                <span class='k'>var</span> <span class='nx'>rad</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='mi'>2</span> <span class='o'>*</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>PI</span> <span class='o'>*</span> <span class='nx'>r</span> <span class='o'>/</span> <span class='mi'>360</span><span class='o'>;</span>
+
+                <span class='k'>var</span> <span class='nx'>matrix</span><span class='o'>:</span><span class='nb'>Matrix</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Matrix</span><span class='p'>();</span>
+                <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>translate</span><span class='p'>(</span><span class='o'>-</span><span class='nx'>stage</span><span class='p'>.</span><span class='nx'>stageWidth</span> <span class='sr'>/ 2, -stage.stageHeight /</span> <span class='mi'>2</span><span class='p'>);</span>
+                <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>rotate</span><span class='p'>(</span><span class='nx'>rad</span><span class='p'>);</span>
+                <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>translate</span><span class='p'>(</span><span class='nx'>stage</span><span class='p'>.</span><span class='nx'>stageWidth</span> <span class='sr'>/ 2, stage.stageHeight /</span> <span class='mi'>2</span><span class='p'>);</span>
+                <span class='nx'>transform</span><span class='p'>.</span><span class='nx'>matrix</span> <span class='o'>=</span> <span class='nx'>matrix</span><span class='o'>;</span>
+            <span class='p'>});</span>
+
+            <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>addEventListener</span><span class='p'>(</span><span class='s2'>&quot;mouseDown&quot;</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:</span><span class='nb'>Event</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
+                <span class='nx'>filters</span> <span class='o'>=</span> <span class='p'>[</span><span class='k'>new</span> <span class='nb'>BlurFilter</span><span class='p'>(</span><span class='mi'>10</span><span class='o'>,</span> <span class='mi'>10</span><span class='p'>)];</span>
+            <span class='p'>}</span><span class='o'>,</span> <span class='kc'>true</span><span class='p'>);</span>
+            <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>addEventListener</span><span class='p'>(</span><span class='s2'>&quot;mouseUp&quot;</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:</span><span class='nb'>Event</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
+                <span class='nx'>filters</span> <span class='o'>=</span> <span class='p'>[];</span>
+            <span class='p'>});</span>
+        <span class='p'>}</span>
+    <span class='p'>}</span>
+<span class='p'>}</span>
+</code></pre>
+</div>
+
+</div>
+
+<div id="pager-bottom">
+	<div class="share">
+	<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-size="horizontal" text="Google Maps API for Flash without MXML - TECH-NI Blog" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	</div>
+
+	
+		&laquo;&nbsp;<a href="/en/blog/2008/05/23/google-maps-globe/" rel="next">Google Maps Globe</a>
+	
+
+	
+		
+			|
+		
+	
+
+
+	
+		<a href="/en/blog/2008/05/12/keynote-like-cube-transition/" rel="previous">Keynote-like cube transition by FIVe3D</a>&nbsp;&raquo;
+	
+</div>
+
+</article>
+
+</div>
+</div>
+
+<footer>
+<h2>About</h2>
+<div class="wrap">
+<div class="wrapped">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon</p>
+		<p>I'm a programmer in Japan, Kyoto.</p>
+		<p class="seemore"><a href="/about.html">more</a></p>
+	</div>
+
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+</div><!-- wrap -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/en/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

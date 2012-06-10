@@ -1,0 +1,615 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>TECH-NI Blog</title>
+		<link>http://tech.nitoyon.com/en/blog/index.xml</link>
+		<description>All Technology is Boiled in This Site.</description>
+		<language>en</language>
+		<copyright>Copyright nitoyon.</copyright>
+		<lastBuildDate>Sun, 10 Jun 2012 23:45:30 +0900</lastBuildDate>
+		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
+		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
+
+
+
+
+
+
+
+		<item>
+			<title>IRBWEB - Try Ruby on Your Browser!</title>
+			<link>http://tech.nitoyon.com/en/blog/2009/04/05/irbweb-ruby-on-your-browser/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2009/04/05/irbweb-ruby-on-your-browser/</guid>
+			<pubDate>Sun, 05 Apr 2009 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>One of the annoyances of trying ruby is installing Ruby. IRBWEB let you try it on your browser!</p>
+
+<p>You can enter ruby expression and evaluate it.</p>
+<center><a href='http://tech.nitoyon.com/irb/'><img border='0' height='344' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090406/20090406011151.png' width='450' /><br />IRBWEB</a></center>
+<p>It works completely in your browser, so you get the result so quickly.</p>
+
+<h1 id='requirements'>Requirements</h1>
+
+<p>The Silverlight 2.0 runtime plug-in required.</p>
+
+<h1 id='how_does_it_work'>How does it work?</h1>
+
+<p>Silverlight supports DLR(Dynamic Language Runtime) which enables us to execute Ruby and Python on .NET application. IRBWEB is developped based on repl sample included in <a href='http://www.codeplex.com/sdlsdk'>Silverlight Dynamic Languages SDK</a> 0.5.0.</p>]]></description>
+		</item>
+
+		<item>
+			<title>Processing &quot;FireCube&quot; example ported to ActionScript 3.0</title>
+			<link>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</guid>
+			<pubDate>Wed, 25 Mar 2009 00:00:00 +0900</pubDate>
+			<description><![CDATA[<center><img height='168' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png' width='398' /></center>
+<p>Processing example <a href='http://processing.org/learning/topics/firecube.html'>FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
+
+<p>The result is&#8230;</p>
+<center><script src='http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js'> </script><noscript>(Flash Player 9  or later required)</noscript></center>
+<h1 id='performance_improvement'>Performance improvement</h1>
+
+<p><a href='http://processing.org/learning/topics/firecube.html'>Processing version</a> calculates every pixel color when</p>
+
+<ul>
+<li>creating noise,</li>
+
+<li>combining values from adjacent pixels and</li>
+
+<li>converting color.</li>
+</ul>
+
+<p>So I implement it as follows:</p>
+
+<ul>
+<li>creating noise -&gt; <code>BitmapData.noise()</code></li>
+
+<li>combining values from adjacent pixels -&gt; <code>ConvolutionFilter</code></li>
+
+<li>converting color -&gt; <code>BitmapData.paletteMap()</code></li>
+</ul>
+
+<h1 id='difficulty'>Difficulty</h1>
+
+<p>HSV color space is not supported in AS3! I created a function called <code>HSVtoRGB</code>.</p>
+
+<p>Drawing a cube was a pain. So, I changed a cube to circle&#8230;</p>
+
+<p>Here is the code: (83 lines)</p>
+<div class='highlight'><pre><code class='actionscript'>// Processing FireCube (AS3 version) 
+// original source: http://processing.org/learning/topics/firecube.html
+package {
+import flash.display.*;
+import flash.filters.*;
+import flash.geom.*;
+
+public class FireCube extends Sprite{
+    private const WIDTH:int = 200;
+    private const HEIGHT:int = 150;
+
+    public function FireCube(){
+        stage.align = &quot;TL&quot;;
+        stage.scaleMode = &quot;noScale&quot;;
+        scaleX = scaleY = 2;
+
+        // Create circle
+        var circle:Sprite = new Sprite();
+        circle.graphics.beginFill(0x808080);
+        circle.graphics.drawCircle(0, 0, 10);
+        circle.graphics.endFill();
+
+        // Create buffered image
+        var fire:BitmapData = new BitmapData(WIDTH, HEIGHT, false, 0);
+        var pg:BitmapData = fire.clone();
+        var noiseBmd:BitmapData = new BitmapData(WIDTH, 1);
+
+        var bmp:Bitmap = new Bitmap(pg);
+        addChild(bmp);
+
+        // Generate the palette
+        var r:Array = [], g:Array = [], b:Array = [];
+        for(var x:int = 0; x &lt; 256; x++) {
+            //Hue goes from 0 to 85: red to yellow
+            //Saturation is always the maximum: 255
+            //Lightness is 0..255 for x=0..128, and 255 for x=128..255
+            HSVtoRGB(x / 3, 1, Math.min(x * 3 / 255.0, 1), r, g, b);
+        }
+
+        // Use ConvolutionFilter to calculate for every pixel
+        var filter:ConvolutionFilter = new ConvolutionFilter(3, 3, [0, 0, 0, 16, 16, 16, 0, 16, 0], 65);
+
+        // Prepare points and matrix
+        var matrix:Matrix = new Matrix();
+        var pt0:Point = new Point(0, HEIGHT - 1);
+        var pt1:Point = new Point(0, -1);
+        var pt2:Point = new Point(0, 1);
+
+        // Do loop
+        addEventListener(&quot;enterFrame&quot;, function(event:*):void{
+            // Randomize the bottom row of the fire buffer
+            noiseBmd.noise(Math.random() * 0xffffffff, 0, 190, 7, true);
+            fire.copyPixels(noiseBmd, noiseBmd.rect, pt0);
+
+            // Display circle
+            matrix.tx = mouseX;
+            matrix.ty = mouseY;
+            fire.draw(circle, matrix);
+
+            // Add pixel values around current pixel
+            fire.applyFilter(fire, fire.rect, pt1, filter);
+
+            // Output everything to screen using our palette colors
+            pg.paletteMap(fire, fire.rect, pt2, r, g, b);
+        });
+    }
+
+    // AS3 does not natively support HSV...  :-(
+    private function HSVtoRGB(h:int, s:Number, v:Number, r:Array, g:Array, b:Array):void {
+        if (h &lt; 60) {
+            r.push((v * 255) &lt;&lt; 16);
+            g.push((v * (1 - (1 - h / 60.0) * s) * 255) &lt;&lt; 8)
+            b.push(v * (1 - s) * 255);
+        } else if (h &lt; 120) {
+            r.push((v * (1 - (-h / 60.0 - 1) * s) * 255) &lt;&lt; 16);
+            g.push((v * 255) &lt;&lt; 8);
+            b.push(v * (1 - s) * 255);
+        } else {
+            throw Error(&#39;not implemented&#39;);
+        }
+    }
+}
+}
+</code></pre>
+</div>]]></description>
+		</item>
+
+		<item>
+			<title>50 polygons Mona Lisa in AS3</title>
+			<link>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</guid>
+			<pubDate>Tue, 17 Feb 2009 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I ported <a href='http://alteredqualia.com/visualization/evolve/'>Image evolution</a> to ActionScript 3.</p>
+
+<blockquote>
+<p>We start from random 50 polygons that are invisible. In each optimization step we randomly modify one parameter (like color components or polygon vertices) and check whether such new variant looks more like the original image. If it is, we keep it, and continue to mutate this one instead.</p>
+</blockquote>
+
+<p>In my computer, the result was as follows.</p>
+<center><img height='378' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg' width='450' /></center>
+<p>It&#8217;s waste of CPU.., but very interesting.</p>
+
+<p>Published SWF (CAUSION: TOO HEAVY CPU 60%~)</p>
+<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='420' width='450'>
+	<param name='src' value='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' />
+	<param name='play' value='true' />
+	<param name='loop' value='true' />
+	<param name='bgcolor' value='#ffffff' />
+	<param name='quality' value='high' />
+	<embed bgcolor='#ffffff' height='420' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' width='450'>
+	</embed>
+</object><noscript>(Flash Player 9 or above required)</noscript>
+<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href='http://alteredqualia.com/visualization/evolve/'>JavaScript version</a>. The original <a href='http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/'>C# version</a> is about 3 times faster than mine.</p>
+
+<p>Here is the code: (189lines)</p>
+<div class='highlight'><pre><code class='actionscript'>package{
+import flash.display.*;
+import flash.text.*;
+import flash.geom.*;
+import flash.filters.ColorMatrixFilter;
+import flash.utils.setInterval;
+
+[SWF(backgroundColor=&quot;#eeeeee&quot;)]
+public class Evolve extends Sprite{
+    [Embed(source=&#39;mona_lisa_crop.jpg&#39;)]
+    private var MonaLisa:Class;
+    private var imgWidth:int;
+    private var imgHeight:int;
+
+    private const POLYGONS:int = 50;
+    private var polygons:Array = [];
+    private var mutating:Boolean = false;
+
+    private var monotoneFilter:ColorMatrixFilter = new ColorMatrixFilter([
+            1 / 3, 1 / 3, 1 / 3, 0, 0, 
+            1 / 3, 1 / 3, 1 / 3, 0, 0, 
+            1 / 3, 1 / 3, 1 / 3, 0, 0, 
+                0,     0,     0, 1, 0 ]);
+    private var pt0:Point = new Point(0, 0);
+    private var rect:Rectangle;
+
+    private var bestBmd:BitmapData;
+    private var testBmd:BitmapData;
+    private var inputBmd:BitmapData;
+    private var debugBmd:BitmapData;
+
+    private var canvas:Sprite;
+
+    private var score:uint;
+    private var scoreMax:uint;
+    private var mutations:uint = 0;
+    private var candidates:uint = 0;
+    private var totalTime:Number = 0;
+    private var time:Date;
+    private var scoreText:TextField;
+
+    public function Evolve(){
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
+
+        // init image
+        var bmp:Bitmap = new MonaLisa();
+        inputBmd = bmp.bitmapData;
+        addChild(bmp);
+        imgWidth = bmp.width;
+        imgHeight = bmp.height;
+        rect = inputBmd.rect;
+        score = scoreMax = rect.width * rect.height * 255;
+
+        // init buffer
+        bestBmd = inputBmd.clone(); bestBmd.fillRect(rect, 0x000000);
+        testBmd = inputBmd.clone(); testBmd.fillRect(rect, 0x000000);
+        debugBmd = inputBmd.clone();
+        addChild(new Bitmap(bestBmd)).x = bmp.width + 10;
+
+        // init data and canvas
+        canvas = new Sprite();
+        for(var i:int = 0; i &lt; POLYGONS; i++){
+            polygons[i] = new Polygon();
+            canvas.addChild(new Sprite());
+        }
+        drawTest();
+        testToBest();
+
+        // init ui
+        var tf:TextField = new TextField();
+        tf.text = &quot;click to start&quot;;
+        tf.y = bmp.height + 10;
+        tf.scaleX = tf.scaleY = 3;
+        addChild(tf);
+        stage.addEventListener(&quot;click&quot;, function(event:*):void{
+            mutating = !mutating;
+            time = (mutating ? new Date() : null);
+            tf.text = (mutating ? &quot;Now Simulating...&quot; : &quot;click to start&quot;);
+        });
+        scoreText = new TextField();
+        scoreText.autoSize = &quot;left&quot;;
+        scoreText.y = bmp.height + 60;
+        scoreText.scaleX = scoreText.scaleY = 3;
+        addChild(scoreText);
+
+        // start timer
+        setInterval(update, 10);
+    }
+
+    private function update():void{
+        if(!mutating) return;
+        var t:Date = new Date();
+        totalTime += (t.getTime() - time.getTime()) / 1000;
+        time = t;
+
+        for(var i:int = 0; i &lt; 10; i++) update1();
+        scoreText.text = (int((1 - score / scoreMax) * 10000) / 100)
+             + &quot;%\n&quot; + mutations + &quot; / &quot; + candidates + &quot;\n&quot;
+             + (int(totalTime * 10) / 10) + &quot;s&quot;;
+    }
+
+    private function update1():void{
+        var index:int = Math.random() * POLYGONS;
+        var backup:Polygon = polygons[index].clone();
+        polygons[index].mutate();
+        drawTest();
+
+        var diffBmd:BitmapData = testBmd.compare(inputBmd) as BitmapData;
+        diffBmd.applyFilter(diffBmd, rect, pt0, monotoneFilter);
+        var testScore:uint = 0;
+        for(var i:int = 0; i &lt; 0x100; i++){
+            testScore += diffBmd.threshold(diffBmd, rect, pt0, &quot;==&quot;, i, i, 0xff) * i;
+        }
+
+        if(score &gt; testScore){
+            score = testScore;
+            testToBest();
+            mutations++;
+        }else{
+            polygons[index] = backup;
+        }
+        candidates++;
+    }
+
+    private function drawTest():void{
+        canvas.graphics.clear();
+        for(var i:int = 0; i &lt; POLYGONS; i++){
+            polygons[i].draw(canvas, imgWidth, imgHeight);
+        }
+
+        testBmd.fillRect(rect, 0x000000);
+        testBmd.draw(canvas);
+    }
+
+    private function testToBest():void{
+        bestBmd.copyPixels(testBmd, rect, pt0);
+    }
+}
+}
+
+import flash.display.*;
+import flash.geom.*;
+
+class Polygon{
+    private const POINTS:int = 6;
+
+    public var points:Array = [];
+    public var color:uint;
+    public var alpha:Number;
+
+    public function Polygon(polygon:Polygon = null){
+        for(var i:int = 0; i &lt; POINTS; i++)
+            points[i] = (polygon ? polygon.points[i].clone() : new Point(Math.random(), Math.random()));
+        color = (polygon ? polygon.color : 0xffffff * Math.random());
+        alpha = (polygon ? polygon.alpha : .1);
+    }
+
+    public function clone():Polygon{
+        return new Polygon(this);
+    }
+
+    public function mutate():void{
+        (Math.random() &lt; 0.5 ? mutateColor() : mutatePosition());
+    }
+
+    private function mutateColor():void{
+        switch(int(Math.random() * 4)){
+            case 0: color = (color &amp; 0x00ffff) + int(Math.random() * 255) * 0x010000; break;
+            case 1: color = (color &amp; 0xff00ff) + int(Math.random() * 255) * 0x000100; break;
+            case 2: color = (color &amp; 0xffff00) + int(Math.random() * 255) * 0x000001; break;
+            case 3: alpha = Math.random(); break;
+        }
+    }
+
+    private function mutatePosition():void{
+        var p:int = Math.random() * POINTS;
+        if(Math.random() &lt; .5) points[p].x = Math.random();
+        else                   points[p].y = Math.random();
+    }
+
+    public function draw(canvas:Sprite, w:Number, h:Number):void{
+        canvas.graphics.beginFill(color, alpha);
+        canvas.graphics.moveTo(points[0].x * w, points[0].y * h);
+        for(var i:int = 1; i &lt; POINTS; i++)
+            canvas.graphics.lineTo(points[i].x * w, points[i].y * h);
+        canvas.graphics.endFill();
+    }
+}
+</code></pre>
+</div>]]></description>
+		</item>
+
+		<item>
+			<title>Color Illusion Generator released</title>
+			<link>http://tech.nitoyon.com/en/blog/2008/06/26/color-illusion-generator-released/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2008/06/26/color-illusion-generator-released/</guid>
+			<pubDate>Thu, 26 Jun 2008 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I released a &#8217;<a href='http://tech.nitoyon.com/illusion1/'>Color Illusion Generator</a>&#8217;, which enables to create a illusion movie from an arbitrary image.</p>
+
+<p>(Example)</p>
+<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0' height='240' id='__illsion1_swf1214513797531' width='360'>
+ <param name='movie' value='http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531' />
+ <param name='bgcolor' value='#000000' />
+ <param name='loop' value='false' />
+ <param name='quality' value='high' />
+ <param name='flashVars' value='url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg' />
+ <embed bgcolor='#000000' flashVars='url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg' height='240' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?p1_prod_version=shockwaveflash' src='http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531' type='application/x-shockwave-flash' width='360' />
+</object><noscript>(Flash Player 9.0+ Required)</noscript>
+<p>You can embed the movie to your blog.</p>
+
+<p>Source code: <a href='http://tech.nitoyon.com/illusion1/Illusion.as'>Illusion.as</a></p>]]></description>
+		</item>
+
+		<item>
+			<title>Google Earth control in Google Maps</title>
+			<link>http://tech.nitoyon.com/en/blog/2008/05/26/google-earth-control-in-google/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2008/05/26/google-earth-control-in-google/</guid>
+			<pubDate>Mon, 26 May 2008 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I placed Google Earth control in Google Maps.</p>
+
+<p>It is impossible to get the image data by <code>BitmapData.draw()</code>, so I used a <code>DisplacementMapFilter</code>.</p>
+<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='400' width='420'>
+	<param name='src' value='http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf' />
+	<param name='play' value='true' />
+	<param name='loop' value='true' />
+	<param name='bgcolor' value='#000000' />
+	<param name='quality' value='high' />
+	<embed bgcolor='#000000' height='400' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf' width='420'>
+	</embed>
+</object><noscript>(Flash Player 9 or above required)</noscript>
+<p>Here is the code(185 lines):</p>
+<div class='highlight'><pre><code class='actionscript'>package {
+    import flash.display.*;
+    import flash.geom.*;
+    import flash.events.*;
+    import flash.filters.DisplacementMapFilter;
+    import com.google.maps.*;
+
+    [SWF(backgroundColor=&quot;0x000000&quot;)]
+    public class GoogleEarthControl extends Sprite {
+        private const WIDTH:int = 400;
+        private const HEIGHT:int = 400;
+        private const VIEWDISTANCE:Number = 500;
+        private var map:Map;
+        private var mapContainer:Sprite;
+        private var bmd:BitmapData;
+
+        public function GoogleEarthControl() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
+
+            mapContainer = new Sprite();
+            addChild(mapContainer);
+
+            map = new Map();
+            map.key = &quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;;
+            map.setSize(new Point(WIDTH, HEIGHT));
+            map.addEventListener(MapEvent.MAP_READY, function(event:*):void{
+                map.setCenter(new LatLng(35.003759, 135.769322), 10, MapType.SATELLITE_MAP_TYPE);
+
+                var mapMask:Sprite = new Sprite();
+                mapMask.graphics.beginFill(0);
+                mapMask.graphics.drawRect(0, 0, WIDTH, HEIGHT);
+                mapMask.graphics.endFill();
+                mapContainer.mask = mapMask;
+
+                bmd = new BitmapData(WIDTH, HEIGHT);
+
+                var s1:ScrollBar = new ScrollBar(50);
+                addChild(s1);
+                s1.rotation = -90
+                s1.x = WIDTH - 100; s1.y = 30;
+                s1.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    updateValue(s1.value);
+                });
+                s1.dispatchEvent(new Event(&quot;change&quot;));
+
+                var s2:ScrollBar = new ScrollBar(80);
+                addChild(s2);
+                s2.x = WIDTH - 10; s2.y = 50;
+                s2.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    map.setZoom((100 - s2.value) / 100 * map.getMaxZoomLevel());
+                });
+                s2.dispatchEvent(new Event(&quot;change&quot;));
+
+                var r:RotationControl = new RotationControl(-10);
+                addChild(r);
+                r.x = WIDTH - 60; r.y = 90;
+                r.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    var matrix:Matrix = new Matrix();
+                    matrix.translate(-WIDTH / 2, -HEIGHT / 2);
+                    matrix.rotate(r.value * Math.PI / 180);
+                    matrix.translate(WIDTH / 2, HEIGHT / 2);
+                    map.transform.matrix = matrix;
+                });
+                r.dispatchEvent(new Event(&quot;change&quot;));
+            });
+            mapContainer.addChild(map);
+        }
+
+        private function updateValue(value:int):void{
+            var rad:Number = value / 100 * 60 * Math.PI / 180;
+            var p:Number = -Math.sin(rad) / VIEWDISTANCE;
+
+            bmd.lock();
+            var HW:int = WIDTH / 2;
+            var HH:int = HEIGHT / 2;
+            for(var j:int = -HH; j &lt; HH; j++){
+                var pj:Number = 1 + j * p;
+                for(var i:int = -HW; i &lt; HW; i++){
+                    var _x:int = pj * i;
+                    var _y:int = pj * j / Math.cos(rad);
+                    bmd.setPixel(i + HW, j + HH, getColor((_x - i) * 1 + 0x80, (_y - j) * 1 + 0x80, 0));
+                }
+            }
+            bmd.unlock();
+
+            mapContainer.filters = [new DisplacementMapFilter(bmd, new Point(0, 0), 1, 2, 256, 256, &quot;color&quot;)];
+        }
+
+        private static function bounds(val:Number, min:Number = Number.POSITIVE_INFINITY, max:Number = Number.NEGATIVE_INFINITY):Number {
+            return Math.max(Math.min(val, max), min);
+        }
+
+        private static function getColor(r:int, g:int, b:int):uint {
+            return Math.floor(bounds(r, 0, 255)) * 0x10000
+                 + Math.floor(bounds(g, 0, 255)) * 0x100
+                 + Math.floor(bounds(b, 0, 255));
+        }
+    }
+}
+
+import flash.display.Sprite;
+import flash.events.*;
+import flash.geom.Point;
+
+class ScrollBar extends Sprite {
+    public var value:int;
+
+    public function ScrollBar(_value:int):void {
+        value = _value;
+
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawRect(0, -2, 8, 112);
+        graphics.endFill();
+
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-8, 0, 24, 8);
+        tab.graphics.endFill();
+        tab.y = _value;
+        addChild(tab);
+
+        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+            mouseMoveHandler(event);
+        });
+
+        var mouseMoveHandler:Function = function(event:MouseEvent):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.y = Math.min(Math.max(0, p.y), 100);
+        }
+        var mouseUpHandler:Function = function(event:MouseEvent):void {
+            value = tab.y;
+            dispatchEvent(new Event(&quot;change&quot;));
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}
+
+class RotationControl extends Sprite {
+    public var value:int = 0;
+
+    public function RotationControl(_value:int):void {
+        value = _value;
+
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawCircle(0, 0, 40);
+        graphics.drawCircle(0, 0, 32);
+        graphics.endFill();
+
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-44, -8, 16, 16);
+        tab.graphics.endFill();
+        tab.rotation = _value + 90;
+        addChild(tab);
+
+        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+            mouseMoveHandler(event);
+        });
+
+        var mouseMoveHandler:Function = function(event:MouseEvent):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.rotation = p.x == 0 ? 90 : Math.atan(p.y / p.x) / Math.PI * 180 + (p.x &gt; 0 ? 180 : 0);
+            value = tab.rotation - 90;
+            dispatchEvent(new Event(&quot;change&quot;));
+        }
+        var mouseUpHandler:Function = function(event:MouseEvent):void {
+            value = tab.rotation - 90;
+            dispatchEvent(new Event(&quot;change&quot;));
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}
+</code></pre>
+</div>]]></description>
+		</item>
+
+	</channel>
+</rss>
