@@ -5,7 +5,7 @@ require_relative 'custom_page'
  
 module Jekyll
   class Archive < CustomPage
-    def self.archives(site)
+    def self.archives(posts)
       years = Hash.new { |h, k| h[k] = Array.new }
       
       months = Hash.new do |h, k|
@@ -18,7 +18,7 @@ module Jekyll
         end
       end
       
-      site.posts.each do |post|
+      posts.each do |post|
         d = post.date
         years[d.year] << post
         months[d.year][d.month] << post 
@@ -28,15 +28,15 @@ module Jekyll
       [years, months, days]
     end
     
-    def initialize(site, base, posts, year, month = nil, day = nil)
+    def initialize(site, base, posts, lang, year, month = nil, day = nil)
       time = Time.new(year, month, day)
       
       if day
-        dir = time.strftime('/en/blog/%Y/%m/%d')
+        dir = time.strftime("/#{lang}/blog/%Y/%m/%d")
       elsif month
-        dir = time.strftime('/en/blog/%Y/%m')
+        dir = time.strftime("/#{lang}/blog/%Y/%m")
       else
-        dir = time.strftime('/en/blog/%Y')
+        dir = time.strftime("/#{lang}/blog/%Y")
       end
       
       super site, base, dir, 'archive'
@@ -52,20 +52,32 @@ module Jekyll
       
       self.data["title"] = title
       self.data["posts"] = posts.reverse
-      self.data["lang"] = "en";
+      self.data["lang"] = lang;
     end
   end
   
   class Site
     def generate_archives
-      years, months, days = Archive.archives(self)
+      # check config
+      unless self.config.has_key? 'lang' and self.config['lang'].instance_of? Array
+        puts "language list is not defined in _config.yml."
+        return
+      end
+
+      self.config['lang'].each do |lang|
+        self.generate_archives_for_lang(lang)
+      end
+    end
+
+    def generate_archives_for_lang(lang)
+      years, months, days = Archive.archives(self.categories[lang])
       
       days.each do |year, m|
-        write_page Archive.new(self, self.source, years[year], year)
+        write_page Archive.new(self, self.source, years[year], lang, year)
         
         m.each do |month, d|
-          write_page Archive.new(self, self.source, months[year][month], year, month)
-          d.each { |day, posts| write_page Archive.new(self, self.source, posts, year, month, day) }
+          write_page Archive.new(self, self.source, months[year][month], lang, year, month)
+          d.each { |day, posts| write_page Archive.new(self, self.source, posts, lang, year, month, day) }
         end
       end
     end
