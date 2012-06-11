@@ -6,6 +6,13 @@ tech-ni source code
   - http://tech.nitoyon.com/ (てっく煮)
   - http://d.hatena.ne.jp/nitoyon/ (てっく煮ブログ)
 
+Initialize
+----------
+
+    $ git clone https://github.com/nitoyon/tech.nitoyon.com.git
+    $ git submodule init
+    $ git submodule update
+
 Build Requirements
 ------------------
 
