@@ -20,12 +20,12 @@ module Jekyll
     def convert(content)
       require 'hparser'
 
-      ### HTML •ÏŠ·‚Ìİ’è ###
-      # ** ‚ª H4 ‚É‚È‚é‚æ‚¤‚É‚·‚é
-      HParser::Block::Head::head_level = 3
+      ### HTML å¤‰æ›ã®è¨­å®š ###
+      # ** ãŒ H1 ã«ãªã‚‹ã‚ˆã†ã«ã™ã‚‹
+      HParser::Block::Head::head_level = 0
 
-      # _config.yml ‚Å pygments ‚ğ true ‚É‚µ‚Ä‚¢‚é‚Æ‚«‚ÍAƒX[ƒp[ pre ‹L–@‚à
-      # Pygments ‚ğg‚Á‚ÄƒnƒCƒ‰ƒCƒg‚·‚é
+      # _config.yml ã§ pygments ã‚’ true ã«ã—ã¦ã„ã‚‹ã¨ãã¯ã€ã‚¹ãƒ¼ãƒ‘ãƒ¼ pre è¨˜æ³•ã‚‚
+      # Pygments ã‚’ä½¿ã£ã¦ãƒã‚¤ãƒ©ã‚¤ãƒˆã™ã‚‹
       if @config['pygments']
         HParser::Block::SuperPre::use_pygments = true
       end
