@@ -9,9 +9,11 @@ tech-ni source code
 Initialize
 ----------
 
-    $ git clone https://github.com/nitoyon/tech.nitoyon.com.git
+    $ git clone git@github.com:nitoyon/tech.nitoyon.com.git
     $ git submodule init
     $ git submodule update
+    $ cd _site
+    $ git checkout html
 
 Build Requirements
 ------------------
