@@ -15,6 +15,17 @@ require 'liquid'
 require 'rexml/document'
 require 'yaml'
 
+# タイトル省略リンクのタイトルを Web から取得するかどうか
+#
+# 動作条件
+# * nokogiri が必要(gem install nokogiri)
+# *_caches フォルダを作っておく
+#
+# 対象のコンテンツが 404 になっている場合には例外がでるので、
+# _caches/url_title.json に手動でエントリを追加することで回避する必要あり
+$enable_html_title_retrieval = true
+
+
 # コマンドライン引数を読み取り
 if ARGV.length < 2
   abort "USAGE: ruby $0 [hatena_id] [XML file]"
@@ -110,8 +121,44 @@ def convert_text(text, hatena_id)
         "{% post_link #{$1}-#{$2}-#{$3}-#{$4.gsub('_', '-')} %}"
     }
 
+    # HTML の省略されたタイトルを解決する
+    if $enable_html_title_retrieval
+        text = text.gsub(/[\[>](https?:\/\/.+?):title[^=]/) { |text|
+            text[0..-2] + "=" + retrieve_html_title($1) + text[-1]
+        }
+    end
+
     text
 end
 
+def retrieve_html_title(url)
+    require 'json'
+    require 'open-uri'
+
+    # キャッシュに存在していればキャッシュから読む
+    cache_path = '_caches/url_title.json'
+    cache = {}
+    if FileTest.file? cache_path
+        open(cache_path) { |f| cache = JSON.parse(f.read) }
+        if cache.key?(url)
+            return cache[url]
+        end
+    end
+
+    # 取得する
+    require 'nokogiri'
+    puts "open url #{url}"
+    doc = Nokogiri::HTML(open(url))
+    titles = doc.css("title")
+    title = titles.length > 0 ? titles[0].text : url
+    title = title.gsub(/\t|\n/, "").strip
+
+    # キャッシュに書く
+    cache[url] = title
+    open(cache_path, 'w') { |f|
+        f.write(JSON.pretty_generate(cache))
+    }
+    title
+end
 
 main(hatena_id, xml_path)
