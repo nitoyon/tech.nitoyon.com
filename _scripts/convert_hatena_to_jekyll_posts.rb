@@ -128,6 +128,18 @@ def convert_text(text, hatena_id)
         }
     end
 
+    # ISBN/ASIN 記法
+    # isbn:xxxxx:title → {% amazon jp:xxxxx:title %}
+    text = text.gsub(/\[?(?:isbn|asin):(\w+):(title|detail)\]?/) { |text|
+      if $2 == "title"
+        "{% amazon jp:#{$1}:title %}"
+      elsif $2 == "detail"
+        ">{% amazon jp:#{$1}:detail %}<"
+      else
+        "(unknown amazon type #{$2})"
+      end
+    }
+
     text
 end
 
