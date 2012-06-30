@@ -9,6 +9,11 @@
 #   1. Install this script to `_plugin` folder.
 #   2. Create cache directory `_caches/amazon`.
 #   3. Install amazon/ecs(`gem install amazon-ecs`).
+#   4. Write access key information to `_amazon.yml' in YAML format.
+#      (ex)
+#        associate_tag: nitoyoncom-22
+#        AWS_access_key_id: XXXXXXXXXXXXXXXXXXXX
+#        AWS_secret_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #
 # Embed amazon
 # ------------
@@ -84,6 +89,7 @@ module Jekyll
     end
 
     def load_product_with_cache(lang, amazon_id, context)
+      config_path = File.join(context.registers[:site].source, '_amazon.yml')
       caches_dir = File.join(context.registers[:site].source, '_caches/amazon')
       cache_path = File.join(caches_dir, "#{lang}.#{amazon_id}.xml")
       unless FileTest.directory?(caches_dir)
@@ -97,25 +103,29 @@ module Jekyll
       end
 
       if doc.nil?
-        puts "load"
-        xml_str = load_product_from_web(lang, amazon_id)
+        puts "loading #{lang} #{amazon_id}"
+        xml_str = load_product_from_web(lang, amazon_id, config_path)
         doc = REXML::Document.new(xml_str)
         open(cache_path, 'w') { |f| f.write(xml_str) }
+        puts "loaded"
       end
 
       doc
     end
 
-    def load_product_from_web(lang, amazon_id)
+    def load_product_from_web(lang, amazon_id, config_path)
       require 'amazon/ecs'
 
-      Amazon::Ecs.options = {
-        :associate_tag => 'nitoyoncom-22',
-        :AWS_access_key_id => 'AKIAJ3X4TN77KIHAF67Q',
-        :AWS_secret_key => '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'
-      }
+      # load config from config_path
+      conf = {}
+      begin
+        open(config_path) { |f| conf = YAML.load(f.read) }
+      rescue => err
+        puts err
+        raise err
+      end
+      Amazon::Ecs.options = conf.inject({}){|h,(k,v)| h[k.to_sym] = v; h}
 
-      # options provided on method call will merge with the default options
       res = Amazon::Ecs.item_lookup(amazon_id, :country => lang, :response_group => 'Images,ItemAttributes')
 
       if res.has_error?
