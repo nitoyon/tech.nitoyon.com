@@ -18,11 +18,18 @@ module Jekyll
       locale_dir = File.join(@context.registers[:site].source, '_locales')
       locale_file = "#{locale_dir}/#{lang}.yml"
 
+      $locale_filter_mtime = {} if $locale_filter_mtime.nil?
+      $locale_filter_hash = {} if $locale_filter_hash.nil?
+
       begin
-        content = File.read(locale_file)
-        yaml = YAML.load(content)
-        if yaml.has_key?(input)
-          yaml[input] 
+        if File.mtime(locale_file) > ($locale_filter_mtime[lang] || Time.new(0))
+          $locale_filter_hash[lang] = YAML.load(File.read(locale_file))
+          $locale_filter_mtime[lang] = File.mtime(locale_file)
+          puts "loaded #{locale_file}"
+        end
+
+        if $locale_filter_hash[lang].has_key? input
+          $locale_filter_hash[lang][input]
         else
           "(UNKNOWN TEXT: #{input} for #{lang})"
         end
