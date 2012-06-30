@@ -44,6 +44,8 @@ module Jekyll
     end
 
     def load_tweet_with_cache(tweet_id, context)
+      require 'json'
+
       caches_dir = File.join(context.registers[:site].source, '_caches/tweet')
       cache_path = File.join(caches_dir, "#{@tweet_id}.json")
       unless FileTest.directory?(caches_dir)
@@ -67,6 +69,7 @@ module Jekyll
       Net::HTTP.start('api.twitter.com', 80) { |http|
         puts "load tweet: #{tweet_id}"
         response = http.get("/1/statuses/oembed.json?id=#{tweet_id}")
+        puts "loaded tweet: #{tweet_id}"
         return response.body
       }
     end
