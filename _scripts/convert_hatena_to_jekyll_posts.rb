@@ -86,18 +86,19 @@ def parse_day(e, hatena_id)
 
     # ファイル出力する
     fn = "_posts/#{date}-#{new_name}.htn"
-    File::open(fn, "w") { |f|
-      f.write({
-        "layout" => "post", 
-        "title" => name_ja,
-        "tags" => tags.join(","),
-        "lang" => "ja",
-        "old_url" => "http://d.hatena.ne.jp/#{hatena_id}/#{old_url}",
-      }.to_yaml)
-      f.write("---\n")
-      f.write(convert_text(text, hatena_id))
-    }
-    puts "Success #{fn}"
+    content = {
+      "layout" => "post", 
+      "title" => name_ja,
+      "tags" => tags.join(","),
+      "lang" => "ja",
+      "old_url" => "http://d.hatena.ne.jp/#{hatena_id}/#{old_url}",
+    }.to_yaml + "---\n" + convert_text(text, hatena_id)
+    if FileTest.file?(fn) && File.read(fn) == content
+      puts "Skip #{fn}"
+    else
+      File.open(fn, "w") { |f| f.write(content) }
+      puts "Success #{fn}"
+    end
   }
 end
 
@@ -113,7 +114,7 @@ def convert_text(text, hatena_id)
     text = tokens.join("")
 
     # [twitter:123456789:detail] → {% twitter 123456789 %}
-    text = text.gsub(/\[twitter:(\d+):detail\]/, '{% twitter \1 %}')
+    text = text.gsub(/\[?twitter:(\d+):detail\]?/, '>{% tweet \1 %}<')
 
     # [http://d.hatena.ne.jp/#{hatena_id}/YYYYMMDD/name:title]
     # → {% post_link YYYY-MM-DD-name %}
