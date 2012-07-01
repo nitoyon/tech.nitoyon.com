@@ -12,20 +12,13 @@ module Jekyll
         h[k] = Hash.new { |h, k| h[k] = Array.new }
       end
       
-      days = Hash.new do |h, k|
-        h[k] = Hash.new do |h, k|
-          h[k] = Hash.new { |h, k| h[k] = Array.new }
-        end
-      end
-      
       posts.each do |post|
         d = post.date
         years[d.year] << post
         months[d.year][d.month] << post 
-        days[d.year][d.month][d.day] << post
       end
       
-      [years, months, days]
+      [years, months]
     end
     
     def initialize(site, base, posts, lang, year, month = nil, day = nil)
@@ -70,42 +63,15 @@ module Jekyll
     end
 
     def generate_archives_for_lang(lang)
-      years, months, days = Archive.archives(self.categories[lang])
+      years, months = Archive.archives(self.categories[lang])
       
-      days.each do |year, m|
+      months.each do |year, m|
         write_page Archive.new(self, self.source, years[year], lang, year)
         
         m.each do |month, d|
           write_page Archive.new(self, self.source, months[year][month], lang, year, month)
-          d.each { |day, posts| write_page Archive.new(self, self.source, posts, lang, year, month, day) }
         end
       end
     end
-  end
-  
-  class MonthlyArchives < Liquid::Tag
-    safe = true
-    
-    def render(context)
-      @@list ||= generate_list(context)
-    end
-    
-    private
-    
-      def generate_list(context)
-        years, months, days = Archive.archives(context.registers[:site])
-        result = ""
-        
-        months.each do |year, m|
-          m.each do |month, posts|
-            time = Time.new(year, month)
-            result.insert(0, %(<a href="#{time.strftime('/%Y/%m')}"><strong>#{time.strftime('%B %Y')}</strong></a> (#{posts.length})<br />)) # for reverse order
-          end
-        end
-        
-        result
-      end
   end
 end
-
-Liquid::Template.register_tag('monthly_archives', Jekyll::MonthlyArchives)
