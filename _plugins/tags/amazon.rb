@@ -49,22 +49,23 @@ module Jekyll
     end
 
     def render(context)
+      require 'cgi'
       if @lang.nil?
         "(invalid amazon tag parameter)"
       elsif @type == "title"
         data = load_product_data(@lang, @amazon_id, context)
-        data[:title]
+        %(<a href="#{data[:detailUrl]}">#{CGI.escapeHTML(data[:title])}</a>)
       elsif @type == "detail"
         data = load_product_data(@lang, @amazon_id, context)
         %(<div class="hatena-asin-detail">
-  <a href="#{data[:detailUrl]}"><img src="#{data[:mediumThumnail]}" class="hatena-asin-detail-image" alt="#{data[:title]}" title="#{data[:title]}"></a>
+  <a href="#{data[:detailUrl]}"><img src="#{data[:mediumThumnail]}" class="hatena-asin-detail-image" alt="#{CGI.escapeHTML(data[:title])}" title="#{CGI.escapeHTML(data[:title])}"></a>
   <div class="hatena-asin-detail-info">
-    <p class="hatena-asin-detail-title"><a href="#{data[:detailUrl]}">#{data[:title]}</a></p>
+    <p class="hatena-asin-detail-title"><a href="#{data[:detailUrl]}">#{CGI.escapeHTML(data[:title])}</a></p>
     <ul>
-      <li><span class="hatena-asin-detail-label">作者:</span> #{data[:author]}</li>
-      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> #{data[:publisher]}</li>
-      <li><span class="hatena-asin-detail-label">発売日:</span> #{data[:date]}</li>
-      <li><span class="hatena-asin-detail-label">メディア:</span> #{data[:media]}</li>
+      <li><span class="hatena-asin-detail-label">作者:</span> #{CGI.escapeHTML(data[:author])}</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> #{CGI.escapeHTML(data[:publisher])}</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> #{CGI.escapeHTML(data[:date])}</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> #{CGI.escapeHTML(data[:media])}</li>
     </ul>
   </div>
   <div class="hatena-asin-detail-foot"></div>
