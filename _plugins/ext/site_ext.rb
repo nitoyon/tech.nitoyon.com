@@ -18,25 +18,64 @@ module Jekyll
     #
     # Added logging and reloading plugins.
     def process
+      t_total = Time.now
+      t_reset = Time.now
       puts "process: resetting"
       self.reset
+      t_reset = Time.now - t_reset
+
+      t_plugin = Time.now
       puts "process: reload_plugin"
       self.reload_plugin
+      t_plugin = Time.now - t_plugin
+
+      t_read = Time.now
       puts "process: reading"
       self.read
+      t_read = Time.now - t_read
+
+      t_generate = Time.now
       puts "process: generating"
       self.generate
+      t_generate = Time.now - t_generate
+
+      t_render = Time.now
       puts "process: rendering"
       self.render
+      t_render = Time.now - t_render
+
+      t_archive = Time.now
       puts "process: archives"
       self.generate_archives
+      t_archive = Time.now - t_archive
+
+      t_lang = Time.now
       puts "process: languages"
       self.generate_languages
+      t_lang = Time.now - t_lang
+
+      t_cleanup = Time.now
       puts "process: cleanuping"
       self.cleanup
+      t_cleanup = Time.now - t_cleanup
+
+      t_write = Time.now
       puts "process: writing"
       self.write
-      puts "process: completed"
+      t_write = Time.now - t_write
+
+      t_total = Time.now - t_total
+
+      puts "reset:         #{t_reset} sec"
+      puts "reload_plugin: #{t_plugin} sec"
+      puts "read:          #{t_read} sec"
+      puts "generate:      #{t_generate} sec"
+      puts "render:        #{t_render} sec"
+      puts "archive:       #{t_archive} sec"
+      puts "languages:     #{t_lang} sec"
+      puts "cleanup:       #{t_cleanup} sec"
+      puts "writing:       #{t_write} sec"
+      puts "total:         #{t_total} sec"
     rescue Exception => e
       puts e
       raise e
@@ -137,8 +176,6 @@ module Jekyll
     def write
       self.posts.each do |post|
         next if post.skipped
-        post.write(self.dest)
-        puts "writing #{post.name}"
       end
       self.pages.each do |page|
         page.write(self.dest)
