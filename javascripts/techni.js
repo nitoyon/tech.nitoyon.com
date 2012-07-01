@@ -16,9 +16,9 @@ $(function(){
 	var month_ja = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月" ];
 	var path = "/" + Site.lang + "/blog/";
 	var is_en = (Site.lang == "en");
-	for (i = Site.archives.monthes.length - 1; i >= 0; i--) {
-		var ys = Site.archives.monthes[i].substr(0, 4),
-		    ms = Site.archives.monthes[i].substr(4);
+	for (i = Site.archives.months.length - 1; i >= 0; i--) {
+		var ys = Site.archives.months[i].substr(0, 4),
+		    ms = Site.archives.months[i].substr(4);
 		var y = parseInt(ys, 10),
 		    m = parseInt(ms, 10);
 		if (y != year) {
