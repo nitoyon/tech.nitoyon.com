@@ -176,6 +176,8 @@ module Jekyll
     def write
       self.posts.each do |post|
         next if post.skipped
+        post.write(self.dest)
+        puts "writing " + post.destination('/')
       end
       self.pages.each do |page|
         page.write(self.dest)
