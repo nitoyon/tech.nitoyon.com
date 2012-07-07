@@ -1,16 +1,58 @@
 # This plugin modifies Site class and adds following functions.
+#
 #  - Reload modified plugin in --server and --auto mode.
-#  - Generate only modified post in --server and --auto mode.
+#  - Skip unmodified post in --server and --auto mode.
+#
+# Dependent plugins:
+#  - post_yaml_cache plugin
+#  - archive plugin
+#  - lang plugin
 
 module Jekyll
   class Post
-    # base: path to `_post` dir
-    # name: relative path from `base` dir
-    attr_accessor :base, :name
     attr_accessor :skipped
+
+    alias :render_ext_orig :render unless self.instance_methods.include?(:render_ext_orig)
+    def render(layouts, site_payload)
+      src_mtime = File::mtime(File.join(@base, @name))
+      dst_path = self.destination(@site.dest)
+      dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
+
+      if dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
+        self.skipped = true
+      else
+        puts "rendering #{self.name}"
+        self.render_ext_orig(layouts, site_payload)
+        self.skipped = false
+        puts "rendered"
+      end
+    end
+  end
+
+  class Page
+    attr_accessor :skipped
+
+    alias :render_ext_orig :render unless self.instance_methods.include?(:render_ext_orig)
+    def render(layouts, site_payload)
+      src_path = File.join(@base, @dir, @name)
+      src_mtime = File::mtime(File.join(@base, @dir, @name)) if FileTest.exists?(src_path)
+      dst_path = self.destination(@site.dest)
+      dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
+
+      if src_mtime && dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
+        self.skipped = true
+      else
+        puts "rendering #{File.join(@dir, @name)}"
+        self.render_ext_orig(layouts, site_payload)
+        self.skipped = false
+      end
+    end
   end
 
   class Site
+    def is_modified_only
+      self.config['server'] && self.config['auto']
+    end
 
     # Render the site to the destination.
     #
@@ -77,7 +119,7 @@ module Jekyll
       puts "writing:       #{t_write} sec"
       puts "total:         #{t_total} sec"
     rescue Exception => e
-      puts e
+      puts "Exception in process: #{e} #{e.backtrace.join("\n")}"
       raise e
     end
 
@@ -87,42 +129,6 @@ module Jekyll
           load f
         end
       end
-    end
-
-    # Render the site to the destination.
-    #
-    # Returns nothing.
-    #
-    # Render only modified file.
-    def render
-      self.posts.each do |post|
-        src_mtime = File::mtime(File.join(post.base, post.name))
-        dst_path = post.destination(self.dest)
-        dst_mtime = File::mtime(post.destination(self.dest)) if FileTest.exists?(dst_path)
-        if dst_mtime && src_mtime <= dst_mtime && self.config['server'] && self.config['auto']
-          puts "skipping #{post.name}"
-          post.skipped = true
-        else
-          puts "rendering #{post.name}"
-          post.render(self.layouts, site_payload)
-          post.skipped = false
-          puts "rendered #{post.name}"
-        end
-      end
-
-      self.pages.each do |page|
-        page.render(self.layouts, site_payload)
-      end
-
-      self.categories.values.map { |ps| ps.sort! { |a, b| b <=> a } }
-      self.tags.values.map { |ps| ps.sort! { |a, b| b <=> a } }
-    rescue Errno::ENOENT => e
-      # ignore missing layout dir
-      puts e
-    rescue Exception => e
-      # log it
-      puts e
-      raise e
     end
 
     # Remove orphaned files and empty directories in destination.
@@ -180,6 +186,7 @@ module Jekyll
         puts "writing " + post.destination('/')
       end
       self.pages.each do |page|
+        next if page.skipped
         page.write(self.dest)
         puts "writing " + page.destination('/')
       end

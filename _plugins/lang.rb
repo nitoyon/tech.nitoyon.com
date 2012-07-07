@@ -1,7 +1,11 @@
-#!/usr/bin/env ruby19
 # Language Page Plugin
+#
 # * Get language list from _config.yml
 # * Output pages in _lang folder for each languages
+#
+# Dependent plugins
+# * site_ext plugin
+# * post_yaml_cache plugin
 
 module Jekyll
   class LanguagePage < Page
@@ -24,13 +28,18 @@ module Jekyll
       return unless File.exists?(base)
       entries = Dir.chdir(base) { filter_entries(Dir['**/*']) }
 
-      # first pass processes, but does not yet render post content
+      # process each entries and languages
       entries.each do |f|
-        f_abs = File.join(base, f)
-        next if File.directory?(f_abs)
-        puts "lang: #{f} #{f_abs}"
+        # skip directories
+        next if File.directory?(File.join(base, f))
+
         self.config['lang'].each do |lang|
-          write_page LanguagePage.new(self, base, f, lang)
+          # Create new page
+          page = LanguagePage.new(self, base, f, lang)
+
+          # Render if post yaml is modified (set by post_yaml_cache plugin)
+          self.render_page_if_yaml_modified page
+          self.pages << page
         end
       end
     end
