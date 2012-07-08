@@ -57,15 +57,26 @@ module Jekyll
         %(<a href="#{data[:detailUrl]}">#{CGI.escapeHTML(data[:title])}</a>)
       elsif @type == "detail"
         data = load_product_data(@lang, @amazon_id, context)
+
+        labels = [
+          { :key => :author , :label => '作者' },
+          { :key => :publisher , :label => '出版社/メーカー' },
+          { :key => :date , :label => '発売日' },
+          { :key => :media , :label => 'メディア' },
+        ]
+        html = labels.map { |l|
+          v = data[l[:key]]
+          next if v.nil?
+          %(      <li><span class="hatena-asin-detail-label">#{l[:label]}:</span> #{CGI.escapeHTML(data[l[:key]])}</li>)
+        }.join("\n")
+
         %(<div class="hatena-asin-detail">
   <a href="#{data[:detailUrl]}"><img src="#{data[:mediumThumnail]}" class="hatena-asin-detail-image" alt="#{CGI.escapeHTML(data[:title])}" title="#{CGI.escapeHTML(data[:title])}"></a>
   <div class="hatena-asin-detail-info">
     <p class="hatena-asin-detail-title"><a href="#{data[:detailUrl]}">#{CGI.escapeHTML(data[:title])}</a></p>
     <ul>
-      <li><span class="hatena-asin-detail-label">作者:</span> #{CGI.escapeHTML(data[:author])}</li>
-      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> #{CGI.escapeHTML(data[:publisher])}</li>
-      <li><span class="hatena-asin-detail-label">発売日:</span> #{CGI.escapeHTML(data[:date])}</li>
-      <li><span class="hatena-asin-detail-label">メディア:</span> #{CGI.escapeHTML(data[:media])}</li>
+#{html}
+      <li><a href="#{data[:reviewUrl]}">Amazon のレビューを見る</a></li>
     </ul>
   </div>
   <div class="hatena-asin-detail-foot"></div>
@@ -78,14 +89,21 @@ module Jekyll
     def load_product_data(lang, amazon_id, context)
       doc = load_product_with_cache(lang, amazon_id, context)
 
+      def element_text(doc, xpath)
+        elm = doc.elements[xpath]
+        elm.nil? ? nil : elm.text
+      end
+
       data = {
-        :detailUrl =>  doc.elements['/Item/DetailPageURL'].text,
-        :mediumThumnail => doc.elements['//MediumImage/URL'].text,
-        :title => doc.elements['//ItemAttributes/Title'].text,
-        :author => doc.elements['//ItemAttributes/Author'].text,
-        :publisher => doc.elements['//ItemAttributes/Manufacturer'].text,
-        :date => doc.elements['//ItemAttributes/PublicationDate'].text,
-        :media => doc.elements['//ItemAttributes/Binding'].text,
+        :detailUrl      => element_text(doc, '/Item/DetailPageURL'),
+        :reviewUrl      => element_text(doc, '//ItemLink/URL[contains(text(), "review")]'),
+        :mediumThumnail => element_text(doc, '//MediumImage/URL'),
+        :title          => element_text(doc, '//ItemAttributes/Title'),
+        :author         => element_text(doc, '//ItemAttributes/Author'),
+        :publisher      => element_text(doc, '//ItemAttributes/Manufacturer'),
+        :date           => element_text(doc, '//ItemAttributes/PublicationDate') ||
+                           element_text(doc, '//ItemAttributes/ReleaseDate'),
+        :media          => element_text(doc, '//ItemAttributes/Binding'),
       }
     end
 
