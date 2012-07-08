@@ -113,8 +113,11 @@ def convert_text(text, hatena_id)
     }
     text = tokens.join("")
 
-    # [twitter:123456789:detail] → {% twitter 123456789 %}
+    # [twitter:123456789:detail] → {% tweet 123456789 %}
     text = text.gsub(/\[?twitter:(\d+):detail\]?/, '>{% tweet \1 %}<')
+
+    # [twitter:@nitoyon] → {% twitter @nitoyon %}
+    text = text.gsub(/\[?twitter:@(\w+)\]?/, '{% twitter @\1 %}')
 
     # [http://d.hatena.ne.jp/#{hatena_id}/YYYYMMDD/name:title]
     # → {% post_link YYYY-MM-DD-name %}
