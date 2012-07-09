@@ -119,6 +119,12 @@ def convert_text(text, hatena_id)
     # [twitter:@nitoyon] → {% twitter @nitoyon %}
     text = text.gsub(/\[?twitter:@(\w+)\]?/, '{% twitter @\1 %}')
 
+    # [http://www.youtube.com/watch?v=xxxxxx:movie]
+    # → {% youtube xxxxxx %}
+    text = text.gsub(/\[http:\/\/www\.youtube\.com\/watch\?v=([^:]+):movie\]/) { |text|
+        "{% youtube #{$1} %}"
+    }
+
     # [http://d.hatena.ne.jp/#{hatena_id}/YYYYMMDD/name:title]
     # → {% post_link YYYY-MM-DD-name %}
     text = text.gsub(/\[http:\/\/d\.hatena\.ne\.jp\/#{hatena_id}\/(\d{4})(\d{2})(\d{2})\/([^\]]+):title\]/) { |text|
