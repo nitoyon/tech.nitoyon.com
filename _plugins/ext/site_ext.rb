@@ -33,13 +33,13 @@ module Jekyll
     attr_accessor :skipped
 
     alias :render_ext_orig :render unless self.instance_methods.include?(:render_ext_orig)
-    def render(layouts, site_payload)
+    def render(layouts, site_payload, force=false)
       src_path = File.join(@base, @dir, @name)
       src_mtime = File::mtime(File.join(@base, @dir, @name)) if FileTest.exists?(src_path)
       dst_path = self.destination(@site.dest)
       dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
 
-      if src_mtime && dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
+      if !force && src_mtime && dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
         self.skipped = true
       else
         puts "rendering #{File.join(@dir, @name)}"
