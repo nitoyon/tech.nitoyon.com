@@ -38,7 +38,8 @@ puts "\nhatena id: #{hatena_id}\nXML path: #{xml_path}\n\n"
 def main(hatena_id, xml_path)
   # XML を開く
   file = File.new(xml_path)
-  doc = REXML::Document.new file
+  str = file.read.gsub('&#65535;', '')
+  doc = REXML::Document.new str
 
   # 各日ごとに処理
   # <diary>
