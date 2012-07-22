@@ -2,11 +2,12 @@
 ---
 // screen css
 //
-// This file is built with compass 0.11.7.
+// This file is built with sass 3.2.0.alpha.275 & compass 0.12.2.
 // Don't forget to set `lang=ja_JP.utf-8`.
 
 @charset "utf-8";
 @import "compass/reset";
+@import "compass/css3/background-size";
 @import "compass/css3/box-shadow";
 @import "compass/css3/border-radius";
 @import "compass/css3/text-shadow";
@@ -22,6 +23,9 @@ $monospace: Monaco, "Courier New", monospace;
 
 // size
 $width: 45em;
+$body_margin: .5em;
+$body_width: $width + $body_margin;
+$breakpoint: 480px;
 
 // color
 $textcolor: #000000;
@@ -107,6 +111,7 @@ body{
 	font-size: 92.5%;
 	line-height: 1.2;
 	background: #fef9ef;
+	-webkit-text-size-adjust: none;
 }
 
 h1,h2,h3,h4,h5{
@@ -157,10 +162,14 @@ del,s{
 }
 
 .wrapped {
-	margin: 0 auto 0 auto;
-	padding: 0;
+	margin: 0 auto;
+	padding: 0 $body_margin;
 	width: $width;
 	text-align: left;
+
+	@media screen and (max-width: $body_width){
+		width: auto;
+	}
 }
 
 // seemore
@@ -179,7 +188,8 @@ header.page-header {
 	@include single-box-shadow(#dddddd, 0px, 0px, 20px);
 
 	.wrapped{
-		padding: 3em 0 1.8em 0;
+		padding-top: 3em;
+		padding-bottom: 1.8em;
 		position: relative;
 
 		h1 a{
@@ -189,10 +199,16 @@ header.page-header {
 			width: 426px;
 			height: 121px;
 
-			&#logo-blog-en{background: url('/images/logo-blog-en.png');}
-			&#logo-blog-ja{background: url('/images/logo-blog-ja.png');}
-			&#logo-en{background: url('/images/logo-en.png');}
-			&#logo-ja{background: url('/images/logo-ja.png');}
+			@media screen and (max-width: $breakpoint){
+				@include background-size(213px, 60px);
+				width: 213px;
+				height: 60px;
+			}
+
+			&#logo-blog-en{background-image: url('/images/logo-blog-en.png');}
+			&#logo-blog-ja{background-image: url('/images/logo-blog-ja.png');}
+			&#logo-en{background-image: url('/images/logo-en.png');}
+			&#logo-ja{background-image: url('/images/logo-ja.png');}
 		}
 	}
 
@@ -575,6 +591,13 @@ article{
 
 		li {
 			margin-left: 0;
+
+			@media screen and (max-width: $body_width){
+				a{
+					display: block;
+					padding-bottom: .8em;
+				}
+			}
 		}
 		span.date{
 			font-family: $monospace;
@@ -585,8 +608,10 @@ article{
 
 //////////////////////////////// footer ////////////////////////////////
 
+$footer_gap: 1.5em;
+
 footer {
-	margin-top: 2em;
+	margin-top: $footer_gap;
 	background: $footerbgcolor;
 	@include single-box-shadow(#aaaaaa, 0px, 0px, 20px);
 
@@ -595,9 +620,8 @@ footer {
 		display: none;
 	}
 
-	div.wrapped{
-		width: $width;
-		padding: 2em 0 0 0;
+	.wrapped{
+		padding-top: $footer_gap;
 	}
 
 	h3{
@@ -611,9 +635,15 @@ footer {
 
 	$column_gap: 2em;
 	$column_width: ($width - $column_gap) / 2;
-	#recententries{
-		width: $column_width;
 
+	div.column{
+		width: $column_width;
+		@media screen and (max-width: $body_width){
+			width: auto;
+		}
+	}
+
+	#recententries{
 		ul li{
 			border-bottom: darken($footerbgcolor, 5%) solid 1px;
 
@@ -636,8 +666,12 @@ footer {
 	}
 
 	#profile{
-		width: $column_width;
 		float: right;
+		margin-bottom: $footer_gap;
+
+		@media screen and (max-width: $body_width){
+			float: none;
+		}
 
 		a#prof_pic{
 			img{
@@ -678,7 +712,7 @@ footer {
 	}
 
 	div.copy{
-		margin-top: 2em;
+		margin-top: $footer_gap;
 		padding: 1em 0;
 		font-size: 0.8em;
 		font-weight: bold;
