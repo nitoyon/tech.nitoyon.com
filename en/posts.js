@@ -17,7 +17,7 @@ Site.archives.posts = [
 	{url: "/en/blog/2008/05/26/google-earth-control-in-google/", title: "Google Earth control in Google Maps"}
 ];
 
-Site.archives.monthes = [
+Site.archives.months = [
   "200904"
 , "200903"
 , "200902"
