@@ -17,7 +17,7 @@ module Jekyll
     end
 
     def render_page_if_yaml_modified(page)
-      if @yaml_modified
+      if @yaml_modified || !(self.config['server'] && self.config['auto'])
         page.render(self.layouts, site_payload, true)
         page.skipped = false
       else
