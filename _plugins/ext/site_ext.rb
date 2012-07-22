@@ -138,7 +138,7 @@ module Jekyll
       # all files and directories in destination, including hidden ones
       dest_files = Set.new
       Dir.glob(File.join(self.dest, "**", "*"), File::FNM_DOTMATCH) do |file|
-        dest_files << file unless file =~ /\/\.{1,2}$/ || file =~ /\/\.git$/
+        dest_files << file unless file =~ /\/\.{1,2}$/ || file =~ /\/\.git/
       end
 
       # files to be written
