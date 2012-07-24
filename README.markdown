@@ -19,8 +19,8 @@ Build Requirements
 ------------------
 
 * Ruby 1.9.3
-  * [Jekyll](https://github.com/mojombo/jekyll)
-  * (Windows only) [Make Jekyll play nice with Windows again post Albino + posix-spawn refactor - gist](https://gist.github.com/1166390)
+  * Jekyll (mojombo/jekyll@fa8400ab61)
+  * Sass 3.2
 * Python 2.7
   * Pygments
 
