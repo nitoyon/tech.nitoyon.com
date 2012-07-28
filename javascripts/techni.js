@@ -57,4 +57,7 @@ _gaq.push(['_trackPageview']);
 	add(('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js');
 	add('//platform.twitter.com/widgets.js', 'twitter-wjs');
 	add('//connect.facebook.net/' + (Site.lang == "ja" ? "ja_JP" : "en_US") + '/all.js#xfbml=1', 'facebook-jssdk');
+	if (Site.lang == "ja") {
+		add('http://b.st-hatena.com/js/bookmark_button.js', 'b_hatena_js');
+	}
 }(document,'script'));
