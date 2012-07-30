@@ -2,14 +2,16 @@
 # ==================================
 #
 # はてなダイアリーの「はてなの日記データ形式」でエクスポートしたデータを
-# はてな記法のまま Jekyll 形式に変換するスクリプト
+# はてな記法のまま Jekyll 形式に変換するスクリプトです。
+#
+# はてなダイアリーが [ブログモード] で運営されていることを前提とします。
 #
 # プラグインとして converter/hatena.rb を指定して、hparser を利用することで、
 # はてなダイアリーとほぼ同等の出力になります。
 #
 # 実行例:
 #     ruby convert_hatena_to_jekyll_posts.rb nitoyon export.xml
-#     # 出力先: _posts/YYYY-MM-DD-entry-title.htn
+#     # YYYYMMDD/entry_title → _posts/YYYY-MM-DD-entry-title.htn
 
 require 'liquid'
 require 'rexml/document'
@@ -21,9 +23,18 @@ require 'yaml'
 # * nokogiri が必要(gem install nokogiri)
 # *_caches フォルダを作っておく
 #
-# 対象のコンテンツが 404 になっている場合には例外がでるので、
-# _caches/url_title.json に手動でエントリを追加することで回避する必要あり
+# 対象のコンテンツが 404 になっている場合には例外が出てスクリプトが停止します。
+# その場合は _caches/url_title.json に手動でエントリを追加する、元のエントリを
+# 修正する、などして回避してください。
 $enable_html_title_retrieval = true
+
+# インポートしない記事を指定するための正規表現
+#
+# タイトルに対して評価され、マッチする記事はインポートしません。
+$title_ng_regex = /<a/
+
+# デバッグログを出力するかどうか
+$debug = false
 
 
 # コマンドライン引数を読み取り
@@ -55,7 +66,9 @@ end
 def parse_day(e, hatena_id)
   date = e.attributes["date"]
   body = e.elements["body"].text
-  if date < "2006-01-01" then return end
+
+  # インポートする期間を制限する場合
+  #if date < "2006-01-01" then return end
 
   # エントリーごとに処理
   # body には複数エントリーが含まれることがある
@@ -65,18 +78,20 @@ def parse_day(e, hatena_id)
   #     
   #     *p2*エントリー2
   #     あああ
-  body.split(/(?=^\*[^\*]+\*)/).each { |entry|
+  body.split(/(?=^\*[^\*\/])/).each { |entry|
     if entry.strip == "" then
       next
     end
 
     # 1 行目がタイトル
     title,text = entry.split(/\n/, 2)
-    puts "Parsing #{date} '#{title}'..."
+    puts "Parsing #{date} '#{title}'..." if $debug
 
     # "*name*[tag1][tag2]name_ja" に分解
+    # name がないエントリーはスキップする
     unless m = title.match(/^\*([^*]+)\*(?:\[([^\]]+)\])*(.*)/)
-        abort("invalid title: #{title}")
+        puts "skip: #{title}"
+        next
     end
     name = m[1]
     name_ja = m[-1]
@@ -84,6 +99,12 @@ def parse_day(e, hatena_id)
     if tags[0].nil? then tags = [] end
     old_url = date.gsub('-', '') + "/" + name
     new_name = name.gsub('_', '-')
+
+    # スキップ条件
+    if name_ja =~ $title_ng_regex
+        puts "skip: #{title}" if $debug
+        next
+    end
 
     # ファイル出力する
     fn = "_posts/#{date}-#{new_name}.htn"
@@ -95,10 +116,10 @@ def parse_day(e, hatena_id)
       "old_url" => "http://d.hatena.ne.jp/#{hatena_id}/#{old_url}",
     }.to_yaml + "---\n" + convert_text(text, hatena_id)
     if FileTest.file?(fn) && File.read(fn) == content
-      puts "Skip #{fn}"
+      puts "Skip #{fn}" if $debug
     else
       File.open(fn, "w") { |f| f.write(content) }
-      puts "Success #{fn}"
+      puts "Success #{fn}" if $debug
     end
   }
 end
