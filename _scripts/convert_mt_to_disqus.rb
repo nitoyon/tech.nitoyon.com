@@ -96,7 +96,7 @@ def output_xml(entries, posts_dir)
       c.add_element("wp:comment_author_url").text = comment[:url]
       c.add_element("wp:comment_author_IP")
       c.add_element("wp:comment_date_gmt").text = comment[:date].strftime "%Y-%m-%d %H:%M:%S"
-      c.add_element("wp:comment_content").text = REXML::CData.new(comment[:content].gsub("\n", "<br/>\n"))
+      c.add_element("wp:comment_content").text = REXML::CData.new(comment[:content])
       c.add_element("wp:comment_approved").text = "1"
       c.add_element("wp:comment_parent").text = "0"
 
