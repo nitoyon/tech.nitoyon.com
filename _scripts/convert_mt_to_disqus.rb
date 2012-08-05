@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 # Import movable type comments to DISQUS
 # ======================================
 #
@@ -15,11 +17,21 @@
 #     # import file.txt, timezone 0, Jekyll posts is ./_posts
 #     ruby convert_mt_to_disqus.rb file.txt 0 ./_posts
 #
-# Todo:
-#   * If 3rd argument is specified, Jekyll posts are read and fill these nodes.
-#
 # reference:
 #     http://help.disqus.com/customer/portal/articles/472150-custom-xml-import-format
+
+# true if exported Hatena diary
+#$is_hatena = false
+$is_hatena = true
+
+# identifier prefix
+#$id_prefix = "/"
+$id_prefix = "/ja/blog/"
+
+# URL domain
+$site_domain = "http://tech.nitoyon.com"
+
+
 
 require 'rexml/document'
 
@@ -41,19 +53,33 @@ def parse_entry(entry, timezone)
     next unless part =~ /^(AUTHOR|COMMENT):/
 
     if part.start_with?("AUTHOR:")
-      ret[:title] = $1 if part =~ /^TITLE: (.*)$/
-      ret[:date] = convert_date($1, timezone) if part =~ /^DATE: (.*)$/
+      ret[:title] = convert_text($1) if part =~ /^TITLE: (.*)$/
+      ret[:date] = convert_date($1, 0) if part =~ /^DATE: (.*)$/
     else
       comment = {}
-      comment[:author] = $1 if part =~ /^AUTHOR: (.*)$/
+      comment[:author] = convert_text($1) if part =~ /^AUTHOR: (.*)$/
       comment[:url] = $1 if part =~ /^URL: (.*)$/
       comment[:date] = convert_date($1, timezone) if part =~ /^DATE: (.*)$/
-      comment[:content] = $1 if part =~ /\nDATE: [0-9: AMP\/]*\n(.*)/m
+      comment[:content] = convert_text($1) if part =~ /\nDATE: [0-9: AMP\/]*\n(.*)\n/m
       ret[:comment] << comment
     end
   }
 
   ret
+end
+
+def convert_text(text)
+  if $is_hatena
+    text = text.
+      gsub("<br>", "\n").
+      gsub("&lt;", "<").
+      gsub("&gt;", ">").
+      gsub("&amp;", "&").
+      gsub("&#39;", "'").
+      gsub("&#187;", "»").
+      gsub("&#65535;", "")
+  end
+  text
 end
 
 def convert_date(date, timezone)
@@ -80,11 +106,21 @@ def output_xml(entries, posts_dir)
   entries.each { |entry|
     next if entry[:comment].empty?
 
+    name = get_entry_id(entry[:title], entry[:date], posts_dir)
+    identifier = ""
+    url = ""
+    if name.nil?
+        puts "Name not found: #{entry[:title]} #{entry[:date]}" unless posts_dir.nil?
+    else
+        identifier = $id_prefix + entry[:date].strftime("%Y/%m/%d/") + name + "/"
+        url = $site_domain + identifier
+    end
+
     item = REXML::Element.new "item"
     item.add_element("title").text = entry[:title]
-    item.add_element("link").text = ""
+    item.add_element("link").text = url
     item.add_element("content:encoded").text = ""
-    item.add_element("dsq:thread_identifier").text = ""
+    item.add_element("dsq:thread_identifier").text = identifier
     item.add_element("wp:post_date_gmt").text = entry[:date].strftime "%Y-%m-%d %H:%M:%S"
     item.add_element("wp:comment_status").text = "open"
 
@@ -108,6 +144,23 @@ def output_xml(entries, posts_dir)
   }
 
   doc.write $stdout, 0
+end
+
+def get_entry_id(title, date, posts_dir)
+  return nil if posts_dir.nil?
+
+  # normalize title
+  title = title.gsub('&amp;', '&') if $is_hatena
+
+  files = Dir::glob(posts_dir + "/" + date.strftime("%Y-%m-%d-*"))
+  files.each { |file|
+    if files.length > 1
+      content = File.read(file)
+      next unless content.include? "\ntitle: #{title}\n"
+    end
+    return $1 if file =~ /\d{4}-\d{2}-\d{2}-(.*)(\.[^.]+)$/
+  }
+  nil
 end
 
 
