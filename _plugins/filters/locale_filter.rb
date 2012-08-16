@@ -8,7 +8,7 @@ module Jekyll
     # Liquid:
     #     {{'hello' | t}}
     #
-    # Locale file(_locale/en.yml):
+    # Locale file(_locales/en.yml):
     #     hello: "Hello world"
     #
     # Returns the translated String.
@@ -22,16 +22,29 @@ module Jekyll
       $locale_filter_hash = {} if $locale_filter_hash.nil?
 
       begin
+        # reload locale YAML if modified
         if File.mtime(locale_file) > ($locale_filter_mtime[lang] || Time.new(0))
           $locale_filter_hash[lang] = YAML.load(File.read(locale_file))
           $locale_filter_mtime[lang] = File.mtime(locale_file)
           puts "loaded #{locale_file}"
         end
 
-        if $locale_filter_hash[lang].has_key? input
-          $locale_filter_hash[lang][input]
+        if input.nil?
+          "(nil)"
+        elsif input.class == Time
+          if $locale_filter_hash[lang].has_key? 'date'
+            input.strftime($locale_filter_hash[lang]['date'])
+          else
+            "(`date` is not defined for #{lang})"
+          end
+        elsif input.class == String
+          if $locale_filter_hash[lang].has_key? input
+            $locale_filter_hash[lang][input]
+          else
+            "(UNKNOWN TEXT: #{input} for #{lang})"
+          end
         else
-          "(UNKNOWN TEXT: #{input} for #{lang})"
+          "(UNKNOWN CLASS: #{input.class})"
         end
       rescue => e
         "(ERROR: #{input} for #{lang} #{e.message})"
