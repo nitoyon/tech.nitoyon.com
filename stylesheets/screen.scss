@@ -34,6 +34,23 @@ $subcolor:  #336699;
 $quiet-color: #888888;
 $footerbgcolor: #e9e9e9;
 
+// hatena-blog
+$is_hatena_blog: true;
+$content-h1: h1;
+$content-h2: h2;
+$entry-body: ".entry-body";
+$header-wrapped: ".wrapped";
+$footer-wrapper: "footer.page-footer";
+$footer-wrapped: ".wrapped";
+@if $is_hatena_blog {
+	$content-h1: h4;
+	$content-h2: h5;
+	$entry-body: ".entry-content";
+	$header-wrapped: "div#blog-title-inner";
+	$footer-wrapper: "aside#box2";
+	$footer-wrapped: "#box2-inner";
+}
+
 // CSS arrow
 // https://github.com/chriseppstein/sass-recipes/tree/master/css-arrow
 @mixin arrow($direction, $bg-color, $border-color, $border-width, $top, $left, $width: 10px){
@@ -161,15 +178,20 @@ sup{
 
 .right{
 	text-align: right;
+	float: none;
 }
 
 //////////////////////////////// layout ////////////////////////////////
-footer.page-footer,
+div#wrapper,
+#{$footer-wrapper},
 .wrap {
 	text-align: center;
 	clear: both;
 }
 
+div#main-inner,
+#{$header-wrapped},
+#{$footer-wrapped},
 .wrapped {
 	margin: 0 auto;
 	padding: 0 $body_margin;
@@ -190,12 +212,16 @@ p.seemore {
 }
 
 //////////////////////////////// header ////////////////////////////////
-header.page-header {
+div#globalheader-container { background-color: white; }
+
+div#container-inner header#blog-title,
+header.page-header{
 	background: white;
 	border-bottom: 1px solid #dddddd;
 	margin-bottom: 1em;
 	@include single-box-shadow(#dddddd, 0px, 0px, 20px);
 
+	div#blog-title-inner,
 	.wrapped{
 		padding-top: 3em;
 		padding-bottom: 1.8em;
@@ -207,6 +233,9 @@ header.page-header {
 			overflow: hidden;
 			width: 426px;
 			height: 121px;
+			@if $is_hatena_blog {
+				background-image: url('http://tech.nitoyon.com/images/logo-blog-ja.png');
+			}
 
 			@media screen and (max-width: $breakpoint){
 				@include background-size(213px, 60px);
@@ -267,12 +296,13 @@ div.post-ad{
 	}
 }
 
-div.entry-body {
+#{$entry-body} {
 	margin-top: 3em;
 	margin-bottom: 2em;
 }
 
 
+div#wrapper,
 body.ja article {
 	h1,h2,h3,h4,h5{
 		font-family: $serif_ja;
@@ -282,16 +312,20 @@ body.ja article {
 
 // entry header
 article {
+	margin-bottom: 4em;
+
 	// entry title
 	header {
 		margin-top: 2em;
 		margin-bottom: 1em;
 
+		div.date a,
 		h2{
 			font-size: 1.2em;
 			margin-bottom: .2em;
 			color: $quiet-color;
 			font-weight: normal;
+			text-decoration: none;
 		}
 
 		h1{
@@ -302,11 +336,16 @@ article {
 			color: black;
 			text-decoration: none;
 		}
+
+		h1 a{
+			color: black;
+			text-decoration: none;
+		}
 	}
 }
 
 // entry body
-article .entry-body {
+article #{$entry-body} {
 	// tag container
 	p.sectionheader{
 		text-align: right;
@@ -326,14 +365,14 @@ article .entry-body {
 	}
 
 	// **
-	h1{
+	#{$content-h1} {
 		font-size: 1.8em;
 		font-weight: bold;
 		margin: 1.5em 0 0 0;
 	}
 
 	// ***
-	h2{
+	#{$content-h2} {
 		font-size: 1.2em;
 		font-weight: bold;
 		color: #336699;
@@ -341,7 +380,7 @@ article .entry-body {
 		position: relative;
 		left: -0.15em;
 	}
-	h1+h2{
+	#{$content-h1} + #{$content-h2} {
 		margin-top: 1.4em;
 	}
 	
@@ -615,6 +654,7 @@ article .entry-body {
 .ja .share .twitter-share-button { width: 105px!important; }
 .en .share .twitter-share-button { width: 85px!important; }
 
+div.social-buttons,
 div.bottom-share{
 	margin: 1.5em 0 1em 0;
 }
@@ -622,6 +662,38 @@ div.bottom-share{
 div#pager-bottom{
 	margin: 2em 0 1em 0;
 	clear: both;
+}
+
+@if $is_hatena_blog {
+	time.updated,
+	a.permalink {
+		color: $quiet-color;
+		text-decoration: none;
+	}
+
+	.comment-box {
+		margin: 1em 0;
+
+		li.entry-comment {
+			margin: 1em 0;
+		}
+
+		p.comment-user-name {
+			color: $subcolor;
+			font-weight: bold;
+		}
+
+		div.comment-content,
+		p.comment-metadata {
+			margin: .2em 0 0 1em;
+		}
+
+		.leave-comment-title {
+			margin: .2em 0;
+			padding: .2em;
+			background: $footerbgcolor;
+		}
+	}
 }
 
 //////////////////////////////// archive ////////////////////////////////
@@ -652,7 +724,7 @@ article{
 
 $footer_gap: 1.5em;
 
-footer.page-footer {
+#{$footer-wrapper} {
 	margin-top: $footer_gap;
 	background: $footerbgcolor;
 	@include single-box-shadow(#aaaaaa, 0px, 0px, 20px);
@@ -662,10 +734,12 @@ footer.page-footer {
 		display: none;
 	}
 
+	.hatena-module,
 	.wrapped{
 		padding-top: $footer_gap;
 	}
 
+	.hatena-module-title,
 	h3{
 		font-size: 1.1em;
 		color: $subcolor;
@@ -674,6 +748,11 @@ footer.page-footer {
 		margin-bottom: .4em;
 		@include text-shadow(white 0 1px 1px, darken($subcolor, 30%) 0 -1px 1px);
 	}
+	.hatena-module-title a {
+		color: inherit;
+		text-decoration: none;
+	}
+
 
 	$column_gap: 2em;
 	$column_width: ($width - $column_gap) / 2;
@@ -685,7 +764,9 @@ footer.page-footer {
 		}
 	}
 
+	.hatena-module-recent-entries,
 	#recententries{
+		width: $column_width;
 		ul li{
 			border-bottom: darken($footerbgcolor, 5%) solid 1px;
 
@@ -707,8 +788,16 @@ footer.page-footer {
 		}
 	}
 
+	.hatena-module-profile {
+		.hatena-module-body {
+			background: url('http://tech.nitoyon.com/img/icon/pic.jpg') no-repeat;
+		}
+	}
+
+	.hatena-module-profile,
 	#profile{
 		float: right;
+		width: $column_width;
 		margin-bottom: $footer_gap;
 
 		@media screen and (max-width: $body_width){
@@ -728,8 +817,30 @@ footer.page-footer {
 		}
 	}
 
+	.hatena-module-archive{
+		@include clearfix;
+		padding-bottom: $footer_gap;
+		ul li {
+			display: block;
+			float: left;
+		}
+		a{
+			display: block;
+			width: 8em;
+			margin-bottom: .2em;
+			color: #000000;
+			text-decoration: none;
+			padding: .1em .3em;
+		}
+		a:hover{
+			background: white;
+			@include border-radius(.5em, .5em);
+			text-decoration: underline;
+		}
+	}
+
 	#archive_month_list{
-		line-height: 1.8;
+		margin-bottom: $footer_gap;
 
 		a.year{
 			color: $quiet-color;
@@ -752,15 +863,20 @@ footer.page-footer {
 			display: none;
 		}
 	}
+}
 
-	div.copy{
-		margin-top: $footer_gap;
-		padding: 1em 0;
-		font-size: 0.8em;
-		font-weight: bold;
-		background: darken($footerbgcolor, 60%);
-		color: white;
-		@include single-box-shadow(#888888, 0px, 0px, 20px);
+div.copy{
+	padding: 1em 0;
+	font-size: 0.8em;
+	font-weight: bold;
+	background: darken($footerbgcolor, 60%);
+	color: white;
+	@include single-box-shadow(#888888, 0px, 0px, 20px);
+}
+
+@if $is_hatena_blog {
+	footer#footer{
+		display: none;
 	}
 }
 
