@@ -1,0 +1,121 @@
+---
+layout: post
+title: BitmapData の範囲拡張を実装するなら…
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070928/bitmapdata_extend
+---
+グレースケールの BitmapData を拡張をしてみるテストです。Photoshop でいう選択範囲の拡張のイメージ。
+
+BitmapData に描画した文字を太くしたり、縁取りしたりするのに使えるんじゃないかと。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBitmapOffset.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=130&amp;title=extend+BitmapData&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+地味なので、見た目をちょっとだけ凝ってみました。クリックすれば、ブラシのサイズが変わります。
+
+仕組みはこう。
+
++円を BitampData に描く
++getPixel で円の全てのピクセルの色を取得する
++全てのピクセルに対して、色の濃さに応じた透明度で大元の画像を出力していく
+
+単純ですね。ただ、拡張範囲のピクセル数を n とすると、描画には O(n<sup>2</sup>) の時間がかかってしまっているのが大変ださいところです。Photoshop の選択範囲の拡張はどういうアルゴリズムで実装してるんだろうなぁ…。
+
+(追記) <strong>munegon さんが高速に実行する技を教えてくれました！！</strong>（→<a href="http://void.heteml.jp/blog/archives/2007/09/dilate_erode.html" title="void element blog: BitmapDataの範囲拡張＆収縮へ">void element blog: BitmapDataの範囲拡張＆収縮</a>）。
+
+仕組みを簡単に見てみると…
+:拡張:BlurFilter でぼかして、threshold でボケを抑える。blendMode "multiply" で draw。
+:収縮:ConvolutionFilterでぼかす。blendMode "add" で draw。
+すごくスマートだ…。BlurFilter とか ConvolutionFilter を使えばできそうだとは思ってたのですが、試行錯誤の末にギブアップしてました。blendMode を使えばよかったんですね。完全に盲点でした。ありがとうございます！！！（追記ここまで）
+
+ちなみに、ベジェ曲線を範囲拡張するアルゴリズムについては <a href="http://www.junko-k.com/cthema/44bezier.htm">コロキウム室(Bezier曲線の問題)</a> で触れられていました。画像処理のアルゴリズムって、数式がいっぱい出てきて難しい…。
+
+ソースは以下に（84行）。
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.geom.*;
+
+    public class BitmapOffset extends Sprite {
+        [Embed(source='techni.png')]
+        private var Logo:Class;
+
+        private var size:Number = 5;
+        private static const SIGN:int = 20;
+        private static const MARGIN:int = 20;
+        private var brush:Sprite;
+        private var bmd:BitmapData;
+        private var bmd1:BitmapData;
+        private var bmd2:BitmapData;
+
+        public function BitmapOffset() {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+            var bmp:Bitmap = new Logo();
+            addChild(bmp);
+
+            bmd  = bmp.bitmapData;
+            bmd1 = new BitmapData(bmd.width, bmd.height, false);
+            bmd2 = new BitmapData(bmd.width, bmd.height);
+
+            var curX:int = bmd.width + MARGIN;
+            var curY:int = bmd.height / 2;
+
+            // x
+            graphics.lineStyle(5, 0xff0000, 1, false, "normal", "none");
+            graphics.moveTo(curX       , curY - SIGN / 2);
+            graphics.lineTo(curX + SIGN, curY + SIGN / 2);
+            graphics.moveTo(curX       , curY + SIGN / 2);
+            graphics.lineTo(curX + SIGN, curY - SIGN / 2);
+
+            // brush
+            curX += SIGN + MARGIN;
+            addChild(brush = new Sprite()).x = curX + bmd.width * 0.25;
+            brush.y = curY;
+
+            // =
+            curX += bmd.width / 2 + MARGIN;
+            graphics.lineStyle(5, 0x0099ff, 1, false, "normal", "none");
+            graphics.moveTo(curX       , curY - SIGN * 0.3);
+            graphics.lineTo(curX + SIGN, curY - SIGN * 0.3);
+            graphics.moveTo(curX       , curY + SIGN * 0.3);
+            graphics.lineTo(curX + SIGN, curY + SIGN * 0.3);
+
+            // result
+            curX += SIGN + MARGIN;
+            addChild(new Bitmap(bmd2)).x = curX;
+
+            draw();
+            stage.addEventListener("click", function(event:*):void {
+                size = size < 10 ? size + 1 : 1;
+                draw();
+            });
+        }
+
+        private function draw():void {
+            bmd1.fillRect(bmd.rect, 0xffffff);
+            bmd2.fillRect(bmd.rect, 0xffffff);
+
+            brush.graphics.clear();
+            brush.graphics.beginFill(0);
+            brush.graphics.drawCircle(0, 0, size / 2);
+            brush.graphics.endFill();
+
+            var m:Matrix = new Matrix();
+            m.tx = m.ty = size / 2;
+            bmd1.draw(brush, m);
+
+            var c:ColorTransform = new ColorTransform();
+            for(var i:int = 0; i < size * size; i++) {
+                m.tx = i % 5; m.ty = Math.floor(i / 5);
+                var alpha:int = -bmd1.getPixel(m.tx, m.ty) % 0x100;
+                c.alphaOffset = alpha;
+                m.tx -= size / 2; m.ty -= size / 2;
+                bmd2.draw(bmd, m, c);
+            }
+        }
+    }
+}
+||<
+

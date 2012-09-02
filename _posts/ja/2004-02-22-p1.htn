@@ -1,0 +1,45 @@
+---
+layout: post
+title: microsoft.comのポップアップメニュー
+tags: HTML
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040222/p1
+---
+microsoft.com のポップアップメニューはどのようにして実現されているかを調べてみた。
+
+どうやら、スタイルシートで behavior を指定してるらしい（http://www.microsoft.com/library/flyoutmenu/default.cssより）。
+>|css|
+.flyoutMenu {
+    (snip)
+    behavior: url(/library/flyoutmenu/default.htc);
+}
+||<
+
+behavior ってIE限定の機能じゃん。開発効率が上がるけど、クロスブラウザを考えると嫌ですな。この時点で、さすがMSのサイト！という雰囲気がぷんぷん。
+
+気になったのが、ポップアップメニューに影がついているのはどうやっているか(上図参照)。若干後ろの画像が透けてます。デフォルトのfilterを使っただけじゃ、ああはならないはずなのに。調べてみて驚愕。影を表示する関数を抜粋するとこんな感じ（http://www.microsoft.com/library/flyoutmenu/default.htcより抜粋）。
+
+>|javascript|
+function makeRectangularDropShadow(el, color, size)
+{
+    var i;
+    for (i=size; i>0; i--)
+    {
+        var rect = document.createElement('div');
+        var rs = rect.style
+        rs.position = 'absolute';
+        rs.left = (el.style.posLeft + i) + 'px';
+        rs.top = (el.style.posTop + i) + 'px';
+        rs.width = el.offsetWidth + 'px';
+        rs.height = el.offsetHeight + 'px';
+        rs.zIndex = el.style.zIndex - i;
+        rs.backgroundColor = color;
+        var opacity = 1 - i / (i + 1);
+        rs.filter = 'alpha(opacity=' + (100 * opacity) + ')';
+        el.insertAdjacentElement('afterEnd', rect);
+        global.fo_shadows[global.fo_shadows.length] = rect;
+    }
+}
+||<
+el は親エレメント、colorが影の色、sizeが影のサイズ（4で固定みたい）として呼び出されます。なんと、div エレメントを影のサイズ分だけ作成し、それぞれの場所を1pxずつ右下に配置し、どんどん透明にしていっている模様。ひえー、無茶苦茶するなぁ！
+

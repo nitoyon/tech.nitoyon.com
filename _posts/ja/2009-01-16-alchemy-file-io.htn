@@ -1,0 +1,102 @@
+---
+layout: post
+title: Alchemy でのファイル IO
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090116/alchemy_file_io
+---
+fopen で読み書きするとどうなるか調べてみた。結論から行くと
+-read のみ可能
+-AS3 側から CLibInit::supplyFile() でファイルを登録する
+という挙動のようだ。
+
+以下、gcc で吐かれた <a href="http://d.hatena.ne.jp/nitoyon/20090109/alchemy_keep_intermediate_files">AS の中間コード</a> を見つつ確認した情報。
+
+**fopen
+fopen からは open（FSM_open） が呼ばれていて、その中で mstate.system.open が呼ばれてる。
+
+**CSystemLocal
+system の実体は
+-bridge を使うときは CSystemBridge
+-それ以外は CSystemLocal
+の模様。今回は swc なので CSystemLocal::open を見る。
+
+**CSystemLocal::open
+flags が 0 以外のとき、つまり、read only 以外のときは失敗するようだ。
+>|javascript|
+  public function open(path:int, flags:int, mode:int):int
+  {
+    var spath:String = gstate.gworker.stringFromPtr(path);
+
+    if(flags != 0)
+    {
+log(3, "failed open(" + spath + ") flags(" + flags + ")");
+      return -1;
+    }
+
+    var stat:Object = fetch(spath);
+
+    if(stat.pending)
+      throw(new AlchemyBlock);
+
+    // snip...
+
+log(4, "open(" + spath + "): " + io.size);
+    return n;
+  }
+||<
+read only のときは fetch() を呼び出す。
+
+**CSystemLocal::fetch
+fetch は次のようになってる。
+>|javascript|
+  private function fetch(path:String):Object
+  {
+    var res:Object = statCache[path];
+
+    if(!res)
+    {
+      var gf:ByteArray = gfiles[path];
+
+      if(gf)
+      {
+        res = { pending:false, size:gf.length, data:gf };
+        statCache[path] = res;
+
+        return res;
+      }
+    }
+
+    Alchemy::Shell {
+
+      var ns:Namespace = new Namespace("avmshell");
+      var file:Object = ns::["File"];
+      // snip...
+    }
+
+    if(forceSync)
+      return res || { size: -1, pending: false };
+
+    Alchemy::NoShell {
+
+    if(!res)
+    {
+      var request:URLRequest = new URLRequest(path);
+      var loader:URLLoader = new URLLoader();
+      // snip...
+    }
+  }
+||<
+ざっと見た感じでは次のように実装されている。
++キャッシュがあればそれを利用する
++gfiles からファイルのデータを取得する（gfiles には <a href="http://labs.adobe.com/wiki/index.php/Alchemy:Documentation:Developing_with_Alchemy:AS3_API#CLibInit">CLibInit::supplyFile()</a> 経由で AS3 から ByteArray を追加できる）
++avmshell 上で実行しているときはファイルを開く
++URLLoader を使ってロードする 
+
+試してみたけど、URLLoader が使われることはなかった。公式のドキュメントには特に何も書いてなかったので深追いはしなかった。
+
+**（関連情報）ファイルポインタが必要な場合
+調べた過程で別の情報を発見。C ライブラリに FILE* を渡したい場合には、funopen を使うとよいようだ
+
+-参考：<a href="http://www.adobe.com/cfusion/webforums/forum/messageview.cfm?forumid=72&catid=755&threadid=1415332&enterthread=y">Reading local files - Adobe - Alchemy</a>
+

@@ -1,0 +1,123 @@
+---
+layout: post
+title: 米 Yahoo! が SQL っぽく色んなデータを取ってこれるAPIを出した
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081215/yql_review
+---
+米 Yahoo! から Yahoo! Pipes みたいに自由度が高くて、またちょっと毛色が違うサービスが出てきた。
+
+題して、<a href="http://developer.yahoo.com/yql/">Yahoo! Query Language</a>。YQL と呼ぶようだ。
+
+SQL 風の言語を REST で投げて、結果を XML や JSON で受け取ることができる。
+
+具体的にやってみないと分かりにくいので、とりあえず試してみた。
+
+**RSS からデータ取得
+YQL を使って RSS から最新のタイトルを取ってきてみる。こんな YQL になるらしい。
+>|sql|
+select title from rss 
+  where url='http://d.hatena.ne.jp/nitoyon/rss'
+||<
+rss テーブルに対して select を発行している。
+
+実際にこの YQL を試すには <a href="http://developer.yahoo.com/yql/console/">YQL 用の console</a> を利用するとよい。（※要ログイン）
+
+console の左上に YQL を入力して、TEST ボタンを押すと…
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034501.png" border="1"></center><
+お、画面下側に結果の XML が表示されてる。
+
+この XML の URL が http://query.yahooapis.com/v1/public/yql?q=select%20title%20from%20rss%20%0A%20%20where%20url%3D'http%3A%2F%2Fd.hatena.ne.jp%2Fnitoyon%2Frss'&format=xml だ。上中央の The REST query に表示されている。(v1 のあとに手動で public を追加してやる必要がある)
+
+**JSON でデータを取得
+真ん中らへんのラジオボックスで JSON を選択すると、JSON でデータを取れる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034502.png" border="1"></center><
+JSON の右側に文字を入力すると、その関数を呼び出す JSONP になる。ここが空だと、生の JSON になるようだ。
+
+**テーブルの情報を取得
+rss テーブルからどういう種類のデータをとれるかは、desc rss をクエリすると教えてくれる。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034503.png" border="1"></center><
+
+<font color="red">url</font> をキーに、<font color="blue">title, description, link, author, pubDate</font> を取得できるとある。
+
+ためしに、title だけでなく URL も取得してみる。
+>|sql|
+select title,link from rss 
+  where url='http://d.hatena.ne.jp/nitoyon/rss'
+||<
+URL はこうなる。
+-http://query.yahooapis.com/v1/public/yql?q=select%20title,link%20from%20rss%20%0A%20%20where%20url%3D'http%3A%2F%2Fd.hatena.ne.jp%2Fnitoyon%2Frss'&format=xml
+クリックしてみると、link の情報も取得できてることが分かってもらえるはず。URL 中の title,link を * に変えてみて情報が増えるのを見てもよいだろう。
+
+**html テーブルで XPath!!
+ここまでだと、Yahoo! Pipes とあんまり変わらない感じだけど、html テーブルを使えば任意の HTML を引っ張ってこれる。しかも、条件に xpath を指定できる。
+
+たとえば <a href="http://headlines.yahoo.co.jp/hl">Yahoo!ニュース</a> からヘッドラインをとってきてみよう。
+>|sql|
+select * from html
+  where
+    url="http://headlines.yahoo.co.jp/hl"
+      and
+    xpath="//li[@class='yjMt']/a"
+||<
+全ての yjMt クラスの li タグから、その直下の a タグを列挙している。
+
+すると、こんな感じで a タグが格納された XML が返ってくる！
+
+><center><a href="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D%22http%3A%2F%2Fheadlines.yahoo.co.jp%2Fhl%22%20and%20xpath%3D%22%2F%2Fli%5B%40class%3D'yjMt'%5D%2Fa%22&format=xml"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034500.png"></a></center><
+
+すげー。日本語が文字化けしてるけど、すげー。
+
+残念ながら valid な HTML じゃないとエラーが返ってくるので、現時点ではほとんどの URL で失敗してしまう。ちゃんと動くようになったとしたら恐ろしく楽しそうですね。
+
+**Flickr からデータを取ってくる
+あと、なぜか flickr がらみのテーブルが大量に用意されている。
+-flickr.location * 
+-flickr.photos.exif * 
+-flickr.photos.info * 
+-flickr.photos.interestingness * 
+-flickr.photos.recent * 
+-flickr.photos.search * 
+-flickr.places * 
+
+簡単なところで、flickr.photo.search というのを利用してみる。
+>|sql|
+select * from flickr.photos.search
+  where
+    user_id='8078344@N06'
+      and
+    max_taken_date='2008-05-01'
+||<
+私が Flickr にアップロードした写真の中から、2008-05-01 以前に撮った写真を検索してる。
+
+><center><a href="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20flickr.photos.search%20where%20user_id%3D'8078344%40N06'%20and%20max_taken_date%3D'2008-05-01'&format=xml"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034459.png"></a></center><
+
+おー、取れてる取れてる。
+
+**まとめ
+利用できるデータは、紹介した以外にも、地理情報・天気情報とかがあるんだけど、米Yahoo!が提供するデータなので、日本国内の情報は含まれていない。
+
+YQL では基本的に select ぐらいしか実装されていないんだけど、サブクエリもサポートしていて結構複雑なこともできるようだ。Console のサンプル aggregate and filter multiple rss feed には次のような YQL が書いてある。
+>|sql|
+select * from rss
+  where
+    url in (select title from atom where url="http://spreadsheets.google.com/feeds/list/pg_T0Mv3iBwIJoc82J1G8aQ/od6/public/basic")
+      and
+    description like "Wall Street"
+  LIMIT 10 | unique(field="title")
+||<
+
+そのほかにも、OAuth なんかを使って private なデータも取得できるようだけど試してない。
+
+YQL の詳細は、<a href="http://developer.yahoo.com/yql/guide/index.html">Yahoo! Query Language (YQL) Guide - YDN</a> あたりを見るとよいだろう。
+
+まだまだ実験段階っぽい感じではありますが、将来的に楽しみなサービスであります。
+
+Pipes と同じく、JavaScript から JSONP を叩いてドメイン制約を意識せずに情報を取ってきたりできるし、Flash からだと crossdomain.xml が設置してあるので楽々だ！
+
+**参考URL
+-<a href="http://developer.yahoo.com/yql/">Yahoo! Query Language - YDN</a>
+-<a href="http://developer.yahoo.com/yql/guide/index.html">Yahoo! Query Language (YQL) Guide - YDN</a>
+-<a href="http://ajaxian.com/archives/yql-converting-the-web-to-json-with-mock-sql">Ajaxian ≫ YQL - converting the web to JSON with mock SQL</a>
+

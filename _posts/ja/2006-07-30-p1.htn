@@ -1,0 +1,63 @@
+---
+layout: post
+title: TeX ワープロ
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20060730/p1
+---
+ちょっと前に「<a href="http://tech.nitoyon.com/javascript/application/texthatena/wordpro/">はてなワープロ</a>」なるものを公開して少しだけ話題になりましたが、それの亜種、TeX ワープロなるものを作ってみました。
+
+TeX のソースをリアルタイムプレビューできる WYSIWYG なエディタです。長い数式を入力するときに、トライアンドエラーでコンパイルする必要なんてありません。TeX 入力の時間を大幅に短縮できます。
+
+**使い方
+以下のソースを「texwordpro.html」という名前で PC に保存して、IE なり Firefox なりで開いてください。JavaScript を有効にするのをお忘れなく。
+
+テキストボックスにいろいろ入力すると、リアルタイムに TeX のコンパイル結果が画像で出力されます。
+
+**ソース
+>|html|
+<html>
+<head><title>てふわーぷろ</title></head>
+<body>
+
+<div id="output" style="height: 60px"></div>
+
+<textarea onkeyup="txt_changed(this.value)" cols="50" rows="20">
+x^2+y^2=1
+</textarea>
+
+<script>
+var timer_id;
+var prev_param;
+function txt_changed(src){
+  if(timer_id){
+    clearTimeout(timer_id);
+  }
+
+  timer_id = setTimeout(function(){
+    var param = escape(src);
+    if(param != prev_param){
+      var a = document.getElementById("output");
+      a.innerHTML = "<img src='http://d.hatena.ne.jp/cgi-bin/mimetex.cgi?"
+         + param + "'>";
+      timer_id = null;
+      prev_param = param;
+    }
+  }, 700);
+}
+txt_changed("x^2+y^2=1");
+</script>
+
+</body>
+</html>
+||<
+
+**仕組み
+テキストボックスが更新されたら はてな の mimetex.cgi に投げてるだけです。たいしたことはやってません。（問題あったら公開停止します＞はてなの中の人）
+
+便利だなーと思って満足していたら、既に <a href="http://www.forkosh.com/mimetex.html">mimetex のサイト</a> にはボタンを押したら画像が更新されるものがありました…。「TeX ワープロ」は、それのリアルタイム版だと考えてください。
+
+インタラクティブだとサーバーに負荷をかけまくってしまうので、負荷対策として700msだけキーボードがタイプされるか待ってからサーバーに問い合わせてます。
+
+ローカルに保存しなきゃいけないのは、mimetex.cgi が別サイトからのリファラつきのリクエストをはじいてしまうからです。
+

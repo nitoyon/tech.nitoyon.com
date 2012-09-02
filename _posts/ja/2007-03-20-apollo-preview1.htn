@@ -1,0 +1,134 @@
+---
+layout: post
+title: Apollo 触ってみた。すごすぎ。
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070320/apollo_preview1
+---
+<a href="http://labs.adobe.com/technologies/apollo/">Apollo のα版がリリースされた</a>ので、さっそく触ってみました。
+
+初日はランタイムをインストールしてサンプルを動かしてみました。コンパイルは時間がなくてまだ試せてません。
+-2007.2.24追記：<a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる</a> で解説文章を書きはじめています
+
+Apollo を知らない人のために、おおざっぱにざっくり説明しておくと、Apollo は Web アプリを作るようにローカルアプリケーションを作れるようになるステキなライブラリです。Flash だけに縛られているわけではなく、Flash, Flex, HTML, Ajax などを統合して利用することができます。イメージはこんな感じ（Adobe の apollo_docs_alpha1_031907.zip からの引用）。
+
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070322/20070322093759.gif" width="428" height="316" alt="Apollo イメージ">
+
+図からもわかるように、HTML/JavaScript だけで Apollo API を利用してローカルアプリを作ることもできます。さらに、HTML/JavaScript で作ったアプリの中に Flash を表示できるのはもちろん、その逆、Flash から HTML/JavaScript で作ったコンポーネントを利用、といったことも簡単にできます。既存の JavaScript のライブラリを活用しつつ、CSS でレイアウトするのは面倒なので、レイアウトだけ Flex で、といった開発もできるようになりそうです。
+
+**サンプルアプリ６つ起動してみた
+apollo_docs_alpha1_031907.zip には６つのサンプルが付属していたので、全部インストールして起動してみました。((<a href="http://labs.adobe.com/wiki/index.php/Apollo:Applications:Samples">Apollo:Applications:Samples</a> でも別のサンプルが公開されていますが、記事執筆時点ではサイトが落ちていて試せませんでした。これらのサンプルについては <a href="http://www.atmarkit.co.jp/news/200703/19/apollo.html">アルファ公開したアドビ「Apollo」を早速使ってみた － ＠IT</a> が詳しいです。))
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070320/20070320092019.jpg" width="450" height="360" alt="サンプル6つ"></center><
+
+それぞれにいろいろ特徴ありそう。左上から順にソースを流し読みしてみました。
+====
+
+***左上：Pixel Perfect
+半透明が美しい定規アプリです。ソースコードはわずか合計13KB。
+
+なにがうれしいって、このアプリ、ActionScript だけで書かれています。MXML や Flex の力を借りることなく、ActionScript で class Hoge extends Sprite とするだけで GUI アプリが書けるのは魅力的です。
+
+***中央上：PrefsXML Demo
+ウインドウの表示位置を XML で保存する、というだけのアプリなのですが、一番夢を感じました。この手のプロファイル保存って、GUI アプリのめんどくさいところの１つなのですが、この XML を作るソースにはしびれてしまいます。
+>|javascript|
+private function createXMLData():void 
+{
+	prefsXML = <preferences/>;
+	prefsXML.windowState.@width = stage.window.width;
+	prefsXML.windowState.@height = stage.window.height;
+	prefsXML.windowState.@x = stage.window.x;
+	prefsXML.windowState.@y = stage.window.y;
+	prefsXML.saveDate = new Date().toString();
+}
+||<
+
+E4X 万歳、ECMAScript 万歳、といったところでしょうか。情報保存用のクラスを用意する必要はなく、XML を変数のように扱って気軽に突っ込んでいってます。あとは、prefsXML.toXMLString() とするだけで、XML を出力できるわけです。
+
+.NET Framework もびっくりの手軽さです…。
+
+***右上：File Search
+ローカルファイルにアクセスできますよ、というのを実証するための検索ツールです。特定のディレクトリ以下をファイル名で検索できます。見た目は Flex そのものですね。
+
+***左下：Text Editor
+Flex で作られたテキストエディタです。ファイルのロード・セーブができます。日本語は UTF-8 なら開けるようです。そのうち誰かが Encode.as を作ってくれて、文字コードなんでもいけるようになるはず！
+
+***中央下：Text Editor (HTML-based)
+こちらは Text Editor の HTML 版です。HTML と JavaScript でできています。HTML/JavaScript だけで Apollo アプリを作れているのがよく分かりますね。
+
+ActionScript で書いたこういうコードは
+>|javascript|
+import flash.filesystem.*;
+
+function fileOpen():void
+{
+	stream = new FileStream();
+	stream.open("c:\\foo.txt", FileMode.READ);
+}
+||<
+JavaScript だとこうなります。
+>|javascript|
+function fileOpen():void
+{
+	stream = new runtime.flash.filesystem.FileStream();
+	stream.open("c:\\foo.txt", runtime.flash.filesystem.FileMode.READ);
+}
+||<
+
+どちらからも同じライブラリを使っているのがよく分かりますね。
+
+***右下：WeatherStation
+米 Yahoo の天気予報 API を叩いて、Y! から取得した画像を組み合わせて表示してます。いかにもガジェットっぽい見た目ですね。
+
+Apollo アプリはどのドメインからでもデータを取ってくることができるので、いろんなサイトの API をフル活用することができます。もちろん、E4X で XML との親和性も抜群、REST でも SOAP でもなんでもこい。複数のサイトの API でマッシュアップ、なんてこともサーバーレスで実現できそうです。
+
+**サンプルのインストール
+さて、先ほどサンプルをインストールした、と簡単に書きましたが、インストーラについても簡単に触れておきましょう。
+
+Apollo のインストーラは全て拡張子が .air になっています。この .air は Apollo ランタイムを入れた段階で Adobe Apollo Application Installer (C:\Program Files\Common Files\Adobe Apollo\Versions\1.0.M3\apollo.exe) に関連付けられており、Apollo アプリケーションのインストールを一元管理するようです。
+
+.air を起動すると、まずはこんな画面が登場。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070320/20070320091307.jpg" width="300" height="225" alt="インストーラ1"></center><
+
+アプリケーションの製作者の情報や実行権限の情報が表示されます。信頼できそうにないベンダーのアプリだけどファイルの読み書きは行わいならインストールしよう、とか、この会社のアプリならファイルの読み書きは認めよう、とか、Adobe 社が認めるならインストールしよう、といった判断が行えるわけです。マニュアルによると、将来的にはアプリケーションにどれだけのアクセス権限を与えるか選べるようになるようです。
+
+「Install」を選ぶと次の画面。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070320/20070320091306.jpg" width="300" height="225" alt="インストーラ2"></center><
+
+よくあるインストーラの設定ですね。「スタートメニューに追加する」「デスクトップにショートカットを置く」をどうするか選べます。インストール先のパスは今のところ C:\Documents and Settings\<username>\Program Files\<publisher>\<name> で固定のようです。<publisher> と <name> というのは Apollo アプリ製作者が application XML と呼ばれる XML ファイルで指定する値です。
+
+「Continue」を選ぶとインストールが進み
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070320/20070320091305.jpg" width="300" height="177" alt="インストーラ3"></center><
+
+無事、インストール完了です。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070320/20070320091304.jpg" width="300" height="158" alt="インストーラ4"></center><
+
+開発者からの視点で見ると、application XML を書くだけで、自動的にインストーラまで作ってくれるのは非常に魅力的です。サンプルについていた XML はこんな具合でした。シンプルですよね。
+>|xml|
+<?xml version="1.0" encoding="UTF-8"?>
+<application appId="com.adobe.apollo.samples.FileSearch" version="1.0" xmlns="http://ns.adobe.com/apollo/application/1.0.M3">
+	<properties>
+		<name>File Search</name>
+		<description>A sample Apollo application.</description>
+		<publisher>Apollo Samples</publisher>
+		<copyright>&copy; 2007</copyright>
+	</properties>
+	<rootContent systemChrome="none" transparent="false" visible="true">[SWF reference is generated]</rootContent>
+	<icon>
+		<image16x16>icons/ApolloApp_16.png</image16x16>
+		<image32x32>icons/ApolloApp_32.png</image32x32>
+		<image48x48>icons/ApolloApp_48.png</image48x48>
+		<image128x128>icons/ApolloApp_128.png</image128x128> 
+	</icon>
+</application>
+||<
+
+-(追記) この XML ファイルのことを「ADF(Apollo Descriptor File)」と呼ぶそうです。
+-(追記) インストール後に .air を実行すると、アンインストールできるようです。それもすごい。（ネタ元：<a href="http://d.hatena.ne.jp/miya2000/20070320/p0">Adobe Apollo で Hello World - m2</a>）
+
+おわり。
+

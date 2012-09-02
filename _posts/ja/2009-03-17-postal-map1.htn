@@ -1,0 +1,169 @@
+---
+layout: post
+title: 郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090317/postal_map1
+---
+前回予告した通り、<a href="http://d.hatena.ne.jp/nitoyon/20090316/postal_map">郵便番号マップ</a>を作った手順を紹介していこう。
+
+ビジュアライジングのためにはデータ収集が重要だ。今回はデータベースに郵便番号データを入れていくところを説明する。泥臭いけど避けては通れない作業だ。
+
+**郵便番号データを入手
+まずは郵便番号のデータを手に入れる。といっても日本郵便が郵便番号データを CSV の形で提供してくれてるので、特に凝ったことはしなくてもよい。
+
+以下のサイトから全国一括のファイルをダウンロードするだけ。ありがたや。
+-<a href="http://www.post.japanpost.jp/zipcode/download.html">郵便番号データダウンロード - 日本郵便</a>
+
+Shift-JIS なので utf-8 に変換しておいた。
+>|
+% wget http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh
+<font color="#999999">--00:23:50--  http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh
+           => `ken_all.lzh.1'
+www.post.japanpost.jp をDNSに問いあわせています... 122.215.192.22
+www.post.japanpost.jp|122.215.192.22|:80 に接続しています... 接続しました。
+HTTP による接続要求を送信しました、応答を待っています... 200 OK
+長さ: 1,726,157 (1.6M) [application/octet-stream]
+
+100%[=============================================&gt;] 1,726,157      1.11M/s
+
+00:23:52 (1.11 MB/s) - `ken_all.lzh.1' を保存しました [1726157/1726157]</font>
+
+% lha -x ken_all.lzh
+<font color="#999999">ken_all.csv     - Melted   :  ooooooooooooooooooooooooooooooooooooooooooooooo</font>
+% nkf -w ken_all.csv &gt; ken_all_utf8.csv
+|<
+
+**データベースへの作成
+{% amazon jp:4873113784:title %} でのアメリカ版では CSV データに経度緯度データも入っていたんだけど、日本郵便のデータには入っていない。ならば、ジオコーディングで取得するしかない。
+
+今回はその準備のためにデータベース環境を整えていく。言語は Ruby を選択した。O/R マッパーとして Ruby on Rails の ActiveRecord を使って省エネを狙う。DB は手軽に使える sqlite3 を使う。
+
+バージョンはこんな感じ。
+-Ruby 1.8.5
+--ActiveRecord 1.15
+--sqlite3-ruby 1.2.4
+-sqlite3 3.6.6.2
+
+**テーブルの準備
+まずは、DB とテーブルの作成。ActiveRecord の Migration 機能を使ってテーブル構造を定義してやる。
+><div class="fix-height-syntax"><
+>|ruby|
+# EntrySchema.rb
+require 'rubygems'
+require 'active_record'
+
+ActiveRecord::Base.establish_connection(
+  :adapter => 'sqlite3',
+  :dbfile => "geocode.db"
+  )
+
+class EntrySchema < ActiveRecord::Migration
+  def self.up
+    create_table(:codes){ |t|
+      t.column :high, :string, :null => false
+      t.column :low, :string, :null => false
+      t.column :pref, :string, :null => false
+      t.column :city, :string, :null => false
+      t.column :lat, :float
+      t.column :lng, :float
+    }
+  end
+
+  def self.down
+    drop_table :codes
+   end
+end
+
+class Code < ActiveRecord::Base
+end
+||<
+></div><
+こう書いておくと、次のようなコードを実行させるだけでテーブルを作成してくれる。
+>|
+% ruby -e 'require "EntrySchema"; EntrySchema.migrate(:up)'
+<font color="#999999">== EntrySchema: migrating
+ ====================================================
+ -- create_table(:codes)
+   -&gt; 0.0397s
+ == EntrySchema: migrated (0.0402s) ============================================</font>
+|<
+素晴らしい。
+
+Migration については、以下のサイトを参考にした。
+-<a href="http://tam.qmix.org/wiki/Migration.html">pylori*style wiki - MigrationによるDB管理</a>
+-<a href="http://tech.feedforce.jp/railsmigration.html">FFTT : RailsのMigration</a>
+-<a href="http://wota.jp/ac/?date=20050817">優しいRailsの育て方 - ヽ( ・∀・)ノくまくまー(2005-08-17)</a>
+
+**CSV を DB に流し込む
+お次は DB に CSV のデータを流し込むところ。
+
+Ruby には標準で CSV クラスがついてくる。こいつを使えば１行を配列としてパースしてくれる。
+
+DB 側は ActiveRecord と併用すればいとも簡単。コードがこれ。
+>|ruby|
+require 'EntrySchema'
+require 'csv'
+
+i = 1
+CSV.open('ken_all_utf8.csv', 'r') do |row|
+  # 下４桁が 0000 のだけ突っ込む
+  next unless row[2].to_s.slice(3, 4) == "0000"
+
+  # 既に突っ込んだ場合はそのデータを読み取る
+  code = Code.find_by_id(i)
+  code = Code.new if code.nil?
+
+  # CSV のデータを保存する
+  code.high = row[2].to_s.slice(0, 3)
+  code.low = row[2].to_s.slice(3, 4)
+  code.pref = row[6]
+  code.city = row[7]
+  code.save
+
+  # 出力
+  puts "#{code.pref} #{code.city}"
+  i += 1
+end
+||<
+ActiveRecord のおかげで、Code オブジェクトのプロパティを設定して save するだけで DB に格納してくれる。抽象度が高くて幸せ。
+
+実行してみる。
+>|
+% ruby script/parse_postal.rb
+<font color="#999999">北海道 札幌市中央区
+北海道 札幌市北区
+北海道 札幌市東区
+北海道 札幌市白石区
+北海道 札幌市豊平区
+  : (略)
+沖縄県 沖縄市
+沖縄県 宮古島市
+沖縄県 八重山郡竹富町</font>
+|<
+いい具合に DB に突っ込まれていく。
+
+ActiveRecord については以下のサイトがとても参考になる。
+-[http://dev.ariel-networks.com/articles/workshop/rails-activerecord/:title=Ruby on Rails - ActiveRecord -— ありえるえりあ]
+
+**sqlite3 コンソールで確認
+ちゃんと入ってることを確認する。
+>|
+sqlite&gt; select * from codes;
+<font color="#999999">      :
+784|904|0000|沖縄県|沖縄市||
+785|906|0000|沖縄県|宮古島市||
+786|907|0000|沖縄県|八重山郡竹富町||</font>
+|<
+786件のデータが入力されている。やったね。
+
+<a href="http://d.hatena.ne.jp/nitoyon/20090318/postal_map2">次回</a>は、経度緯度を埋めていくところから。
+
+><div class="seealso"><
+**連載目次（予定）
+-{% post_link 2009-03-16-postal-map %}
+-郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる
+-{% post_link 2009-03-18-postal-map2 %}
+-{% post_link 2009-03-20-postal-map3 %}
+></div><
+

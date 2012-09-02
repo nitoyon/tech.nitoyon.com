@@ -1,0 +1,46 @@
+---
+layout: post
+title: prototype.js 1.4.0 の Enumerable.min のバグ
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20061109/p1
+---
+script.aculo.us をいじっていて気づいた Enumerable.min のバグ。
+
+実証コードはこんな感じ。配列の最小値 0 を返すべきなのに...なぜか 1 が返ってきます。
+>|
+>>> [0,1,2,3].min()
+1
+|<
+
+該当部分のソースコードはこうなってます。
+>|
+  min: function(iterator) {
+    var result;
+    this.each(function(value, index) {
+      value = (iterator || Prototype.K)(value, index);
+<font color="blue">      if (value <= (result || value))</font>
+        result = value;
+    });
+    return result;
+  },
+|<
+
+バグの原因は each の２回目で if (value <= (result || value)) が if (1 <= (0 || 1)) すなわち if (true) となってしまうところにあるようです。
+
+prototype.js では undefined かどうかを調べるのに || 演算子を使ってることが多いのですが、0 や "" が false になってしまうことに注意しなければならないですね。
+
+なお、この部分のコードは 1.5.0 rc1 で次のように修正されてます。
+>|
+  min: function(iterator) {
+    var result;
+    this.each(function(value, index) {
+      value = (iterator || Prototype.K)(value, index);
+      <font color="red">if (result == undefined || value < result)</font>
+        result = value;
+    });
+    return result;
+  },
+|<
+
+多くの人が使ってる prototype.js 1.4 にこんなバグが潜んでいたとは。恐ろしい。1.5 を正式リリースしたら、1.4.1 を出してほしいものです。

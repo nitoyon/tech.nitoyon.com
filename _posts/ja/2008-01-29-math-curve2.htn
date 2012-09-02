@@ -1,0 +1,211 @@
+---
+layout: post
+title: 勝手に添削：数学的な曲線を描画する (2)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080129/math_curve2
+---
+<a href="http://d.hatena.ne.jp/nitoyon/20080128/math_curve">勝手に添削：数学的な曲線を描画する</a> の完結篇。
+
+今回は図形クラスに手を入れていく。
+
+図形ごとに異なるクラスを定義しているんだけど、描画のルーチンは同じものだ。異なるのは座標計算の部分だけ。
+
+ならば、座標データを外からパラメータとして渡すようにしてやろう。こんな具合に。
+>|javascript|
+private var shapes:Array = [
+    {
+        text : "円",
+        rad : 180,
+        fx : function(r:Number, t:Number, x:Number):Number{
+            return r * Math.cos(t) + x
+        },
+        fy : function(r:Number, t:Number, y:Number):Number{
+            return r * Math.sin(t) + y
+        }
+    },
+    {
+        text : "三葉線", 
+        rad : 180,
+        fx : function(r:Number, t:Number, x:Number):Number{
+            return r * Math.sin(3 * t) * Math.cos(t) + x
+        },
+        fy : function(r:Number, t:Number, y:Number):Number{
+            return r * Math.sin(3 * t) * Math.sin(t) + y
+        }
+    },
+    // (以下略)
+||<
+あとは、このオブジェクトを食う描画クラスを作る。
+
+Tweener みたいな使い方ができるように、static なメソッドに変えた。
+>|javascript|
+import flash.display.Sprite;
+import flash.events.Event;
+
+class PolarDrawer{
+  // 描画メソッド (Sprite, 円の半径, 中心x, 中心y, Object)
+  static public function draw(m:Sprite, cx:Number, cy:Number, shape:Object):void {
+    var rad:Number = shape.rad * Math.random();
+    var angle:Number = 0;
+
+    m.graphics.lineStyle(1, 0xff0000);
+    m.graphics.moveTo(shape.fx(rad, angle, cx), shape.fy(rad, angle, cy));
+
+    m.addEventListener(Event.ENTER_FRAME, function(e:Event):void{
+      angle += 0.05
+      m.graphics.lineTo(shape.fx(rad, angle, cx), shape.fy(rad, angle, cy))
+
+      if(angle >= 2*Math.PI){
+        m.removeEventListener("enterFrame", arguments.callee);
+      }
+    });
+  }
+}
+||<
+shapes[i] を PolarDrawer.draw() を呼び出せば描画できる。クリック時イベントで次のように呼び出している。
+>|javascript|
+  private function clickHandler(e:Event):void{
+      var s:Sprite = new Sprite();
+      addChild(s);
+      PolarDrawer.draw(s, mouseX, mouseY, shapes[curveMode]);
+  }
+
+||<
+
+はい、だいぶシンプルになりました。行数はたった105行！ (ソースは最後に掲載)
+
+**シンプルは重要
+デザイン用のコードなんだから勢いでもいいじゃないか、と考える人もいるだろうけど、個人的にはデザイナの人にこそ綺麗なコードを書いてもらいたいと思ってる。
+
+というのも、修正前のコードは7つのクラスに描画ルーチンが散らばっていた。例えば、次のような実験をしようにも、めんどくさくて青ざめてしまう。
+-色を少しずつ変えて線を引きたい
+-線の太さを変えたい
+-線を引く開始角度をランダムにしたい
+今回の改造で描画処理が１箇所に集約されたので、これらの実験が簡単に実現できるようになった。気軽に試して芸の肥やし(?)にできるというわけだ。
+
+ただ、最初からきれいに書こうとしてたら、何もかけなくなってしまう。自分も最初は勢いで書き始める方だ。
+
+コードを整形するのは、<strong>同じコードを３箇所以上に書きたくなったとき</strong>にしている。同じものが散らばっているとメンテナンスが大変だし、後でソースを読むときに違う部分を探し出すのが面倒だからだ。
+
+**心構えをマスターしよう
+プログラム言語が分かってきたら、OOP の概念とかデザインパターンに行ってしまうよりも前に、ソースをシンプルに書く方法を身につけていくのがよいと思う。
+
+そんな「心構え」を教えてくれるのがこの本。
+>{% amazon jp:4894712288:detail %}<
+既存のコードをきれいに、シンプルにしていくためのレシピが多数紹介されている。今回や前回のエントリで行った改造も、全部この本に載ってるレシピで説明できる。
+
+挙動を変えずに、ソースを変更していくこと（＝リファクタリング）を学ぶにはうってつけ。去年読んだんだけど、<strong>もうちょっと早くこの本に出会ってればなぁ</strong>…と後悔した。自信をもってお薦めできる数少ない良本！
+
+本で紹介されているソースコードは Java だけど、最初の導入でちょっと長めなソースがでてくるぐらいで、ほとんどが概念的なコード。ActionScript しか知らない人でも違和感なく読めると思う。ActionScript も Java みたいなもんだし。
+
+**ソースコード
+きもい書き方で行数を短くしてたりするけど、そこはご愛嬌で。
+====
+>|javascript|
+package{
+import flash.display.Sprite;
+import flash.events.*;
+import flash.text.TextField;
+
+public class Test extends Sprite{
+    private var dtext:TextField;
+    private var curveMode:int = 0;
+    private var vertex:int = 5; // for hypocycloid
+
+    private var shapes:Array = [
+        {
+            text : "円",
+            rad : 180,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * Math.cos(t) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * Math.sin(t) + y}
+        },
+        {
+            text : "三葉線", 
+            rad : 180,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * Math.sin(3 * t) * Math.cos(t) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * Math.sin(3 * t) * Math.sin(t) + y}
+        },
+        {
+            text : "螺旋", 
+            rad : 15,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * t * Math.cos(t) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * t * Math.sin(t) + y}
+        },
+        {
+            text : "アステロイド曲線", 
+            rad : 150,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * Math.pow(Math.cos(t), 3) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * Math.pow(Math.sin(t), 3) + y}
+        },
+        {
+            text : "内サイクロイド", 
+            rad : 30,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * (vertex * Math.cos(t) + Math.cos(vertex * t)) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * (vertex * Math.sin(t) - Math.sin(vertex * t)) + y}
+        },
+        {
+            text : "リサジュー曲線", 
+            rad : 180,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * Math.sin(2 * t) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * Math.sin(3 * t) + y}
+        },
+        {
+            text : "四葉線",
+            rad : 150,
+            fx : function(r:Number, t:Number, x:Number):Number{return r * Math.sin(2 * t) * Math.cos(t) + x},
+            fy : function(r:Number, t:Number, y:Number):Number{return r * Math.sin(2 * t) * Math.sin(t) + y}
+        }
+    ];
+
+    public function Test(){
+        addChild(dtext = new TextField());
+        dtext.text = shapes[curveMode].text;
+
+        stage.addEventListener(MouseEvent.CLICK,clickHandler);
+        stage.addEventListener(KeyboardEvent.KEY_DOWN,keyDownHandler);
+    }
+
+    private function clickHandler(e:Event):void{
+        PolarDrawer.draw(Sprite(addChild(new Sprite())), mouseX, mouseY, shapes[curveMode]);
+    }
+
+    private function erase():void{
+        for(var i:int = numChildren - 1; i >= 0; i--)
+            if(getChildAt(i) is Sprite)
+                removeChildAt(i);
+    }
+
+    private function keyDownHandler(e:KeyboardEvent):void{
+        if(49 <= e.keyCode && e.keyCode < 49 + shapes.length){
+            curveMode = e.keyCode - 49;
+            dtext.text = shapes[curveMode].text;
+        }
+        else if(e.keyCode == 49 + shapes.length)
+            erase();
+    }
+}
+}
+
+import flash.display.Sprite;
+import flash.events.Event;
+
+class PolarDrawer{
+    // 描画メソッド (Sprite, 円の半径, 中心x, 中心y, Object)
+    static public function draw(m:Sprite, cx:Number, cy:Number, shape:Object):void {
+        var rad:Number = shape.rad * Math.random();
+        var angle:Number = 0;
+
+        m.graphics.lineStyle(1, 0xff0000);
+        m.graphics.moveTo(shape.fx(rad, angle, cx), shape.fy(rad, angle, cy));
+
+        m.addEventListener(Event.ENTER_FRAME, function(e:Event):void{
+            angle += 0.05
+            m.graphics.lineTo(shape.fx(rad, angle, cx), shape.fy(rad, angle, cy))
+
+            if(angle >= 2*Math.PI)
+                m.removeEventListener("enterFrame", arguments.callee);
+        });
+    }
+}
+||<

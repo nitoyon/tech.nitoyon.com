@@ -1,0 +1,87 @@
+---
+layout: post
+title: 埋め込みフォントの情報を swfassist で取得する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080724/embed_font_swfassist
+---
+先日の Shibuya.js のあとに、BeInteractive! の yossy さんが「swfassist を使ってくれる人が少なくて悲しい」みたいなことを言ってたので、埋め込みフォントのベクタ情報を swfassist を使って取得してみた。
+
+><center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FPop2.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=150&amp;title=pop+ad&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript></center><
+
+SWF のバイト情報は loaderInfo.bytes に入っている。そこで、フォントを埋め込んだ SWF を swfassist に食わしてやると、フォントのベクタ情報が取れる。このベクタ情報を元に ShapeOutlineDrawer を使って描画してる。
+
+(追記) ただし、loaderInfo.bytes は Flash Player 9.0.115 以降にしか含まれていないので、それ以前のバージョンだとエラーになる。
+
+ShapeOutlineDrawer には graphics.lineStyle(1,0x000000); という行があるのだけど、呼び出し元で線の太さを指定したかったので、この部分をコメントアウトして使っている。１行だけ違う別のクラス作るのもなんだか微妙だったので…。
+
+そのほかは、ほとんど公式のドキュメントそのまんま。やってることは <a href="http:/subtech.g.hatena.ne.jp/secondlife/20071017/1192555005">swfassist でフォントのベクタ情報取得 - 8時40分が超えられない - subtech</a> に近い。見た目は <a href="http:/d.hatena.ne.jp/nitoyon/20071005/potras_pop">PotrAs でチラシ文字 - てっく煮ブログ</a> の焼き直し。
+
+ソースは以下に。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.filters.DropShadowFilter;
+
+    import org.libspark.swfassist.io.*;
+    import org.libspark.swfassist.swf.io.*;
+    import org.libspark.swfassist.swf.structures.SWF;
+    import org.libspark.swfassist.swf.structures.Shape;
+    import org.libspark.swfassist.swf.structures.ShapeRecord;
+    import org.libspark.swfassist.swf.structures.ShapeRecordTypeConstants;
+    import org.libspark.swfassist.inprogress.swf.ShapeCollector;
+    import org.libspark.swfassist.flash.display.ShapeDrawer;
+    import org.libspark.swfassist.flash.display.ShapeOutlineDrawer;
+    import org.libspark.swfassist.flash.display.FlashGraphics;
+
+    public class Pop2 extends Sprite {
+        [Embed(source='アニトＭ-教漢.TTF',fontName='anito',unicodeRange='U+58F2,U+5927,U+5B89')]
+        private var font:lass;
+
+        public function Pop2(){
+            stage.align = "TL";
+            stage.scaleMode = "noScale";
+
+            var input:ataInput = new ByteArrayInputStream(loaderInfo.bytes);
+            var context:eadingContext = new ReadingContext();
+            var reader:WFReader = new SWFReader();
+            var swf:WF = reader.readSWF(input,context);
+
+            var shapeCollector:hapeCollector = new ShapeCollector();
+            swf.visit(shapeCollector);
+
+            var drawer:hapeOutlineDrawer = new ShapeOutlineDrawer();
+            var s1:prite = draw(shapeCollector.shapes[2],drawer);
+            var s2:prite = draw(shapeCollector.shapes[3],drawer);
+            var s3:prite = draw(shapeCollector.shapes[1],drawer);
+
+            addChild(s1); s1.x =  10; s1.y = 50;
+            addChild(s2); s2.x =  60; s2.y = 50;
+            addChild(s3); s3.x = 110; s3.y = 50;
+
+            scaleX = scaleY = 2;
+            filters = [new DropShadowFilter(4,45,0x000080,1,0,0)];
+        }
+
+        private function draw(shape:hape,drawer:hapeOutlineDrawer):prite{
+            var ret:prite = new Sprite();
+
+            drawer.graphics = new FlashGraphics(ret.graphics);
+            ret.graphics.lineStyle(5,0xff0000);
+            ret.graphics.beginFill(0xff0000);
+            drawer.draw(shape);
+            ret.graphics.endFill();
+
+            ret.graphics.lineStyle(1,0xffffff);
+            drawer.draw(shape);
+            ret.graphics.endFill();
+
+            return ret;
+        }
+    }
+}
+||<
+></div><
+

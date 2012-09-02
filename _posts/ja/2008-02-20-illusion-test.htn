@@ -1,0 +1,63 @@
+---
+layout: post
+title: GIGAZINE に載ってた錯視を検証する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080220/illusion_test
+---
+<a href="http://gigazine.net/index.php?/news/comments/20080219_optical_illusion/">錯視画像の色は本当に同じ色なのか検証してみました - GIGAZINE</a> が面白かったので、実証コードを書いてみた。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FIllusionTest.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=280&amp;title=IllusionTest&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9.0 以降がインストールされている場合は、ここにFlashが表示されます)</noscript><
+
+四角をドラッグすると、色が変わっていくように見える…けど実は変わってない。不思議だ。背景をクリックで背景色のON/OFFが切り替わるよ。
+
+ソースはこちら(46行)：
+>|javascript|
+package{
+    import flash.display.*;
+    import flash.geom.*;
+    import flash.events.Event;
+
+    public class IllusionTest extends Sprite{
+        function IllusionTest(){
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var toggle:Boolean = true;
+            stage.addEventListener("click", function(event:*):void{
+                if(event.target != stage) return;
+                graphics.clear();
+                drawGrad(toggle ? 0x000000 : 0xffffff, 0xffffff, 400, 300, graphics);
+                toggle = !toggle;
+            });
+            stage.dispatchEvent(new Event("click"));
+
+            var s1:Sprite = createBox(); s1.x = 100;
+            var s2:Sprite = createBox(); s2.x = 250;
+        }
+
+        private function createBox():Sprite{
+            var s:Sprite = new Sprite();
+            drawGrad(0x242424, 0x626262, 80, 80, s.graphics);
+            s.addEventListener("mouseDown", function(event:*):void{
+                setChildIndex(s, numChildren - 1);
+                s.startDrag();
+            });
+            s.addEventListener("mouseUp", function(event:*):void{s.stopDrag();});
+            s.buttonMode = true; s.useHandCursor = true;
+            s.y = 100;
+            addChild(s);
+            return s;
+        }
+
+        private function drawGrad(col1:uint, col2:uint, w:Number, h:Number, g:Graphics):void{
+            var m:Matrix = new Matrix();
+            m.createGradientBox(w, h);
+            g.beginGradientFill("linear", [col1, col2], [100, 100], [0x00, 0xff], m);
+            g.drawRect(0, 0, w, h);
+            g.endFill();
+        }
+    }
+}
+||<
+

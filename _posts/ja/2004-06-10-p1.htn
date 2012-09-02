@@ -1,0 +1,43 @@
+---
+layout: post
+title: プロセスの親子関係を知る
+tags: Win32
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040610/p1
+---
+Windowsのプロセスにも一応親子関係が存在する。例えばタスクマネージャのプロセスタブで右クリックして「プロセスツリーの終了」を選択すると、子プロセスもろとも殺すことができる。プロセスツリーを見るには<a href="http://www.sysinternals.com/ntw2k/freeware/procexp.shtml">Process Explorer</a>というツールが便利だろう。
+
+あるプロセスＡが新規プロセスＢを作成すると、必ずＡはＢの子供になるようだ。そんなこともあり、通常、ほとんどのアプリケーションはexplorer.exeの子プロセスのようだ。また、何らかのランチャからプロセスを立ち上げていると、ランチャーから起動したプロセスはランチャーの子プロセスとなっている。他にも、サービスのプロセスは「services.exe」の子プロセスのようだ。ちなみに、services.exeはwinlogon.exeの子プロセスだ。
+>|
+System Idle Process
+ +System
+   +smss.exe
+     +csrss.exe
+     +winlogon.exe
+       +winlogon.exe
+         +services.exe
+           +svchost.exe
+           +  :
+Explorer.exe
+  +IEXPLORE.exe
+  + :
+  +(ランチャー)
+     +(ランチャーから立ち上げたアプリ)
+|<
+
+プロセスＡの子プロセスがＢで、その子プロセスがＣのとき
+>|
+TopLevelProcess.exe
+  +Ａ
+    +Ｂ
+      +Ｃ
+|<
+Ｂを殺すと、ＣはＡの子供にはならずに自動的にトップレベルのプロセスになるようだ。
+>|
+TopLevelProcess.exe
+  +Ａ
+Ｃ
+|<
+
+自作のアプリケーションで親子関係を知りたい場合は、CreateToolhelp32Snapshot関数を呼び出して、Process32First・Process32Nextなどを呼び出しながらPROCESSENTRY32構造体の「th32ParentProcessID」を参照するとよいようだ。なお、NT4.0ではToolHelp functionsが提供されていないため、この方法は使えないようだ(未確認)。
+

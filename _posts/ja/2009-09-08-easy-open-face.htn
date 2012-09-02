@@ -1,0 +1,107 @@
+---
+layout: post
+title: GlowFilter で簡単袋文字
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090908/easy_open_face
+---
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090908/20090908025207.png" width="431" height="73"></center><
+
+<a href="http://d.hatena.ne.jp/nitoyon/20090907/glowing_text">前回</a> に続くテキストシリーズ第２弾。今回は ActionScript 3.0 で簡単に袋文字を実装する方法を紹介する。
+
+完成品はこんな具合。
+
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FEasyOpenFaceWithGlowFilter.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=100&amp;title=Easy+Open-Face&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。</noscript></center><
+
+文字を編集することもできる。編集後の文字も袋文字！
+
+**やってること
++TextField を表示
++TextField に <code>GlowFilter</code> で縁取りを作成する
+
+通常、<code>GlowFilter</code> は、ぼんやりと光る効果のために利用することが多い。しかし、<code>strength</code> を大きい値にすることで「ぼんやり」が「くっきり」になる。
+
+<code>GlowFilter</code> のコンストラクタは次のような定義になっている。
+====
+>|javascript|
+GlowFilter(
+  color:uint = 0xFF0000,  // 光の色
+  alpha:Number = 1.0,     // 光の透明度
+  blurX:Number = 6.0,     // 水平方向のぼかし量
+  blurY:Number = 6.0,     // 垂直方向のぼかし量
+  strength:Number = 2,    // 強さ（後述）
+  quality:int = 1,        // 適用回数
+  inner:Boolean = false,  // 内側かどうか
+  knockout:Boolean = false) // trueならグロー以外を消す
+||<
+
+たとえば、幅 8px の縁取りを行うには次のように <code>GlowFilter</code> を利用する。
+>|javascript|
+new GlowFilter(
+  0x000000,   // color (縁取りの色)
+  1.0,        // alpha
+  8,          // blurX (X方向の幅: 8px)
+  8,          // blurY (Y方向の幅: 8px)
+  16          // strength (ある程度大きい値)
+)
+||<
+
+<code>strength</code> が大きいときには <code>blurX</code> や <code>blurY</code> でぼかした結果を塗りにする感じだ。Photoshop 的な言葉で表現すると「blur した後に <code>strength</code> の大きさに応じてトーンカーブを下方向に移動させる」というイメージだ。
+
+<code>GlowFilter</code> の代わりに <code>GradientGlowFilter</code> を使えば、複数の色での袋文字を作れそうだ。
+
+**弱点
+簡単なのはいいんだけど、あまりキレイではない。
+
+特にとがった部分の縁取りが汚い。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090908/20090908025208.png"></center><
+
+これは「HELLO」の「EL」の上部なんだけど、「L」の右上の頑張りが足りない。もっと右方向に出っ張ってほしいのだけど、blur で広げる都合上、細い部分の blur で先端が削られてしまうようだ。
+
+**まとめ
+ご利用は計画的に。
+
+ソースコードは以下に（28行）。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+// Easy Open Face with GlowFilter
+//--------------------------------------------------
+// GlowFilter で簡単袋文字
+package{
+import flash.display.*;
+import flash.filters.GlowFilter;
+import flash.text.*;
+
+[SWF(backgroundColor="#ffffff", width="450", height="80")]
+public class EasyOpenFaceWithGlowFilter extends Sprite{
+    public function EasyOpenFaceWithGlowFilter(){
+        stage.scaleMode = "noScale";
+
+        // initialize canvas.
+        var bmp:Bitmap = addChild(new Bitmap()) as Bitmap;
+
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.autoSize = "left";
+        text.type = "input";
+        text.htmlText = <font size="50" color="#ffffff">HELLO WORLD</font>.toXMLString();
+        addChild(text);
+
+        // Glow it
+        text.filters = [new GlowFilter(0x000000, 1, 8, 8, 16, 1)];
+    }
+}
+}
+||<
+></div><
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2009-09-07-glowing-text %}
+-{% post_link 2008-07-25-shape-of-a-dream %}
+-{% post_link 2008-07-24-embed-font-swfassist %}
+-{% post_link 2007-10-05-potras-pop %}
+></div><
+

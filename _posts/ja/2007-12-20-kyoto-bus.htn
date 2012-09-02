@@ -1,0 +1,44 @@
+---
+layout: post
+title: 京都市バスの路線別 停留所取得API公開
+tags: Yahoo! Pipies
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071220/kyoto_bus
+---
+今回も Pipes ネタ。例によって Fetch Page モジュール。今まで「Page Fetch」だと勘違いしてたが、どうやら「Fetch Page」だったらしい。あちゃー。
+
+で、本題。京都市バスの路線別 停留所 API を <a href="http://pipes.yahoo.com/nitoyon/kyoto_busstop">Yahoo! Pipes で作ってみた</a>。
+
+**サンプル作ってみた
+この Pipes を使ったサンプルを作ってみた。→ <a href="http://tech.nitoyon.com/misc/js/kyoto_bus/">京都バス案内 (デモ)</a>
+
+><center><a href="http://tech.nitoyon.com/misc/js/kyoto_bus/"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071220/20071220092540.jpg" width="450" height="340"></a></center><
+
+-左の系統一覧を選択したら、右側に詳細が出る。
+-停留所をクリックしたら時刻表が表示される。
+
+JavaScript＋jQuery＋JSONP で実装してるよ。
+
+そのまんまだけど、API 使ってる気分になってきた。
+
+**すごくない？
+絶対に API を公開しそうにない京都市交通局の HTML を使って、外部の人間が勝手に API 化しちゃってるわけですよ。
+
+Web 1.0 なページを、無理やり Web 2.0 化ですよ。なんでもかんでもマッシュアップですよ。
+
+Yahoo! Pipes なので、もれなく JSONP にも対応、crossdomain.xml にも対応、RSS 出力にも対応、Yahoo! だからそこそこ信頼性ある、などなど申し分ないスペック。
+
+自分でサーバー側のスクリプト書くと、動かなくなったらどうしようとか、負荷分散はどうしようとか、ディスクいっぱいになったらどうしようとか、無駄に心配することが増えるけど、そういうストレスからも開放。
+
+自分はサーバーサイドを考えずに、クライアント側に注力したい人間なので、Yahoo! Pipes は楽しいサービスなのです。あと、落ちてたら Yahoo! のせいにできるし…(笑)
+
+**仕組み
+まあ、詳しくはソースを見てもらうとして、簡単に概要を説明。
+
+まず、入力された系統番号から京都市交通局の URL を構築する。17号系統なら <a href="http://www.city.kyoto.jp/kotsu/busdia/keitou/kto/017.htm">http://www.city.kyoto.jp/kotsu/busdia/keitou/kto/<strong>017</strong>.htm</a> といった具合。
+
+この URL に対して Fetch Page モジュールで取得して、正規表現でごにょごにょっと RSS を作り上げる。
+
+結果、<a href="http://pipes.yahoo.com/nitoyon/kyoto_busstop?_render=rss&num=017">こんな RSS</a> になるわけです。
+
+最寄の観光地の情報が含まれてるのが京都っぽいですね。

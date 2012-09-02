@@ -1,0 +1,60 @@
+---
+layout: post
+title: Google Maps をぐーるぐる
+tags: Google Maps
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080518/google_guruguru
+---
+さっそく <a href="http://code.google.com/apis/maps/documentation/flash/index.html">Google Maps API for Flash</a> で遊んでみた。
+
+公式のチュートリアルを見ると MXML 必須のように見えるが、Map クラス自体は Sprite を継承してるので、AS3 の範囲だけで遊べる。
+
+回転、フィルタが自由自在ですよ、ということで、ぐるぐる回してみた。ドラッグ時にはマップ全体がぼやけます。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FGoogleGuruGuru.swf&amp;up_background=%23000000&amp;synd=open&amp;w=460&amp;h=360&amp;title=Google+Guru+Guru&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 がインストールされていると、ここにサンプルが表示されます)</noscript><
+
+ソースコードはこちら。
+====
+>|javascript|
+package {
+    import flash.events.Event;
+    import flash.geom.Matrix;
+    import flash.filters.BlurFilter;
+    import com.google.maps.Map;
+    import com.google.maps.MapEvent;
+    import com.google.maps.MapType;
+    import com.google.maps.LatLng;
+
+    public class GoogleGuruGuru extends Map {
+        public function GoogleGuruGuru() {
+            super();
+            key = "ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg";
+
+            addEventListener(MapEvent.MAP_READY, function(event:Event):void{
+                setCenter(new LatLng(35.003759, 135.769322), 18, MapType.NORMAL_MAP_TYPE);
+            });
+
+            var r:int = 0;
+            var scale:Number = 1;
+            addEventListener("enterFrame", function(event:Event):void{
+                r = (r + 1) % 360;
+                var rad:Number = 2 * Math.PI * r / 360;
+
+                var matrix:Matrix = new Matrix();
+                matrix.translate(-stage.stageWidth / 2, -stage.stageHeight / 2);
+                matrix.rotate(rad);
+                matrix.translate(stage.stageWidth / 2, stage.stageHeight / 2);
+                transform.matrix = matrix;
+            });
+
+            stage.addEventListener("mouseDown", function(event:Event):void{
+                filters = [new BlurFilter(10, 10)];
+            }, true);
+            stage.addEventListener("mouseUp", function(event:Event):void{
+                filters = [];
+            });
+        }
+    }
+}
+||<
+

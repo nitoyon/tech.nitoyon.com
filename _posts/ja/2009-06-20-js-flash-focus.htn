@@ -1,0 +1,58 @@
+---
+layout: post
+title: JavaScriptからFlashにフォーカスを与えられるよ
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090620/js_flash_focus
+---
+こんな記事を見つけたけどそんなことないよ。
+>http://less.carbonfairy.org/post/125109545/javascript-flash:title=JavaScriptからFlashにフォーカスを与えられるか>
+Flash上でキー操作をするにはFlashにフォーカスが当たっていなければならない。フォーカスが当たっていない時にJavaScriptからフォーカス出来るか実験してみた。
+-http://codefairy.org/etc/focus-swf.html
+
+結果。
+-Firefox 3: 一度手でフォーカスを当てる操作をした後だとフォーカス出来る
+-Safari 4: 無理
+-Chrome 2: 無理
+-IE 8: 無理
+
+むり！ 
+<<
+
+この記事ではフォーカスを得られるかどうかを MXML の Application.focusIn イベントで判別してるんだけど、ここに問題がある。
+
+簡単にまとめると、Flash を扱う場合にはフォーカスといっても
++ブラウザが管理しているフォーカス
++Flash が管理しているフォーカス
+の２つがあるわけですよ。
+
+１つ目は上の記事のサンプルにもあるとおり、JavaScript の <code>focus()</code> で変更することができる。サンプルでは jQuery 使って <code>$('object')[0].focus();</code> としている。ページ内の Flash が１つだったらこれで十分。
+
+で、今回問題となるのが２つ目。１つ目のフォーカスは Flash にあたっていても、２つ目のFlash 的なフォーカスが適切なところにないとフォーカスを持ってないように見えちゃう。結果、Application.focusIn イベントも呼ばれない。Flash 的なフォーカスを設定するには <code>setFocus()</code> を呼んであげよう。
+
+以下、修正版の MXML。初期化完了時に 2. の Flash 的フォーカスを得るように改造した。
+>|xml|
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+  focusIn="bg(true)" focusOut="bg(false)"
+  applicationComplete="init()"
+  backgroundColor="0xCCCCCC" backgroundImage="none">
+  <mx:Script>
+    <![CDATA[
+      private function init():void
+      {
+        myInput.setFocus(); // ←ココ重要
+      }
+      
+      private function bg(focus:Boolean):void
+      {
+        this.setStyle('backgroundColor', focus ? '0x333333' : '0xCCCCCC');
+      }
+    ]]>
+  </mx:Script>
+ 
+  <mx:TextInput/>
+</mx:Application>
+||<
+
+ブラウザの onload イベントで SWF に <code>focus()</code> してあげれば、ページ表示時から MXML 内のテキストにフォーカスが行くことを確認した（IE7 と Firefox3 で）。
+

@@ -1,0 +1,197 @@
+---
+layout: post
+title: ウニができるまで ～ Context Free Art の遊び方
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090310/context_free_tutorial_uni
+---
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195148.png">
+<a href="http://d.hatena.ne.jp/nitoyon/20090309/context_free_try">前回</a>に引き続き、Context Free Art を取り上げる。今回は、Context Free Art で変なウニ風の生き物を作っていく手順を紹介する。
+
+さぁ、準備はいいですか？
+
+**1. 基本となる図形
+まずは基本となる図形を描画する。こんなやつ。
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195149.png">
+
+ソースコードは次のようなもの。
+>|cpp|
+startshape LINE   // LINE というルールを描画しろ
+
+rule LINE {       // ルール LINE の定義
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+}
+||<
+１行目の <code>startshepe LINE</code> では、「<code>LINE</code> というルールを描画しろ」と指定してる。
+
+じゃあ、<code>LINE</code> ルールはどうなってるかというと３行目で定義している。
+
+<code>LINE</code> ルールでは <code>CIRCLE</code> を１つ描画する。<code>CIRCLE</code> は Context Free で定義されている円を描画するルールだ。ルールにいくつか追加のパラメータを渡している。詳しく説明するとこうなる。
+>|cpp|
+rule LINE {
+    CIRCLE {    // 以下の条件で円を描く
+        s 6 1   // 倍率を横を6倍、縦を1倍に設定
+        x 3     // 表示する X 座標を 3 増やす
+        sat 1   // HSB の S（彩度）を 100% にする
+        b .3    // HSB の B（明度）を 3 割増やす
+    }
+}
+||<
+
+**2. 白抜きにする
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195150.png">
+
+白い円を小さめに描画して白抜きにした。
+====
+>|cpp|
+startshape LINE
+
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 } // ← ここを追加
+}
+||<
+
+**3. 再帰呼び出しで列挙
+ここからが面白い。１行追加するだけで劇的に見た目が変わる。触角みたい…。
+
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195151.png">
+
+正体は再帰呼び出し。LINE の中で LINE を定義してる。
+>|cpp|
+startshape LINE
+
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}  // ←ここを追加
+}
+||<
+
+もうちょっと詳しく説明するとこうなる。右側に少し小さい LINE を回転させながら配置していってる。
+>|cpp|
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE {     // LINE を以下の条件で表示する
+        s .9   // 表示倍率を90%にする
+        x 3    // 右に 3 移動する
+        r 10   // 10°回転する
+        a -.1  // 透明度を 10% 減らす
+    }
+||<
+無限再帰呼び出しになってるんだけど、描画する図形がどんどん小さくなるので、サイズが見えないぐらいに小さくなった時点で描画が止まってくれるようだ。
+
+**4. うねうねさせる
+LINE に新たなルールを追加してみる。
+>|cpp|
+startshape LINE
+
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}
+}
+
+// ↓ここを追加
+rule LINE {
+    LINE { flip 180 }  // flip 180 した上で LINE を表示
+}
+||<
+LINE のルールを２つ書いた。同じ名前が２つあると、どちらかのルールが等確率で選ばれる。
+
+flip というのは180度反転するということ。つまり、1/2 の確率で曲がる方向が反転する。
+
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195152.png">
+
+**5. 枝を作る
+時々、枝分かれするようにしてみる。次のルールを追加する。
+>|cpp|
+// 0.3 の割合で選択される
+rule LINE .3{
+    // そのまま続ける
+    LINE {}
+
+    //  30°回転させて 5割の大きさで LINE を描く
+    LINE { r  30  s .5 }
+
+    // -30°回転させて 5割の大きさで LINE を描く
+    LINE { r -30  s .5 }
+}
+||<
+0.3 の割合でこの枝分かれルールが選択される。こんな感じになる。
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195153.png">
+
+枝がでてきた！　木を描くときも同じようなソースになる。
+
+ちなみに、枝が追加される確率を計算すると、それぞれのルールが
+-通常 LINE： 1.0
+-反転： 1.0 （4.で追加したルール）
+-枝生成： 0.3 （今回追加したルール）
+の割合を占めるので、枝が追加されるのは 0.3/2.3 = 0.130... の確率となる。
+
+**6. いっぱい回す
+今までは１本だけ描いてたけど、これを大量生産する。
+<img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195155.png">
+
+START というルールを新たに定義して、<code>startshape</code> も START に変更する。
+>|cpp|
+startshape START
+
+rule START{
+    60 * { r 6 hue 6} LINE {}
+}
+||<
+<code>START</code> ルールでは <code>60 * {} LINE {}</code> という文法で 60 個の LINE を生産している。
+
+１つ目の {} の中がポイント。<code>r 6 hue 6</code> は 6°ずつ回転、hue（色相）を 6°増やす、という意味。つまり、少しずつ回転させて、色を変えながら LINE を60回描画している。
+
+**7. 長さをばらつかせる
+ちょっと長さにばらつきを持たせたかったので、まれに枝が元気なくなるようにさせた。
+>|cpp|
+rule LINE .1{
+    LINE { s .7 }
+}
+||<
+
+**おわり
+これで終わり。最終的なソースコードはわずか25行！
+
+一通りの文法は解説したが、詳しくは <a href="http://www.contextfreeart.org/mediawiki/index.php/Reference_Card">Reference Card - Context Free Art</a> に書いてある。
+
+最後に、ウニの最終的なソースコードを掲載しておく。Enjoy Context Free Art！
+>|cpp|
+startshape START
+
+rule START {
+    60 * { r 6 hue 6} LINE {}
+}
+
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}
+}
+
+rule LINE {
+    LINE { flip 180 }
+}
+
+rule LINE .3 {
+    LINE {}
+    LINE { r  30  s .5 }
+    LINE { r -30  s .5 }
+}
+
+rule LINE .1 {
+    LINE { s .7 }
+}
+||<
+
+><div class="seealso"><
+**関連エントリ
+-{% post_link 2009-03-09-context-free-try %}
+-{% post_link 2009-03-11-context-free-tile %}
+-{% post_link 2009-03-12-context-free-3d %}
+-{% post_link 2009-03-13-context-free-favorite5 %}
+></div><
+

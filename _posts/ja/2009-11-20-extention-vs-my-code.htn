@@ -1,0 +1,57 @@
+---
+layout: post
+title: ! 'Skype Extension for Firefox と Security error" code: "1000'
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20091120/extention_vs_my_code
+---
+いままで動いていた自作の JavaScript が Firefox でいつの間にか動かなくなる現象が発生したので調べてみた。
+
+エラーを見ると <code>Security error" code: "1000</code> とある。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20091120/20091120014333.png" border="1"></center><
+
+ぐぐってみると、どうやら CSS の insertRule に失敗したときに発生するエラーのようだ。(参考：[http://haraita9283.blog98.fc2.com/blog-entry-288.html:title=(solved) Javascriptのエラー: Security error"code: "1000 |  anobota])
+
+**HTML の構造を見てみると
+Firebug で HTML の構造を見てみると、見覚えのない JavaScript と CSS が追加されている。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20091120/20091120014335.jpg" border="1" width="458" height="312"></center><
+====
+名前から判断するに、Skype と一緒にインストールされる Skype Extension for Firefox が動的に挿入するもののようだ。
+
+**どこが悪かったのか
+で、改めて自分が書いたスクリプトを見てみると CSS 関係で次のような処理があった。
+>|javascript|
+addStyle: function(selector, property){
+  // 一番最後のスタイルシートオブジェクトを取得
+  var sheets = document.styleSheets;
+  var sheet = sheets[sheets.length - 1];
+
+  // CSS の最後に追加
+  // IE では addRule を、Firefox では insertRule を使う
+  if(sheet.addRule){
+    sheet.addRule(selector, "{" + property + "}", 
+      sheet.rules.length);
+  }else if(sheet.insertRule){
+    sheet.insertRule(selector + "{" + property + "}", 
+      sheet.cssRules.length);
+  }
+},
+||<
+
+最後のスタイルシートオブジェクトに対して insertRule で CSS のルールを追加しようとしてる。
+
+ところが、Skype のプラグインが追加で CSS を突っ込んでいたため、「最後のスタイルシートオブジェクト」は Skype プラグインのものになってしまっていた。ここに insertRule しようとして、サンドボックスが異なってエラーになってたようだ。
+
+**これも相性問題か
+今まで動いていたコードが動かなくなった理由は「Skype をインストールしたこと」が原因だったようだ。
+
+Skype Extension for Firefox はお行儀が悪いので即効で削除した。削除してみると、何事もなかったように動くようになっていた。Skpye はデフォルトでポート 80 を listen したり、いろいろとお行儀が悪くて嫌だ。
+
+個人的に使ってるだけのスクリプトなので、対策は以上で終わりとしたが、世間に公開してるものだったらそうはいかない。今回のようなケースでは「一番最後のスタイルシートオブジェクト」を取得するのではなく、動的にルールを追加していくスタイルシートオブジェクトを事前に決めておくか、スクリプトで動的にスタイルシートオブジェクトを作成して、そこに insertRule していくべきだったのかもしれない。
+
+Firefox のような自由に機能拡張できてしまうブラウザでは、動的に CSS や DOM ノードが追加されてもある程度は耐久性のあるように作らなきゃいけないのかもしれない。
+
+なんともめんどくさい世の中よ。
+

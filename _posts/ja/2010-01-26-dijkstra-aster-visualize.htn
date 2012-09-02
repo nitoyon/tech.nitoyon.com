@@ -1,0 +1,70 @@
+---
+layout: post
+title: 経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100126/dijkstra_aster_visualize
+---
+<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873114373/nitoyoncom-22/">詳解 ActionScript 3.0アニメーション ―衝突判定・AI・3DからピクセルシェーダまでFlash上級テクニック</a> を読んでいて、経路探索のアルゴリズムで A* が取り上げられていました。
+
+A* については、いろいろ検索して調べたりもしたのですが、やっぱり本に書いてあると理解しやすいですね。せっかくなので自分流に実装してビジュアライズしてみました。
+
+**ダイクストラ法
+まずは A* の特別なケースでもあるダイクストラ法から見ていきます。クリックすると探索のシミュレーションが開始します。
+
+><center><script type="text/javascript" src="http://wonderfl.net/blogparts/fVQE/js"></script><noscript>(ここに Flash が表示されます)</noscript></center><
+
+スタート地点(S)からゴール(G)への探索が始まります。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012802.png"></center><
+色がついたところが「最短経路が決定した場所」です。スタート地点から少しずつ探索が完了していきます。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012803.png"></center><
+半分ぐらい完了しました。まだまだ進みます。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012804.png"></center><
+最後まで終わりました。最短経路を黒色矢印で表示しています。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012801.png"></center><
+
+ダイクストラ法は、スタート地点から近いノード(=マス目)から順番に最短経路が判明していきます。
+
+ざっくりとした例えですが、<strong>スタート地点から水をたらして広がった順番に経路が決定していく</strong>ようなイメージです。水は均等に広がっていくので、一番最初に到達した水滴について、たどってきた道を確認すれば経路が判明するわけです。
+
+**A*(A-Star)
+次に A* の探索過程を見てみましょう。大枠はダイクストラ法と同じなのですが、探索の道順が異なります。
+====
+><center><script type="text/javascript" src="http://wonderfl.net/blogparts/ktk5/js"></script><noscript>(ここに Flash が表示されます)</noscript></center><
+
+A* ではゴールへの距離が近いノードを優先的に調べていきます。右方向のノードを調べにいってますね。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012806.png"></center><
+
+上半分を探索し終わったら、仕方なくゴールから遠ざかる左方向に移動していきます。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012808.png"></center><
+
+そのあとはゴールに向かって一直線です。
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100126/20100126012805.png"></center><
+A* ではゴールへの経路が判明した段階で処理は終了です。
+
+A* はダイクストラ法に比べてゴールに到達するまでに調べるマス目が少ないのが印象的です。
+
+ダイクストラ法と同じように水で例えると、<strong>A* では水が少し意思を持っていて、なるべくゴールに近いほうに流れようとする</strong>ようなイメージです。ここがまさに A* のキモです。ゴールへの近さを加味して、探索するノードの数をなるべく減らそうとします。
+
+A* では、スコアとして <code>f* = g* + h*</code> を用います。各ノードの f* を調べて、f* の値が小さいノードから先に探索していきます。g* はスタート地点からの距離であり、ダイクストラ法で用いるスコアと同じです。h* がゴールへの距離なのですが、実際の最短距離は途中の段階では分からないので、ゴールへの直線距離やマンハッタン距離を利用して計算します。
+
+この、h* の部分がゴールへの近さを加味する部分です。スタートからの距離が同じノードが複数ある場合には、h*(=ゴールへの距離)が近いものから調べていこう、という作戦です。
+
+もし、h* が 0 ならダイクストラ法と同じ処理になります。h* が実際の最短距離より小さい値である限りは、選んだノードが最短距離であることが保証されているようです。直線距離やマンハッタン距離を使ってる限りは、それよりも最短距離が小さくなることはありませんね。
+
+**まとめ
+ダイクストラ法と A* の探索途中の様子をビジュアライズしてみました。
+
+ソースコードは wonderfl に投稿しています（<a href="http://wonderfl.net/code/6faaab5234abf034417a8e753f6309de0b9560f0">ダイクストラ法</a>・<a href="http://wonderfl.net/code/8f7c11caf4939ef77ee0ee8f2db427c92b5a5bab">A*</a>）。それぞれ200行ほどですがコメントはしっかり書いたつもりですし、ソースの diff は40行ほどなので共通点も多いです。よければ参考にしてください。
+
+ちなみに、私が参考にした <a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873114373/nitoyoncom-22/">詳解 ActionScript 3.0アニメーション</a> のデモは、<a href="http://www.oreilly.co.jp/pub/9784873114378/">O'REILLY のサイト</a> から閲覧できますし、ソースコードも <a href="http://www.oreilly.co.jp/books/9784873114378/#files">ダウンロードできます</a>。太っ腹！
+
+>{% amazon jp:4873114373:detail %}<
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2009-04-09-kmeans-visualise %}
+-{% post_link 2009-04-13-kmeans-visualize-3d %}
+-{% post_link 2009-03-16-postal-map %}
+-{% post_link 2009-03-03-dp %}
+></div><

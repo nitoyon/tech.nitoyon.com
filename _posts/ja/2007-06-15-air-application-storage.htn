@@ -1,0 +1,40 @@
+---
+layout: post
+title: AIR の app-storage:/ はどこに保存される？
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070615/air_application_storage
+---
+AIR ではアプリケーションの設定を app-storage:/ に保存することが推奨されています。
+
+使い方はこんな感じ。
+>|javascript|
+var file:File = new File("app-storage:/myfile.txt");
+||<
+もしくは、File.applicationStorageDirectory を使って、次のようにもできます。
+>|javascript|
+var file:File = File.applicationStorageDirectory.resolve("myfile.txt");
+||<
+
+file:/ ではなく、app-storage:/ を使うことで、Windows でも Mac でも、ディレクトリ構造を意識せずに設定を保存できるというメリットがあります。
+
+じゃあ、ファイルは一体どこに保存されるかというと...
+:Windows XP:C:\Documents and Settings\username\Application Data\appId\Local Store
+:Windows Vista:(2007/6/19修正) C:\Users\username\AppData\Roaming\appId\Local Store
+:Mac:/Users/username/Library/Preferences/appId/Local Store
+だそうです。appId の部分は ADF(Apollo Descriptor File) で指定したものに置き換えてください。（参考：<a href="http://www.brandonellis.org/?p=40">Apollo File Path Gotcha ≫ Brandon Ellis Dot Org</a>、<a href="http://amoi.mib.jp/wp/?p=22">AMOSTYLE2.0 ≫ AIR の app-storage:/ はVistaではどこに保存される？</a>）
+
+例えば、先ほどのアプリケーションの appId が「com.nitoyon.sampleApp」だったとすると、app-storage:/myfile.txt に保存したファイルは XP では
+>|
+C:\Documents and Settings\username\Application Data\<strong>com.nitoyon.sampleApp</strong>\Local Store\myfile.txt
+|<
+に保存されるわけです。
+
+ちなみに、AIR アプリケーションをアンインストールしても、app-storage に保存されたファイルは消えません。ちょっとお行儀は悪いところに注意が必要です。
+
+app-storage と似たものとして、app-resource（もしくは File.applicationResourceDirectory）があります。app-resource は AIR アプリケーションがインストールされたディレクトリを表します。
+
+app-resource にファイルを出力したとしても、アンインストール時に自動的に消えることはありません。
+
+どうやら、アンインストール時には .air パッケージに含まれていたファイルのみを削除している模様です。
+

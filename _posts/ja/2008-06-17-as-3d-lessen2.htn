@@ -1,0 +1,240 @@
+---
+layout: post
+title: AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080617/as_3d_lessen2
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080617/20080617020339.png" width="448" height="197"></center><
+このまま実装を進めていくとソースが複雑になりそうなので少し地盤を固めておこう。
+
+座標計算を簡潔にするために行列クラスを導入する。
+
+**Matrix3D クラス
+前回は軸の周りの回転を公式
+>|
+p.x =  Math.cos(rad) * x + Math.sin(rad) * y;
+p.y = -Math.sin(rad) * x + Math.cos(rad) * y;
+|<
+を使って直接計算していたけど、ここを行列に置き換えてみる。
+
+ちょうど、3D ライブラリ <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> に Matrix3D クラスがあったのでこれを借用した。
+
+X軸周りに rad ラジアン回転する演算は次のように書けるようになる。
+>|javascript|
+// 回転前の点 p1 を定義
+var p1:Point3D = new Point3D(0, 10, 20);
+
+// rad ラジアン回転する行列を作成
+var matrix:Matrix3D = new Matrix3D();
+matrix.rotateX(rad);
+
+// 行列に p1 を渡すと、回転後の座標が返ってくる
+var p2:Point3D   = matrix.transformPoint(p1);
+||<
+中でやってる計算は前回と全く同じなんだけども、計算式が Matrix3D クラスの中に隠蔽されている分、ソースがすっきりした。
+
+この連載ではライブラリを極力使わない方針なのだけど、行列に関しては例外とさせていただく。さすがに行列演算をフルスクラッチするのは面倒だし、誰が作ってもだいたい同じになるので既存の資産を活用することにした。
+
+PV3D にも同じようなことをする Matrix3D クラスがある。使い方はちょっと違うので要注意。
+
+**行列を使うメリットってなんなのよ
+行列と聞くと途端に拒否反応が出る人も多そうなんだけど、<strong>座標変換してくれるありがたい仕組み</strong>ぐらいに考えておくとよいだろう。
+
+さきほどの例では、行列 matrix は「X軸を中心に rad 回転する」という変換を表している。イメージ的には
+>|
+      matrix1
+p1 ------------> p2
+|<
+という感じ。点 p1 に matrix を適用すると、場所 p2 に移動する。p2 は p1 を X 軸を中心に rad 回転した場所になっている。
+
+それでは、点 p1 を Y軸方向に rad1 回転したあと、Z 軸方向に rad2 回転させてみよう。ちょうど前回のサンプルのような感じだ。
+
+普通に考えると次のようなコーディングになる。
+
+>|javascript|
+// 回転前の点 from を定義
+var p1:Point3D = new Point3D(0, 10, 20);
+
+// Y 軸方向に rad1 ラジアン回転する行列 matrix1 を作成
+var matrix1:Matrix3D = new Matrix3D();
+matrix1.rotateY(rad);
+
+// Z 軸方向に rad2 ラジアン回転する行列 matrix2 を作成
+var matrix2:Matrix3D = new Matrix3D();
+matrix2.rotateZ(rad2);
+
+// matrix1 と matrix2 を適用
+var p2:Point3D = matrix1.transformPoint(p2);
+var p3:Point3D = matrix2.transformPoint(p3);
+||<
+
+イメージとしては、こんな感じ。
+
+>|
+      matrix1          matrix2
+p1 ------------> p2 ------------> p3
+|<
+p1 に matrix1 を適用して、次に matrix2 を適用している。もちろんこれで動くんだけど、例えば点の数が１万個あったとすると、行列の演算は２万回発生することになる。
+
+実は、行列の効果は合成できるので、簡単に高速化できる。matrix1 の効果と matrix2 の効果をあらかじめ合成した行列を作っておく。イメージとしてはこんな感じ。
+>|
+       matrix1 + matrix2 (=matrix3)
+p1 ----------------------------------> p3
+
+※イメージをつかみやすいように「matrix1 + matrix2」と
+  記述しているが、数学的には行列の積となる。
+|<
+これだと、１万個の点があっても、それぞれに matrix3 を１回ずつ適用するだけでOK。合計１万回の演算で済むことになる。ざっくりだけど、座標変換の計算負荷が半分になる。
+
+ソースコードで書くとこうなる。
+>|javascript|
+// X軸とY軸の周りに回転する行列
+var matrix3:Matrix3D = new Matrix3D();
+matrix3.rotateY(rad1);
+matrix3.rotateZ(rad2);
+
+// 行列を適用
+var p3:Point3D = matrix3.transformPoint(p1);
+||<
+
+**整備結果
+イメージは掴めただろうか。では、実践編。前回のコードを Matrix3D を使いながら拡張していこう。
+
+立方体をいくつも配置してみた。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d2.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=300&amp;title=3D+Study2&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript><
+
+コアのコードはこんな具合。
+>|javascript|
+    // 回転行列を作成
+    var matrix:Matrix3D = new Matrix3D();
+    matrix.rotateY(stage.mouseX / 180 * Math.PI);
+    matrix.rotateZ(stage.mouseY / 180 * Math.PI);
+
+    // 描画
+    for each(var c:Cube in cubes){
+        c.draw(canvas.graphics, matrix);
+    }
+||<
+まず、マウスの位置に応じて、回転する角度を決めて Matrix3D オブジェクトを作成している。そのあと、それぞれの立方体を表す Cube オブジェクトに Matrix3D オブジェクトを与えて、回転具合を伝えている。
+
+Cube オブジェクトの draw() メソッドでは、与えられた行列に応じて座標変換を行って描画している。
+
+前回よりも見た目も凝っているけど、Matrix3D を導入したたので行数はあまり変わらない。もしかしたら、前回よりも読みやすいかもしれない。
+
+**まとめ
+行列は座標変換する魔法の箱。理論が分からなくても、イメージを掴みさえすれば、ばんばん使っていったらいいんじゃなかろうか。
+
+<a href="http://d.hatena.ne.jp/nitoyon/20080618/as_3d_lessen3">次回</a>に続く。
+
+><div class="seealso"><
+**連載目次
+-{% post_link 2008-06-16-as-3d-lessen1 %}
+-{% post_link 2008-06-17-as-3d-lessen2 %}
+-{% post_link 2008-06-18-as-3d-lessen3 %}
+-{% post_link 2008-06-20-as-3d-lessen3 %}
+-{% post_link 2008-06-23-as-3d-lessen5 %}
+></div><
+
+ソースは以下に（95行）。
+====
+要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+    import five3D.geom.Matrix3D;
+
+    [SWF(backgroundColor="0x000000")]
+    public class Study3d2 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+
+        public function Study3d2(){
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 50));
+            cubes.push(new Cube(0, 100, 0, 20));
+            cubes.push(new Cube(0, -100, 0, 20));
+            cubes.push(new Cube(100, 0, 0, 20));
+            cubes.push(new Cube(-100, 0, 0, 20));
+
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 250;
+            canvas.y = 150;
+
+            stage.addEventListener("mouseMove", changeHandler);
+            changeHandler(null);
+        }
+
+        private function changeHandler(event:Event):void {
+            canvas.graphics.clear();
+
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateY(stage.mouseX / 180 * Math.PI);
+            matrix.rotateZ(stage.mouseY / 180 * Math.PI);
+
+            // 描画
+            for each(var c:Cube in cubes){
+                c.draw(canvas.graphics, matrix);
+            }
+        }
+    }
+}
+
+import flash.display.Graphics;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
+
+class Cube {
+    private var points:Array = [];
+
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
+
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i < 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 < 2), z + diff(i < 4));
+            points.push(p);
+        }
+    }
+
+    public function draw(g:Graphics, matrix:Matrix3D):void {
+        // 回転後の各頂点の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i < points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
+            drawPoint(g, pt);
+            p.push(pt);
+        }
+
+        // 頂点の間を線で結ぶ
+        for(i = 0; i < 4; i++){
+            drawLine(g, p[i], p[i + 4]);
+            drawLine(g, p[i], p[(i + 1) % 4]);
+            drawLine(g, p[i + 4], p[(i + 1) % 4 + 4]);
+        }
+    }
+
+    private function drawPoint(g:Graphics, p:Point3D):void {
+        g.beginFill(0xffffff);
+        g.drawCircle(p.x, p.y, 3);
+        g.endFill();
+    }
+
+    private function drawLine(g:Graphics, p1:Point3D, p2:Point3D):void {
+        g.beginFill(0, 0);
+        g.lineStyle(1, 0xffffff);
+        g.moveTo(p1.x, p1.y);
+        g.lineTo(p2.x, p2.y);
+        g.lineStyle();
+        g.endFill();
+    }
+}
+||<
+

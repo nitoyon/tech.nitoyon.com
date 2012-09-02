@@ -1,0 +1,53 @@
+---
+layout: post
+title: Alchemy で中間ファイルを消さない設定
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090109/alchemy_keep_intermediate_files
+---
+alc-on して置き換わる gcc(achacks/gcc) は Perl でできてるんだけど、その最後に次のようなコードがある。
+>|perl|
+# remove junk TODO failure leaves stuff around!
+if(!$ENV{ACHACKS_TMPS})
+  { sys("rm", "-f", <$$.achacks.*>) }
+||<
+これが中間ファイルを全部消す処理ですな。
+
+ということで、どういう AS が吐かれるのかを見たいときには ACHACKS_TMPS を 1 にしよう。cygwin ではこうする。
+>|sh|
+$ export ACHACKS_TMPS=1
+||<
+こんな感じで中間ファイルが消えないよ。
+>|sh|
+$ ls
+3080.achacks.abc
+3080.achacks.as
+3080.achacks.exe
+3080.achacks.exe.bc
+3080.achacks.o
+# ...
+||<
+.o が llvm の中間ファイル。llvm-dis を実行すればディスアセンブルできる。
+>|sh|
+$ llvm-dis 3080.achacks.o  
+# → 3080.achacks.o.ll が生成される
+||<
+.o から .as が生成されるらしいので、比較すると面白いはず。
+
+**その他の環境変数
+alc-util を使えばその他の有用そうな環境変数を確認できる。
+>|sh|
+ALCHEMY_HOME=/home/nitoyon/doc/alchemy
+ALCHEMY_VER=0.4a
+PATH=/home/nitoyon/doc/alchemy/achacks:...
+ADL=
+ASC=C:/Alchemy/bin/asc.jar
+ACHACKS_TMPS=1
+LOG=
+LOGLEVEL=
+NOMEMUSER=
+NOASVECTOR=
+VISIBLEAIR=
+||<
+NOASVECTOR を有効にすれば、Flash Player 9 でも動くライブラリを作れるのかなぁ？
+

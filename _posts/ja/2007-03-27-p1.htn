@@ -1,0 +1,142 @@
+---
+layout: post
+title: あまり語られていない Apollo のセキュリティについてまとめてみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070327/p1
+---
+(2007年10月追記) <strong>この記事は、Adobe AIR と呼ばれている技術のα版時点でのセキュリティについて述べています。2007年10月現在での最新版についての情報は、以下のページを参照してください。</strong>
+-<a href="http://weblogs.macromedia.com/akamijo/archives/2007/10/adobe_air_2_1.cfm">akihiro kamijo: Adobe AIR ベータ 2 セキュリティ関連の変更点</a>
+-<a href="http://weblogs.macromedia.com/akamijo/archives/2007/10/adobe_air_1.cfm">akihiro kamijo: Adobe AIR のデジタル署名機能について</a>
+(追記ここまで)
+
+
+<a href="http://void.heteml.jp/blog/archives/2007/03/apollo.html">void element blog: いろんな意味でしゃれにならないApollo</a> にて Apollo はセキュリティ的に危ないよ、という話が出ていたので、ちょっと調べてみました。
+
+Web 技術を使っているとはいえ、ローカル環境で動くので、ある程度の覚悟をもってインストールする必要があります。今回は、その心構え（？）のようなものをまとめてみました。セキュリティは専門ではないので、つっこみは大歓迎です。
+====
+**Apollo アプリはローカル アクセス自由
+Apollo はアプリケーションとして動くわけですから、ローカル ファイルの読み・書き・追加・削除は自由にできます。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001744.jpg" width="377" height="264" alt="自由にアクセスするよ"></center><
+
+**どう対策するか？
+冒頭に紹介した <a href="http://void.heteml.jp/blog/archives/2007/03/apollo.html">void element blog: いろんな意味でしゃれにならないApollo</a> では、簡単に作れるから誰でも悪用できる、という主張がされていますが、その危険性は今に始まったことではありません。
+
+Firefox の Greasemonkey や拡張機能 (.xpi) にも同様の危険性はあります（参考：<a href="http://d.hatena.ne.jp/nazoking/20050701/1120190176">nazonoDiary - Greasemonkeyは恐ろしい</a>）。拡張機能に及んでは、ローカルファイルにもアクセスできます。どちらも Web 技術を応用しています。
+
+我々がとれる対策は１つだけです。<strong>信頼できる人が作っているか</strong>で判断するしかありません。フリーソフトが流行っていた昔も、Web サービスが人気の今も、ローカル アプリが流行るかもしれない今後も変わらない対策方法です。
+
+**Apollo ランタイムの今後の流れ
+とはいえ、信頼できないアプリを安全に実行するための仕組みもほしいところです。<a href="http://labs.adobe.com/wiki/index.php/Apollo:Documentation:Understanding_Apollo_security">Apollo:Documentation:Understanding Apollo security - Adobe Labs</a> には次のような記述があります。
+
+>>
+α版では Apollo アプリはローカル ファイルへのアクセスは自由だよ。でも、今後のバージョンでは、Apollo アプリ自体の設定やインストール時の設定によって、アクセスの自由度は変わってくると思うよ(意訳)。
+<<
+
+将来的には Apollo アプリが「俺、ローカル ファイルは読みとらへんから、インストールしてーな」などと主張してくるようになるわけです。それを見て、あなたはインストールするのか、しないのか、それとも制限つきでインストールするのかを選べるのです。
+
+たとえ名も知らぬ信頼できそうにない作者のアプリだったとしても、アクセス範囲が狭ければ気軽にインストールできます。もしくは、動作イメージをしるために、ファイルの読み書きを禁止した上で、動かしてみることだってできるようになるのです。
+
+
+**実はリモート ファイルからもローカル アクセス自由
+これはちょっとびっくりです。
+
+インターネットから JavaScript や SWF をダウンロードして表示すると、その<strong>インターネット上のファイルから Apollo API 経由でローカル アクセスできてしまう</strong>のです。
+
+HTML 版 Apollo アプリでも、
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001743.jpg" width="377" height="209" alt="HTML 版ロード"></center><
+
+SWF 版 Apollo アプリもそうです。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001742.jpg" width="377" height="249" alt="SWF 版ロード"></center><
+
+図にも描きましたが、１つだけ例外があります。SWF 版 Apollo アプリから HTML を表示するときには、exposeRuntime というフラグで「ロードする HTML にローカル アクセスを認めるか」を制御できます。しかも、デフォルト値は false（認めない）と安全側に倒れています。
+
+
+Apollo のマニュアル(<a href="http://labs.adobe.com/wiki/index.php/Apollo:Documentation:Understanding_Apollo_security">Apollo:Documentation:Understanding Apollo security - Adobe Labs</a>)には次のような注意書きが載っています（日本語は意訳）。
+-セキュリティ ホールを作らないために一番気をつけなきゃいけないのは、外部のデータを読み取るときだよ
+--信頼できないページへのリンクを張っちゃダメ
+--信頼できない SWF をロードしちゃダメ
+--JSON をロードしたら、実行されるかもしれないよ (訳注：JSONP のことかな？)
+--外部ソースからのデータを読み取ってファイル書き込みするときは、必ず validate しようね
+-まだα版だから、潜在的な脆弱性つながりそうなところがあったら教えてね
+
+つまり、善意のつもりで作ったはずの Apollo アプリが、インターネット上の悪意のあるファイルをロードしてしまった段階で、危険な行動をしてしまうかもしれないのです。
+
+正式版がでるまでには、ローカルアクセスを禁じた上で外部リソースを表示するような仕組みがほしいものです。パッケージに含まないファイルをロードするときには、デフォルトで安全側に倒れているような設計なら最高です。
+
+**自作サンプルに紛れていたセキュリティー ホール
+恥ずかしながら、先日公開した、<a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる</a> のサンプルにはセキュリティ ホールが紛れていました。
+
+簡単な RSS リーダーを作ってみよう、という企画だったのですが、RSS で取得した URL を Apollo アプリ中で素直に &lt;a&gt; タグでリンクしてしまっていたのです。リンクをクリックした先のページに悪意があれば、ローカル ファイルにアクセスができてしまう状態でした。
+
+現在は、リンクはしないバージョンに修正していますが、これじゃ RSS リーダーというよりも、ただのヘッドライン リーダーです。flash.net.navigateToURL 関数を使えば、ブラウザで開くこともできるのですが、サンプルのソースが複雑になるので掲載は諦めました。
+
+危険なコードを排除してから表示する、といった方法も考えられますが、そこまでやるのはさすがに馬鹿馬鹿しい気分です。安全な Sandbox でページを表示するための仕組みの登場が望まれます。
+
+**まとめ
+まとめるとこうなります。
+
+-Apollo のα版はセキュリティ的には怖い。
+-正式版では改善されるはず。
+-でも、結局は他人のアプリをインストールするなら自己責任で。
+
+Apollo の今後のバージョンにおいて、セキュリティ機能がどのように強化されるのか、興味を持って見ていきたいと思います。
+
+セキュリティ機能が複雑になれば、その分、開発の手間が増えてしまうかもしれません。しかし、このままセキュリティー的にずぶずぶなままリリースされると、Apollo＝危険という図式ができあがってしまって、Active X の二の舞になってしまいかねません。
+
+設計にセンスを問われる部分ですが、Apollo 開発陣が優秀なことを信じて、α版のセキュリティ解説はひとまず終わりにします。
+
+**おまけ：サンプル ソース
+***HTML+JavaScript 版 Apollo アプリでの危険性テスト
+Apollo アプリとして利用する HTML
+>|html|
+<body>
+<a href="http://www.example.com/test.html">test</a>
+</body>
+||<
+
+サーバーにおいておく HTML
+>|html|
+<script>
+var file = runtime.flash.filesystem.File.desktopDirectory.resolve("test.txt");
+var stream = new runtime.flash.filesystem.FileStream();
+stream.open(file, runtime.flash.filesystem.FileMode.WRITE);
+stream.writeUTFBytes("hello world");
+stream.close()
+</script>
+test
+||<
+
+リンクをクリックすると、デスクトップに test.txt が作成される。
+
+***SWF 版 Apollo アプリでの危険性テスト
+Apollo アプリとして利用する mxml
+>|xml|
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml">
+  <mx:SWFLoader source="http://www.example.com/test.swf" width="100%" height="100%" />
+</mx:Application>
+||<
+
+サーバーにおいておく SWF の元になる ActionScript。
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.filesystem.*;
+    
+    public class sec_test extends Sprite {
+        public function sec_test():void {
+            var file:File = File.desktopDirectory.resolve("test.txt");
+            var stream:stream = new stream();
+            stream.open(file, FileMode.WRITE);
+            stream.writeUTFBytes("hello world");
+            stream.close()
+        }
+    }
+}
+||<
+
+Apollo アプリを起動すると、デスクトップに test.txt が作成される。

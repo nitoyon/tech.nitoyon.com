@@ -1,0 +1,184 @@
+---
+layout: post
+title: C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080801/atlcom_dispatch
+---
+そんなわけで、前回紹介した <a href="http://d.hatena.ne.jp/nitoyon/20080731/c_sharp_com">C# で COM コンポーネントを公開する</a> 方法で、コーディングして遊んでたのだけれど、どうもコレクションを実装してもうまく行かないので困り果てた話をしておこう。
+
+**JScript だと DISPID_VALUE が呼ばれない
+通常、COM オブジェクトをコレクションとして公開するには DISPID 0 (DISPID_VALUE) で Item メソッドを公開する。具体的にはこう。
+>|javascript|
+    [Guid("E5C9BABC-CF32-46de-ADF7-B1FF56126966")]
+    public interface IFoo
+    {
+        [DispId(0)]
+        int Item(int i);
+    }
+
+    [ClassInterface(ClassInterfaceType.None)]
+    [ProgId("Test.Foo")]
+    [Guid("B13E1F81-991F-4498-AB1F-FF83FB97914D")]
+    public class Foo : IFoo
+    {
+        public int Item(int i)
+        {
+            return i;
+        }
+    }
+||<
+DispId 属性を使って、ディスパッチID を 0 に強制している。
+
+VBScript からコレクション（配列）のようにアクセスできることが確認できる。
+
+>|vb|
+Dim test
+Set test = CreateObject("Test.Foo")
+
+For i = 0 To 10
+    WScript.echo(test(i))
+Next
+' 1 2 3 4 ...
+||<
+
+でも、JScript からだと、なぜか表示されない。
+
+>|javascript|
+var test = new ActiveXObject("Test.Foo");
+
+for(var i = 0; i < 10; i++){
+  WScript.echo(test[i]);
+}
+// 何も表示されない…
+||<
+
+どうやら、JScript で hoge[0] と書くと、hoge.0 というプロパティを探しに行くらしい。COM 的に表現すると、DISPID 0 の Item() メソッドを呼ぶのではなく、GetIDsOfNames() メソッドを呼んで、DISPID を探し始めるようだ…。
+
+**ATL で書き直し
+C# は GetIDsObNames() がラップされているため、細かく制御できない。つまり、C# で JScript からコレクションに見えるオブジェクトを作ることは不可能だ。
+
+仕方がないので、ATL で書き直すことにした。ATL COM を使うのは初めてだったけど、<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4881356992/nitoyoncom-22/ref=nosim">ATL COMプログラミング</a> を読みながら習得していった。
+
+>{% amazon jp:4881356992:detail %}<
+
+COM 関係の本はいくつかチャレンジしたが、これが一番分かりやすかった。ちょっと情報が古いけど、Visual Studio 2005 を触りながらでも理解できた。
+
+**IDispatchImpl を拡張して添え字でアクセス可能に
+通常、ATL でデュアルインターフェースを実装するには、IDispatchImpl を利用する。IDispatchImpl の実装を眺めてみると、GetIDsOfNames() などのメソッドはタイプライブラリ(tlb)から情報を読み取っている。つまり、IDispatchImpl では動的に増減する可変長のコレクションは扱えない。
+
+仕方がないので、IDispatchImpl を継承したクラスで拡張していくことにした。まずは、ヘッダファイル。
+====
+>|cpp|
+// IDipatchArrayImpl
+template <class T>
+class ATL_NO_VTABLE IDispatchArrayImpl : public T
+{
+public:
+    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+        LCID lcid, DISPID* rgdispid);
+    STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid,
+        LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
+        EXCEPINFO* pexcepinfo, UINT* puArgErr);
+
+    virtual HRESULT ArrayGet(int index, VARIANT* pvarResult) = 0;
+
+    virtual ~IDispatchArrayImpl(){};
+};
+||<
+IDispatch のインターフェースと ArrayGet というメソッドを宣言している。テンプレートを使ってるのは ATL の流儀に則るための必然。
+
+コレクションに見せたいクラスでは、IDispatchImpl を継承する代わりに、次のように IDispatchArrayImpl を継承する。
+>|cpp|
+class ATL_NO_VTABLE CDomUiNodeList :
+    public CComObjectRootEx<CComSingleThreadModel>,
+    public CComCoClass<CDomUiNodeList, &CLSID_DomUiNodeList>,
+    public IDispatchArrayImpl<IDispatchImpl<IDomUiNodeList, &IID_IDomUiNodeList, &LIBID_dom4winuiLib, 1, 0>>
+{
+||<
+このクラスの実装はこんな具合。詳しくはコメントを参照あれ。
+>|cpp|
+// IDipatchArrayImpl
+#define DISPID_ARRAY 5
+
+// プロパティ名が数字だったら、DISPID_ARRAY を足した
+// DISPID を返す
+template <class T>
+STDMETHODIMP IDispatchArrayImpl<T>::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+    LCID lcid, DISPID* rgdispid)
+{
+    // assumes that cNames == 1
+    if(cNames == 1)
+    {
+        // digit check
+        if(iswdigit(*rgszNames[0]))
+        {
+            int index = _wtoi(*rgszNames);
+            if(index >= 0)
+            {
+                *rgdispid = index + DISPID_ARRAY;
+                return ERROR_SUCCESS;
+            }
+        }
+    }
+    return T::GetIDsOfNames(riid, rgszNames, cNames, lcid, rgdispid);
+}
+
+// DISPID が DISPID_ARRAY 以上なら ArrayGet を呼び出す
+template <class T>
+STDMETHODIMP IDispatchArrayImpl<T>::Invoke(DISPID dispidMember, REFIID riid,
+    LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
+    EXCEPINFO* pexcepinfo, UINT* puArgErr)
+{
+    // Array member
+    if(dispidMember >= DISPID_ARRAY)
+    {
+        int index = dispidMember - DISPID_ARRAY;
+        if(wFlags & DISPATCH_PROPERTYGET)
+        {
+            // index 番目の要素を返す
+            return ArrayGet(index, pvarResult);
+        }
+        return S_OK; // return null
+    }
+
+    return T::Invoke(dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr);
+}
+
+// 内部で持ってる nodes コレクションの値を
+// pvarResult に設定してあげる
+HRESULT CDomUiNodeList::ArrayGet(int index, VARIANT* pvarResult)
+{
+    if(0 <= index && (UINT)index < nodes.GetCount())
+    {
+        nodes[index]->QueryInterface(IID_IDispatch, (void**)&pvarResult->pdispVal);
+        pvarResult->vt = VT_DISPATCH;
+        return S_OK;
+    }
+    return S_OK; // return null;
+}
+||<
+これで、hoge.0 でアクセスされても 0 番目の要素を返せるようになった。JScript から CoClass を配列として参照できるようになったわけだ。めでたしめでたし。
+
+ソース全体は以下を参照あれ。
+-<a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/DomUiNodeList.cpp?rev=16007">DomUiNodeList.cpp - CodeRepos::Share</a>
+-<a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/DomUiNodeList.h?rev=16007">DomUiNodeList.h - CodeRepos::Share</a>
+
+**おまけ：任意のプロパティを書き換えられるようにするには
+ここまでできたら、CoClass に JScript から任意のプロパティを設定可能にするコードも書ける。
+
+ここでは詳しい手順は省略するが、IDispatchImplExtensible というクラスを実装したので、興味のある人はソースをみてほしい。
+
+-<a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/IDispatchImplExtensible.h?rev=16007">IDispatchImplExtensible.h - CodeRepos::Share</a>
+
+このクラスは IDispatchImpl と同じように使いたかったので、大部分のソースを IDispatchImpl からコピってきて、GetIDsOfNames と Invoke の実装に手を入れている。
+
+ただ、現状のコードでは VT_DISPATCH 型を上書きするときに Release() してないので、たぶんメモリリークが発生する。流用する人はその辺のところを気をつけて自己責任でよろしく。
+
+**まとめ
+以上、<a href="http://d.hatena.ne.jp/nitoyon/20080720/wsh_dom">dom4winui.js</a> の裏側でした。
+
+参考文献：
+-<a href="http://www.ddj.com/184410820">Dr. Dobb's | Extending JScript</a>
+-<a href="http://www.eggheadcafe.com/forumarchives/win32programmerole/Jul2005/post23442263.asp">win32 programmer ole COM Collections/arrays accessed from JScript</a>
+

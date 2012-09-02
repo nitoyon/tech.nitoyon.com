@@ -1,0 +1,110 @@
+---
+layout: post
+title: CraftLaunch 3 を便利にする自作プラグイン６つ
+tags: CraftLaunch3
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20111004/craft_launch3_my_plugins
+---
+[http://d.hatena.ne.jp/nitoyon/20110831/programmable_launcher_clnch3:title=プログラマブルなコマンドライン ランチャー CraftLaunch 3 が楽しい] で CraftLaunch 3.Xを紹介しました。
+
+いままで自作プラグインとして、
+-[http://d.hatena.ne.jp/nitoyon/20110831/programmable_launcher_clnch3#seemore:title=window_command] プラグイン
+-[http://d.hatena.ne.jp/nitoyon/20110902/clnch3_open_folder:title=open_folder] プラグイン
+を公開しましたが、そのあと、さらに６つ作って便利に使っているので紹介しておきます。
+
+ソースは全て https://github.com/nitoyon/clnch3_extensions に置いています。
+
+**url_alias - URL を開きやすくするプラグイン
+CraftLaunch から特定の URL を開くのが便利になります。本体の機能でも特定の URL を開く機能はありますが、「コマンド名;パラメータ」の形で入力する必要があって不便なので、<code>;</code> を不要にしてみました。
+
+入力例：
+-<code>@nitoyon</code> と入力して Enter を押すと http://twitter.com/nitoyon を開く
+-<code>rfc822</code> と入力して Enter を押すと http://www.ietf.org/rfc/rfc822.txt を開く
+
+登録は、<code>config.py</code> に次のようにして正規表現で定義します。
+>|python|
+# config.py の configure() 関数に次のように記載します
+
+import url_alias
+#reload(url_alias)
+url_alias.register(window, 
+                   { 'regex': re.compile('^rfc(\d+)$', re.IGNORECASE), 
+                     'url': 'http://www.ietf.org/rfc/rfc%param%.txt' },
+                   { 'regex': re.compile('^@(\w+)$'), 
+                     'url': 'http://twitter.com/%param%' },
+                  )
+||<
+
+BTS やメーリングリストの番号をブラウザで開けるようにするとお仕事でも便利！
+
+**control_panel - コントロールパネルや管理ツールをコマンド化する プラグイン
+コントロールパネルや管理ツールのアイテムを開けます。
+-[ネットワーク接続] を開くには <code>cpl:Network</code> と入力
+-[イベント ビューワー] を開くには <code>cpl:EventViewer</code> と入力
+
+コントロールパネルや管理ツールの各アイテムは日本語版 Windows ではキーボードでアクセスしにくいので、キーボード派の人には便利じゃないでしょうか。
+====
+どういうコマンドが登録されるかは、<code><a href="https://github.com/nitoyon/clnch3_extensions/blob/master/control_panel.py#L45">ControlCommandList.__init__()</a></code> を見るとだいたい分かると思います。
+
+<code>cpl:</code> を入力するのが面倒な人は、<code>prefix=''</code> とすればプレフィックスなしで登録できますが、不要なものまで登録されて名前空間が汚染されるので嫌な人も多いでしょう。そんな人は、後述の <code>misc.py</code> の <code>addAlias</code> 関数で別名を登録するほうがお勧めです。
+
+>|python|
+import misc
+misc.addAlias( window, u'cpl:Date/Time', u'ClockSet' )
+||<
+
+**path_plus - 相対パス・フォルダエイリアスを可能にするプラグイン
+登録したコマンドからサブフォルダに移動しやすくなります。
+
+たとえば、マイ ドキュメントを <code>~</code> コマンドとして登録しておけば、
+-<code>~\</code> でマイドキュメント以下のファイルが補完で現れる
+-<code>~\memo.txt</code> でマイドキュメント直下の <code>memo.txt</code> を開ける
+のように使えます。同じように、デスクトップやダウンロードフォルダを登録しておけば便利です。
+
+また、実行ファイルを登録したコマンドについても、コマンド名のあとに <code>\</code> をつけることで、実行ファイルのフォルダ内のファイルを補完してくれます。たとえば、<code>CraftLaunch</code> コマンドを登録していたとすると、
+-<code>CraftLaunch\</code> で CraftLaunch インストールフォルダ以下のファイルが補完で現れる
+-<code>CraftLaunch\readme.txt</code> で CraftLaunch の readme を表示できる
+といった使い方ができます。
+
+相対パス対応としては、<code>.\hoge\foo</code> のようにしてファイルを開けるようにしています。デフォルトの CraftLaunch では、<code>.\</code> でカレントフォルダ直下のファイルは開けるものの、１階層以上深いファイルは開けないバグがあります。これは、<code>ShellExecute</code> をするとき、実行するファイルがあるフォルダをカレントディレクトリに設定するのが原因です。この挙動自体は絶対パスで指定するときにはうまくいくのですが、相対パスのときは二重に相対化してしまうので、勝手に修正してみました。
+
+ところで、CraftLaunch のカレントフォルダは、CraftLaunch のショートカットの [初期フォルダー] で指定できます。これは Windows の Tips ですね…。
+
+実装面では、<code>commandline_Launcher</code> と <code>commandline_ExecuteFile</code> をラップして置き換えるというアグレッシブなことをしています。何か予想外の問題を引き起こす可能性があるかもしれませんが、私が日常的に使っている限りは問題は起きていません。
+
+**python_console - Python のインタラクティブシェルが使えるプラグイン
+Python が使えるんなら、Python のコードの評価も CraftLaunch 上でできるようにしてしまおうというプラグインです。
+
+<code>&gt;&gt;&gt; </code> を先頭に入力することで、Python のインタラクティブ シェルと同等の動作をしてくれます。
+>|python|
+>>> a = [1,3,5]
+>>> a
+[1, 3, 5]
+>>> for i in a:
+...     print i
+... 
+1
+3
+5
+||<
+
+すごいことをしてそうですが、標準ライブラリの <code>code.InteractiveConsole</code> の機能にほとんどの処理を任せています。ただ、CraftLaunch ではスペースキーが入力できないようになっているので、これを迂回するためのハックを施しています。
+
+**run_as_administrator - 管理者として実行できるプラグイン
+管理者として実行させたいコマンドを Ctrl-Shift-Enter で実行すると、管理者権限で実行してくれます。Vista 以降で UAC を有効のまま使っている人には便利です。
+
+この挙動は、Windows Vista 以降のスタートメニュー中の [プログラムとファイルの検索] で Ctrl-Shift-Enter を押すと、管理者として実行してくれる動作と合わせています。
+
+実装上は、<code>ShellExecuteW</code> の処理を置き換えていて、Ctrl-Shift-Enter が押されていたときに、<code>lpVerb</code> に <code>runas</code> を指定するようにしています。そのため、コマンドだけではなく、直接パスを入力した場合にも、Ctrl-Shift-Enter が押されていれば管理者として実行してくれます。
+
+
+**misc - 雑多な拡張
+独立して作るほどではない雑多な機能を実装しています。
+
+次の２つの機能が入っています。
+:<code>command_ClearConsole</code> コマンド:コンソールをクリアします。<code>python_console</code> プラグインの出力を消したいときや、プラグイン開発していて例外メッセージに満ち溢れてきたときに便利。
+:<code>addAlias</code> 関数:コマンドに別名を設定する関数です。<code>control_panel</code> プラグインで便利。
+
+**まとめ
+工夫次第で自分好みにできる CraftLaunch 3 はやっぱり楽しい！
+

@@ -1,0 +1,112 @@
+---
+layout: post
+title: FIVe3D で Keynote 風 Cube トランジッション
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080513/p1
+---
+最近、いくつかの Flash ブログで <a href="http://five3d.mathieu-badimon.com/">FIVe3D</a> が取り上げられていたので、自分も触ってみた。バージョンは v2.1。
+
+確かにこれは簡単だ。クラス数も少ないし、クラス名が ActionScript のものと似てるので直感的。Sprite3D クラスの graphics プロパティで Graphics3D オブジェクトが取得できて、 beginFill() とか drawCircle() で図が描ける。座標空間は 3D。（参考：<a href="http://moringo.moo.jp/wordpress/?p=115">FIVe3D 3D空間に描画 | moriBlog</a>）
+
+ってことで、Bitmap3D クラスを使って Keynote 風な Cube トランジッションを作ってみた。
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFive3dCubeEffect.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=265&amp;title=Cube+transition&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 or above required)</noscript><
+
+ソースの考え方は <a href="http://www.unic8.com/en/news/labs/flexcube-os-x-3d-look-2.html">unic8 Studios - Flex Cube - 3D OSX look</a> と同じ。
+
+ただ、FIVe3D は奥行きを一切考えてくれないところに注意が必要。単に座標変換するだけのライブラリなので、前後関係は考慮せずにそのまま表示しちゃう。だからこそ、ライブラリのソースがシンプルなんだけどね。
+
+このサンプルでは困るので回転具合に応じて自力で前後関係を入れ替えてる。Tweener.addTween() の onUpdate のところ。
+
+(追記) Z-Sort の機能を使えば自動でやってくれるようだ。（参考）<a href="http://moringo.moo.jp/wordpress/?p=122">[FIVe3D]Z-Sortの続き。Cubeを表示 | moriBlog</a>
+
+あと、Flex SDK だと fl.motion.Color が必要だとかなんとか怒られたけど、適当にコメントアウトして逃げた。
+
+ソースはこちら（84行）。
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.events.MouseEvent;
+    import flash.utils.setInterval;
+    import five3D.display.*;
+
+    import caurina.transitions.Tweener;
+
+    public class Five3dCubeEffect extends Sprite {
+        private const WIDTH:int = 400;
+        private const HEIGHT:int = 267;
+
+        [Embed(source="1.jpg")]
+        private var Image1:Class;
+        [Embed(source="2.jpg")]
+        private var Image2:Class;
+        [Embed(source="3.jpg")]
+        private var Image3:Class;
+
+        private var isCube:int = -1;
+
+        public function Five3dCubeEffect() {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var images:Array = [];
+            images.push(new Image1());
+            images.push(new Image2());
+            images.push(new Image3());
+
+            addChild(images[0]);
+            var index:int = 0;
+
+            setInterval(function():void{
+                isCube = (Math.random() < 0.5 ? 1 : -1);
+                transition(images[index], images[(index + 1) % images.length]);
+                index = (index + 1) % images.length;
+            }, 3500);
+        }
+
+        private function transition(bmp1:Bitmap, bmp2:Bitmap):void {
+            var scene:Scene3D = new Scene3D();
+            scene.x = WIDTH / 2;
+            scene.y = HEIGHT / 2;
+            addChild(scene);
+
+            var box:Sprite3D = new Sprite3D();
+            box.z = isCube * WIDTH / 2;
+            scene.addChild(box);
+
+            var img2:Bitmap3D = new Bitmap3D(bmp2.bitmapData);
+            box.addChild(img2);
+            img2.x = WIDTH / 2;
+            img2.y = -HEIGHT / 2;
+            img2.z = -isCube * WIDTH / 2;
+            img2.rotationY = -isCube * 90;
+
+            var img1:Bitmap3D = new Bitmap3D(bmp1.bitmapData);
+            box.addChild(img1);
+            img1.x = -WIDTH / 2;
+            img1.y = -HEIGHT / 2;
+            img1.z = -isCube * WIDTH / 2;
+
+            Tweener.addTween(box, {
+                time: 1.5,
+                rotationY: isCube * 90,
+                transition: "easeInOutCubic",
+                onStart: function():void{
+                    removeChild(bmp1);
+                },
+                onUpdate: function():void{
+                    if(Math.abs(box.rotationY) > 45){
+                        box.setChildIndex(img1, 0);
+                    }
+                },
+                onComplete: function():void{
+                    box.parent.removeChild(box);
+                    addChild(bmp2);
+                }
+            });
+        }
+    }
+}
+||<

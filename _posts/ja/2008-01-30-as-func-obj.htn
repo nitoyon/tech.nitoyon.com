@@ -1,0 +1,82 @@
+---
+layout: post
+title: AS3 で関数かつクラスっぽいオブジェクトを作る
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080130/as_func_obj
+---
+jQuery では、$ を関数としてもハッシュとしても使っている。
+-$("#foo")  → エレメントを選択
+-$.each() → ユーティリティ関数の呼び出し
+
+as3Query でも同じようにやりたかったんだけど、いい方法が思いつかずに苦しんでた。
+
+**失敗例 1
+$ を public な function として定義する。
+
+Function は dynamic なクラスなので、$["each"] = function(){} とすれば関数を代入できる。$["each"] で呼び出せる。
+
+けども、$.each とすると、静的型付け言語の宿命でコンパイルエラーになってしまう。
+
+**失敗例 2
+$ をクラスにしてみたら、$() がキャストと解釈されて、$("#foo") が実行時のキャストエラーになった…。
+
+**失敗例 3
+Function を extends しようとしたら、final だって怒られた。
+
+**失敗例 4
+Proxy クラスを使ってみたけども、キャスト時の挙動は決められないようだ。
+
+**ひらめいた
+Object にしちゃえばよかったんだ！
+>|javascript|
+package {
+    public const $:Object = function():void {
+        if(!$.each){
+            $.each = function():void{
+                trace("each called");
+            }
+        }
+
+        trace("$ called");
+    }
+}
+||<
+Object なので $.each のチェックは実行時。よって、コンパイルが通る。
+
+実行結果はこんな具合。
+>|javascript|
+$();       // $ called
+$.each();  // each called
+||<
+
+ただ、これだと $() を呼んだあとじゃないと、$.each が使えない。
+
+ちょっと泥臭く対応したらこうなった。
+>|javascript|
+package {
+    public const $:Object = function():Function {
+        var f:Function = function():void{
+            trace("$ called");
+        }
+        f.each = function():void{
+            trace("each called");
+        }
+
+        return f;
+    }();
+}
+||<
+
+無名関数の中で、のちほど $ になる関数 f を宣言しておいて、each を代入している。
+
+$ 自体は public なオブジェクトなのでプログラムの最初のほうで初期化される。初期化時に無名関数が評価されて、each が設定された f が $ に代入されるというわけだ。
+
+実行結果はこんな具合。
+>|javascript|
+$.each();  // each called
+$();       // $ called
+||<
+
+**感想
+なんだか JavaScript ちっくで楽しい。同じようにすれば、JavaScript 風のクラス定義もできるような気がする。

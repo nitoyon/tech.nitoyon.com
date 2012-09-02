@@ -1,0 +1,65 @@
+---
+layout: post
+title: jQuery で JSONP ２通り
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071213/jquery_jsonp
+---
+jQuery を使って JSONP でリクエストする方法を２通り紹介するよ。
+
+**その１: $("&lt;script&gt;")
+<code>document.createElement()</code> を <code>$()</code> を使って実現する。
+>|javascript|
+$("<script>")
+    .attr('type', 'text/javascript')
+    .attr('src', "http://www.example.com/jsonp.cgi?param1=value1&callback=myCallback")
+    .appendTo($("head"));
+
+function myCallback(json){
+    // ロード完了時にここが呼ばれる
+}
+||<
+
+http://www.example.com/jsonp.cgi?param1=value1&callback=myCallback にリクエストがいく。
+
+<code>callback</code> のところは、サービスによって指定の仕方が違うかもね。
+
+**その２: $.ajax
+<code>$.ajax</code> の <code>dataType</code> で <code>jsonp</code> が使える。
+>|javascript|
+$.ajax({
+    url : "http://www.example.com/jsonp.cgi",
+    dataType : "jsonp",
+    data : {
+        param1 : "value1"
+    },
+    success : function(json){
+        // ロード完了時にここが呼ばれる
+    },
+    error : function(){
+        alert('error');
+    }
+});
+||<
+こっちの方がシンプルに書ける。コールバック用の関数は jQuery が自動的に生成して、結果に応じて <code>success</code> や <code>error</code> を呼び出してくれる。
+
+API によってはコールバックを指定するためのパラメータが <code>callback</code> ではなくて、別の名前の場合がある。このときは <code>jsonp</code> パラメータを指定する。
+>|javascript|
+$.ajax({
+    url : "http://www.example.com/jsonp.cgi",
+    dataType : "jsonp",
+    data : {
+        param1 : "value1"
+    },
+    jsonp : "jsoncallback", // ← !!!これ!!!
+    success : function(json){
+        // ロード完了時にここが呼ばれる
+    },
+    error : function(){
+        alert('error');
+    }
+});
+||<
+
+裏側では、http://www.example.com/jsonp.cgi?jsoncallback=jsonp1197507452843&_=1197507453671&param1=value1 という URL にリクエストが行く。<code>jsonp1197507452843</code> というのが jQuery が動的に生成するコールバック関数。呼び終わったら、ちゃんと自分自身を <code>undefined</code> にしているので、グローバル名前空間を汚すのも一瞬で済むようだ。
+

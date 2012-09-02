@@ -1,0 +1,58 @@
+---
+layout: post
+title: Apollo アプリを AIR β版で動かすための方法
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070612/apollo_to_air_build
+---
+<s>まだ途中のため、中途半端かもしれないけど参考程度に。</s>
+
+(2007.6.13 1:00 追記) <a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe AIRメモ</a> さんが早速 AIR β版に対応しています。すばやい対応！　ここよりも、<a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe AIRメモ</a> さんのほうがお勧め。
+
+**1. 開発環境のアップグレード
+Flex Builder 2 を使っている人は 3 を、Flex 2 SDK を使っている人は Flex 3 SDK を導入します。
+
+Builder はどうか知らないけど、Flex SDK は共存できるので Flex 2 が必要な人は残しておいたほうがいいでしょう。
+
+**2. ADF の修正
+ADF(Apollo Descriptor File) と呼ばれるアプリケーションの情報を記述した XML ファイルの仕様が変更になっています。
+
+手順はこう。
+
+-xmlns の apollo/application/1.0.M3 を air/application/1.0.M4 に変更
+-properies タグを取り除いて、name や publisher を application 直下に配置
+
+例。
+
+Apollo α版でこうだとすると
+>|xml|
+<?xml version="1.0" encoding="UTF-8"?>
+<application appId="com.nitoyon.sample" version="0.1"
+  xmlns="http://ns.adobe.com/apollo/application/1.0.M3">
+  <properties>
+    <name>application name</name>
+    <publisher>nitoyon</publisher>
+    <description>sample application</description>
+    <copyright>2007 nitoyon</copyright>
+  </properties>
+  <rootContent systemChrome="standard" visible="true">hoge.html</rootContent>
+</application>
+||<
+
+AIR β版ではこうするよ。
+>|xml|
+<?xml version="1.0" encoding="UTF-8"?>
+<application appId="com.nitoyon.sample" version="0.1"
+  xmlns="http://ns.adobe.com/air/application/1.0.M4">
+  <name>application name</name>
+  <publisher>nitoyon</publisher>
+  <description>sample application</description>
+  <copyright>2007 nitoyon</copyright>
+  <rootContent systemChrome="standard" visible="true">hoge.html</rootContent>
+</application>
+||<
+
+あとは、仕様変更になったクラスを使っていなければ、そのままのソースで動くと思います。
+
+再コンパイル(amxmlc)・パッケージング(adl) はまだ試してないので中途半端だけど時間切れ。
+

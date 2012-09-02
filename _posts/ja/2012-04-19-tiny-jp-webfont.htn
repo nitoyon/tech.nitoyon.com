@@ -1,0 +1,141 @@
+---
+layout: post
+title: 文字を制限した軽量な日本語 Web フォントを作成する方法
+tags: HTML5
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120419/tiny_jp_webfont
+---
+最近、Web フォントをつかってかっこいい表現をしているサイトも増えてきました。ただ、残念ながら 日本語で Web フォントを使うのは厳しいのが現実です。
+
+というのも、日本語には英数字・ひらがな・カタカナ・漢字・記号・・・など必要になる文字数が多すぎるため、フルスペックの日本語の Web フォントはファイルサイズがすごいことになりそうです。
+
+そこで、「<strong>利用したい文字だけを含んだ Web フォントをその都度作ればいいんじゃね？</strong>」ということを考えてみました。アイデア自体は珍しいものではなく、例えば <a href="http://decomoji.jp/">デコもじ</a> というサービスは同じようなことをやってくれるようです（ただし、無料では「書体 1 つまで」「5 文字まで」など機能制限が大きい）。
+
+(追記) このような軽量フォントを作成することを<strong>「サブセット化」</strong>というようです。
+
+**手始めに日本語 Web フォントを作ってみる
+まずは簡単に日本語 Web フォントを作る方法を紹介しておきます。
+
+無料で公開されているフォントの中にも、フォントファイルの改変を禁止しているものが意外と多いので注意が必要です。今回は、武蔵システムが公開している <a href="http://musashi.or.tv/kouzansousho.htm">衡山毛筆フォント草書</a> を選びました。無料で、改編も自由とのことで遠慮なく活用させてもらいます。
+
+(追記) Web フォントとして利用できるフォント一覧が <a href="http://www.yomotsu.net/wp/?p=565">WebFonts として利用できるフリーの和文フォント | ヨモツネット</a> にまとまっていました。
+
+Web フォント化する方法ですが、同じく武蔵システムが公開している <a href="http://musashi.or.tv/woffconv.htm">WOFF コンバーター</a> を使ってみました。実行してみるとサンプルの HTML も吐いてくれます。
+
+ブラウザー上で毛筆フォントを表示できました！
+><center>[f:id:nitoyon:20120419013354p:image]</center><
+====
+
+気になるファイルサイズは次のようになっていました。
+>||
+衡山毛筆フォント草書.ttf: 5,732 KB
+                 ↓
+衡山毛筆フォント草書.woff: 3.697 KB
+||<
+
+うーん、3 MB 以上の Web フォントを使うのは現実的ではありませんね。
+
+**不要な文字を取り除いてみる
+3 MB は嫌すぎるので、使いたい文字のみを含んだ Web フォントを作ってみましょう。
+
+今回は
+>>
+日本語フォントをWebFontに変換すると数MBになってしまうので日本語は難しいと思っていました。
+<<
+という文を表示するためだけの Web フォントを作ってみます。
+
+フォントの編集ソフトといえば FontForge や TTEdit などが有名なようですが、手作業でやるのは耐えられません。FontForge はスクリプト機能もあるようですが、Windows では環境の準備が大変なので敬遠しました。
+
+そこで、<a href="http://d.hatena.ne.jp/project_the_tower2/20101106/1289060546">Webフォント変換サービスを作ろう その1（ ´_ゝ`） - Webと文字</a> で紹介されていた Python のライブラリ <a href="http://sourceforge.net/projects/fonttools/files/">TTX/FontTools</a> を使ってみました。手順とソースコードは最後に紹介します。
+
+変換したところ、こんなフォントができあがりました。
+
+><center>[f:id:nitoyon:20120419013355p:image]</center><
+
+5.7 MB もあった ttf ファイルが  <strong>214 KB</strong> になりました。「Windows でコンピューターの世界が広がります。」が歯抜けになっていることからも、必要最低限の文字しか含まれていないことが分かります。
+
+この ttf ファイルを WOFF に変換すると次のようになりました。
+>||
+衡山毛筆フォント草書(改).ttf: 214 KB
+                 ↓
+衡山毛筆フォント草書(改).woff: 67 KB
+||<
+67 KB なら画像ファイル 1 枚程度のサイズです。
+
+画像で埋め込むよりも SEO 効果は高いですし、文字のコピペもできます。タイトル字に画像を使うぐらいなら、こっちのほうがいいかもしれません。
+
+**もっとサイズを小さくしたい！
+今回のスクリプトでは<strong>「未使用の文字のベクターデータを空にする」</strong>という処理のみを行っています。
+
+フォントファイルには、その他にも
+- バイト列をどの文字に対応付けるか (文字コードごとに…)
+- 縦書、合字、カーニング、異体字…etc
+の情報が残っています。このあたりを整理できれば、まだまだファイルサイズは小さくできます。
+
+空にしたベクターデータについても、「何も描画しない」というデータが残ってしまっています。これを削除できればもっとサイズを抑えられるはずです。
+
+しかし、いろいろ試してみたのですが、各テーブルが複雑に絡まりあっていて、一部を下手に削除すると保存時にエラーがでたり、表示できないフォントファイルができあがったりと、かなり難易度高かったです。
+
+かといって、<a href="http://www.microsoft.com/typography/otspec/">OpenFont の仕様書</a> を最初から読む気にもなりません。フォントの世界は難しいです…。
+
+何かいいツールやライブラリがあれば教えてください。(追記)<strong><a href="http://www.fontsquirrel.com/fontface/generator">Font Squirrel | Create Your Own @font-face Kits</a> を使えば日本語のサブセット化にも対応してくれるようです。ためしに 1 文字のフォントを作ったら数 KB になりました。</strong>
+
+**スクリプトの使い方
+では最後にスクリプトを公開します。
+
+動作には Python 2.X、が必要です。
+>http://d.hatena.ne.jp/project_the_tower2/20101106/1289060546:title=Webフォント変換サービスを作ろう　その１（　´_ゝ`） - Webと文字>
++Python 2.X の実行環境を用意します。
++<a href="http://numpy.scipy.org/">Numpy</a> をダウンロードして、インストールします。
++<a href="http://sourceforge.net/projects/fonttools/files/">fonttools-2.3.tar.gz</a> をダウンロードして、展開します。
+<<
+
+実行するには次のようにします。
+>|sh|
+python compact.py FontName.ttf < test.txt
+||<
+- 第一引数にサイズを小さくするフォントを指定する
+- 取り出す文字を含んだ文章を UTF-8 で保存して、標準入力から渡す
+- 変換に成功すると <code>converted-FontName.ttf</code> が出力される
+- 出力フォントに半角の数字や記号が含まれないバグあり (グリフ名が <code>zero</code>、<code>plus</code> などになっていて機械的変換できなかった。本気でやるなら <code>cmap</code> を見るべきなのだが面倒だった。)
+
+ソースコードは以下の通りです。
+>|python|
+import fontTools.ttLib.tables
+import fontTools.ttLib
+import sys
+import os.path
+
+if len(sys.argv) < 2:
+    print "font file not specified"
+    sys.exit(1)
+
+path = sys.argv[1]
+if not os.path.exists(path):
+    print "file not found: %s" % path
+    sys.exit()
+
+s = ''.join(sys.stdin.readlines())
+s = unicode(s, 'utf-8')
+
+chars = set()
+for c in s:
+    if ord(c) < 256:
+        chars.add(c)
+    else:
+        chars.add("uni%04X" % ord(c));
+chars.add('.notdef')
+
+tt = fontTools.ttLib.TTFont(path)
+
+for g in dict(tt['glyf'].glyphs):
+    if g in chars:
+        print "skipping %s" % g
+        continue
+    tt['glyf'].glyphs[g] = fontTools.ttLib.tables._g_l_y_f.Glyph()
+
+output_path = "converted-%s" % path
+tt.save(output_path)
+print "wrote %s" % output_path
+||<
+

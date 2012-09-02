@@ -1,0 +1,177 @@
+---
+layout: post
+title: Processing のトンネルを AS3 で書いてみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090327/tunnel_as3
+---
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309003805.png" width="450" height="166"></center><
+
+昨日に続き、Processing 本体に付属しているサンプルで面白かった <a href="http://processing.org/learning/topics/tunnel.html">Tunnel</a> を ActionScript 3 に移植してみました。
+
+完成品はこちら。重めなのでクリックすると始まりますよ。
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FTunnel.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=300&amp;title=Tunnel+AS3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>（Flash Player 9 以降がインストールされていると、ここにトンネルが表示されますよ）</noscript></center><
+
+**<b>仕組み</b>
+ぐるぐる吸い込まれるように見えますが、「トンネルの中をまっすぐ進むアニメーション」と「絵全体の平行移動」を組み合わせです。平行移動は単にずらすだけなので、「トンネルの中を進むアニメーション」について説明していきましょう。
+
+トンネルの壁面は red_smoke.jpg という上下左右がつながったテクスチャ画像を貼り付けてます。そこで気になるのが、テクスチャを貼り付けるときの計算式。
+
+実はこのような式で計算しています。
+- [tex:{\rm depth} = \frac{\rm ratio}{l_{x,y}} \times h_{\rm texture} \, {\rm mod} \, h_{\rm texture}]
+- [tex:{\rm angle} =  \frac{\theta}{2\pi} \times w_{\rm texture}]
+
+まずは depth。l<sub>x,y</sub> が中心からの距離、ratio が定数（ここでは32）です。つまり、中心からの距離に応じて、縦方向の座標が決まります。
+
+続いて angle。こちらは、中心からの角度に応じて横方向の位置が決まります。
+
+図にすると、こうなります。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090326/20090326020632.png" width="406" height="269" border="1"></center><
+
+もっと直感的に考えると、テクスチャを縦に並べて、右と左をわっかにして上から覗き込んだイメージでしょうか。
+
+**<b>高速化必須！</b>
+オリジナルのはピクセル単位に演算していたのですが、これをそのまま移植してみたらデュアルコアで CPU 常時 50% になってしまった。ちなみに、オリジナルの Processing 版は 30% 程度。
+
+高速化しようにも getPixel/setPixel は必須そうだったので、あらかじめバッファに必要な画像を描画しておく作戦をとりました。流れとしてはこんな感じです。
++回転中の映像が一定周期でループするようにパラメータを調整する
++再生前に１ループを50個の BitmapData に描画しておく
++実際にアニメーションが始まったら、BitmapData を順番に表示していく
+結果として、CPU 2～3% 程度に収まったので、なんとか Web 上で公開できるレベルになりました。
+
+以下、ソースコードです。高速化のために、だいぶ長くなっちゃいました。
+====
+><div class="fix-height-syntax">
+>|javascript|
+// Processing Tunnel (AS3 version) 
+// original source: http://processing.org/learning/topics/tunnel.html
+package {
+import flash.display.*;
+import flash.geom.*;
+import flash.text.*;
+import flash.utils.setTimeout;
+
+[SWF(backgroundColor="#ffffff", width="320", height="200")]
+public class Tunnel extends Sprite{
+    [Embed(source='red_smoke.jpg')]
+    private var Texture:Class;
+    private var textureImg:BitmapData;
+
+    private var tunnelEffect:BitmapData;
+    private var distanceTable:Array = [];
+    private var angleTable:Array = [];
+
+    private var w:int;
+    private var h:int;
+
+    private var count:int;
+    private const CYCLE:int = 50;
+    private var bmdCache:Array = [];
+
+    public function Tunnel(){
+        // Load texture 512 x 512
+        textureImg = new Texture().bitmapData;
+
+        // Create buffer screen
+        tunnelEffect = new BitmapData(320, 200);
+        addChild(new Bitmap(tunnelEffect));
+        w = tunnelEffect.width;
+        h = tunnelEffect.height;
+
+        var ratio:Number = 32.0
+
+        // Make the tables twice as big as the screen. 
+        // The center of the buffers is now the position (w,h).
+        for (var x:int = 0; x < w * 2; x++){
+            distanceTable[x] = [];
+            angleTable[x] = [];
+            for (var y:int = 0; y < h * 2; y++){
+                var depth:int = int(ratio * textureImg.height / Math.sqrt((x - w) * (x - w) + (y - h) * (y - h))) ;
+                var angle:int = int(0.5 * textureImg.width * atan2(y - h, x - w) / Math.PI) ;
+
+                // The distance table contains for every pixel of the 
+                // screen, the inverse of the distance to the center of 
+                // the screen this pixel has.
+                distanceTable[x][y] = depth ;
+
+                // The angle table contains the angle of every pixel of the screen, 
+                // where the center of the screen represents the origin.
+                angleTable[x][y] = angle ;
+            }
+        }
+
+        var tf:TextField = new TextField();
+        tf.text = "Click to start...";
+        addChild(tf);
+
+        var i:int = 0;
+        stage.addEventListener("click", function(event:*):void{
+            stage.removeEventListener("click", arguments.callee);
+            setTimeout(function():void{
+                if(i >= CYCLE){
+                    // Buffering finish. Start animating.
+                    addEventListener("enterFrame", function(event:*):void{draw()});
+                    removeChild(tf);
+                    return;
+                }
+
+                // Create buffered images.
+                tf.text = "Buffering " + int(i / CYCLE * 100) + "%...";
+                createBmdCache(i++);
+                setTimeout(arguments.callee, 20);
+            }, 0);
+        });
+    }
+
+    // Create i-th buffered image.
+    private function createBmdCache(i:int):void{
+        var timeDisplacement:Number = count++ / CYCLE;
+
+        // Calculate the shift values out of the time value
+        var shiftX:int = textureImg.width * timeDisplacement; // speed of zoom
+        var shiftY:int = textureImg.height * timeDisplacement; //speed of spin
+
+        var bmd:BitmapData = new BitmapData(w * 2, h * 2);
+        for (var y:int = 0; y < h * 2; y++)  {
+            for (var x:int = 0; x < w * 2; x++) {
+                // Make sure that x + shiftLookX never goes outside 
+                // the dimensions of the table
+                var texture_x:int = (distanceTable[x][y] + shiftX) % textureImg.width;
+                var texture_y:int = (angleTable[x][y] + shiftY + textureImg.height) % textureImg.height;
+
+                var color:uint = textureImg.getPixel(texture_x, texture_y);
+                color = darken(color, 300 / distanceTable[x][y]);
+                bmd.setPixel(x, y, color);
+            }
+        }
+        bmdCache[i] = bmd;
+    }
+
+    private function draw():void{
+        // looking left/right and up/down
+        var shiftLookX:int = w / 2 + w / 4 * Math.sin(count / 20);
+        var shiftLookY:int = h / 2 + h / 4 * Math.sin(count / 20 * 1.5);
+        var rect:Rectangle = new Rectangle(shiftLookX, shiftLookY, w, h);
+
+        tunnelEffect.copyPixels(bmdCache[count % CYCLE], rect, new Point(0, 0));
+        count++;
+    }
+
+    private function darken(color:uint, brightness:Number):uint{
+        brightness = brightness > 1 ? 1 : brightness < 0 ? 0 : brightness;
+        return (((color & 0xff0000) >> 16) * brightness << 16)
+             + (((color & 0x00ff00) >>  8) * brightness <<  8)
+             + (((color & 0x0000ff)      ) * brightness      );
+    }
+
+    private function atan2(y:Number, x:Number):Number{
+        if (x == 0) return Math.PI * (y > 0 ? .5 : -.5);
+        if (x < 0 && y < 0) return Math.atan(y / x) - Math.PI;
+        return Math.atan(y / x) + (x > 0 ? 0 : Math.PI)
+    }
+}
+}
+||<
+></div><
+

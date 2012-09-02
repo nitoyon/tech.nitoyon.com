@@ -1,0 +1,47 @@
+---
+layout: post
+title: jQuery UI モーダルダイアログの仕組み
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20110303/jquery_modal_dialog
+---
+jQuery UI の Dialog 機能はダイアログをモーダル表示することができる。
+
+<a href="http://jqueryui.com/demos/dialog/#modal">サンプル</a>を見ると、
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110303/20110303015432.jpg" width="400" height="307"></center><
+
+-背景がグレーアウトされて、手前のダイアログしか操作できない
+-Tab キーを動かしてもダイアログからフォーカスを移せない
+といった動作になっている。
+
+いままでいろんなライブラリの擬似モーダル実装を見てきたが、Tab キーを押したらこっそり裏側の部分にフォーカスを移せるものばかりだったので、Tab キーにちゃんと対処していたところに驚いた。
+
+どうやって実装してるんだろうと思って <code>jquery.ui.dialog.js</code> を見てみたら、次のように泥臭く実装していた。
+>|javascript|
+    // prevent tabbing out of modal dialogs
+    if (options.modal) {
+        uiDialog.bind('keypress.ui-dialog', function(event) {
+            if (event.keyCode !== $.ui.keyCode.TAB) {
+                return;
+            }
+
+            var tabbables = $(':tabbable', this),
+                first = tabbables.filter(':first'),
+                last  = tabbables.filter(':last');
+
+            if (event.target === last[0] && !event.shiftKey) {
+                first.focus(1);
+                return false;
+            } else if (event.target === first[0] && event.shiftKey) {
+                last.focus(1);
+                return false;
+            }
+        });
+    }
+||<
+Tab キーが押されたら、ダイアログ外にフォーカスが移らないよう、無理やりダイアログ内にフォーカスを設定している。
+
+ちなみに、ソース中に <code>:tabbable</code> という CSS 擬似クラスが登場しているが、これは <code>jquery.ui.core.js</code> で独自定義されているもので、標準の CSS や生の jQuery では利用できないので注意が必要だ。
+
+フォーカスを無理やりなんとかするようなブラウザ拡張がインストールされていたら対処しきれないが、多くの場合ではこの実装で問題なさそうだ。
+

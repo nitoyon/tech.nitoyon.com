@@ -1,0 +1,64 @@
+---
+layout: post
+title: BitmapData のチャンネル分解
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070912/channel_test
+---
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070912/20070912092956.jpg" width="424" height="313" alt="チャンネル分解">
+
+BitmapData.copyChannel の習作。画像をチャンネルごとに分解してみた。左上が赤、右上が緑、左下が青、右下がアルファ。
+
+元の写真の赤いところ（岩）が、赤チャンネルでは白っぽくなってます。空はやはり青チャンネルが白っぽくなってますね。元写真は透過PNGにしてあるので、アルファチャンネルもそれなりに表示されてます。
+
+実装方法はシンプル。赤チャンネルなら元画像の赤チャンネルを RGB それぞれのチャンネルにコピーしています。
+
+ソースはこちら。
+>|javascript|
+package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
+    import flash.text.*;
+
+    public class PngTest extends Sprite
+    {
+        [Embed(source='channel.png')]
+        private var SamplePicture:Class;
+        
+        public function PngTest()
+        {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var icon:Bitmap = new SamplePicture();
+            addChild(icon);
+
+            var zeroPoint:Point = new Point(0, 0);
+            var rect:Rectangle = new Rectangle(0, 0, icon.width, icon.height);
+
+            var channels:Array = [BitmapDataChannel.RED, BitmapDataChannel.GREEN, 
+                BitmapDataChannel.BLUE, BitmapDataChannel.ALPHA];
+            for(var i:int = 0; i < channels.length; i++)
+            {
+                var channel:uint = channels[i];
+                var bmpdata:BitmapData = new BitmapData(icon.width, icon.height);
+
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.RED);
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.GREEN);
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.BLUE);
+
+                var bmp:Bitmap = new Bitmap(bmpdata);
+                bmp.x = (2 + i % 2) * icon.width;
+                bmp.y = Math.floor(i / 2) * icon.height;
+
+                addChild(bmp);
+            }
+
+            icon.scaleX = icon.scaleY = 2;
+        }
+    }
+}
+||<
+

@@ -1,0 +1,118 @@
+---
+layout: post
+title: Smalltalk でヒープソートを書いてみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081014/smalltalk_heap_sort
+---
+最近、<a href="http://d.hatena.ne.jp/motemen/20080813/1218634304">アルゴリズムイントロダクション輪読会@京都</a> に参加している。前回のヒープソートの回では、id:secondlife さんが Ruby で <a href="http://introductiontoalgorithms.g.hatena.ne.jp/keyword/0801006%e3%83%92%e3%83%bc%e3%83%97%e3%82%bd%e3%83%bc%e3%83%88%e3%82%b5%e3%83%b3%e3%83%97%e3%83%ab%e3%82%b3%e3%83%bc%e3%83%89">ヒープソートサンプルコード</a> を作っていたので、負けずに Smalltalk で作ってみた。
+
+Smalltalk は初めてなのであまり自信はないけど、やってみないことには始まらない。処理系は VisualWorks を使ってみた。
+
+**クラス定義
+さっそく関数定義…したいんだけど、Smalltalk には関数はなくて全てメソッド。
+
+なので、まずはヒープを表現するクラスを定義する。OrderedCollection を継承して Heap クラスを作った。
+>|ruby|
+OrderedCollection subclass: #Heap
+    instanceVariableNames: 'heapSize'
+    classVariableNames: ''
+    poolDictionaries: ''
+    category: nil.
+||<
+
+次にインスタンス作成時の処理を行う initialize メソッドを定義する。Smalltalk でのメソッド定義は基本的に GUI ベースで行うので、ちょっと無理やりなメソッド定義となっている。Ruby で class_eval してるような感じ。
+>|ruby|
+Heap compile: 'initialize: anArray
+    super addAll: anArray asOrderedCollection.
+    heapSize := self size.'.
+||<
+
+Smalltalk のコレクションはインデックスが 1 から始まるので、特に工夫する必要はない。
+
+**メソッド定義していく
+<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4764903342/nitoyoncom-22/ref=nosim">アルゴリズムイントロダクション 第1巻</a> に載ってる parent や left を定義した。
+>|ruby|
+Heap compile: 'parent: anInteger
+    ^ (anInteger / 2) truncated'.
+
+Heap compile: 'left: anInteger
+    ^ 2 * anInteger'.
+
+Heap compile: 'right: anInteger
+    ^ 2 * anInteger + 1'.
+
+Heap compile: 'swap: i and: j
+    | tmp |
+    tmp := self at: i.
+    self at: i put: (self at: j).
+    self at: j put: tmp.'.
+||<
+
+ついでに配列の要素を入れ替える swap も定義しておいた。
+
+**if に苦しむ
+同じように、教科書の MAX-HEAPIFY を定義。
+>|ruby|
+Heap compile: 'maxHeapify: i
+    | l r largest |
+    l := self left: i.
+    r := self right: i.
+    (l <= heapSize and: [(self at: l) > (self at: i)])
+        ifTrue:    [largest := l]
+        ifFalse:  [largest := i].
+    (r <= heapSize and: [(self at: r) > (self at: largest)])
+        ifTrue:    [largest := r].
+    (largest = i) not 
+        ifTrue: [ self swap: largest and: i.
+            self maxHeapify: largest.
+        ].'.
+||<
+Smalltalk には if 文がないので、true や false の ifTrue～ifFalse メソッドを利用している。
+
+教科書のサンプルでは、A && B がショートサーキットなところ（A が false なら、B は評価されないところ）を利用していたんだけど、Smalltalk の A & B は A も B も評価されてしまう。というのも、& は true や false のメソッドとして実装されている。遅延評価もない以上、必ず B が評価されてしまうようだ。
+
+仕方がないので、２つ目の条件をブロックで受け取る A and: Bblock を使ってみた。こうすれば、前が true のときのみ、B を評価してくれる。
+
+**慣れてきた
+あとは同じようにえいや。
+>|ruby|
+Heap compile: 'buildMaxHeap
+    (heapSize / 2) truncated to: 1 by: -1 
+        do: [:i | self maxHeapify: i.]'.
+
+Heap compile: 'heapSort
+    self buildMaxHeap.
+    (self size) to: 2 by: -1 do: [:i |
+        self swap: 1 and: i.
+        heapSize := heapSize - 1.
+        self maxHeapify: 1.
+    ]'.
+||<
+数字 to: 数字 で範囲になって、ブロックで処理をするあたりが Ruby とそっくり。downto がなくて Ruby に負けた感じだけど、Ruby に負けず劣らず、教科書の疑似コードに近くなった気はしている。
+
+最後に実行。
+>|ruby|
+| aHeap |
+
+aHeap := Heap new initialize: #(16 4 10 14 7 9 3 2 8 1).
+aHeap heapSort.
+Transcript show: aHeap printString.
+||<
+Ruby だと new した瞬間に initialize が呼ばれるんだけど、Smalltalk では new のあとに initialize をつけて明示的に呼ぶのがお約束になっているようだ。
+
+**感想
+Ruby は Smalltalk の影響を強く受けてるみたいで、いろんなところで共通点が多い。
+
+なので、Ruby のコードを移植するのは簡単かなーと思って試してみたんだけど、Smalltalk の独特の癖に翻弄されてすごく時間がかかってしまった。けど、慣れてくると面白い。もう少し、Smalltalk と戯れてみよう。
+
+Ruby 好きな人は、Smalltalk を勉強してみると起源が辿れて面白いかもしれない。私はこの本を読んで Smalltalk を勉強した。著者の語り口が授業を受けてるみたいで面白かった。
+
+>{% amazon jp:4822283623:detail %}<
+
+ただ、後半のほとんどが自作フレームワークの使い方の解説になってるのが残念…。もうちょっとオブジェクト指向のなんたるか、や、MVC の具体例を見たかったものだ。
+
+コードでクラスを定義する方法は、以下の２つのページを参考にした。
+-<a href="http://d.hatena.ne.jp/sumim/20080304/p1" title="最低限の Squeak Smalltalk 入門 - sumim’s Smalltalking-tosへ">最低限の Squeak Smalltalk 入門 - sumim’s Smalltalking-tos</a>
+-<a href="http://www.sra.co.jp/people/h-asaoka/study/TextbookAboutJun/19/index.html" title="Textbook about Jun for Smalltalk 19へ">Textbook about Jun for Smalltalk 19</a>
+

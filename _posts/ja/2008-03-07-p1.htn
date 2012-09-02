@@ -1,0 +1,173 @@
+---
+layout: post
+title: Windows で Flex SDK をビルドしてみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080307/p1
+---
+Windows XP で、オリジナル mxmlc から SWF を作るところまで。
+
+まずは、README.txt に従って、下準備。
+
+**J2SDK の導入
+<a href="http://java.sun.com/products/archive/j2se/1.4.2_14/index.html">Archive: Download Java 2 SDK, Standard Edition, v 1.4.2_14 (J2SE)</a> から j2sdk1.4.2_14 をダウンロード。
+
+C:\j2sdk1.4.2_14 にインストールする。
+
+**Apache Ant の導入
+http://archive.apache.org/dist/ant/binaries/ より <a href="http://archive.apache.org/dist/ant/binaries/apache-ant-1.6.2-bin.zip">apache-ant-1.6.2-bin.zip</a> をダウンロード。
+
+C:\apache-ant-1.6.2 に展開。
+
+**Cygwin の導入
+http://cygwin.com/ から setup.exe を実行。
+
+全てデフォルトで。
+
+**環境設定
+ここからは <a href="http://opensource.adobe.com/wiki/display/flexsdk/Build+and+Test">Build and Test - Flex SDK - Confluence</a> を見ながら。
+
+trunk、tags、branches の中からビルドするものを選ぶ。ここでは、trunk でビルドしてみることにする。
+
+cygwin を起動。trunk のフォルダに移動して、setup.sh を実行する。
+>|sh|
+cd flex/sdk/trunk
+source setup.sh
+||<
+エラーが出た。
+>|sh|
+bash: $'\r': command not found
+bash: $'\r': command not found
+bash: $'\r': command not found
+bash: setup.sh: line 41: syntax error near unexpected token `$'in\r''
+'ash: setup.sh: line 41: `case `uname` in
+||<
+setup.sh の改行コードを LF にしたらうまくいった。
+>|sh|
+$ source setup.sh
+setup.sh: Setting default  ANT_HOME=/cygdrive/c/apache-ant-1.6.2
+setup.sh: Setting default JAVA_HOME=/cygdrive/c/j2sdk1.4.2_14
+||<
+ant や j2sdk が見つからない場合は、
+>|
+setup.sh: setup.sh: <strong>WARNING</strong>: JAVA_HOME does not exist:
+        /cygdrive/c/j2sdk1.4.2_14
+|<
+のように警告がでる。この場合、正しい場所に導入するか、setup.sh のほうをいじって、パスを変更するべし。再度、setup.sh を叩いて WARNING が出ないことを確認しよう。
+**ビルド
+えいーっ
+>|sh|
+ant -q main
+||<
+出力
+>|
+$ ant -q main
+cygpath: can't convert empty path
+     [echo] Building lib/swfutils.jar
+     [echo] Building lib/swfdump.jar
+    [javac] 注: 一部の入力ファイルは推奨されない API を使用またはオーバーライド
+しています。
+    [javac] 注: 詳細については、-deprecation オプションを指定して再コンパイルし
+てください。
+     [echo] Building lib/fdb.jar
+
+(中略)
+
+     [echo] Compiling frameworks/projects/flash_integration/libs/FlexComponentBa
+se.swc
+     [echo] ant main target completed on 03/07/2008 12:45:21 午前
+
+BUILD SUCCESSFUL
+Total time: 3 minutes 5 seconds
+|<
+中途半端に日本語なのが気持ち悪いが <a href="http://opensource.adobe.com/wiki/display/flexsdk/Build+and+Test">Build and Test - Flex SDK - Confluence</a> とだいたい同じ出力になった。
+
+**出力結果
+lib フォルダに色々できてる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080307/20080307013438.png" width="416" height="97" border="1"></center><
+
+mxmlc.jar だけじゃなく、mxmlc_ja.jar (日本語版)まで出力されてたりするのがびっくり。
+
+ついでに、framework.swc （mx パッケージの下）なんかもコンパイルされてる。その辺も含めてビルドするのか…。
+
+**テスト実施
+>|sh|
+ant -q checkintests
+||<
+Flash Player が起動して、自動でテストが始まるのが愉快。
+>|
+$ ant -q checkintests
+cygpath: can't convert empty path
+     [echo] launching player and swf
+     [echo] compiling checkinapp
+     [echo] launching player and swf
+
+BUILD SUCCESSFUL
+Total time: 37 seconds
+|<
+途中でプレーヤーを触ると、例外が出ることがある。UI のテストなんだから、そんなもんか。
+
+**コンパイル
+>|
+$ bin/mxmlc.exe Test.as
+設定ファイル "N:\program\as\flexsdk\trunk\frameworks\flex-config.xml" をロードし
+ています
+N:\program\as\flexsdk\trunk\Test.swf (683 bytes)
+|<
+mxmlc を使う場合は LF に変換しないとエラーになる。
+
+うまくいってるか半信半疑。ならば…。
+
+**ソースをいじる
+世界で１つだけの mxmlc を作る。
+
+modules\compiler\src\java\flex2\tools\Compiler.java に次のようなソースが。
+>|java|
+    /**
+     * The entry-point for Mxmlc.
+     * Note that if you change anything in this method, make sure to check Compc, Shell, and
+     * the server's CompileFilter to see if the same change needs to be made there.  You
+     * should also inform the Zorn team of the change.
+     *
+     * @param args
+     */
+    public static void main(String[] args)
+    {
+        mxmlc(args);
+        System.exit(ThreadLocalToolkit.errorCount());
+    }
+||<
+
+おお、これが mxmlc のエントリポイントのようだ。ならば、main の先頭に
+>|java|
+        System.out.print("Hello World\n");
+||<
+と突っ込む。
+
+mxmlc をリビルドする。全部ビルドすると時間かかるので、compiler のみをビルドしよう。
+>|
+$ ant -q <strong>compiler</strong>
+cygpath: can't convert empty path
+(中略)
+     [echo] Building lib/mxmlc.jar
+     [echo] Building lib/mxmlc_ja.jar
+(中略)
+
+BUILD SUCCESSFUL
+Total time: 17 seconds
+|<
+
+準備は整った。オリジナルな mxmlc で ActionScript をコンパイルしてみる。
+>|
+$ bin/mxmlc.exe Test.as
+<strong>Hello World</strong>
+設定ファイル "N:\program\as\flexsdk\trunk\frameworks\flex-config.xml" をロードし
+ています
+N:\program\as\flexsdk\trunk\Test.swf (683 bytes)
+|<
+ヤター！！　ちゃんと Flash Player で再生できるよ！
+
+**TODO
+<a href="http://jacwright.com/blog/69/hacking-the-flex-sdk/">Hacking the Flex SDK</a> の人は Bindable の挙動をいじるところまでやってる。もう一息。
+

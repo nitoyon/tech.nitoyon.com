@@ -1,0 +1,76 @@
+---
+layout: post
+title: Flex の見た目カスタマイズについて調べてみた
+tags: Flex
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070422/flex_ui_customize
+---
+**前置き
+出発点は <a href="http://www.adobe.com/designcenter/video_workshop/">Adobe Design Center - Video workshop</a>。
+
+このページ、CS3 のチュートリアル ビデオがいっぱいあって、CS3 の新機能を予習できたりもする。ネタ元は <a href="http://www.popxpop.com/archives/2007/04/adobevideo_workshop.html">POP*POP</a>。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070423/20070423021239.jpg" width="408" height="172" alt="dobe Design Center - Video workshop"></center><
+
+と、表向きの紹介はこの辺でおいといて、気になったのが「このページ、Flex だよね」ということ。DataGrid そのまんま。標準のデザインと色が違ってるだけなんだけど、ちょっとかっこいい。
+
+今までは Flex 使ったら機能的になるけど見た目は微妙だよなー、と思っていたんだけどどうやらそうでもないらしい。
+
+で、調査してみた。
+
+**Flex で Napkin Look and Feel
+まず面白かったのが、Flex で Napkin Look and Feel を実現するページ。キャプチャを見たら分かるけど、かなり見た目が変わってる。（Napkin Look and Feel に関しては <a href="http://www.aoky.net/articles/kathy_sierra/dont_make_the_d.htm">デモではものができあがっているように見せない</a> が詳しいのでそちらを参照あれ）
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070423/20070423021240.jpg" width="450" height="125" alt="Napkin skins in Flex"></center><
+
+全３回のチュートリアル形式になっている：
+:第１回：<a href="http://onreflexion.blogspot.com/2007/01/napkin-skins-stage-one-css-styles-and.html">Napkin skins, stage one：CSS styles and graphical skins</a>:CSS だけで見た目を変えてみる。背景や枠線の色・太さは変えられる。
+:第２回：<a href="http://onreflexion.blogspot.com/2007/01/napkin-skins-stage-two-programmatic.html">Napkin skins, stage two：programmatic skins</a>:プログラムスキンを使って ActionScript で UI の描画方法をいじる。
+:第３回：<a href="http://onreflexion.blogspot.com/2007/01/napkin-skins-stage-three-current-limits.html">Napkin skins, stage three：the (current) limits of skinning</a>:CSS とプログラムスキンではいじれなかった部分を、サブクラス化によってカスタマイズする。ここまでくると、かなり泥臭い。
+
+このサンプルのおかげで、見た目を変えるときの当たりのつけ方が分かった気がする。全部ソースがついてるので、手元でコンパイルしながら確認できるのもうれしい。
+
+via: <a href="http://www.noridon.net/weblogs/archives/2007/04/addressbooknapk.html">AddressBookにNapkinSkinを適用してみる：nod::ぶろぐ</a>
+
+**自分で書いてみた
+MXML で CSS をカスタマイズしてみる。
+>|xml|
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" >
+    <mx:Style source="test.css" />
+    <mx:Panel title="My Application">
+        <mx:Label text="Hello World!" fontWeight="bold" fontSize="24" />
+    </mx:Panel>
+</mx:Application>
+||<
+でも、これ、コンパイル時に test.css がないとエラーになる。
+
+コンパイル後にダイナミックにスタイルを書き換えられないのかなぁ、と思って Flex 2.0.1 から導入された Runtime CSS について調べてみた。
+-<a href="http://www.fxug.net/modules/xhnewbb/viewtopic.php?topic_id=708">スタイルシートの動的切り替え - フォーラム - Flex User Group</a>
+-<a href="http://shigeru-nakagaki.com/flex_samples/Style/RuntimeCSS/RuntimeCSS.html">Runtime CSS Sample</a> （ソースつき）
+コンパイル済み CSS を StyleManager.loadStyleDeclarations でロードするらしい。
+
+でもこれ、CSS 変更→CSS コンパイル→テスト という手順になる。MXML のコンパイルの代わりに CSS のコンパイルするだけで、あまりうれしくはない。
+
+HTML+CSS みたく、CSS 変更→テスト にしたいよね…。
+
+**リアルタイム CSS アップデータ ツール
+不便だなぁ、と悶々としていたら、ちょうどリアルタイムに fladdict さんところで、<a href="http://fladdict.net/blog/2007/04/flexcss.html">Flexで外部からリアルタイムにCSSを更新できるエディター</a> が紹介されていた。ナイスタイミング。
+
+-<a href="http://shigeru-nakagaki.com/index.cfm/2007/3/22/20070322-RealTime-CSS-Updater-JP">Shigeru-Nakagaki.com: リアルタイム CSS アップデータ ツール</a>
+
+この記事、以前も見た記憶があったけど、そのときはありがたみに気づかなかった。やっと需要が理解できるところまでいった。
+
+Flex2 Style Explorer の変更をリアルタイムに自分の Flex アプリに適用できるようになる。仕組みは単純。Flex2 Style Explorer が出力する CSS を LocalConnection で自分の Flex アプリに転送して、Flex 側でパースして SetStyle しまくる。
+
+**以下、まとめ。むしろ、妄想
+-FABridge を使えば、JavaScript 経由で eval・Inspect・関数呼び出しできる
+-リアルタイム CSS アップデータ ツールを使えば、リアルタイムで CSS を書き換えられる
+
+ってことは
+-あと一息がんばれば、Flex 版の Firebug もどき作れるってことじゃね？
+-Apollo でやるのか、Firefox エクステンションでやるのか、Firebug をいじっちゃうのか、どういう手法がいいか分からないけど、すごく楽しそう...
+-１人でやるにはあまりにも時間が足りないから、誰か賛同してくれないかなぁ
+
+(追記:2007/4/23 23:50) secondlife さんに <a href="http://subtech.g.hatena.ne.jp/secondlife/20070423/1177293159">「誰か賛同してくれないかなぁ」をつっこまれてしまった</a>。確かにその通り。言い訳すると、今のところ AS/Flex やってる人はコアな人ばかりな気がするので、共同でやるなら今のうちかな、と思って書いてみたのでした。ま、ぼちぼち調査しながら設計していきます。
+

@@ -1,0 +1,65 @@
+---
+layout: post
+title: Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題
+tags: Yahoo! Pipies
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071212/pipes_page_fetch
+---
+このブログでも何度か Yahoo! Pipes の話題は取り上げてきましたが、<a href="http://blog.pipes.yahoo.com/2007/12/06/new-fetch-page-module-and-nice-web-path-enhancement/">先日実装された「Page Fetch」モジュール</a>は素敵すぎます。ほんとに。
+
+今まで、Yahoo! Pipes といえば、XML・CSV か Yahoo が提供してるサービスのデータを加工することしかできませんでした。それが、「Page Fetch」モジュールの登場により、<strong>任意の Web ページを加工</strong>できるようになったのです。
+
+Yahoo! Pipes の使い道といえば、次の２つだと思います。
+:1. RSSリーダーで読むための XML 作り:複数の RSS を結合したり、見た目を整えたりして、自分専用の RSS を作る。<br>（例）<a href="http://d.hatena.ne.jp/nitoyon/20070424/bookmarked_summary">サイトの最新被ブックマークを livedoor Reader で読むための Pipes</a>
+:2. Web サービスとの連携:JSONP に対応してるので、JavaScript と組み合わせてサーバーレスに色々できる。crossdomain.xml に対応しているので、ActionScript と組み合わせてサーバーレスに色々できる。<br>（例）<a href="http://d.hatena.ne.jp/nitoyon/20071025/p1">丸ビルRSSリーダー</a>
+このいずれに関しても、「Page Fetch」モジュールで可能性が広がってきます。
+
+**1. RSSリーダーで読むための XML 作り
+任意のページの HTML を取ってこれるようになったおかげで
+-RSS 配信していないページの RSS を作れます。
+-全文配信していないページの RSS の全文配信版を作れます。
+
+ためしに、作ったのがこれ。<a href="http://www.fujiwarashinya.com/talk/index.php">Shinya talk</a> という藤原新也さんのブログの RSS を作成してみました。
+-<a href="http://pipes.yahoo.com/nitoyon/shinya_talk_rss">Shinya talk を RSS 化</a>
+ソースはこんな感じ。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093138.jpg" width="450" height="353"></center><
++Fetch Page でページを取得して、「&lt;a id="」で分割（配列ができる）
++Rename を使って title, description, link に移動（配列を RSS 形式に変換）
++Regex を使って不要な部分を取り除いて、URL や本文を抽出
+
+RSS は http://pipes.yahoo.com/nitoyon/shinya_talk_rss?_render=rss から取得できます。レッツ購読。
+
+**2. Web サービスとの連携
+こっちは例を見てもらうほうが早いかな。<a href="http://pipes.yahoo.com/nitoyon/hatebucount">はてブ ブックマーク件数一括取得API</a> というのを作ってみました。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093137.jpg" width="350" height="155"></center><
+
+はてなブックマークのブックマーク件数を一括で取得するための Pipe です。Web サービスから使うイメージを醸し出すために API と名づけてます。
+
+はてなが用意する <a href="http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A4%CA%A5%D6%A5%C3%A5%AF%A5%DE%A1%BC%A5%AF%B7%EF%BF%F4%BC%E8%C6%C0API?kid=146686">ブックマーク件数取得 API</a> は XML-RPC なので JS や AS からは扱いづらいし、RSS にもブックマーク数が入っていません。<a href="http://i.hatena.ne.jp/idea/3693">はてなアイデア - HTML→RSS で情報が落ちすぎ。ブックマーク数、できればタグとカテゴリもつけてほしい</a> という要望が放置されているところを見ると、今後も RSS にブックマーク件数が追加される予定はなさそうです。
+
+ってことで、「Page Fetch」モジュールを使って、ページ内のブックマーク一覧をスクレイピングしてます。JS や AS からこの API を使うこともできますし、サーバー側の Perl や PHP から XML をパースして利用も OK。
+
+Yahoo! Pipes 側にキャッシュが効いてるので、はてなのサーバーに負荷をかけすぎる心配もありません。
+
+***応用例
+この Pipe を活用して、<a href="http://pipes.yahoo.com/nitoyon/hatebu_bookmark_ranking">複数ドメインの人気エントリランキング</a> というのを作ってみました。雰囲気を知るには <a href="http://pipes.yahoo.com/nitoyon/hatebu_bookmark_ranking?url1=http%3A%2F%2Fwww.100shiki.com%2F&url2=http%3A%2F%2Fgigazine.net%2F&url3=http%3A%2F%2Fd.hatena.ne.jp%2F">サンプルデータつき</a> のものを見たほうがイメージが沸きやすいかもしれません。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093134.jpg" width="350" height="175"></center><
+
+通常、URL 別でしか人気エントリを見れないのですが、複数のURLで集計できます。
+
+複数の場所でサイトを運営してる人は、自分が運営してるサイトを入れてみるとちょっと楽しいと思います。ブログの端っこに貼り付けてもいいかもしれませんね。
+
+**注意点
+ちょっとはまったところ。
+:正規表現が必要:正規表現が分からないと自作するのはきつい。HTML はたいてい複数行なので s オプションをつけるのを忘れずに。
+:なぜかパースできない HTML がある:ヘルプには「robots.txt を設置していたり、meta タグで noindex しているサイトはパースできない」とあるが、それ以外のページでも失敗することがある。どうせ正規表現でパースするんだから好きにさせてほしい。
+:最後に正規化される:a タグに rel="nofolow" が追加されたり、相対リンクが消えたり、HTML 的に変なところを正規化する。途中のモジュールをプレビューしたときも HTML が正規化されているが、正規化は一番最後に走るので混乱しないよう。スクレイピングするサイトのソースを見ながら作業したほうがよさそう。
+:かなり面倒:Yahoo! Pipes の応答速度が結構遅くて、１箇所変更しては２～３秒待っては確認を繰り返す必要あり。根気が必要。
+地味に少しずつ機能追加されていってる Yahoo! Pipes ですが、まだまだできることは限られています。やりたいことを実現するには頭をひねらないといけません。けれども、そういうところも含めて論理パズルのようで楽しかったりもします。
+
+**関連リンク
+-<a href="http://blog.fkoji.com/2007/12071331.html">Yahoo! Pipesに任意のウェブページを切り取って分割できるFetch Pageモジュールが追加された - F.Ko-Jiの「一秒後は未来」</a>
+-<a href="http://muumoo.jp/news/2007/12/12/0pageloader.html">URLを渡すとページの内容(htmlソース)をJSONPとかで取得できるAPIをYahoo! Pipesで作った(管理人日記) - むぅもぉ.jp</a>
+-<a href="http://www.ac.cyberhome.ne.jp/~mattn/cgi-bin/blosxom.cgi/software/lang/javascript/20071212120815.htm">Big Sky :: JSONでHTMLを取得するYahoo! Pipesが凄い</a>

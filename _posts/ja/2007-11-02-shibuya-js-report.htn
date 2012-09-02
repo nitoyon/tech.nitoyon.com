@@ -1,0 +1,119 @@
+---
+layout: post
+title: The Future of JavaScript メモ
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071102/shibuya_js_report
+---
+<a href="http://www.mozilla-japan.org/events/2007/javascript/">The Future of JavaScript -presented by Mozilla & Shibuya.JS-</a> のメモ。
+
+-発表資料： <a href="http://www.mozilla-japan.org/events/2007/javascript/tamarin-es4.pdf">John Resig: Tamarin and ECMAScript 4 (PDF)</a>
+
+ES4 の概要は <a href="http://d.hatena.ne.jp/nitoyon/20071030/es4_overview">ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ</a> で Overview を読んで勉強したので、だいたい知ってることだった。
+
+ここでは概要と細かなところを、まとめておく。（間違いがあったらツッコミください）
+====
+**概要
+3つのプロジェクト
++ActionMonkey
+--Tamarin を Spidermonkey に統合
+--これを JavaScript2 として Firefox 4 に搭載
++ScreamingMonkey
+--IE に Tamarin を統合するもの
+--MS が ES4 を実装することは期待できない
++IronMonkey
+--Python と Ruby を Tamarin で動くようにする
+**目標
+-ES3 のコードが動くこと
+-大規模なシステムで動くように
+-ライブラリの再利用性
+-AS3 をマージする
+-ES3 のバグを直す
+-小さなプログラムも書けるように
+
+**細かい仕様
+-多重継承は水面下でバトル中
+-arguments は...
+--deplicated
+--Array になる
+--Arguments.callee も残る
+-AS4 は ES4 に沿うために、AS3 と下位互換性がなくなる
+-is like はクラスも含めたもの。like は type のみ。
+-Map の Object は === で評価される
+-use で名前空間をトグルできる
+-リファレンス実装の大部分はES4で定義されている（Self-Hosting）。
+-prototype は広くは理解してもらえないのでクラスベースにした
+-ScreamingMonkey は Firefox と Flash で配布していく予定
+--IE で使うときは Flash インクルード？
+-関数型言語なカーリー化や遅延評価はサポートされない
+
+**日本の JavaScript 最新動向
+-<a href="http://labs.cybozu.co.jp/blog/takesako/2007/11/shibuyajs_for_john_resig.html">TAKESAKO @ Yet another Cybozu Labs: Shibuya.JS Digest (for John Resig) 発表資料公開しました</a>
+-<a href="http://d.hatena.ne.jp/amachang/20071105/1194235279">John Resig を囲う会の資料を公開します！ - IT戦記</a>
+
+**質疑応答
+amachang と <del datetime="2007-11-07T20:04:45+09:00">piro たん</del>小林悠さんがメインで質問。Resig たんが回等。
+-ライブラリの機能を元のソースをいじることなく、外からいじることができなくなるのは悲しい
+--プロトタイプを介して、プロパティや関数を追加することはできる
+-ライブラリはどういう方向で書かれることになるのか
+--どれでもできるよ。
+--私はJava ライクな書き方がすき。
+-type と interface の違い
+--（色々言ってたきがするけど抜け落ちてる）
+--is は class で type は like で評価する。（「なんとかしたかったんだけど、そう決まっちゃった」みたいなことを言っていたような気がした）
+-ブラウザ実装
+--Opera が作業開始してる
+--Apple が WG に来て質問はしてるので、計画はあるはず
+--Rhino は JS2 をやると言っている。既に1.3を実装してる（1.7では？というツッコミあり。）
+-ES4 の this はどうなる？？
+--bugfix
+--理解できなかった。id:amachang の補足エントリに期待
+-class method に対して apply(), call() はできるか
+--できる！
+-ES4 がごちゃごちゃしてる。C++ の二の舞では？
+--スタートが今までより難しくなったことはない。シンプルさは残っている
+--さらにパワフルに使いたい人に向けての拡張だと理解して欲しい
+-コロンに色々な意味が入っている。初心者が上級者のコードを読みにくくなるのでは？
+--今でも経験者のコードは難しい。（クロージャとかprototypeとか）
+--もちろん、今より複雑になるが、今より状況が悪くなることはない。
+-Function でダイナミックに関数を作れたが、Class をダイナミックにジェネレートできるか
+--グローバルクラスを操作する方法はない
+--演算子などの intrinsic な名前空間のものをオーバーライトしていくことはできる。
+--intrinsic は書かなくてもよい？　デフォルトでそうなる。
+-anonymous class が欲しい → new (class {})()
+--クラスの目的は複数回インスタンス化するときのもの。
+--動的に拡張したいなら、親クラスをインスタンス化して拡張すればよい
+-ES4 の標準ライブラリがあったら便利では？
+--Map と Vector を実装することしか考えていない
+--JSON のサポートも辞めようという話も出ている
+-64bit int が欲しい。DB の id が 64bit なの…
+--グループでも話がでたが、やらない！
+--議事録は ES4 Wiki を見てね
+-スレッドが欲しいよね
+--ES4 の中に実装することはない
+--Google Gears のように実装側で対応するものだと考えている
+--一応議題には上がっているが期待はできない
+-継続(continuation)は言語でサポートしなければできないが...
+--話にはあがったが、入れない
+-ES4 の VM は AVM4 になるもの想像できるが、共通のバイトコード化の話はあるのか
+--既に出ている
+--Tamarin の一部として出る。
+--今は Adobe から貰ったものそのまま。
+-ES4 の処理速度は。strict ではなく duck typing を使えば遅くなるか
+--VM の実装方法による
+--Tamarin にはかなりの量の最適化が行われている
+--一例として Fast path optimization がある
+--代入したものによって、コンテンツを調べる
+-var a = [1,2,3]; var a2 = a.pop; var b = a2() は？
+--this のコンテキストが変わってるのでエラーになる
+-evalは
+--eval した結果をキャッシュする仕組みが Firefox で実装される(?)
+
+**じゃんけん大会
+サイン入りマウスパッドを賭けた戦い。
++チョキ
++チョキ
++チョキ
++パー
++パー
+

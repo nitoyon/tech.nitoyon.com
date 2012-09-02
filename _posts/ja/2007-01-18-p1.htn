@@ -1,0 +1,105 @@
+---
+layout: post
+title: AS3の１ファイル複数クラスを応用してファクトリーメソッドを実装
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070118/p1
+---
+前回の <a href="http://d.hatena.ne.jp/nitoyon/20070116/p1">AS3で１ファイルに複数のクラスを定義する方法</a> を応用して、デザインパターンのファクトリーメソッドを実現してみます。
+====
+
+まずはインターフェースの定義。雑煮インターフェース IZouni を定義します。
+>|javascript|
+// sample/IZouni.as
+package sample
+{
+    public interface IZouni
+    {
+        function get soup():String;
+        function get mochi():String;
+    }
+}
+||<
+
+次に雑煮ファクトリー、および IZouni の実装です。
+
+IZouni を実装した TokyoZouni, KyotoZouni は ZouniFactory.as 以外からは参照することがでません。
+>|javascript|
+// sample/ZouniFactory.as
+package sample
+{
+    // 雑煮ファクトリー
+    public class ZouniFactory
+    {
+        public function create(place:String):IZouni
+        {
+            place = place.toLowerCase();
+            switch(place)
+            {
+                case "tokyo":
+                    return new TokyoZouni();
+                case "kyoto":
+                    return new KyotoZouni();
+                default:
+                    throw new ArgumentError("not implemented");
+            }
+            return null;
+        }
+    }
+}
+
+// 以下、雑煮インターフースの実装
+import sample.IZouni;
+class TokyoZouni implements IZouni
+{
+    public function get soup():String{return "醤油"}
+    public function get mochi():String{return "角焼"}
+}
+
+class KyotoZouni implements IZouni
+{
+    public function get soup():String{return "白味噌"}
+    public function get mochi():String{return "丸煮"}
+}
+||<
+
+これで準備完了。次のように使います。
+>|javascript|
+// Test.as
+package
+{
+    import sample.*;
+    import flash.display.Sprite;
+    import flash.utils.getQualifiedClassName;
+
+    public class Test extends Sprite
+    {
+        public function Test()
+        {
+            var factory:ZouniFactory = new ZouniFactory();
+            var z:IZouni;
+
+            z = factory.create("Tokyo");
+            trace(z.soup); // 醤油
+
+            z = factory.create("Kyoto");
+            trace(z.soup); // 白味噌
+
+            trace(getQualifiedClassName(factory)); // sample::ZouniFactory
+            trace(getQualifiedClassName(z));       // ::KyotoZouni
+        }
+    }
+}
+||<
+
+TokyoZouni や KyotoZouni クラスのメソッドに Zouni インターフェース経由でアクセスできていることが分かるかと思います。
+
+getQualifiedClassName で KyotoZouni クラスの完全修飾クラス名を取得してみると、::KyotoZouni となっています。無名パッケージ空間にいるのでしょうか。ちなみに、Test クラスの完全修飾クラス名は Test となるため、KyotoZouni クラスは Test とも ZouniFactory とも違う名前空間で定義されているようです。
+
+
+まとめます。
+
+この方法の一番のメリットは「TokyoZouni」「KyotoZouni」のためにファイルを作らなくてよい、という点です。JavaScript のように１つのファイルに実装を詰め込むスタイルに慣れた人にはうれしい方法ではないでしょうか。
+
+TokyoZouni や KyotoZouni の実装が込み入ってくれば、internal なクラスとしてファイルを分けてやれば OK。ただし、同一パッケージの別クラスからファクトリーを経由しなくともインスタンス生成が可能になる点には注意が必要です。通常はあまり問題にならないとは思いますが。
+

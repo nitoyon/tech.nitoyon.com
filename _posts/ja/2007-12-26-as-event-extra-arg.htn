@@ -1,0 +1,100 @@
+---
+layout: post
+title: イベントハンドラに追加のパラメータを渡す
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071226/as_event_extra_arg
+---
+<a href="http://www.reflektions.com/miniml/template_permalink.asp?id=438">Reflektions miniml > AS3 : passing extra arguments to an event handler</a> より。
+
+AS3 でイベントハンドラに追加の値を渡したいときにはどうするか。
+
+**送信側から渡すとき
+イベントオブジェクトにパラメータをくっつけて dispatch する。リンク先で紹介されている方法がこれ。
+
+イベントを送信するコードを自分が作る場合は一番素直かと。パラメータは全ての listener に伝達される。
+
+個人的には、イベントの種類ごとにクラスを定義するのはめんどくさい。そんな人には、DynamicEvent クラスを作っておくのがお薦め。
+>|javascript|
+package {
+    import flash.events.Event;
+
+    public dynamic class DynamicEvent extends Event {
+        public function DynamicEvent(type:String, 
+                                     bubbles:Boolean = false,
+                                     cancelable:Boolean = false) {
+            super(type, bubbles, cancelable);
+        }
+
+        override public function clone():Event {
+            return new DynamicEvent(type, bubbles, cancelable);
+        }
+    }
+}
+||<
+Flex SDK には mx.events.DynamicEvent というクラスが定義されている。中身も同じ。SDK で開発してる人は、そっちを使うのがよろしいかと。
+
+送信側はこう。
+>|javascript|
+var event:DynamicEvent = new DynamicEvent("myEvent");
+event.param1 = "文字列";
+event.param2 = [1, 2, 3];  // 配列もOK
+dispatchEvent(event);
+||<
+受信する側はこう。
+>|javascript|
+addEventListener("myEvent", function(event:DynamicEvent):void {
+    trace(event.param1); // 文字列
+});
+||<
+dynamic クラスなので、コード補完してくれないし、入力ミスしたときにエラーにもならない。それが嫌ならクラスとして定義すべきなんだけど、めんどくさいときはこれでいくのが楽なのでおすすめ。
+
+**受信側で追加する場合
+送信側に手が出せないときとか、受信側で追加のパラメータを付け加えるときには、クロージャ使うのが手軽。
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+
+    public class MyClass extends Sprite {
+        // コンストラクタ
+        public function MyClass() {
+            var counter:int = 0;
+            stage.addEventListener("click", function(event:Event):void {
+                clickHandler(event, counter++);
+            });
+        }
+
+        // イベントハンドラ
+        private function clickHandler(event:Event, counter:int):void {
+            trace(counter);
+        }
+    }
+}
+||<
+
+プライベートな変数にしてもいいけど、その場合はクラス内全体からアクセスする必要がある場合に絞ったほうがよいだろう。
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+
+    public class Test extends Sprite {
+        // プライベート変数に
+        private var counter:int;
+
+        // コンストラクタ
+        public function Test() {
+            counter = 0;
+            stage.addEventListener("click", clickHandler);
+        }
+
+        // イベントハンドラ
+        private function clickHandler(event:Event):void {
+            trace(counter);
+            counter++;
+        }
+    }
+}
+||<
+

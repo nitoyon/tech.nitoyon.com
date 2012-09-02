@@ -1,0 +1,66 @@
+---
+layout: post
+title: Ruby で Web2.0（笑）
+tags: Ruby
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071207/ruby_abc2
+---
+Ruby 勉強第２弾。前回の <a href="http://d.hatena.ne.jp/nitoyon/20071203/ruby_abc">スイーツ（笑）で関数定義</a> に引き続いて、今回はクラスと Mix-in を試してみた。
+
+ModuleO に O というメソッドを定義しておき、クラスメソッド、インスタンスメソッド、特異メソッドとして Mix-in している。
+>|ruby|
+# モジュールを定義
+module ModuleO
+  def O(*args)
+    # クラスを取得する
+    cls = self.kind_of?(Class) ? self : self.class
+
+    #  <class name>.0 を出力
+    print "#{cls.to_s}.0"
+
+    # 引数があれば出力
+    unless args.empty?
+      print "(#{args[0].to_s})"
+    end
+
+    # 改行
+    puts
+  end
+end
+
+# クラスメソッドとして Mix-in
+class Web2
+  extend ModuleO
+end
+
+# インスタンスメソッドとして Mix-in
+class DoCoMo2
+  include ModuleO
+end
+ドコモ2 = DoCoMo2.new
+
+# 特異メソッドとして Mix-in
+ActionScript3 = "AS3"
+ActionScript3.extend ModuleO
+
+# 実験！
+Web2.O("笑")       # Web2.0(笑)
+ドコモ2.O("笑")    # DoCoMo2.0(笑)
+ActionScript3.O    # String.0
+||<
+
+**ポイント
+どのケースでもクラスを取得するために
+>|ruby|
+self.kind_of?(Class) ? self : self.class
+||<
+と書いてみた。
+
+クラスメソッドとして Mix-in されるときは、self はクラス自身を指す（上の例だと Web2 クラス）。だから、self.kind_of?(Class) は true になる。
+
+インスタンスメソッドおよび特異メソッドとして Mix-in されるときは、self がインスタンスを指す（上の例だと ドコモ2 と ActionScript3）。なので、self.kind_of?(Class) は false になって、self.class でクラスを取得している。
+
+もっといい書き方はあるんだろか。
+
+**ちなみに
+Web2.O とあるけど、メソッド名に 0（ゼロ）は使えないので、大文字の O（オー）で代用してます。

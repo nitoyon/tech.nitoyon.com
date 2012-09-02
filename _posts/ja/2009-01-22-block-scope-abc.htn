@@ -1,0 +1,252 @@
+---
+layout: post
+title: ActionScript3 ブロックスコープの ABC
+tags: tamarin
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090122/block_scope_abc
+---
+※ AS3 にはブロックスコープがないよ、という内容です
+
+<a href="http://level0.kayac.com/2009/01/localvariables_optimization.php">一時変数の効率化｜_level0.KAYAC</a> という記事に怪しいことが書いてあったので突っ込んでおきます。
+
+この記事によると、for の中で変数を宣言するよりも
+>|javascript|
+// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i < 10; i++){
+    var a:Object = new Object();
+  }
+}
+||<
+外で宣言をしたほうが
+>|javascript|
+// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i < 10; i++){
+    a = new Object();
+  }
+}
+||<
+a が宣言される回数が少ないので効率的だとしています。
+
+けれども、<strong>これは間違い</strong>です。
+
+for の中で宣言したとしても、for のあとで変数は生き残ってます。さらに、for の前でも参照できます。
+
+**実証コードを見てみよう
+以下に実証コードを。
+>|javascript|
+trace(a);                       // NaN
+
+for(var i = 0; i < 10; i++){
+  var a:Number = new Number(i);
+  trace(a);                     // 0, 1, ..., 9
+}
+
+trace(a);                       // 9
+||<
+for の中で var a を宣言していますが、for を抜けたあとも 9 ですね。また、for の前では NaN（Number の初期値） になっています。
+
+ということで、var は実はどこに書いても同じ。全て<strong>関数の冒頭に宣言した場合と同じ</strong>になるわけです。
+
+**ブロックスコープと let
+この性質のことを専門用語でいうと、「<strong>ActionScript 3はブロックスコープを持たない</strong>」といえます。var 宣言は <strong>関数スコープ</strong> 内に変数を作成します。
+
+そういえば、次の警告に出くわしたことある人も多いのでは。
+>|javascript|
+var a;
+for(var i = 0; i < 10; i++){
+  // 警告: 変数定義が重複しています。
+  var a:Number = new Number(i);
+}
+||<
+この警告からも、AS3 がブロックスコープを持たないのが分かりますね。
+
+対して、C++ や Java はブロックスコープを持つので、ブロックでだけ有効な変数を宣言することができます。
+
+ちなみに、JavaScript だと with を使ってブロックスコープを再現できるのですが、AS3 では with はなかったことになってるので使えません。（関連）<a href="http://d.hatena.ne.jp/amachang/20090119/1232331329">for 文と無名関数のイディオム - IT戦記</a>
+
+また、JavaScript 1.7 からは let を使ってブロックスコープを宣言することができます。
+
+<strike>ECMAScript 3.1 にも取り込まれるはずです</strike> (追記)←取り込まれない方向のようです。失礼しました。
+
+**バイトコードを見てみた
+ここからが本題。
+
+せっかくなので
+-var を for の中に置く場合 （中バージョン）
+-var を for の外に置く場合 （外バージョン）
+でバイトコードがどう変わるかを見てみた。
+====
+
+これが検証用のソースコード。
+>|javascript|
+// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i < 10; i++){
+    var a:Object = new Object();
+  }
+}
+
+// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i < 10; i++){
+    a = new Object();
+  }
+}
+||<
+
+Flex SDK 3.2 の asc.jar でコンパイルして、Tamarin 付属の abcdump でバイトコードを眺めてみた。
+
+中バージョンではこんな感じになった。
+>|javascript|
+var undefined():void    /* disp_id 0*/
+{
+  // local_count=3 max_scope=0 max_stack=2 code_len=33
+  0         pushnull
+  1         coerce              Object
+  3         setlocal2
+  4         pushbyte            0
+  6         convert_i
+  7         setlocal1
+  8         jump                L1
+
+  L2:
+  12        label
+  13        findpropstrict      Object
+  15        constructprop       Object (0)
+  18        coerce              Object
+  20        setlocal2
+  21        getlocal1
+  22        increment_i
+  23        convert_i
+  24        setlocal1
+
+  L1:
+  25        getlocal1
+  26        pushbyte            10
+  28        iflt                L2
+
+  32        returnvoid
+}
+||<
+いっぱい出てきたが、焦らずにゆっくり見ていこう。
+
+**最初にローカル変数の準備
+まずは冒頭の7行。
+
+コメントでバイトコードにほぼ等しい AS3 の該当するコードを補っておいた。
+>|javascript|
+// var a:Object = null
+  0  pushnull          // null をスタックに積む
+  1  coerce     Object // スタック1番上を Object にキャスト
+  3  setlocal2         // pop して register 2 に代入
+
+// var i:int = 0
+  4  pushbyte   0      // 0 をスタックに積む
+  6  convert_i         // スタック1番上を int にキャストする
+  7  setlocal1         // pop して register 1 に代入
+
+  8  jump       L1     // L1 に移動
+||<
+関数の最初ではローカル変数 a と i を準備していることが分かる。
+
+ここまでのバイトコードは、「外バージョン」も「中バージョン」も同じだった。<strong>ローカル変数は宣言した場所によらず、関数の冒頭で確保される</strong>ようだ。
+
+**for を抜けるチェック
+次、L1 の処理を見ていく。
+>|javascript|
+L1:
+// i < 10
+  25 getlocal1         // i (register 1)をスタックに積む
+  26 pushbyte   10     // 10 をスタックに積む
+  28 iflt       L2     // スタック上の2つの値を比較して、
+                       // i が小さければ L2 にジャンプする
+
+  32 returnvoid        // void を返す
+||<
+i < 10 である限りは、L2 にジャンプし続けるわけですな。実はここも、外バージョンと中バージョンで同じ。
+
+**いよいよ for の中を解析
+最後に L2。ここで外と中の違いがでてくる。
+
+まずは中バージョン（<code>var a:Object = new Object()</code>）。
+>|javascript|
+L2:
+  12  label
+
+// a = new Object()
+  13 findpropstrict  Object
+  15 constructprop   Object (0) // new Object() する
+  18 coerce          Object     // Object にキャストする
+  20 setlocal2                  // a (register 2) に代入
+
+// i++
+  21 getlocal1        // i (register 1) をスタックに取り出す
+  22 increment_i      // スタック1番上を 1 加算する
+  23 convert_i        // スタック1番上を int にキャストする
+  24 setlocal1        // スタック1番上を register 1 に代入
+||<
+素直な感じ。
+
+次は外バージョン（<code>a = new Object()</code>）。
+>|javascript|
+// var c:* = new Object()
+  13 findpropstrict  Object
+  15 constructprop   Object (0) // new Object() する
+  18 dup                        // スタック上で複製する
+  19 setlocal3                  // pop して register 3 に代入
+
+// a = (new の結果)
+  20 coerce    Object // スタック1番上を Object にキャストする
+  22 setlocal1        // a (register 2) に代入
+
+// c = null
+  23 getlocal3        // c (register 3) をスタックに複製する
+  24 kill      3      // register 3 を undefined に初期化する
+  26 pop              // スタックの1番上を取り除く
+
+// i++
+  27 getlocal2        // i (register 1) をスタックに取り出す
+  28 increment_i      // スタック1番上を 1 加算する
+  29 convert_i        // スタック1番上を int にキャストする
+  30 setlocal2        // スタック1番上を register 1 に代入
+||<
+ということで、new の結果を一時変数 var c:* に代入したような扱いになっている。
+
+一時変数がどこからでてくるのかがよく分からなかったが、もしかしたら、
+>|javascript|
+x = y = new Object();
+||<
+のような構文で <code>y = new Object()</code> の結果を <code>x</code> に代入するための一時オブジェクトなのかもしれない。
+
+C++ でいうコピーコンストラクタと代入演算子の違いのような感じ。
+
+**バイトコードを見た感想
+こうやって見ると、
+>|javascript|
+// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i < 10; i++){
+    var a:Object = new Object();
+  }
+}
+||<
+の方が
+>|javascript|
+// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i < 10; i++){
+    a = new Object();
+  }
+}
+||<
+よりも多少効率がよかった。とはいえ、ほんとうに些細な違いであり、無視していいレベルのはずだ。普通にコードを書いたら、ボトルネックは別の場所に出てくるだろう。
+
+**結論
+-AS3 は関数スコープ
+-書きやすいほうで書け
+

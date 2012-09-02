@@ -1,0 +1,74 @@
+---
+layout: post
+title: AS3 で簡単２重袋文字
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20091031/easy_double_open_face
+---
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090914/20091031111744.png" width="411" height="80"></center><
+
+以前、{% post_link 2009-09-08-easy-open-face %} を紹介したけど、これをほんの少しだけ修正して２重の袋文字にしてみた。
+
+完成品はこんな具合。
+
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FEasyOpenFaceWithGlowFilter3.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=100&amp;title=Easy+Open-Face+3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。</noscript></center><
+
+文字を編集することもできる。編集後の文字も袋文字！
+
+**やってること
++TextField を表示
++TextField に <code>GlowFilter</code> で縁取りを作成し、<code>GlowFilter</code> をもう１度適用して２重に縁取りする
+
+<code>filters</code> プロパティには複数のフィルタを配列の形で指定できる。今回は次のように <code>GlowFilter</code> を２回適用している。
+>|javascript|
+text.filters = [new GlowFilter(0xffffff, 1, 8, 8, 16, 1),
+                new GlowFilter(0x0000ff, 1, 8, 8, 16, 1)];
+||<
+
+１つ目のフィルタ（白）を適用した結果に、２つ目（青）を適用している。
+
+詳しくは {% post_link 2009-09-08-easy-open-face %} 参照あれ。
+
+**まとめ
+<code>filters</code> を繰り返し利用することで、さらに凝った効果を簡単に試せる。
+
+以下、ソースコード（24行）。
+====
+>|javascript|
+// GlowFilter で２重簡単袋文字
+package{
+import flash.display.Sprite;
+import flash.filters.GlowFilter;
+import flash.text.TextField;
+
+public class EasyOpenFaceWithGlowFilter3 extends Sprite{
+    public function EasyOpenFaceWithGlowFilter3(){
+        stage.align = "TL";
+        stage.scaleMode = "noScale";
+
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.autoSize = "left";
+        text.type = "input";
+        text.htmlText = <font size="50" color="#ff0000">HELLO WORLD</font>.toXMLString();
+        addChild(text);
+
+        // Glow it
+        text.filters = [new GlowFilter(0xffffff, 1, 8, 8, 16, 1),
+                        new GlowFilter(0x0000ff, 1, 8, 8, 16, 1)];
+    }
+}
+}
+||<
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2009-09-14-easy-glow-drop-pop %}
+-{% post_link 2009-09-09-text-mask %}
+-{% post_link 2009-09-08-easy-open-face %}
+-{% post_link 2009-09-07-glowing-text %}
+-{% post_link 2008-07-25-shape-of-a-dream %}
+-{% post_link 2008-07-24-embed-font-swfassist %}
+-{% post_link 2007-10-05-potras-pop %}
+></div>
+

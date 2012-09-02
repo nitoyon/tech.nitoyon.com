@@ -1,0 +1,72 @@
+---
+layout: post
+title: Silverlight2.0 ではまった話
+tags: Silverlight
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080515/my_first_silverlight2
+---
+Silverlight 勉強会に備えて環境をそろえてみた。参考にしたのはこのへん。
+-<a href="http://labs.cybozu.co.jp/blog/kaorun/2008/04/silverlight2sdk_with_javascript_1.html">Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)</a>
+
+**MS公式のサンプルが動かない
+<a href="http://go.microsoft.com/fwlink/?LinkId=111131">ヘルプの CHM 版</a> の「Dynamic Languages in Silverlight 2」を参考にして触っていたんだけどエラーになる。
+
+こんなエラー。
+>|
+Silverlight error message     
+ErrorCode: 4002
+ErrorType: ManagedRuntimeError       
+Message: Microsoft.Scripting.ArgumentTypeException: LoadRootVisual() takes exactly 1 argument (1 given)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.ExecuteThrow(CodeContext context, ThrowStatement node)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.EvaluateExpression(CodeContext context, Expression node)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.Execute(CodeContext context, Expression expression)
+|<
+エラーメッセージ、分かりにくすぎるよ…。
+
+どうやらこのあたりが問題のようだ。
+>|javascript|
+Import("System.Windows.Application")
+
+function App() {
+   this.scene = Application.Current.LoadRootVisual("app.xaml")
+}
+||<
+他のサンプルと見比べると LoadRootVisual は引数２ついるようだ。
+
+**検索してみた
+2ch に同じ問題ではまってる人がいた。
+>|
+366 ：デフォルトの名無しさん：2008/03/07(金) 23:59:55 
+ヘルプの Dynamic Languages in Silverlight 2 
+に書いてある通りやったのに 
+LoadRootVisual の引数の使い方がおかしいって怒られるぞ・・・ 
+IronRuby, IronPython でもダメだ。ほんとに動くのか 
+|<
+動きません。
+
+で、<a href="http://d.hatena.ne.jp/coma2n/20080311/1205192784">Silverlight2 Beta1を入れてみた - Programmable Life</a> に解決方法を見つけた。JScript だと次のように修正する。
+>|
+Import("System.Windows.Application")
+<strong>Import("System.Windows.Controls.Canvas") </strong>
+
+function App() {
+   this.scene = 
+      Application.Current.LoadRootVisual(<strong>new Canvas()</strong>, "app.xaml")
+}
+|<
+やっと動いた…。
+
+自分は元々 Windows 開発者なので、MS のドキュメントは見慣れてるほうだと思うんだけど、それでも CHM ファイルのせいで２時間ぐらい苦しめられた。
+
+もしや、と思って Web のドキュメントを参照したら、ちゃんと修正されていた。
+-<a href="http://msdn.microsoft.com/en-us/library/cc189024(vs.95).aspx">http://msdn.microsoft.com/en-us/library/cc189024(vs.95).aspx</a>
+CHM が間違ったまま放置されている…。最新版がどこかから手に入るのかなぁ。
+
+**まとめと雑感
+-ドキュメントは最新のものを見よう
+-Silverlight は難しい。AS3/Flex の方がドキュメントは分かりやすい。
+-Silverlight のはてブ率の低さは異常。すごく優れたドキュメントの <a href="http://labs.cybozu.co.jp/blog/kaorun/2008/04/silverlight2sdk_with_javascript_1.html">Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)</a> が2008年5月15日時点で 14users だなんて！
+-Twitter 検索の Flex と Silverlight の RSS を購読してウォッチしてるんだけど、あきらかに Flex やってる人のほうが多い。ネット上では Flex のほうが流行ってきてる印象。スーツな世界では Silverlight のほうが強そうだけど。

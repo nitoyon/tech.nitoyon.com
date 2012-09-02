@@ -1,0 +1,122 @@
+---
+layout: post
+title: AS3 でヒストグラムを作る (2) - スライダー篇
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071010/as3_histogram2
+---
+ヒストグラムを Photoshop のように操作できるようにしていきます。今回はスライダーを作成します。
+
+完成したのはこんなスライダー。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FHistogram2.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=320&amp;h=50&amp;title=Histogram+slider&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+標準では fl.controls.Slider や mx.controls.HSlider のようなつまみが１つのスライダーは用意されていますが、このような３つのつまみがついたスライダーはありません。ないならば自作するしかありません。
+
+作るといっても、UI の実装はなかなか手間がかかります。昨日のヒストグラムが45行、今回のスライダーが97行。こっちの方が地味なのに倍のコード量です。ちょっとした使いやすさを演出するために、細かい心配りも必要です。
+
+例えば、mouseDown イベントのときは、マウスから一番近いつまみをドラッグするために、各つまみからの距離を計算しています。また、ドラッグ可能範囲を両端もしくは左右のつまみの間に制限しています。完全に重なってしまわないように、少し間を空けるようにもしています。ドラッグ可能範囲は、Sprite.startDrag メソッドの第２引数 bounds:Rectangle で指定しています。mouseMove イベントでは、両端のつまみ位置に応じて真ん中のつまみを調整しています。
+
+説明するだけでややこしいので、興味がある人はソースを見てください。
+
+ソースは以下に(97行)。
+====
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.geom.*;
+
+    [SWF(width="280", height="20")]
+    public class Histogram2 extends Sprite {
+        private var dragging:Sprite;
+        private var h2pos:Number = 0.5;
+        private var h1:Sprite;
+        private var h2:Sprite;
+        private var h3:Sprite;
+
+        public function Histogram2() {
+            addChild(createSlider()).x = 10;
+        }
+
+        // スライダーを作成する
+        private function createSlider():Sprite {
+            // スライド可能範囲描画
+            var slider:Sprite = new Sprite();
+            slider.graphics.beginFill(0xffffff);
+            slider.graphics.drawRect(0, 0, 256, 10);
+            slider.graphics.endFill();
+            slider.graphics.lineStyle(1, 0);
+            slider.graphics.lineTo(255, 0);
+            slider.buttonMode = true;
+            slider.useHandCursor = true;
+
+            // つまみ作成
+            h1 = Sprite(slider.addChild(createButton(0xffffff))); h1.x = 0;
+            h2 = Sprite(slider.addChild(createButton(0x999999))); h2.x = 128;
+            h3 = Sprite(slider.addChild(createButton(0x000000))); h3.x = 255;
+
+            // mouseDown
+            slider.addEventListener("mouseDown", function(e:*):void {
+                var localX:Number = slider.globalToLocal(new Point(mouseX, mouseY)).x;
+
+                // ドラッグするつまみを決定する
+                var d1:Number = Math.abs(localX - h1.x);
+                var d2:Number = Math.abs(localX - h2.x);
+                var d3:Number = Math.abs(localX - h3.x);
+                var max:Number = Math.min(d1, d2, d3);
+                dragging = (max == d1 ? h1 : max == d2 ? h2 : h3);
+
+                // 場所補正
+                var bounds:Rectangle = getDraggableBounds(dragging);
+                dragging.x = Math.max(Math.min(localX, bounds.right), bounds.x);
+                updateH2(null);
+
+                dragging.startDrag(false, bounds);
+            });
+
+            // mouseMove
+            stage.addEventListener("mouseMove", updateH2);
+
+            // mouseUp
+            stage.addEventListener("mouseUp", function(e:*):void {
+                if(dragging) {
+                    dragging.stopDrag();
+                    dragging = null;
+                }
+            });
+
+            return slider;
+        }
+
+        // つまみを描画する
+        private function createButton(color:int):Sprite {
+            var s:Sprite = new Sprite();
+            s.graphics.lineStyle(1, 0);
+            s.graphics.beginFill(color);
+            s.graphics.lineTo(5, 8.6);
+            s.graphics.lineTo(-5, 8.6);
+            s.graphics.endFill();
+            return s;
+        }
+
+        // つまみの移動可能範囲を計算する
+        private function getDraggableBounds(s:Sprite):Rectangle {
+            if(s == h1) return new Rectangle(0, 0, h3.x - 4, 0);
+            if(s == h2) return new Rectangle(h1.x + 2, 0, h3.x - h1.x - 4, 0);
+            if(s == h3) return new Rectangle(h1.x + 4, 0, 255 - h1.x - 4, 0);
+            return null;
+        }
+
+        // 真ん中のつまみの位置を計算する
+        private function updateH2(e:*):void {
+            if(dragging && dragging != h2) {
+                h2.x = (h3.x - h1.x) * h2pos + h1.x;
+                h2.x = Math.max(Math.min(h2.x, h3.x - 2), h1.x + 2);
+            }
+            else if(dragging == h2){
+                h2pos = (h2.x - h1.x) / (h3.x - h1.x);
+            }
+        }
+    }
+}
+||<

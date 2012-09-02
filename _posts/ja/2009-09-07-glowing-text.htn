@@ -1,0 +1,114 @@
+---
+layout: post
+title: AS3.0 で光るテキスト効果を作ってみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090907/glowing_text
+---
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090906/20090906110733.png" width="450" height="80"></center><
+
+TVCM とか映画予告編などでよく見かける「文字が左から右に光るエフェクト」を ActionScript 3.0 で作ってみた。
+
+完成品はこんな具合。
+
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FGlowingHelloWorld.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=100&amp;title=Glowing+Hello+World&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。</noscript></center><
+
+文字を編集することもできる。編集後の文字ですぐに光り始める！
+
+**やってること
++TextField を表示
++TextField を BitmapData に表示して、GlowFitler で光らせる (<code>bmpGlow</code>)
++円形のマスク Sprite を用意 (<code>msk</code>)。周りに行くに従って透明になるようにしておく。
++2. で作った <code>bmpGlow</code> に 3. のマスク <code>msk</code> を適用する。マスクを徐々に右に移動していけば、光ってるところが移動しているように見える。
+
+苦労したのはグラデーションのマスクを適用させるところ。マスクとマスクされる <code>DisplayObject</code> の両方の  <code>cacheAsBitmap</code> プロパティを <code>true</code> に設定しておく必要がある。
+
+当初、それに気付かずに、<code>copyPixel()</code> を使って<a href="http://wonderfl.net/code/7689123caaff96fc89a3855b76dec5022443c740">泥臭く実装していた</a>んだけど、cacheAsBitmap すればアルファの Sprite で透明度を利用したマスクを作れることを<a href="http://wonderfl.net/code/fb15467c08b713fd630ace5fa691a13f6c6f810d">教えてもらった</a>。<code>cacheAsBitmap</code> を使って <a href="http://wonderfl.net/code/6478e7a910e69f15bdc14d0faf6b492c7001ca55">書き直した</a>ら、10行短くなって、ソースコードも素直になって万歳。
+
+ソースコードは以下に（73行）。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+// Glowing Hellow World revised. (lines: 83 -> 73) 
+//------------------------------------------------------- 
+// An experiment on creating a dynamic glow text effect. 
+// You can edit the text!!! 
+
+package{ 
+import flash.display.*; 
+import flash.events.Event; 
+import flash.filters.GlowFilter; 
+import flash.geom.*; 
+import flash.text.*; 
+
+[SWF(backgroundColor="#000000", width="450", height="80")] 
+public class GlowingHelloWorld extends Sprite{ 
+    public function GlowingHelloWorld(){ 
+        stage.scaleMode = "noScale"; 
+        var ptZero:Point = new Point(); 
+
+        // initialize canvas. 
+        var bmpGlow:Bitmap = addChild(new Bitmap()) as Bitmap; 
+
+        // Show original text (input) 
+        var text:TextField = new TextField(); 
+        text.autoSize = "left"; 
+        text.type = "input"; 
+        text.htmlText = <font size="50" color="#ffffff">HELLO WORLD</font>.toXMLString(); 
+        addChild(text); 
+        text.addEventListener("change", function(event:Event):void{ updateGlow() }); 
+
+        // Create a glow BitmapData. 
+        var bmdGlow:BitmapData, bmdCanvas:BitmapData; 
+        var updateGlow:Function = function():void{ 
+            // dispose existing BitmapData. 
+            if (bmdGlow) bmdGlow.dispose(); 
+
+            // Glow it. 
+            bmdGlow = new BitmapData(text.textWidth + 10, text.textHeight + 10, true, 0);; 
+            bmdGlow.draw(text); 
+            var glow:GlowFilter = new GlowFilter(0xffffff, .9, 8, 8, 4); 
+            bmdGlow.applyFilter(bmdGlow, bmdGlow.rect, ptZero, glow); 
+
+            // Update canvas BitmapData. 
+            bmpGlow.bitmapData = bmdGlow; 
+        } 
+        updateGlow(); 
+
+        // Create a mask sprite. 
+        var msk:Sprite = new Sprite(); 
+        msk.graphics.beginGradientFill("radial", [0xffffff, 0xffffff], [1, 0], [64, 255]); 
+        msk.graphics.drawCircle(0, 0, 100); 
+        msk.graphics.endFill(); 
+        addChild(msk);
+
+        // Set mask.
+        msk.y = 50 - text.textHeight / 2;
+        bmpGlow.cacheAsBitmap = msk.cacheAsBitmap = true;
+        bmpGlow.mask = msk;
+
+        // Start animation loop. 
+        var counter:int = 0; 
+        addEventListener("enterFrame", function(event:Event):void{ 
+            // move the mask
+            msk.x = counter;
+
+            // update counter... 
+            counter += 14; 
+            if (counter > 800){ 
+                counter = -10; 
+            } 
+        }); 
+    } 
+} 
+} 
+||<
+></div><
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2008-07-25-shape-of-a-dream %}
+-{% post_link 2008-07-24-embed-font-swfassist %}
+-{% post_link 2007-10-05-potras-pop %}
+></div><
+

@@ -1,0 +1,256 @@
+---
+layout: post
+title: AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080618/as_3d_lessen3
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080618/20080618015334.png" width="482" height="224"></center><
+<a href="http://d.hatena.ne.jp/nitoyon/20080617/as_3d_lessen2">前回</a>までのサンプルでは、遠くのものも近くのものも同じ大きさで表示していた。これでは立体感がでないので、遠くのものほど小さく表示するようにしたい。
+
+これを実現するには「投影」の方法を考えることになる。投影というのは、3D 上の点を 2D にマッピングすることを指す。今までは、Zの値を無視する方法を利用していたが、この手法には<strong>平行投影</strong>という名前がついている。
+
+それに対して、今回紹介するのが<strong>透視投影</strong>だ。遠くのものほど小さく表示できるので、遠近感を表現できる投影方法となっている。
+
+**透視投影ってなあに？
+透視投影では「焦点」と「スクリーン」という概念が登場する。焦点は自分の目を表し、スクリーンは 3D の空間を投影する面である、と考えると分かりやすいだろう。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080618/20080618030937.png" width="470" height="173"></center><
+
+スクリーンを窓として考えると、もっとすっきりするかもしれない。貴方は窓から外の景色をみている。透明なガラス窓の上に、窓の外の景色を見えた通りに描いていったとしよう。この絵が透視投影後の２次元の図となる。
+
+**透視投影の一般化
+透視投影の計算方法は考え方が色々あって混乱しがちなので、最初に一般解を解いておく。
+
+ある点 P1(x, y, z) を透視投影すると、(x<sub>s</sub>, y<sub>s</sub>) に移動するものとする。(x<sub>s</sub>, y<sub>s</sub>) の求め方を計算しよう。
+
+まずは、ZY 平面で考える。図示するとこんな具合。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080618/20080618015333.png" width="450" height="261"></center><
+
+P1 と焦点を結んで、スクリーンと交わったところが投影後の点となる。P1 と P2 の高さ(y)は同じなのだが、スクリーン上には奥の P2 のほうが小さい y の値で投影されている。
+
+それでは、y<sub>s</sub> を計算しよう。と言っても、小学生レベルの相似の問題なので簡単に解けてしまって、
+　　[tex:y_s = \frac{z_s - z_f}{z - z_f}y]
+となる。
+
+x<sub>s</sub> についても同様に解いて、次のようになる。
+　　[tex:x_s = \frac{z_s - z_f}{z - z_f}x]
+
+**焦点が原点の場合
+焦点を原点にすると計算が簡単になる。スクリーン z<sub>s</sub> = 1 としてしまえば、
+　　[tex:\left\{  \begin{array}x_s = x / z \\y_s = y / z \end{array}]
+となる。計算がとても簡単だ。
+
+ただ、前回から作ってるサンプルでは、立体が原点付近に存在しているため、この方法を使うといびつに描画されてしまう。原点から遠ざけてから投影する、といった工夫が必要になるだろう。
+
+**スクリーンが原点にある場合
+今度はスクリーン(z<sub>s</sub>)を原点に移動してみる。式はこうなる。
+
+　　[tex: \left\{ \begin{array}x_s = \frac{-z_f}{z - z_f}x \\ y_s = \frac{-z_f}{z - z_f}y \end{array}]
+
+ここで、z<sub>f</sub> &lt; z<sub>s</sub> とすると、z<sub>f</sub> は 0 より小さい値となる。そこで、スクリーンと焦点の距離を f (= -z<sub>f</sub>)と置くことで、上の式は次のように書き換えられる。
+　　[tex:\left\{ \begin{array}x_s = \frac{f}{z + f}x \\ y_s = \frac{f}{z + f}y \end{array}]
+
+ちなみに、f がどんどん大きくなってくと、x<sub>s</sub> = x, y<sub>s</sub> = y に近づく。つまり、焦点がスクリーンから遠ざかると、透視投影の遠近感の影響が少なくなって平行投影に近づいていくことを表す。
+
+**透視投影のデモ
+実は、FIVe3D の Point3D クラスには、透視投影を行うメソッドが定義されている。
+>|javascript|
+public function getPerspective(viewdistance:Number):Number {
+    return viewdistance/(z+viewdistance);
+}
+
+public function project(perspective:Number):void {
+    x *= perspective;
+    y *= perspective;
+    z = 0;
+}
+||<
+viewdistance というのが、「スクリーンが原点にある場合」の f そのものだ。
+
+このメソッドを利用して、透視投影のデモを作ってみた。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d3.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=300&amp;title=3D+Study3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript><
+
+左のスライダで f の値を調整できる。f が小さい（スライダが上）になるほど、図形が歪むのが確認いただけるだろう。
+
+ソースは最後に掲載しておく。スクロールバーの分だけ30行ほど増えているが、ほとんど前回のソースと同じだ。透視投影後の座標を取得する部分は次のようになっている。
+>|javascript|
+    // 点を透視投影する
+    pt.project(pt.getPerspective(f));
+||<
+
+**まとめ
+透視投影の一般解を求めた。透視投影として紹介される式にはいくつかのパターンがあるが、そのいずれも一般解の形に収まるはずだ。ここでは、２通りの計算を簡単にするパターンを紹介し、後者を利用してデモを行った。
+
+<a href="http://d.hatena.ne.jp/nitoyon/20080620/as_3d_lessen3">次回に続く</a>。
+
+><div class="seealso"><
+**連載目次
+-{% post_link 2008-06-16-as-3d-lessen1 %}
+-{% post_link 2008-06-17-as-3d-lessen2 %}
+-{% post_link 2008-06-18-as-3d-lessen3 %}
+-{% post_link 2008-06-20-as-3d-lessen3 %}
+-{% post_link 2008-06-23-as-3d-lessen5 %}
+></div><
+
+ソースは以下に(153行)。
+====
+要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.utils.Dictionary;
+    import five3D.geom.Matrix3D;
+    import five3D.geom.Point3D;
+
+    [SWF(backgroundColor="0x000000")]
+    public class Study3d3 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+        private var rad:Number;
+        private var scrollBar:ScrollBar;
+
+        public function Study3d3(){
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 50));
+            cubes.push(new Cube(0, 100, 0, 20));
+            cubes.push(new Cube(0, -100, 0, 20));
+            cubes.push(new Cube(100, 0, 0, 20));
+            cubes.push(new Cube(-100, 0, 0, 20));
+            cubes.push(new Cube(0, 0, 100, 20));
+            cubes.push(new Cube(0, 0, -100, 20));
+
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 200;
+            canvas.y = 150;
+
+            scrollBar = new ScrollBar();
+            scrollBar.x = scrollBar.y = 30;
+            addChild(scrollBar);
+
+            rad = 0;
+            addEventListener("enterFrame", changeHandler);
+        }
+
+        private function changeHandler(event:Event):void {
+            canvas.graphics.clear();
+
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateX(Math.PI / 6);
+            matrix.rotateY(rad / 180 * Math.PI * 3);
+            matrix.rotateZ(rad / 180 * Math.PI);
+
+            // 描画
+            for each(var c:Cube in cubes){
+                c.draw(canvas.graphics, matrix, 150 + scrollBar.value * 3);
+            }
+
+            // 角度更新
+            rad = (rad + 1) % 360;
+        }
+    }
+}
+
+import flash.display.*;
+import flash.events.Event;
+import flash.geom.Point;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
+
+class Cube {
+    private var points:Array = [];
+
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
+
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i < 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 < 2), z + diff(i < 4));
+            points.push(p);
+        }
+    }
+
+    public function draw(g:Graphics, matrix:Matrix3D, f:Number):void {
+        // 回転後の各頂点の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i < points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
+
+            // 点を透視投影する
+            pt.project(pt.getPerspective(f));
+
+            drawPoint(g, pt);
+            p.push(pt);
+        }
+
+        // 頂点の間を線で結ぶ
+        for(i = 0; i < 4; i++){
+            drawLine(g, p[i], p[i + 4]);
+            drawLine(g, p[i], p[(i + 1) % 4]);
+            drawLine(g, p[i + 4], p[(i + 1) % 4 + 4]);
+        }
+    }
+
+    private function drawPoint(g:Graphics, p:Point3D):void {
+        g.beginFill(0xffffff);
+        g.drawCircle(p.x, p.y, 3);
+        g.endFill();
+    }
+
+    private function drawLine(g:Graphics, p1:Point3D, p2:Point3D):void {
+        g.beginFill(0, 0);
+        g.lineStyle(1, 0xffffff);
+        g.moveTo(p1.x, p1.y);
+        g.lineTo(p2.x, p2.y);
+        g.lineStyle();
+        g.endFill();
+    }
+}
+
+class ScrollBar extends Sprite {
+    public var value:int;
+
+    public function ScrollBar():void {
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawRect(0, -2, 8, 112);
+        graphics.endFill();
+
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-8, 0, 24, 8);
+        tab.graphics.endFill();
+        tab.y = 0;
+        addChild(tab);
+
+        addEventListener("mouseDown", function(event:Event):void {
+            stage.addEventListener("mouseMove", mouseMoveHandler);
+            stage.addEventListener("mouseUp", mouseUpHandler);
+            mouseMoveHandler(event);
+        });
+
+        var mouseMoveHandler:Function = function(event:Event):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.y = Math.min(Math.max(0, p.y), 100);
+            value = tab.y;
+        }
+        var mouseUpHandler:Function = function(event:Event):void {
+            value = tab.y;
+            dispatchEvent(new Event("change"));
+            stage.removeEventListener("mouseMove", mouseMoveHandler);
+            stage.removeEventListener("mouseUp", mouseUpHandler);
+        }
+    }
+}
+||<
+

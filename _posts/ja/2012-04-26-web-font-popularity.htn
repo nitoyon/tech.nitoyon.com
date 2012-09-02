@@ -1,0 +1,280 @@
+---
+layout: post
+title: 意外と多い!? Web フォントに対応していない環境 ～2012 年の Web フォント事情
+tags: HTML5
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120426/web_font_popularity
+---
+Web フォントは「Web サイトにオリジナルのフォントを埋め込む」ための技術です。現行のブラウザーは全て Web フォントに対応している状況です。
+
+そんな状況であるため、<a href="http://d.hatena.ne.jp/nitoyon/20120420/uncopyable">絶対にコピペできない文章を作ったったwwww</a> は Web フォントに依存したコンテンツでしたが、特別な配慮はせずに公開しました。
+
+しかし、公開後、Web フォントが適用されなかった複数の方から「コピペできるんだけどどういうこと？」「意味が分からない」というコメントがよせられました。
+
+そこで、Web サーバーのアクセスログを解析して「Web フォントに対応していない環境」がどの程度あったのかを調べてみました。
+
+**４種類のフォーマット
+一口に Web フォントといっても、フォントのフォーマットは <strong>WOFF・TTF・EOT・SVG の 4 種類</strong>あります。今後は WOFF フォーマットが標準になっていくのですが、現在ではサポートしていないブラウザーも残っています。
+
+そこで、<a href="http://d.hatena.ne.jp/nitoyon/20120420/uncopyable">絶対にコピペできない文章を作ったったwwww</a> では、4 種類すべてのフォントを設置し、CSS には次のように記述していました。
+>|css|
+@font-face {
+    font-family: 'CipherM+1cregular';
+    src: url('ciphered-mplus.eot');
+    src: url('ciphered-mplus.eot?#iefix') format('embedded-opentype'),
+         url('ciphered-mplus.woff') format('woff'),
+         url('ciphered-mplus.ttf') format('truetype'),
+         url('ciphered-mplus.svg#M+1cregular') format('svg');
+}
+||<
+
+IE8 以前は複数のフォント指定に対応していないため、ハックを活用しつつ 4 種類のフォーマットを指定しています。この指定は <a href="http://www.fontsquirrel.com/fontface/generator">Font Squirrel | Create Your Own @font-face Kits</a> を使って出力されたものをそのまま利用しています。
+
+では、このような指定をしたときに、どのフォーマットが一番利用されたのでしょうか。
+
+**これが 2012 年の Web フォント利用率だ
+公開後の 2 日間（4月20日～4月21日）には 43,892 件の PV がありました。このうち、利用されたフォントの割合は・・・
+====
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426013757.png"></center><
+
+はい、7 割以上の人が WOFF フォーマットを利用していました。見逃せないのが、どのフォントも利用しなかった 3.94 %（1,729 PV）の存在です。
+3.94% の詳細はこのあと分析するとして、まずはそれぞれのフォーマット別にどういうブラウザーからのアクセスが上位を占めていたのかを紹介していきます。
+
+***期待の新星: WOFF フォーマット
+一番多かったのが WOFF フォーマット。
+
+Web Open Font Format という名前からして、Web フォントのために生まれてきた新人さん。今後、主流になるのは間違いないんだけども、まだ 3 割の人は使ってくれてない状況。
+
+そんな WOFF に対応しているミーハーなブラウザーの上位 10 個はこれだ！
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th><th>割合</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025425.gif" width="16" height="16" alt="Chrome"> Chrome 18 (PC Windows)</td><td class="right">8,525</td><td class="right">27.06%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.1 (iPhone iOS 5.1)</td><td class="right">6,434</td><td class="right">20.42%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 11 (PC Windows)</td><td class="right">5,663</td><td class="right">17.98%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025425.gif" width="16" height="16" alt="Chrome"> Chrome 18 (PC Mac OS X)</td><td class="right">2,326</td><td class="right">7.38%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.1.5 (PC Mac OS X)</td><td class="right">1,048</td><td class="right">3.33%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 11 (PC Mac OS X)</td><td class="right">988</td><td class="right">3.14%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.1 (iPad iOS 5.1)</td><td class="right">889</td><td class="right">2.82%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.1 (iPhone iOS 5.0.1)</td><td class="right">842</td><td class="right">2.67%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.62 (PC Windows)</td><td class="right">576</td><td class="right">1.83%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5 (iPhone iOS 5.1)</td><td class="right">450</td><td class="right">1.43%</td></tr>
+</table><
+
+分析：
+- Chrome、Safari、Opera、Firefox など、主要なブラウザーの最新版が対応済み。
+- IE9 も対応はしているが、CSS での指定順の関係から WOFF フォーマットは利用していない。
+- iPhone、iPad では iOS 5 以降なら対応済み。
+- Android 4 以降は Chrome 18 や一部の Mobile Safari（WebKit ビルド番号 535.7 以降）が対応済み。
+
+
+はやく全部 WOFF でいける時代がくるといいですね。
+
+***PC の覇者: TTF フォーマット
+お次は 14% の人が参照した TTF フォーマット。
+
+TTF(TrueType Font)は、いまは昔、1990 年に Apple と Microsoft が共同開発した業界標準のフォーマットです。
+
+しかし、「生のフォント ファイルをそのまま Web にアップロードするのはどうなのよ？」という声があり、Web フォント業界では WOFF さんにその座を譲り渡しました。
+
+そんな TTF さんを欲したのはコイツらだ!!!
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th><th>割合</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.4)</td><td class="right">1,397</td><td class="right">22.06%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.3)</td><td class="right">1,128</td><td class="right">17.81%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.5)</td><td class="right">580</td><td class="right">9.16%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.6)</td><td class="right">509</td><td class="right">8.04%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.2.1)</td><td class="right">454</td><td class="right">7.17%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.2.2)</td><td class="right">274</td><td class="right">4.33%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.0.2 (iPhone iOS 4.3.5)</td><td class="right">236</td><td class="right">3.73%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.7)</td><td class="right">232</td><td class="right">3.66%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.0.2 (iPhone iOS 4.3.3)</td><td class="right">171</td><td class="right">2.70%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 530.17 (Android 2.1)</td><td class="right">166</td><td class="right">2.62%</td></tr>
+</table><
+
+ザ・モバイル。
+
+Android 2、iOS 4.2、iOS 4.3 など、少し古めのスマートフォンが独占しています。
+
+ランク外には Firefox 3.5 (Windows)、 Android 4 の Mobile Safari（WebKit ビルド番号 535.7 以前）などもいました。
+
+TTF さんは、少し前に愛されたフォーマットだということが分かりました。君は Web ではダメだったけど、PC の世界ではまだまだ主流なんだよ！、と励ましてあげましょう。
+
+***時代を切り開いた英雄: EOT フォーマット
+次は約 10% の人に求められた EOT フォーマットです。
+
+いまをさかのぼること 14 年前、IE4 で Web フォントを実現するときに策定されたのが EOT（Embedded OpenType）フォーマットです。
+
+当然、EOT さんを欲するのは・・・
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th><th>割合</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 7 (PC Windows)</td><td class="right">1,615</td><td class="right">38.15%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 8 (PC Windows)</td><td class="right">1,415</td><td class="right">33.43%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 9 (PC Windows)</td><td class="right">1,021</td><td class="right">24.12%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 6 (PC Windows)</td><td class="right">110</td><td class="right">2.60%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.62 (PC Mac OS X)</td><td class="right">31</td><td class="right">0.73%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.63 (PC Mac OS X)</td><td class="right">3</td><td class="right">0.07%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.61 (PC Mac OS X)</td><td class="right">3</td><td class="right">0.07%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.62 (PC Windows)</td><td class="right">2</td><td class="right">0.05%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 10 (PC Windows)</td><td class="right">2</td><td class="right">0.05%</td></tr>
+</table><
+
+はい、IE さんです。ただ、IE 一途かと思いきや、なぜか Mac の Opera も EOT を利用しています。
+
+そんな IE さんも、IE9 で WOFF フォーマットに対応し、いよいよ死の瞬間が迫ってきています。さよなら、EOT さん。あなたが Web フォントの道を切り開いたから今があるんだよ・・・。
+
+
+ところで、日本での IE の利用率は 50% を超えているはずです。にもかかわらず、EOT フォーマットへのアクセスは全体の 10% 程度でした。これは集計期間（公開直後 2 日間）には先進的なユーザー層の訪問が多かっからだと推測できます。
+
+その後、4月25日に <a href="http://nlab.itmedia.co.jp/nl/articles/1204/24/news103.html">ITmedia</a> に取り上げられると、公開直後よりも多くのアクセスが集まりました。この期間で集計してみると、
+- WOFF フォーマット: 50.3%
+- EOT フォーマット: 36.1%
+と、一般ユーザーの分布に近くなりました。
+
+***もう過去の人？: SVG フォント
+利用率が 1% を切ったのが SVG フォントです。
+
+SVG はベクター画像を扱うための規格であり、HTML5 でも注目されています。フォントがない環境でも SVG で文字を表示したい場合を考慮し、SVG にはフォント データを埋め込むことができるようになっています。この機能を活用したのが、SVG フォントです。
+
+そんな SVG フォントを欲したのは・・・。
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th><th>割合</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0.5 (iPhone iOS 4.1)</td><td class="right">33</td><td class="right">40.74%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0.5 (iPhone iOS 4.0.1)</td><td class="right">11</td><td class="right">13.58%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0.5 (iPhone iOS 4.0)</td><td class="right">7</td><td class="right">8.64%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0.5 (iPhone iOS 4.0.2)</td><td class="right">5</td><td class="right">6.17%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0.4 (iPad iOS 3.2.2)</td><td class="right">4</td><td class="right">4.94%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 4.0 (iPhone iOS 3.1.3)</td><td class="right">3</td><td class="right">3.70%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025429.gif" width="16" height="16" alt="-----"> BlackBerry 534.8 (BlackBerry)</td><td class="right">3</td><td class="right">3.70%</td></tr>
+</table><
+
+かなり古めの iOS の Safari が SVG フォントを利用するようです。
+
+本当にごくわずかではありますが、古い iPhone や iPad にも対応したい場合には、SVG フォントを用意しておくとよいでしょう。
+
+
+**Web フォント利用しない 3.94% ってどういう人？
+さて、問題は Web フォントを利用しない 3.94% の人たちです。
+
+大きく分けて 2 パターンあります。
+
+***Web フォント利用しない環境 その１: ブラウザーが対応していない
+本当にごく少数ですが、Web フォントに対応していないブラウザーでアクセスしてきた人がいました（一部抜粋）。
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 3 (PC Windows)</td><td class="right">12</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 7 (FujitsuToshibaMobileCommun IS12T Windows)</td><td class="right">9</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 3 (PC Mac OS X)</td><td class="right">5</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025429.gif" width="16" height="16" alt="-----"> Nintendo 3DS 1.7455 (Nintendo 3DS )</td><td class="right">5</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 3.0.4 (PC Mac OS X)</td><td class="right">4</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 2 (PC Windows)</td><td class="right">3</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 9.3 (PC)</td><td class="right">3</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025427.gif" width="16" height="16" alt="Netscape"> Netscape 4 (PC)</td><td class="right">3</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 9 (FujitsuToshibaMobileCommun IS12T Windows)</td><td class="right">3</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025429.gif" width="16" height="16" alt="-----"> NetFront (Sony PlayStation Portable Playstation Portable GameOS)</td><td class="right">2</td></tr>
+</table><
+
+Windows Phone とか、Nintendo DS とか、プレステとか、もしくは、古いブラウザーを強固に使い続ける人とか…。4万ヒット中に数十人のレベルなので、無視してもいいレベルでしょう。
+
+しかし、無視できないのが次の人たちです。
+
+***Web フォント利用しない環境 その 2: ブラウザーは対応してるけど無効になっている
+Web フォントに対応したブラウザーでは、デフォルトで Web フォントが有効となります。しかし、何らかのカスタマイズによって Web フォントが無効になっている人がいました。
+
+ブラウザー別に分類するとこうなりました。
+
+><table>
+<tr><th>ブラウザー</th><th>PV</th><th>割合</th><th>同一ブラウザー<br>中の割合</th></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 11 (PC Windows)</td><td class="right">285</td><td class="right">16.48%</td><td class="right">4.77%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025425.gif" width="16" height="16" alt="Chrome"> Chrome 18 (PC Windows)</td><td class="right">162</td><td class="right">9.37%</td><td class="right">1.86%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Safari 5.1 (iPhone iOS 5.1)</td><td class="right">142</td><td class="right">8.21%</td><td class="right">2.16%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025428.gif" width="16" height="16" alt="Opera"> Opera 11.62 (PC Windows)</td><td class="right">103</td><td class="right">5.96%</td><td class="right">14.69%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 7 (PC Windows)</td><td class="right">82</td><td class="right">4.74%</td><td class="right">4.83%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 8 (PC Windows)</td><td class="right">58</td><td class="right">3.35%</td><td class="right">3.93%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025424.gif" width="16" height="16" alt="Firefox"> Firefox 11 (PC Mac OS X)</td><td class="right">52</td><td class="right">3.01%</td><td class="right">5.00%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.4)</td><td class="right">51</td><td class="right">2.95%</td><td class="right">3.52%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025426.gif" width="16" height="16" alt="IE"> MSIE 9 (PC Windows)</td><td class="right">50</td><td class="right">2.89%</td><td class="right">4.66%</td></tr>
+<tr><td><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120426/20120426025430.gif" width="16" height="16" alt="Safari"> Mobile Safari 533.1 (Android 2.3.3)</td><td class="right">46</td><td class="right">2.66%</td><td class="right">3.92%</td></tr>
+</table><
+
+注目すべきは一番右側の列です。同じブラウザーを利用している人のうち、何パーセントが Web フォントをロードしなかったかを表します。
+
+IE、Firefox、Chrome、Opera、Safari など、主要なブラウザーで数パーセントの人が Web フォントをロードしていないことが分かります。
+では、いったい、どのような設定をすると、Web フォントが無効になるのでしょうか。
+
+**Web フォントが無効になる設定とは？
+***1. Web ページが指定するフォントを無視したい人
+ブラウザーによっては、Web ページで指定されたフォントを利用しない設定項目があります。
+:Firefox:[Web ページが指定したフォントを優先する] のチェックボックス
+:Internet Explorer:[Web ページで指定されたフォント スタイルを使用しない] のチェックボックス
+
+この設定を変更すると Web フォントの指定は無視されます。
+
+また、あまり多くはないでしょうが、ユーザースタイルシートを設定している人も同じ状態となります。
+
+***2. 拡張機能によって無効化されている人
+ブラウザー拡張の中には、Web フォントの利用を禁止するものもあります。
+
+有名どころでは <a href="https://addons.mozilla.org/ja/firefox/addon/noscript/">NoScript</a> です。Google Web Fonts の FAQ には「NoScript のオプションを開いて、Embeddings タブで [Forbid @font-face] のチェックをはずすことで、Web フォントが使えるようになる」と<a href="https://developers.google.com/webfonts/docs/troubleshooting#NoScript">書いてあります</a>。
+
+NoScript が Web フォントを無効にする理由は、セキュリティーにあるようです。Firefox は Web フォントを利用するために、FreeType フォント ライブラリーを利用しているのですが、このライブラリーに問題があるようです。
+>http://hackademix.net/2010/03/24/why-noscript-blocks-web-fonts/:title=hackademix.net &#187; Why NoScript Blocks Web Fonts>
+FreeType フォント ライブラリーが Web 上の信頼できないフォント ファイルを読み込むのは、本当に困った状況です。
+
+というのも、このライブラリーは、ローカルコンピューター上の信頼できるフォントを処理するためのものであり、信頼できないフォントを読み込むことを想定していないように思えるからです。実際、このライブラリーが Firefox に導入されたあと、いくつもの脆弱性がみつかりました。
+<<
+
+ここで書いてある脆弱性は、たとえばこの件だと思います。
+>http://internet.watch.impress.co.jp/docs/news/20100323_356341.html:title=「Firefox 3.6.2」公開、危険度の高い脆弱性を修正 -INTERNET Watch>
+Firefox 3.6.2では、Firefox 3.6で追加された「WOFF」形式フォントの展開処理に関する脆弱性を修正している。この脆弱性が悪用された場合、ブラウザーのクラッシュが引き起こされ、任意のコードを実行させられる危険がある。
+<<
+
+このような事例もあるため、NoScript は「Web フォントはスクリプト実行と同等の危険性がある」と判断して、Web フォントをデフォルトで無効にしているようです。
+
+(追記 2012/05/01) Firefox は 3.6.13 以降で <a href="http://code.google.com/p/ots/">OTS</a> というフォント サニタイザーを<a href="http://www.mozilla-japan.org/security/announce/2010/mfsa2010-78.html">利用するように修正</a>されており、現在では Web フォントを利用することによる危険性は小さいものと考えられます。OTS は Google Chrome でも利用されています。(twitter で @yusk_ さんに教えていただきました(<a href="https://twitter.com/yusk_/status/196250942004408323">その1</a>, <a href="https://twitter.com/yusk_/status/196251246745751552">その2</a>)。ありがとうございます)
+
+***3. iPhone, Android は…？
+iPhone や Android でも数パーセントほど、Web フォントをロードしなかった人がいたのですが、こちらについては原因は分かっていません。
+
+何らかの設定があるのでしょうか。ご存知の方がいれば教えてください。
+
+
+(追記) twitter で指摘いただきました。iOS の<strong>アプリ内</strong>のブラウザーでは Web フォントが効かないことがあるようです。
+
+>{% tweet 195331139207041024 %}<
+
+また、「iPhone ではそもそもコピーできない」という指摘がいくつかありましたが、このあたりもアプリ内かどうかで挙動が変わってくるのかもしれません。手元に iPhone がないので深追いできません…。(追記終わり)
+
+**結論: Web フォントに依存してはいけない
+長々と調べてきましたが、3 行で結論をまとめるとこうなります。
+
+- WOFF フォーマットが普及しているが、現時点では各フォーマットの Web フォントを用意したほうがよい。
+- Web フォントに対応していないブラウザーは皆無である。
+- Web フォントを使わないように設定変更している人が数パーセントいる。
+
+
+中でも、忘れてはいけないのが <strong>Web フォントを使わない人が確実に数パーセントいる</strong> という事実です。その状況は今後も変わらないでしょう。
+
+最近、Web フォントでアイコンを表示するテクニックが注目を集めています。
+- [http://design.kayac.com/topics/2012/02/webFontIcons.php:title=意外と知らない？アイコンはWebフォントでつくるとこんなに便利！ | KAYAC DESIGNER'S BLOG - デザインやマークアップの話:bookmark]
+- [http://kachibito.net/software/modern-pictograms.html:title=商用OKで、Webフォントにも使用可能な、シンプルで汎用的なアイコンタイプのフリーフォント・Modern Pictograms - かちびと.net:bookmark]
+
+しかし、数パーセントの人には、Web フォントによるアイコンは意味不明な文字にしか見えません((追記 2012/05/03: <a href="http://hail2u.net/blog/webdesign/mapping-to-private-use-area-is-not-a-perfect-answer.html">私用領域へのマッピングだけでは解決しないもの - Weblog - hail2u.net</a> によると、最近は Private Use Area (私用領域または外字領域)へアイコンをマッピングするもの増えてきているそうです。))。本当に万人に届けたいコンテンツを作るのであればアイコンは画像を使うべきでしょう。
+
+
+最後に、今回の集計結果を <a href="https://docs.google.com/spreadsheet/ccc?key=0AnNWAectqT7GdEJuTWMyb2J5MFIyZU5MYllvb2theVE">Google スプレッドシートに公開</a>しておきます。紙面の都合で省略したデータもありますので、興味のある方は確認してみてください。
+
+><div class="seealso"><
+**あわせてどうぞ
+-<a href="http://d.hatena.ne.jp/nitoyon/20120423/why_uncopyable">「コピペできない文章」がコピペできなかった理由</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20120420/uncopyable">絶対にコピペできない文章を作ったったwwww</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20120419/tiny_jp_webfont">文字を制限した軽量な日本語 Web フォントを作成する方法</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20120228/why_google_still_uses_flash">Google がまだ Flash を使っているサービスでみる脱 Flash の難しさ</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20090515/genotyp_review">フォント同士を交配させて新しいフォントを作る「genoTyp」が面白い</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20090120/ie4_blueprint">IE4 の青写真を懐かしむ</a>
+></div><
+

@@ -1,0 +1,39 @@
+---
+layout: post
+title: 文字コードによっては正規表現がエラーになる話
+tags: C#
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120223/regex_encoding
+---
+Git Extensions のソースコードを取ってきて自前でビルドしたところ、スペルチェック機能の正規表現でエラーが出てしまった。
+
+エラーの場所を確認したところ、正規表現の「<strong><code>&#192;-&#255;</code></strong>」が不正な範囲だとなっていた。
+
+**&#192;-&#255; がエラーになる理由
+&#192; と &#255; の文字は iso-8859-1（Latin-1) では次の範囲になる。
+- &#192; (0xC0)
+- &#255; (0xFF)
+
+しかし、自分のコードページは 932(Japanese Shift-JIS)なので、
+- 0xC0 → ﾀ
+- 0xFF → <なし>
+となる。
+
+C# の内部では文字列を Unicode で扱っているので、それぞれ次のように変換される。
+- Shift-JIS 0xC0 → U+FF80 (HALFWIDTH KATAKANA LETTER TA)
+- Shift-JIS 0xFF → U+F8F3 (Unassigned)
+
+結果として、「&#192;-&#255;」は「U+FF80～U+F8F3」の範囲を表してしまうため、範囲として不正となる。
+
+**どのように改善したか
+元のソースが ANSI だから、コードページによっては変な文字に変換されてしまっていた。
+
+それならばと、BOM 付きで UTF-8 に変換してやった。
+
+そもそも、C# で内部表現が Unicode なのに「0xC0～0xFF」という正規表現に意味があるのか怪しいところだが、そこは見てみぬふりをしておいた。
+
+**pull リクエストして取り込まれた!!
+さっそく修正を GitHub へ push して、pull リクエストを出してみたところ、無事に本家に取り込まれた。
+- [https://github.com/spdr870/gitextensions/pull/800:title=#800: Fixed Spelling.cs ArgumentException problem by nitoyon for spdr870/gitextensions - Pull Request - GitHub]
+
+めでたし。

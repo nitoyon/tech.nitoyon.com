@@ -1,0 +1,133 @@
+---
+layout: post
+title: AS3 でヒストグラムを作る (4) - 周辺分布
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071012/as3_histogram4
+---
+最近、画像処理について興味をもって勉強しているのですが、{% amazon jp:4789830950:title %} という本を読んでいます。その中で、「周辺分布」の図が面白かったので AS3 で実装してみました。
+
+**周辺分布って何？
+周辺分布というのは、２値化した画像においてドットの登場頻度を X軸、Y軸のそれぞれについて集計したもののようです。パターン認識の特徴ベクトルとして利用されるらしいです。
+
+サンプルはこんな感じ。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071012/20071012022750.gif" width="251" height="258"></center><
+
+イメージとしては、画像を縦と横のそれぞれにべちゃっと圧縮した感じ。例えば、「し」の縦棒の下は長くなってますよね。
+
+**ActionScript で作ってみた
+で、これをリアルタイムで解析できたら楽しそうだったので、作ってみたのがこちらの Flash。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FHistogram4.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=300&amp;h=300&amp;title=Marginal+Distribution&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+-枠の中でドラッグして線を描画できます
+-枠の外でクリックすると絵を消去できます
+
+適当にマウスを動かすと、スプラッター映画の血痕のようにヒストグラムが延びていくのが愉快です。
+
+技術的にはたいしたことしてません。例によって threshold でピクセル数を集計しているだけです。
+
+**本の紹介
+ちなみに、この {% amazon jp:4789830950:title %} という本、C# を例に説明はしてますが、実践的な画像処理の情報が詰まってるので、なかなか楽しいです。フィルタやラベリングに始まり、パターン認識からニューラルネット、顔認識などの幅広い内容をサンプルコードつきで扱ってます。他の本を読んだわけではないので、「これがベストだ！」と自信をもって言い切ることはできませんが、入門には分かりやすくていい具合です。
+
+それはそうと、誰か「ActionScript で実践する画像処理」という本を書かないかなぁ。Graphics クラスの初歩から始まり、パーティクルアニメーションを解説したり、BitmapData を使った加工ネタを取り上げたあとに Web カメラや FLV 動画の加工に応用、さらには PV3D で３次元…などなど、魅力的な内容になって面白そうなのに。だったらお前が書けよ、といわれそうだけど、ご覧のように画像処理については初心者なのでいかんとも…。
+
+>{% amazon jp:4789830950:detail %}<
+
+今回のソースコードは以下に(89行)。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.geom.*;
+
+    [SWF(width="400", height="400")]
+    public class Histogram4 extends Sprite {
+        private var canvas:Sprite;
+        private static var SIZE:uint = 200;
+
+        public function Histogram4() {
+            stage.align = "TL";
+            stage.scaleMode = "noScale";
+            
+            // 描画用キャンバス準備
+            canvas = new Sprite();
+            addChild(canvas);
+            initCanvas();
+
+            // ドラッグで描画
+            var dragging:Boolean = false;
+            var count:int = 0; // 間引き用のカウンタ
+            canvas.addEventListener("mouseDown", function(e:*):void {
+                canvas.graphics.moveTo(mouseX, mouseY);
+                canvas.graphics.lineTo(mouseX, mouseY);
+                dragging = true;
+            });
+            canvas.addEventListener("mouseMove", function(e:*):void {
+                if(dragging) {
+                    count = count < 12 ? count + 1 : 0;
+                    canvas.graphics.lineTo(mouseX, mouseY);
+
+                    // 12回に1回、ヒストグラムを更新する
+                    if(count == 0) {
+                        updateHistogram();
+                    }
+                }
+            });
+            canvas.addEventListener("mouseUp", function(e:*):void {
+                dragging = false;
+            });
+
+            // キャンバスの外でクリックしたらクリア
+            stage.addEventListener("click", function(event:Event):void {
+                if(event.target == stage) {
+                    initCanvas();
+                }
+            });
+        }
+
+        // キャンバスを初期化する
+        private function initCanvas():void {
+            canvas.graphics.clear();
+            canvas.graphics.lineStyle(1, 0x808080);
+            canvas.graphics.beginFill(0xffffff);
+            canvas.graphics.drawRect(0, 0, SIZE, SIZE);
+            canvas.graphics.endFill();
+            canvas.graphics.lineStyle(2, 0);
+            updateHistogram();
+        }
+
+        // ヒストグラムを描画する
+        private function updateHistogram():void {
+            graphics.clear();
+
+            // BitmapData に描画
+            var bmd:BitmapData = new BitmapData(SIZE, SIZE);
+            bmd.draw(canvas);
+
+            var num:uint;
+            graphics.lineStyle(1, 0);
+
+            // ヒストグラム分析＆描画
+            for(var i:int = 0; i < SIZE; i++) {
+                // X 成分のヒストグラム
+                num = bmd.threshold(bmd, new Rectangle(0, i, bmd.width, 1), new Point(), "==", 0xff000000);
+                graphics.moveTo(SIZE, i);
+                graphics.lineTo(SIZE + num, i);
+
+                // Y 成分のヒストグラム
+                num = bmd.threshold(bmd, new Rectangle(i, 0, 1, bmd.height), new Point(), "==", 0xff000000);
+                graphics.moveTo(i, SIZE);
+                graphics.lineTo(i, SIZE + num);
+            }
+
+            bmd.dispose();
+        }
+   }
+}
+||<
+></div><
+

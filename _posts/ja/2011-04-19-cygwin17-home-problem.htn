@@ -1,0 +1,49 @@
+---
+layout: post
+title: Cygwin 1.7 をインストールしたら home が変な場所になった話
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20110419/cygwin17_home_problem
+---
+Cygwin 1.7 をインストールして、Cygwin Bash Shell を起動したら次のようなエラーが表示されて困ってしまった。
+
+>|
+mkdir: cannot create directory `/home': Not a directory
+/home/my_account could not be created.
+Setting HOME to /tmp.
+|<
+
+管理者アカウントで Cygwin Bash Shell を起動したら上記のエラーは出なくなったが、<code>/home</code> が <code>C:\cygwin\home</code> ではなくどこか別の場所にリダイレクトされていた。
+
+**リダイレクトの正体は fstab
+少し調べてみると、Cygwin 1.7 からは <code>/etc/fstab</code> にマウント情報が記載されるようになったらしい。
+
+>http://cygwin.com/cygwin-ug-net/ov-new1.7.html:title=What&apos;s new and what changed in Cygwin 1.7>
+Mount points are no longer stored in the registry. Use /etc/fstab and /etc/fstab.d/$USER instead.
+>>
+1.7 からはマウント ポイントがレジストリに記録されなくなりました。その代わりに、<code>/etc/fstab</code> と <code>/etc/fstab.d/$USER</code> を利用します。
+<<
+<<
+
+実際、<code>C:\cygwin\etc\fstab</code> を見てみると次のような記載があった。
+
+>|
+C:/Users/foo/AppData/Roaming/Microsoft /home some_fs binary 0 0
+|<
+
+**setup.exe と過去インストールした別ユーザーの存在
+なぜか別のユーザー foo さんの <code>AppData</code> の下にリダイレクトされているようだ。
+
+どうやら、1.5 の設定を引き継ぐために setup.exe がレジストリから読み取っているようだ。
+
+>http://www.cygwin.com/cygwin-ug-net/using.html:title=Chapter 3. Using Cygwin>
+When you upgrade an existing older Cygwin installation to Cygwin 1.7, your old system mount points (stored in the HKEY_LOCAL_MACHINE branch of your registry) are read by a script and the /etc/fstab file is generated from these entries. 
+>>
+過去のバージョン から 1.7 にアップグレードすると、過去のマウントポイントの情報（レジストリの <code>HKEY_LOCAL_MACHINE</code> に記録されています）がスクリプトによって読み出され、これらの情報を元に <code>/etc/fstab</code> ファイルが生成されます。
+<<
+<<
+
+なるほど！と思ってレジストリを見てみると、<code>HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2\/home</code> キーの <code>native</code> に問題の設定があった。どうやら、foo さんが以前、この端末で過去の Cygwin をインストールしたときの設定が残っていたようだ。
+
+**そして...
+改めてレジストリを削除したあとで新規インストールしたらうまく行った。新規インストールと同等になったので、<code>/etc/fstab</code> はコメントだけになっていた。とほほ。

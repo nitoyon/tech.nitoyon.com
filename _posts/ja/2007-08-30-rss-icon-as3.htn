@@ -1,0 +1,227 @@
+---
+layout: post
+title: AS3 で RSS アイコンを描画
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070830/rss_icon_as3
+---
+ActionScript 3 で Photoshop チュートリアル実践シリーズ 第２弾。
+
+今回は RSS アイコンを作ってみました。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FRssIcon.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=240&amp;h=240&amp;title=RSS+Icon+by+ActionScript+3.0&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+参考にしたサイトは <a href="http://www.drweb.de/photoshop/rss-icon.shtml">Photohop: RSS-Icon Standard in Variationen</a>。ドイツ語で読めないけど、PSD ファイルが公開されているのでそれに沿って作成しました。
+
+表面の描画は <a href="http://d.hatena.ne.jp/nitoyon/20070801/as3_iphone_button">前回</a> とほとんど同じなので省略。
+
+いろいろ思いついて面白いのが「1/4 ドーナッツ」をどう描くか。円をマスクしてもできるんですが、それでは面白くないので、別の方法を３通り考えてみました。
+
+**1. 素直に外枠をなぞるパスを作る
+１つ目は一番最初に思いついた単純だけどめんどくさい方法。
+
+内側のドーナッツ作成コードがこれです。
+>|javascript|
+private function drawPattern1(g:Graphics):void
+{
+    g.beginFill(0xffffff);
+    g.moveTo(24, 52);
+    arcTo(g, 24, 108, 56, -Math.PI / 2, 0);
+    arcTo(g, 24, 108, 40, 0, -Math.PI / 2);
+    g.endFill();
+
+    // ...
+||<
+
+座標がいっぱい出てくるので、イメージがつかみやすいように図を描いてみました。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070830/20070830090742.gif" width="192" height="159" alt="RSSドーナッツ部分の座標"></center><
+
+Graphics クラスには弧を描画する関数がないので、arcTo というメソッドを定義しています。<a href="http://www.fumiononaka.com/TechNotes/Flash/FN0506002.html">FN0506002 - 描画メソッドで円を描く - Flash : テクニカルノート</a> を参考にしてベジェ曲線で描いています。
+
+**2. 線として弧を描く
+２つ目は太い線として描く方法。
+
+先ほどと同じく、arcTo 関数を使って描画します。
+>|javascript|
+private function drawPattern2(g:Graphics):void
+{
+    g.moveTo(24, 60);
+    g.lineStyle(16, 0xffffff, 1, false, "normal", CapsStyle.NONE);
+    arcTo(g, 24, 108, 48, -Math.PI / 2, 0);
+    g.lineStyle(0, 0, 0);
+
+    // ...
+||<
+
+だいぶシンプルになりました。
+====
+**3. 扇から扇を引く
+最後はちょっとアクロバットに描画。
+
+>|javascript|
+private function drawPattern2(g:Graphics):void
+{
+    g.beginFill(0xffffff);
+    drawPie(g, 24, 106, 56, -Math.PI / 2, 0);
+    drawPie(g, 24, 106, 40, -Math.PI / 2, 0);
+    g.endFill();
+
+    // ...
+||<
+
+1/4円を２つ描いて XOR にしてます。このテクニックについては <a href="http://d.hatena.ne.jp/nitoyon/20070810/begin_fill_end_fill_case_study">beginFill と endFill のケーススタディ</a> で説明済みです。
+
+drawPie は独自に定義したメソッドなのですが、内部で arcTo を使っているので行数は短くなってます。
+
+**ソース全体
+まとめ代わりにソースを掲載。長いよ。
+><div class="fix-height-syntax"><
+====
+>|javascript|
+package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
+
+    [SWF(width="128", height="128")]
+    public class RssIcon extends Sprite
+    {
+        private const SIZE:int = 128;
+        private const ROUND:int = 48;
+        
+        public function RssIcon():void
+        {
+            var matrix:Matrix = new Matrix();
+            matrix.createGradientBox(SIZE, SIZE, Math.PI * 1 / 4);
+
+            var glowFilter:GlowFilter = new GlowFilter(0xffffbe, 0.75);
+            glowFilter.inner = true;
+
+            // 外側の角円四角
+            var base:Shape = new Shape();
+            base.graphics.beginFill(0xcc6611);
+            base.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            base.graphics.endFill();
+            addChild(base);
+
+            // 内側の角円四角
+            var base2:Shape = new Shape();
+            base2.graphics.beginFill(0xee7722);
+            base2.graphics.drawRoundRect(1, 1, SIZE - 2, SIZE - 2, ROUND - 1, ROUND - 1);
+            base2.graphics.endFill();
+            base2.filters = [glowFilter];
+            addChild(base2);
+
+            // グラデーション
+            var gross:Shape = new Shape();
+            gross.graphics.beginGradientFill("linear", [0xffffff, 0x000000], [0.2, 0.2], [0, 255], matrix);
+            gross.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            gross.graphics.endFill();
+            gross.graphics.beginGradientFill("linear", [0xffffff, 0xffffff, 0xffffff], [0, 0.2, 0], [0, 112, 255], matrix);
+            gross.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            gross.graphics.endFill();
+            gross.blendMode = BlendMode.OVERLAY;
+            addChild(gross);
+
+            // ●
+            var white:Shape = new Shape();
+            white.graphics.beginFill(0xffffff);
+            white.graphics.drawCircle(36, 96, 12);
+            white.graphics.endFill();
+
+            // ))
+            drawPattern1(white.graphics);
+            //drawPattern2(white.graphics);
+            //drawPattern3(white.graphics);
+
+            addChild(white);
+        }
+
+        // その1: 素直に外枠をなぞるパスを作る
+        private function drawPattern1(g:Graphics):void
+        {
+            g.beginFill(0xffffff);
+            g.moveTo(24, 52);
+            arcTo(g, 24, 108, 56, -Math.PI / 2, 0);
+            arcTo(g, 24, 108, 40, 0, -Math.PI / 2);
+            g.endFill();
+
+            g.beginFill(0xffffff);
+            g.moveTo(24, 22);
+            arcTo(g, 24, 108, 86, -Math.PI / 2, 0);
+            arcTo(g, 24, 108, 70, 0, -Math.PI / 2);
+            g.endFill();
+        }
+
+        // その2: 線として弧を描く
+        private function drawPattern2(g:Graphics):void
+        {
+            g.moveTo(24, 60);
+            g.lineStyle(16, 0xffffff, 1, false, "normal", CapsStyle.NONE);
+            arcTo(g, 24, 108, 48, -Math.PI / 2, 0);
+            g.lineStyle(0, 0, 0);
+
+            g.moveTo(24, 30);
+            g.lineStyle(16, 0xffffff, 1, false, "normal", CapsStyle.NONE);
+            arcTo(g, 24, 108, 78, -Math.PI / 2, 0);
+            g.lineStyle(0, 0, 0);
+        }
+
+        // その3: 扇から扇を引く
+        private function drawPattern3(g:Graphics):void
+        {
+            g.beginFill(0xffffff);
+            drawPie(g, 24, 106, 56, -Math.PI / 2, 0);
+            drawPie(g, 24, 106, 40, -Math.PI / 2, 0);
+            g.endFill();
+
+            g.beginFill(0xffffff);
+            drawPie(g, 24, 106, 86, -Math.PI / 2, 0);
+            drawPie(g, 24, 106, 70, -Math.PI / 2, 0);
+            g.endFill();
+        }
+
+        // 弧を描くメソッド
+        // (参考) http://www.fumiononaka.com/TechNotes/Flash/FN0506002.html
+        private function arcTo(g:Graphics, x:Number, y:Number, radius:Number, startAngle:Number, endAngle:Number):void
+        {
+            var clockwise:Boolean = startAngle < endAngle;
+
+            g.lineTo(x + radius * Math.cos(startAngle), y + radius * Math.sin(startAngle));
+            
+            while(clockwise && startAngle < endAngle || !clockwise && startAngle > endAngle)
+            {
+                var nextAngle:Number = clockwise ? Math.min(endAngle, startAngle + Math.PI / 4)
+                                                 : Math.max(endAngle, startAngle - Math.PI / 4);
+
+                var nextPos:Point = new Point(
+                    Math.cos(nextAngle) * radius, 
+                    Math.sin(nextAngle) * radius);
+
+                var controlPos:Point = new Point(
+                    radius * Math.tan((nextAngle - startAngle) / 2) * Math.cos(nextAngle - Math.PI / 2),
+                    radius * Math.tan((nextAngle - startAngle) / 2) * Math.sin(nextAngle - Math.PI / 2)
+                    );
+
+                g.curveTo(x + nextPos.x + controlPos.x, y + nextPos.y + controlPos.y, x + nextPos.x, y + nextPos.y);
+
+                startAngle = nextAngle;
+            }
+        }
+
+        // 扇形を描くメソッド
+        private function drawPie(g:Graphics, x:Number, y:Number, radius:Number, startAngle:Number, endAngle:Number):void
+        {
+            g.moveTo(x, y);
+            arcTo(g, x, y, radius, startAngle, endAngle);
+        }
+    }
+}
+||<
+></div><
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2007-08-01-as3-iphone-button %}
+

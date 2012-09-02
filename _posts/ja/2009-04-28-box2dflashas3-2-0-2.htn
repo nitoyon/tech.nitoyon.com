@@ -1,0 +1,325 @@
+---
+layout: post
+title: Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090428/box2dflashas3_2_0_2
+---
+Box2dFlashAS3 はバージョンによって API が激しく変わっていてなかなか困りものだ。2.0.0 なら gihyo.jp の <a href="http://gihyo.jp/dev/feature/01/box2d">特集：Box2DでActionScript物理プログラミング</a> が分かりやすくてよいんだけど、2.0.1 で重要な API が改名されていて、そのことがパッケージには書いていない。
+
+「Box2dFlashAS3 どうなってるんだ」と思ったら、どうやら Box2D 本家の API 変更に素直に追従しているだけのようだ。本家側ではそこそこドキュメントはそろっているようなので、ドキュメントが欲しい人は <a href="http://sourceforge.net/projects/box2d">Box2D</a> 付属のクラスライブラリや <a href="http://www.box2d.org/manual.html">Box2D User Manual</a> を見たほうがよいかもしれない。
+
+今回は Box2dFlashAS3 <strong>ver 2.0.2</strong> の単純なサンプルを作った。クリックすると始まるよ。
+><center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBox2dSimpleSample202.swf&amp;up_background=%23666666&amp;synd=open&amp;w=450&amp;h=450&amp;title=Box2dFlashAS3+simple+sample&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)<br></noscript>（表示されない場合はリロードしてください。）</center><
+
+これのソースコードを紹介しながら Box2dFlashAS3 を使う手順を解説していく。
+
+**目次：
++世界の作成
++床の作成
++落下する物体の作成
++シミュレーションの開始
++描画
+====
+**1. 世界の作成
+シミュレーションを行うための世界を作成する。
+
+>|javascript|
+// シミュレーションする座標の範囲を指定する
+var worldAABB:b2AABB = new b2AABB();
+worldAABB.lowerBound.Set(-100.0, -100.0);
+worldAABB.upperBound.Set(100.0, 100.0);
+
+// 重力を定義する
+var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+
+// 世界のインスタンスを作成する
+world = new b2World(worldAABB, gravity, true);
+||<
+
+まずは、<code>worldAABB</code> を作ってシミュレーション計算する範囲を指定する。((ver 1 では <code>b2AABB</code> の範囲を指定するプロパティは minVertex, maxVertex だったのが、ver 2 からはそれぞれ <code>lowerBound</code>, <code>upperBound</code> に変わっいてる))
+
+次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。
+
+これで準備完了。世界を生成する。
+>|javascript|
+m_world = new b2World(worldAABB, gravity, true);
+||<
+第3パラメータは <code>doSleep</code>。ここを <code>true</code> にしておくと、物体が動いていないときはその分のシミュレーション処理を削減できる。
+
+**2. 床の作成
+さて、世界ができたら床を作っていこう。
+
+ここから世界に物体を配置していくんだけど、Box2D では、円や箱を作る手順がちょっと複雑なので毎回忘れてしまう。始めに手順を整理しておく。
+
+>>
+***物体を作る方法
++物体の定義を作る
+--<code>new b2BodyDef()</code>
+--場所や角度を決める
++物体を作る
+--<code>world.CreateBody(bodyDef):b2Body</code>
+--世界上に物体を作成する
++形の定義を作る
+--<code>b2PolygonDef, b2CircleDef</code>
+--形の大きさなどを決める
+--反発係数、摩擦係数などを決める
++形を物体に追加する
+--<code>body.CreateShape(shapeDef)</code>
+--物体上に形を追加する
+--いくつもの形を追加してもよい
++(動く物体の場合のみ) 重さを計算する
+--<code>body.SetMassFromShapes()</code>
+--これを忘れると落ちない
+<<
+
+<code>XXXDef</code> というのは <code>XXX</code> を作成するときのパラメータだと考えるとよいだろう。事前に <code>XXXDef</code> に値を設定しておいて、<code>CreateXXXX(XXXDef);</code> メソッドで実体を作る、という流れになる。
+
+それでは、手順に沿って作成していこう。
+
+***2-1. 物体の定義を作る。
+>|javascript|
+// 物体の定義を作る
+var wallBdDef:b2BodyDef = new b2BodyDef();
+wallBdDef.position.Set(400 / SCALE / 2, 300 / SCALE);
+wallBdDef.angle = Math.PI / 24;
+||<
+400, 300 の位置に物体を作る。角度はラジアンで指定する（π(=180°) / 24 なので 7.5°傾ける）。
+
+***2-2. 物体を作る。
+世界上に物体を作成する。
+>|javascript|
+// 物体を作る
+var wallBd:b2Body = world.CreateBody(wallBdDef);
+||<
+
+***2-3. 形の定義を作成する
+>|javascript|
+// 形の定義を作る
+var wallShapeDef:b2PolygonDef = new b2PolygonDef();
+wallShapeDef.SetAsBox(180 / SCALE, 10 / SCALE);
+||<
+<code>b2PolygonDef</code> を使って 180×10 の四角形の定義を作る。((ver1 には <code>b2BoxDef</code> があったが、ver2 からは箱は <code>b2PolygonDef.SetAsBox()</code> で作成するようになった))
+
+***2-4. 形を物体に追加する
+定義を作っただけではだめで物体に追加しなきゃいけない。
+>|javascript|
+// 形を物体に追加する
+wallBd.CreateShape(wallShapeDef);
+||<
+<code>b2Body</code> オブジェクトの <code>CreateShape</code> を呼ぶ。((ver 2.0.0 では <code>CreateStaticShape()</code> と <code>CreateDynamicShape()</code> に分かれていたが、ver 2.0.1 からは <code>CreateShape()</code> に統一された))
+
+***2-5. (動く物体の場合のみ) 重さを計算する
+今回は動かない物体なので必要ない。
+
+**3. 落下する物体の作成
+同じようにして積み木を作成していく。
+>|javascript|
+// 物体の定義を作る (x 座標と角度はランダム)
+var objBdDef:b2BodyDef = new b2BodyDef();
+objBdDef.position.Set((300 * Math.random()) / SCALE, 0);
+objBdDef.angle = Math.PI / 2 * Math.random();
+
+// 物体を作る
+var objBd:b2Body = world.CreateBody(objBdDef);
+
+// 形の定義を作る
+var shapeDef:b2PolygonDef = new b2PolygonDef();
+shapeDef.SetAsBox(30 / SCALE, 30 / SCALE);
+shapeDef.density = 1;
+shapeDef.restitution = 0.4;
+shapeDef.friction = 0.1;
+
+// 形を物体に追加する
+objBd.CreateShape(shapeDef);
+
+// 定義を変更してもう１個の形を追加する
+shapeDef.SetAsBox(40 / SCALE, 5 / SCALE);
+objBd.CreateShape(shapeDef);
+
+// 重さ・重心を計算する
+objBd.SetMassFromShapes();
+||<
+先ほどの手順と同じだが、動く物体なので最後に <code>SetMassFromShapes()</code> を利用して重さや重心を計算している。
+
+<code>ShepeDef</code> のプロパティは次の通り。
+:<code>density</code>:<code>0</code> 以外に設定すると、固定されない（自由落下する）ようになる。
+:<code>restitution</code>:はね返り具合。
+:<code>friction</code>:摩擦ぐあいを表すパラメータ。<code>0</code> だとよく滑る。
+
+物体にはいくつも形を追加できる。ここでは、２個の四角を追加している。
+
+**4. シミュレーションの開始
+<code>enterFrame</code> の中で次の関数を実行する。
+>|javascript|
+world.Step(1 / 9, 10);
+||<
+-第一引数（<code>timeStep</code>）は１回のステップで進める秒数。
+-第二引数（<code>iterations</code>）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）
+
+**5. 描画
+ver 2 から DebugView が導入された。開発の初期の段階では、物体を正しく定義できているか調べるのに便利だ。今回も DebugView を使って描画している。
+
+一回、次のように定義するだけで、自動的に描画してくれるようになる。ありがたい。
+>|javascript|
+//----------------------------------
+// DebugDraw を有効にする
+//----------------------------------
+var debugDraw:b2DebugDraw = new b2DebugDraw();
+debugDraw.m_sprite = this;
+debugDraw.m_drawScale = SCALE;
+debugDraw.m_fillAlpha = .8;
+debugDraw.m_lineThickness = 1;
+debugDraw.m_drawFlags = b2DebugDraw.e_shapeBit;
+world.SetDebugDraw(debugDraw);
+||<
+
+**ソース
+コメントを細かく書いているので128行あります。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+package {
+import Box2D.Dynamics.*;
+import Box2D.Collision.*;
+import Box2D.Collision.Shapes.*;
+import Box2D.Common.Math.*;
+import flash.events.Event
+import flash.display.Sprite;
+import flash.text.TextField;
+
+[SWF(backgroundColor="#666666", width="350", height="200")]
+public class Box2dSimpleSample202 extends Sprite {
+    private const SCALE:Number = 10;
+    private var world:b2World;
+
+    // コンストラクタ
+    public function Box2dSimpleSample202() {
+        stage.scaleMode = "noScale";
+        stage.align = "TL";
+
+        // メッセージとクリック時の処理
+        var tf:TextField = new TextField();
+        tf.textColor = 0xffffff;
+        tf.text = "Click to start";
+        addChild(tf);
+        var animation:Boolean = false;
+        stage.addEventListener("click", function(event:Event):void{
+            count = 0;
+            animation = !animation;
+            tf.text = "Click to " + (animation ? "stop" : "start");
+        });
+
+        // 初期化
+        init();
+        createObject();
+
+        // 毎フレームの処理
+        var count:int = 0;
+        addEventListener("enterFrame", function(event:Event):void {
+            world.Step(1 / 9, 10);
+            if (count == 0 && animation){
+                createObject();
+            }
+            count = (count + 1) % 30;
+
+            // 下に行ったオブジェクトを削除する
+            for (var b:b2Body = world.GetBodyList(); b; b = b.GetNext()) {
+                if (b.GetWorldCenter().y * SCALE > 600){
+                    world.DestroyBody(b);
+                }
+            }
+        });
+    }
+
+    // 初期化
+    private function init():void {
+        //----------------------------------
+        // 世界を作成する
+        //----------------------------------
+        // シミュレーションする座標の範囲を指定する
+        var worldAABB:b2AABB = new b2AABB();
+        worldAABB.lowerBound.Set(-100.0, -100.0);
+        worldAABB.upperBound.Set(100.0, 100.0);
+
+        // 重力を定義する
+        var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+
+        // 世界のインスタンスを作成する
+        world = new b2World(worldAABB, gravity, true);
+
+        //----------------------------------
+        // 床を作る
+        //----------------------------------
+        // 物体の定義を作る
+        var wallBdDef:b2BodyDef = new b2BodyDef();
+        wallBdDef.position.Set(400 / SCALE / 2, 300 / SCALE);
+        wallBdDef.angle = Math.PI / 24;
+
+        // 物体を作る
+        var wallBd:b2Body = world.CreateBody(wallBdDef);
+
+        // 形の定義を作る
+        var wallShapeDef:b2PolygonDef = new b2PolygonDef();
+        wallShapeDef.SetAsBox(180 / SCALE, 10 / SCALE);
+
+        // 形を物体に追加する
+        wallBd.CreateShape(wallShapeDef);
+
+        //----------------------------------
+        // DebugDraw を有効にする
+        //----------------------------------
+        var debugDraw:b2DebugDraw = new b2DebugDraw();
+        debugDraw.m_sprite = this;
+        debugDraw.m_drawScale = SCALE;
+        debugDraw.m_fillAlpha = .8;
+        debugDraw.m_lineThickness = 1;
+        debugDraw.m_drawFlags = b2DebugDraw.e_shapeBit;
+        world.SetDebugDraw(debugDraw);
+    }
+
+    // 物体を１個作る
+    private function createObject():void{
+        // 物体の定義を作る (x 座標と角度はランダム)
+        var objBdDef:b2BodyDef = new b2BodyDef();
+        objBdDef.position.Set((300 * Math.random()) / SCALE, 0);
+        objBdDef.angle = Math.PI / 2 * Math.random();
+
+        // 物体を作る
+        var objBd:b2Body = world.CreateBody(objBdDef);
+
+        // 形の定義を作る
+        var shapeDef:b2PolygonDef = new b2PolygonDef();
+        shapeDef.SetAsBox(30 / SCALE, 30 / SCALE);
+        shapeDef.density = 1;
+        shapeDef.restitution = 0.4;
+        shapeDef.friction = 0.1;
+
+        // 形を物体に追加する
+        objBd.CreateShape(shapeDef);
+
+        // 定義を変更してもう１個の形を追加する
+        shapeDef.SetAsBox(40 / SCALE, 5 / SCALE);
+        objBd.CreateShape(shapeDef);
+
+        // 重さ・重心を計算する
+        objBd.SetMassFromShapes();
+    }
+}
+}
+||<
+></div><
+
+><div class="seealso"><
+**目次
+-Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)
+-{% post_link 2009-04-30-box2d-no-debug-draw %}
+
+**あわせてどうぞ
+-{% post_link 2007-11-27-box2d-simple-sample %} (ver 1.4.X 用のチュートリアル)
+-{% post_link 2007-11-29-box2dflashas3-bitmap %}
+-{% post_link 2008-02-09-box2d-example %}
+-{% post_link 2008-06-25-zantetsu-mouse %}
+-{% post_link 2008-06-10-p1 %}
+></div><
+

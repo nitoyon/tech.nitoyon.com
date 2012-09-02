@@ -1,0 +1,90 @@
+---
+layout: post
+title: Flash CS3 で開発者とデザイナの連携・分業が簡単になりそうだ
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070404/flash_cs3_review
+---
+先日、Flash CS3 (Flash 9) が発表されました。発表されるまでは、Adobe が開発者とデザイナの連携方法をどのように思い描いているのかが分からなかったのですが、今回の発表でだいぶ見えてきました。
+
+と、その前に Flash CS3 の新機能をざっとサーベイしてみます。
+====
+**Flash CS3 の新機能
+情報源は <a href="http://www.adobe.com/products/flash/features/">Adobe Flash CS3: Features</a> と <a href="http://www.adobe.com/devnet/flash/articles/introducing_flash_cs3.html">Introducing Adobe Flash CS3 Professional</a> あたりです。
+:Photoshop, Illustrator からのインポートが便利に:Adobe と Macromedia 合併の成果ですね。.psd や .ai からレイヤーを選択してインポートしたり、ベクターデータをそのままインポートしたり、文字列を編集可能なままインポートしたりできるようになりました。
+:Adobe CS 3 共通の UI:折りたたんで省スペース化できる新しいパネル、パネルの配置を複数保存できるワークスペース機能が登場します。この UI は Adobe CS 3 ですべて共通です。
+:新しいシェイプ:角丸や同心円が簡単に作れるようになりました。また、ベクターデータは Illustrator と同じようにいじれるようになりました（好き嫌いは出るでしょうが...）。
+:ActionScript 3.0 対応:ActionScript 3.0 を使えるようになりました。デバッグ機能も Flex Builder 2 と同等のものを装備しているようです。
+:タイムラインアニメーションを ActionScript 3.0 に変換:すぐあとで説明します。
+
+他にもビデオエンコード機能の進化、Adobe Device Central CS3 と呼ばれる携帯端末のシミューレータ、Quick Time サポートの向上などなど、いろいろな目玉はあるようですが、中でも <strong>タイムラインアニメーションを AS3 に変換</strong> という機能がおもしろいです。
+====
+**タイムラインアニメーションを AS3 に変換する機能!?
+いったいどんな機能なのでしょうか。
+
+<a href="http://www.adobe.com/products/flash/features/">Adobe - Adobe Flash CS3: Features</a> の動画に変換後のソースコードが映っていたので書き写してみました。(分からないところは ... で省略しています)
+>|javascript|
+import fl.motion.Animator;
+var can_animation_xml:XML = <Motion duration="25" xmlns="fl.motion.Animator">
+  <source>
+    <Source frameRate="30" x="-16.4" y="138.1" scaleX="1.6" ...
+      <dimensions>
+        <geom:Rectangle left="-15" top="-7" width="120" ...
+      </dimensions>
+      <transformationPoint>
+        <geom:Point x="0.5" y="0.49772"/>
+      </transformationPoint>
+    </Source>
+  </source>
+
+  <Keyframe index="0" tweenSync="true">
+    <filters>
+      <filters:BlurFilter blurX="120" blurY="0" quarity=... />
+    </filters>
+  </Keyframe>
+
+  <Keyframe index="1" tweenSync="true" x="91.85" y="-0.009999" ....
+    <filters>
+      <filters:BlurFilter blurX="110.00..." ...
+    </filters>
+  </Keyframe>
+||<
+
+アニメーションの情報が XML 形式で書き出されているのが分かります。E4X で直接 can_animation_xml 変数に XML を流し込んでいます。
+
+&lt;geom:Rectangle&gt; や &lt;geom:Point&gt; といったタグがあるので、SVG や VML みたいに使えるのかと思ったのですが、そうではなく、単にアニメーションを行う領域を定義しているだけのようです。
+
+&lt;Keyframe&gt; タグでそれぞれのフレーム（24fps なら 1/24秒）での表示方法を指定しています。このサンプルは移動しながら blur 値が変わっていくものだったのですが、まさにそのような XML になっていますね。
+
+fl.motion.Animator というクラスを import しているのも気になりますが、いまのところ Animator クラスに関する情報は公表されていません。
+
+
+複雑なアニメーションを ActionScript だけで実現するのは面倒ですが、Flash CS3 を使って手軽にアニメーションデータを作れるようになりそうです。
+
+
+**開発者がやること、デザイナがやること
+さて、冒頭にも軽く述べましたが、開発者とデザイナの連携方法です。今後、Flash を活用したウェブサービスや Apollo アプリケーションの開発では、開発者とデザイナが連携して開発を進める機会は増えていくでしょう。
+
+Flash 8 までは、お世辞にも共同開発しやすい環境とはいえなかったのですが、Flash CS3＋ActionScript 3.0 の登場により、だいぶ状況は改善してきそうです。
+
+今回のアニメーションの AS3 書き出し機能の発表から、１つの連携方法を想像してみました...
+
+-デザイナは全体のパーツとなる部分をそれぞれ SWF や画像で作る
+-開発者がアニメーションの細かな動きを ActionScript から制御したい場合は、デザイナは別途タイムラインアニメーションを XML 形式で書き出す。
+-デザイナがアニメーションのパラメータを変更したとしても、プログラマが再コンパイルするだけで対応できる。
+
+アプリケーションの魅力を左右するアニメーション部分をデザイナの管理下に置けるのは大きな利点でしょう。これは、MVC モデルでいうところの、<strong>V を完全にデザイナに任せてしまえる</strong>ことを意味します。
+
+さらに、Flash 8 までは ActionScript を SWF 化するためには Flash でパブリッシュしなければならなかったのが、Flash CS3 での ActionScript 3.0 採用により、コマンドラインでビルドできるようになりました。つまり、Flash CS3 をデザイナが素材作りのために使うツールとして位置づけてしまい、アプリケーション全体はプログラマが ActionScript で管理することが可能になります。いいかえれば、MVC モデルでいうところの、<strong>M と C をプログラマの手中に収められる</strong>ことを意味します。
+
+けっこう幸せそうですよね。
+
+**それでもやっぱり分からない
+とはいえ、SWF の中に ActionScript を埋め込んでコンポーネント化したほうが、アプリケーションの設計としてはシンプルな気もします。しかし、そうするためには、今までどおり、開発者が Flash CS3 を触らなければなりません。Flash CS3 から ActionScript をインクルードすることはできるでしょうが、デザイナが作った各 MovieClip の名前を意識して ActionScript のコーディングをする必要が出てきますし、動作検証をするためには Flash CS3 でパブリッシュしなければなりません。
+
+そうなると、ファイルの排他処理やバージョン管理が煩雑になりますし、デッドロックが発生してしまうことも出てくるでしょう。
+
+結局、昔と変わってない悲しい状況...
+
+いまだに情報がはっきりしておらず、このあたりのノウハウを確立できるのは Flash CS3 が発売されて、実際に触ってからになりそうです。
+

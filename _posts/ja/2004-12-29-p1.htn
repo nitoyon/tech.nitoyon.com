@@ -1,0 +1,42 @@
+---
+layout: post
+title: C++.NET でクラス宣言するときの注意点
+tags: 開発
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20041229/p1
+---
+C++ で他クラスを含めるには、そのクラスの宣言をインクルードする必要があるけど、他クラスへのポインタだけでいい場合は、次のようにすればよい。
+>|cpp|
+class A;
+
+class B
+{
+private:
+    A* objectA;
+}
+||<
+
+
+C++.NET でマネージドクラスをポインタとして含むには次のようにする。
+>|cpp|
+public __gc class A;
+
+public __gc class B
+{
+    A* objectA;
+}
+||<
+
+こうしないと、マネージドクラスであることが伝わりません。名前空間の宣言がある場合は、ちゃんと同じ名前空間の中で宣言してやらないとダメ。
+>|cpp|
+namespace sample
+{
+    public __gc class A;
+
+    public __gc class B
+    {
+        A* objectA;
+    }
+}
+||<
+

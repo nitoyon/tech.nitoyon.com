@@ -1,0 +1,91 @@
+---
+layout: post
+title: Bloggie のドーナッツ状パノラマ動画を変換してみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100323/bloggie_movie
+---
+<a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fitem.rakuten.co.jp%2Fkaden-sakura%2F10015963%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkaden-sakura%2Fi%2F10015963%2F">bloggie</a> という手軽にパノラマ動画を撮れるオモチャで遊ぶシリーズの第３回。前回、<a href="http://d.hatena.ne.jp/nitoyon/20100314/donut_converter">静止画のコンバーター</a> ができたので、いよいよ動画にチャレンジする。
+
+bloggie の動画は MPEG4(H.264/AVC) なのでそのまま Flash で読み込める。つまり、オリジナルの動画を再生しながら毎フレームごとに変換していけば、やや CPU は食うが展開して表示することはできる。実際、[http://clockmaker.jp/blog/2010/02/bloggie-motionvr/:title=Flashで360度パノラマ動画MotionVRを再生 | ClockMaker Blog] ではそのようにやってる。
+
+同じ方法を試しても面白くないので、ここではドーナッツ状の動画を展開した動画を作ってみることにする。
+
+**できあがり
+完成品がこちら。
+
+{% youtube YJZCdltEnYo %}
+
+製品付属の変換ツールを使わずに変換してみた。自転車で <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fitem.rakuten.co.jp%2Fkaden-sakura%2F10015963%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkaden-sakura%2Fi%2F10015963%2F">bloggie</a> を手持ちしつつ鴨川沿いを走った動画でございます。
+
+**手順
+動画といっても、コマごとに変換してやればいいだけ。フリーの定番動画変換ツール、ffmpeg を活用してみた。
+
++ffmpeg を利用して撮影画像をコマごとに画像として分解する (参考: [http://opensourceaki.blogspot.com/2007/10/ffmpeg.html:title=フリーランス アキのオープンソース活用術: FFMpegで動画を画像にする])
++<a href="http://d.hatena.ne.jp/nitoyon/20100314/donut_converter">静止画のコンバーター</a> のソースを流用して、各画像を変換するツールを AIR で作成する
++ffmpeg を利用して変換後の画像から動画を再構成する (参考: [http://opensourceaki.blogspot.com/2007/10/ffmpeg_19.html:title=フリーランス アキのオープンソース活用術: FFMpegで連続画像から動画を作成する])
+
+**もう１つサンプル
+動画にできたのなら、あとは左端と右端を繋げればループしてくれる。ということで作ってみたのがコレ。
+====
+動画の上でマウスを移動させて位置調整できます。マウス動かしても反応ないなら、動画をクリックしてみる必要があるかも。
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://tech.nitoyon.com/misc/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBloggie360Test.swf&amp;up_background=%23ffffff&amp;up_cache=1&amp;up_swfver=9&amp;synd=open&amp;w=400&amp;h=248&amp;title=Bloggie+360+degree+movie+test&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(ここにFlashが表示されます)</noscript></center><
+
+ソースはこんな感じ。ソース中に出てくる out.swf は YouTube にアップロードした動画を ffmpeg で swf として出力したもの。
+>|actionscript|
+package{
+import flash.display.*;
+import flash.geom.Matrix;
+import flash.events.Event;
+
+[SWF(backgroundColor="#ffffff")]
+public class Bloggie360Test extends Sprite{
+    [Embed(source="out.swf")]
+    private var movie:Class;
+
+    public function Bloggie360Test() {
+        var mc:MovieClip = new movie();
+
+        var bmd:BitmapData = new BitmapData(400, 248);
+        var bmp:Bitmap = addChild(new Bitmap(bmd)) as Bitmap;
+
+        var mtx:Matrix = new Matrix();
+        var mtx2:Matrix = new Matrix();
+
+        addEventListener("enterFrame", function(event:Event):void {
+            mtx.tx += (200 - stage.mouseX) / 10;
+            mtx.tx %= mc.width;
+
+            bmd.draw(mc, mtx);
+            if (mtx.tx > 0) {
+                mtx2.tx = mtx.tx - mc.width;
+                bmd.draw(mc, mtx2);
+            }
+            if (mtx.tx < mc.width - 400) {
+                mtx2.tx = mtx.tx + mc.width;
+                bmd.draw(mc, mtx2);
+            }
+            
+        });
+    }
+}
+}
+||<
+
+商品情報はこちら。自分が購入したお店で値下がりしていて税抜2万円切っていた。
+
+><div class="hatena-asin-detail">
+<a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fitem.rakuten.co.jp%2Fkaden-sakura%2F10015963%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkaden-sakura%2Fi%2F10015963%2F"><img src="http://thumbnail.image.rakuten.co.jp/@0_mall/kaden-sakura/cabinet/01260387/mhspm5kl.jpg?_ex=128x128" class="hatena-asin-detail-image" alt="■ソニー【☆bloggie】モバイルHDスナップカメラ MHS-PM5K-L（ブルー）★送料無料【MHSPM5K】" title="■ソニー【☆bloggie】モバイルHDスナップカメラ MHS-PM5K-L（ブルー）★送料無料【MHSPM5K】"></a>
+<div class="hatena-asin-detail-info">
+<p class="hatena-asin-detail-title"><a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fitem.rakuten.co.jp%2Fkaden-sakura%2F10015963%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkaden-sakura%2Fi%2F10015963%2F">■ソニー【☆bloggie】モバイルHDスナップカメラ MHS-PM5K-L（ブルー）★送料無料【MHSPM5K】</a></p>
+<ul>
+<li><span class="hatena-asin-detail-label">ジャンル:</span> <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fbeta.directory.rakuten.co.jp%2Frms%2Fsd%2Fdirectory%2Fvc%2Fs1tz211742%2F" target="_blank">家電・AV・カメラ</a> &gt; <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fbeta.directory.rakuten.co.jp%2Frms%2Fsd%2Fdirectory%2Fvc%2Fs1tz204199%2F" target="_blank">ビデオカメラ・デッキ</a> &gt; <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fbeta.directory.rakuten.co.jp%2Frms%2Fsd%2Fdirectory%2Fvc%2Fs1tz110238%2F" target="_blank">ビデオカメラ</a> &gt; <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fbeta.directory.rakuten.co.jp%2Frms%2Fsd%2Fdirectory%2Fvc%2Fs1tz509456%2F" target="_blank">SDカードビデオカメラ</a> &gt; <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fbeta.directory.rakuten.co.jp%2Frms%2Fsd%2Fdirectory%2Fvc%2Fs1tz213056%2F" target="_blank">その他</a></li>
+
+<li><span class="hatena-asin-detail-label">ショップ:</span> <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fwww.rakuten.co.jp%2Fkaden-sakura%2F" target="_blank">家電のSAKURA　楽天市場店</a></li>
+<li><span class="hatena-asin-detail-label">価格:</span> 19,400円</li>
+</ul>
+</div>
+</div><
+
+>{% amazon jp:B003479I0Y:detail %}<
+

@@ -1,0 +1,81 @@
+---
+layout: post
+title: beginFill と endFill のケーススタディ
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070810/begin_fill_end_fill_case_study
+---
+Graphics クラスの beginFill と endFill あたりの挙動がよく分からなかったので調べてみた。
+
+**Case 1
+>|javascript|
+package
+{
+    import flash.display.*;
+
+    public class erase extends Sprite
+    {
+        public function erase()
+        {
+            graphics.beginFill(0xff0000);
+            graphics.drawCircle(0, 100, 100);
+
+            graphics.drawCircle(100, 100, 100);
+
+            graphics.drawRect(-30, 100, 300, 50);
+
+            graphics.endFill();
+        }
+    }
+}
+||<
+
+奇数回重なっている部分が塗りつぶされているのが分かる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023602.gif" width="200" height="125"></center><
+
+XOR な領域が塗られる、と言い換えてもいいかもしれない。
+
+**Case 2
+１つ目の円描画あとに endFill を持ってきてみる。
+
+>|javascript|
+graphics.beginFill(0xff0000);
+graphics.drawCircle(0, 100, 100);
+graphics.endFill();
+
+graphics.drawCircle(100, 100, 100);
+
+graphics.drawRect(-30, 100, 300, 50);
+graphics.endFill();
+||<
+
+１つ目の円しか描画されない。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023601.gif" width="150" height="121"></center><
+
+endFill を呼んだ段階で、塗りの情報は初期化されて、それ以降は endFill されても何も塗られないんだと推測できる。
+
+**Case 3
+毎回、beginFill してみる。
+
+>|javascript|
+graphics.beginFill(0xff0000);
+graphics.drawCircle(0, 100, 100);
+
+graphics.beginFill(0xff0000);
+graphics.drawCircle(100, 100, 100);
+
+graphics.beginFill(0xff0000);
+graphics.drawRect(-30, 100, 300, 50);
+||<
+
+全部塗られる。Case 1 のように XOR になることもない。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023600.gif" width="200" height="124"></center><
+
+これは、たぶん、beginFill を実行した段階で、自動的に前の塗りの endFill が呼ばれてるんだろう。
+
+**まとめ
+なんとなく内部実装が見えてきた気がする。endFill せずに２回塗れば XOR になる、という技は使えそうだ。
+

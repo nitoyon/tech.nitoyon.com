@@ -1,0 +1,36 @@
+---
+layout: post
+title: twitter の console.log() エラーよけ
+tags: Twitter
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20110318/console_log_twitter
+---
+Firebug が導入した <code>console.log()</code> は最近のブラウザで標準的に実装されつつあります。
+
+しかし、万が一、リリースコードに <code>console.log</code> が混じり込んでしまうと、古いブラウザや開発ツールが導入されていないブラウザで JavaScript エラーになってしまってとても悲しくなります。
+
+ということで、そういう場合にエラーを出さないようにするために、お手製の偽者 console オブジェクトを実装するテクニックがあります。ちょっと検索するといろいろ見つかります。
+>|javascript|
+if (!window.console){
+    window.console = {
+        log: function(){}
+    };
+}
+||<
+
+確かに小さなプロジェクトでは、こういうおまじないを書いておくと安心だろうなー…と思っていたら、twitter のソースコードに次のようなコードを発見。
+>|javascript|
+if (!window.console) {
+  (function() {
+      var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
+        "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
+      window.console = {};
+      for (var i = 0; i < names.length; ++i)
+        window.console[names[i]] = function() {}
+  })();
+}
+||<
+新 UI になってからは、JavaScript の役割が大きくて、<code>console.log</code> を残して JavaScript エラーを出してしまうと致命的だからでしょうか。念には念を押して、ということなのかもしれませんが、少しびっくりしました。
+
+本題から外れますが、日本赤十字に10万円寄付してみました。さらに、はてなのポイントを450ほど寄付してみました。何もできないもどかしさが少しだけ軽くなったような気がします。被災された方々には、心からお見舞い申し上げます。一刻も早い復旧を心よりお祈り申し上げます。
+

@@ -1,0 +1,169 @@
+---
+layout: post
+title: JavaScriptでかんたんHTAアプリに挑戦
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090119/hta
+---
+><p>こんにちは！<br>
+みなさんガジェットつくってますか！<br>
+なんだか最近、色々な種類があるみたいですね！<br>
+Yahooナントカとか、Googleガジェットとか、Adobe AIRとか、シルバーナントカとか、あとWindowsサイドバーだとか、Operaナントカとか…。</p><
+
+><p>こういうガジェット的な、ちょっとしたデスクトップ用のツールって、<br>
+どうやってつくるのかなーなんて思って、ちょっと調べてみました！</p><
+
+><p>そしたら意外と簡単だった…！
+これならぼくにも作れそう！！</p><
+
+ってことで、ちょっとメモしておきますね！ 
+
+**どれにしようかな…！
+-つくるのが簡単なこと
+-Winで動いたらいいや
+-使う人がインストールしやすそうなのがいい
+
+><p>こんな感じで考えていくと…<br>
+Googleガジェット か AIR なのかなー、って思ったんだけど、</p><
+
+プラグインとかインストールはめんどくさいから、なにもせずに使えるものがいいよね！
+
+だから <font color="red"><b>HTA（HTMLアプリケーション）に決定！</b></font>
+
+**つくるのかんたんそう？
+<font color="red"><b>HTAってなんなの？おいしいの？</b></font>
+
+なんて思っていた時期がぼくにもありました…！ 
+
+<font color="red"><b>大丈夫！ html と JavaScript だけでできるよ！</b></font>
+
+だからホームページ作るのと同じくらい簡単ですね！ 
+
+
+><p>いまでこそ AIR とか Prism とかが少し注目されてるけど、<br>
+HTA は Microsoft が10年も前に HTML と JavaScript でアプリケーション作れるようにしちゃえ！<br>
+ってことで発表した仕組みだよ。</p><
+
+
+><p>ブラウザ上のページだと、JavaScriptとかで他のサイトの情報を取得できなかったり<br>
+ファイルの読み書きできなかったりと、色々な制約があるんだけど、<br>
+そんな制約なしで、ウイルスでも何でも好きなものがバンバンつくれます！<br>
+やったね！</p><
+
+**つくるための準備
+><p>Windowsでのやりかたです！<br>
+Macとか他のへんなOS使ってるひとはあきらめてください！</p><
+
+><p>準備といっても、<font color="red"><b>HTA は IE5 以降についてくる</b></font>から何もしなくてオッケーだよ<br>
+IE4を使ってるひとは日常生活に支障がでてると思うので、いますぐIE7をインストールするといいと思うよ！</p><
+
+**よし！ つくろう！
+***まず作業用フォルダをつくる
+><p>ぼくはいつも C:\home\ にガラクタファイルを溜め込んでいってるので、<br>
+<b>C:\home\HTA\test1</b> ってフォルダを作ってみました！<br>
+はい！ 今回つくるやつは「<b>test1</b>」っていうHTAアプリです！</p><
+
+***作業用フォルダに必要なファイルを用意する
+AIR だと３つぐらいのファイルを用意しなきゃいけないみたいだけど、HTA は１つのファイルでじゅうぶん！
+
+><p>作業用フォルダの中に新しく「<b>test1.hta</b>」ってファイルを作ってね！<br>
+中身は…</p><
+>|html|
+<html>
+<head>
+<title>てすと！</title>
+<script>
+function start_load() {
+    var xhr = new ActiveXObject("Msxml2.XMLHTTP");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            view(xhr);
+        }
+    };
+
+    xhr.open('get', 'http://b.hatena.ne.jp/hotentry');
+    xhr.send(null);
+}
+
+function view(xhr) {
+    document.getElementById('main').value = xhr.responseText;
+}
+</script>
+<style>
+body {
+    background: #000;
+}
+
+#main {
+    width: 100%;
+    height: 200px;
+    color: red;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+<textarea id="main">こんにちはこんにちは！</textarea>
+<input type="button" value="ひみつボタン" onclick="start_load()" />
+</body>
+</html>
+||<
+
+><p>これをコピペでオッケー！<br>
+ただし、<font color="red"><b>文字コードは Shift-JIS で保存してね！</b></font><br>
+(別の文字コードで保存したいばあいは、meta タグを書いてね)</p><
+
+**実行しよう
+エクスプローラを起動して、作業フォルダに移動
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090118/20090118200619.jpg?1232276995" width="437" height="210"></center><
+
+さっき作ったやつをダブルクリックで実行…！
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090118/20090118200730.png?" width="450" height="333"></center><
+><p>できた！やった！なんかうごいた！<br>
+ひみつボタン押したら、はてなブックマークのソースコードが表示されたよー。</p><
+
+**改造しよう！
+HTA の html とか JavaScript は、IE と同じやつが使われてるらしいですよ！ 
+
+><p>てことは、普段ホームページ作りの時に「あぁこれFirefoxだと使えないからなぁ」<br>
+なんて諦めていたやつが色々つかえるかもしれないですね！<br>
+ActiveX とか expression とか、なんかそういうの！</p><
+
+><p>あと <b>prototype.js</b> とか <b>jQuery</b> みたいな便利ライブラリも普通に使えるよ！<br>
+やった！ すごい！ べんり！</p><
+
+**だけどHTAのちょっとまずいところ
+***Windows 限定…！
+Windows 以外のひとにも使ってもらいたいときは、HTA はあきらめたほうがよいだろうね…！
+
+***cookieがIEと共通…！
+><p>たとえ「標準のブラウザ」をFirefoxに設定していたとしても<br>
+cookieはIEのものをつかっちゃう…！</p><
+
+><p>つまり、IEでhatenaにログインしていたら、HTAでもhatenaにログイン済み。<br>
+その状態で、HTAから(IE以外の)標準のブラウザでリンクを開こうとすると<br>
+ログインしていない状態でリンクが開かれちゃう。</p><
+
+**参考になるページ
+公式のページに公開ファイルの作り方とか色々書いてあるよ！ 
+-<a href="http://www.microsoft.com/japan/technet/scriptcenter/hubs/htas.mspx">HTA Developers Center</a>
+--入門ドキュメントが日本語で書いてあるよ
+-<a href="http://www.microsoft.com/japan/technet/scriptcenter/resources/qanda/htas.mspx">Hey, Scripting Guy! ‐ HTML アプリケーション (HTA)</a>
+--かんたんなＱ＆Ａだよ
+--ファイルを開いたり保存したりする方法も…！
+--もちろん日本語！
+-<a href="http://msdn.microsoft.com/en-us/library/ms536473.aspx">HTML Applications Reference</a>
+--英語だけど仕様がくわしく書いてるリファレンスだよ
+
+ぼくが過去に作った HTA のツールも紹介します
+-<a href="http://tech.nitoyon.com/javascript/application/racing/2.html">Google Earth でもドライビング！</a>
+--Google Earth の COM インターフェースを直接叩いてみた実験的な HTA。現在は動かないと思う…
+
+みんなも作って、どんどこ公開しちゃえばいいんじゃないかな！
+
+<br><br><br><br><br>
+
+ネタ元：
+-<a href="http://d.hatena.ne.jp/Hamachiya2/20090116/air">JavaScriptでかんたんAIRアプリに挑戦 - ぼくはまちちゃん！(Hatena)</a>
+

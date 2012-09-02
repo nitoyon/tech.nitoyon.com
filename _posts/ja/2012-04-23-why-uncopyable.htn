@@ -1,0 +1,150 @@
+---
+layout: post
+title: 「コピペできない文章」がコピペできなかった理由
+tags: HTML5
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120423/why_uncopyable
+---
+先日公開した <a href="http://d.hatena.ne.jp/nitoyon/20120420/uncopyable">絶対にコピペできない文章を作ったったwwww</a> はおかげさまで好評だったようで嬉しい限りです。
+
+「不思議！」「どういう仕組みなんだ？」という声も多かったので裏側を紹介します。
+
+**コピペできない訳ではない
+タイトルは「コピペできない」としていますが、実際にはコピペはできます。正確に表現すると「コピーすると違う文字になる」という状態になっています。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003559.png"></center><
+
+
+ではなぜ違う文字になるのでしょうか。結論をいってしまうと
+>>
+「そこにある文字が、人間の目に見える文字とは違う」
+<<
+からです。
+
+といっても、これでは分からないですね。
+====
+
+**今回のために作成された独自フォント
+トリックの肝は「フォント」です。フォントといえば、文字の見た目を変えるために利用するものです。
+
+たとえば、「ほ」という文字を「メイリオ」フォントで表示するとこうなります。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003601.png"></center><
+
+フォントを変えて「HG創英角ポップ体」フォントで表示すると、ポップな雰囲気になります。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003602.png"></center><
+
+
+今回の「コピペできない文章」では <a href="http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index.html">M+ OUTLINE FONTS</a> というフォントをを利用しています。ただし、ある細工をした「いじわるフォント」になっています。
+
+その細工とは・・・<strong>「ほ」で表示される文字が「コ」になっている</strong>のです。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003600.png"></center><
+
+同じように「ら」→「ピ」、「。」→「ペ」のように意図的にシャッフルされています。
+
+そのため、「いじわるフォント」で「ほら。無理でしょ？絶対に不可能なんです！」を表示すると、「コピペできない文章です！！　嘘じゃないよ」に見えてしまいます。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003557.png"></center><
+
+
+**人間だけをだます
+面白いのが、HTML も、ブラウザーも、OS も、「ほら。無理でしょ？」と画面に表示しているつもりだということです。にもかかわらず、いじわるフォントのせいで、人間にだけは「コピペできない文章です」に見えます。
+
+当然、コピーすると「ほら。無理でしょ？」がクリップボードに入り、ペーストすると「ほら。無理でしょ？」が貼り付けられます。コンピューターは何も変わったことをしていないのに、人間だけが不思議に思うのです。
+
+普段、われわれは「フォントが悪さをする」なんて想像すらしていないのですが、もしある日、フォントが反乱して文字がバラバラになってしまったら、人間はコンピューター上で一切の文章を読むことができなくなります。日々の生活は、目に見えない多くの信頼の上に成り立っているのです。
+
+**いじわるフォントの作りかた
+ここから少し技術的な話になって、いじわるフォントを作った方法を説明していきます。
+
+世の中にはいろんなフォント編集ツールがありますが、まともなものはどれも有料です。たとえ無料でいいソフトがあったとしても、手作業で編集するのはめんどくさいものです。プログラマーなら自動化でしょう。
+
+そこで、Python のライブラリ <a href="http://sourceforge.net/projects/fonttools/files/">TTX/FontTools</a> を使いました。
+
+動作には Python が必要です。
+>http://d.hatena.ne.jp/nitoyon/20120419/tiny_jp_webfont:title=文字を制限した軽量な日本語 Web フォントを作成する方法 - てっく煮ブログ>
++Python 2.X の実行環境を用意します。
++<a href="http://numpy.scipy.org/">Numpy</a> をダウンロードして、インストールします。
++<a href="http://sourceforge.net/projects/fonttools/files/">fonttools-2.3.tar.gz</a> をダウンロードして、展開します。
+<<
+
+作成したスクリプトはこれです(33行)。
+><div class="fix-height-syntax"><
+>|python|
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import fontTools.ttLib.tables
+import fontTools.ttLib
+
+s1 = u"コピペできない文章です！！　嘘じゃないよ"
+s2 = u"ほら。無理でしょ？絶対に不可能なんです！"
+
+tt = fontTools.ttLib.TTFont("mplus-2p-regular.ttf")
+
+chars = set()
+glyphMap = dict()
+hmtxMap = dict()
+for i in range(len(s1)):
+    c1 = "uni%04X" % ord(s1[i])
+    c2 = "uni%04X" % ord(s2[i])
+    chars.add(c2);
+    print "%s -> %s" % (c1, c2)
+    glyphMap[c2] = tt['glyf'].glyphs[c1]
+    hmtxMap[c2] = tt['hmtx'].metrics[c1]
+glyphMap['.notdef'] = tt['glyf'].glyphs['.notdef']
+
+for g in dict(tt['glyf'].glyphs):
+    if g in chars:
+        tt['glyf'].glyphs[g] = glyphMap[g]
+        tt['hmtx'].metrics[g] = hmtxMap[g]
+    else:
+        tt['glyf'].glyphs[g] = fontTools.ttLib.tables._g_l_y_f.Glyph()
+
+output_path = "output.ttf"
+tt.save(output_path)
+print "wrote %s" % output_path
+||<
+></div><
+
+このスクリプトを実行することで、M+ フォントのグリフが入れ替わり、利用しないグリフは空っぽになります。
+
+この時点で 1.2MB あったフォントは 180KB になりました。ただ、Web に載せるにはまだまだ無駄にサイズが大きいです。
+そこで、<a href="http://www.fontsquirrel.com/fontface/generator">Font Squirrel | Create Your Own @font-face Kits</a> という Web サービスを利用しました。同じような Web フォントへの変換サービスはいくつかあるのですが、このサイトは「EXPERT...」機能の充実っぷりがすごいです。今回はフォントのサブセット化のオプションで、利用するフォントだけの情報を含むようにしました。
+
+この結果、20 文字ほどの文字のみを含んだ 8KB のフォント ファイルが完成しました。できあがったフォントを Web フォントとして CSS3 で設定すれば完成です。
+
+**アイデアの元は Font Cipher
+今回のネタは、<a href="http://christopherwoodall.com/ceasar/">Font Cipher</a> というサイトに着想を得ています。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003556.png"></center><
+
+このサイトでは英語フォントをランダムに置き換えて、「人間には読めるけどコンピューターには読めない」文章を作る方法を提案しています。
+
+そこから一歩進めて「暗号化された文章にも意味を持たせてしまえ」と作ったのが今回のネタです。
+
+大文字小文字あわせても 54 文字しかないアルファベットではかなり難しいでしょうが、日本語は文字数が多いのが特徴です。唯一苦労したところが 2 つの「で」です。「で」に対応する文字は同じにする必要があるので、表示後の文章をどのようにするか少しだけ試行錯誤しました。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120423/20120423003558.png"></center><
+
+今回は短い文章なので簡単でしたが、長い文章で意味を持たせようとするとパズルの要素が高くなってくることでしょう。
+
+**まとめ
+いかがでしたでしょうか。公開したスクリプトを使えば、誰でも同じようなイタズラができるようになります。興味がある人は、ぜひ私が作ったものよりも面白くてインパクトが強い「コピペできない文章」を作ってみてください。
+
+このネタはもうちょっと引っ張ります。
+
+公開前、Web フォントは最近のブラウザーではほとんどサポートされているので、全ての人に楽しんでもらえると考えていました。しかし、実際にはフォントが適用されず「意味が分からない」と困った人が続出しました。
+
+次回は「<a href="http://d.hatena.ne.jp/nitoyon/20120426/web_font_popularity">意外と多い!? Web フォントに対応していない環境</a>」をお送りします。
+
+><div class="seealso"><
+**あわせてどうぞ
+-<a href="http://d.hatena.ne.jp/nitoyon/20120420/uncopyable">絶対にコピペできない文章を作ったったwwww</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20120419/tiny_jp_webfont">文字を制限した軽量な日本語 Web フォントを作成する方法</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20090515/genotyp_review">フォント同士を交配させて新しいフォントを作る「genoTyp」が面白い</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20090422/hokkaido_uragawa">北海道を落とすとどう跳ねるのか？の裏側</a>
+></div><
+

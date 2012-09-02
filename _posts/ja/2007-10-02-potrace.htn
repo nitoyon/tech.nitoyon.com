@@ -1,0 +1,36 @@
+---
+layout: post
+title: ラスタ→ベクタ変換する AS ライブラリ "PotrAs"
+tags: potras
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071002/potrace
+---
+超絶のまとめ記事が反応ありすぎて意外すぎます。
+
+それはそうと、超絶で発表した PotrAs を公開します。詳しくはプレゼン資料をごらんあれ。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Fsnippets.libspark.org%2Fsvn%2Fas3%2FPotrAs%2Fsamples%2Fpotras%2Fdemo20070929%2Fbin%2FSlide.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=360&amp;title=PotrAs+presentation&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+プレゼンの閲覧方法：
+-プレゼン資料をクリックしてフォーカス与える
+-→で次のページ、←で前のページ
+-Home で先頭、End で最後のページ
+-0～9＋Enter で入力したページにジャンプ
+
+２色のラスタ画像をベクタに変換するライブラリです。プレゼン資料はリアルタイムで変換しながら表示しているので、CPU 消費量が少し高めです。あと、Mac でどう表示されるかが分からないのがちょっと不安です（アンチエイリアスがらみ）。
+
+(2007.10.3 追記) Mac 対策しました。Mac では BitmapData.draw したときにデフォルトでアンチエイリアスがかかってしまうため、細い線になるのが原因でした。threshold メソッドで２値化することにより対処しました。（<a href="http://snippets.libspark.org/trac/changeset?old_path=nitoyon%2Fas3%2Fsrc%2Fcom%2Fnitoyon%2Fpotras%2FPotrAs.as&old=89&new_path=nitoyon%2Fas3%2Fsrc%2Fcom%2Fnitoyon%2Fpotras%2FPotrAs.as&new=89">diff</a>）
+
+ソースは Spark Project に置いておきました。<a href="http://snippets.libspark.org/trac/wiki/nitoyon/PotrAs">こちらからどうぞ</a>。プレゼンのソースも <a href="http://snippets.libspark.org/trac/browser/as3/PotrAs/samples/potras/demo20070929/Slide.as">公開してますよ</a>。
+
+**新たなモーションタイポの可能性
+Flash でモーションタイポするには、問題点がいろいろありました。デバイスフォントは回転・透過ができなくて表現力が低すぎるし、BitmapData に転写すると処理が煩雑になってしまいます。フォントを埋め込めば自由にできるのですが、日本語フォントは権利関係が難しいし、ファイルサイズも大きくなってしまいます。
+
+それに対する解が、この PotrAs です。デバイスフォントを BitmapData に描画し、それをトレースしてベクタ変換します。アクロバティックですが、ローカルのフォントを使っているので権利関係も（たぶん）問題ありません。回転縮小アルファも自由自在。塗りや線のスタイルを少し変えるだけで文字の表情も変わります。また、あえて低い解像度でトレースすると、味のある見た目になります。上のスライドの１枚目がそれです。
+
+新たなモーションタイポの表現が可能になる気がしています。みんな遊んでね。
+
+**ロードマップ
+今後発展させていくとすれば…
+-AS2 への移植（他力本願）
+-パフォーマンスチューニング（ちょっと使う分にはいいけど、高速化したい）
+-ドキュメントの充実

@@ -1,0 +1,77 @@
+---
+layout: post
+title: 日本の伝統色をHSV空間に配置してみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080325/traditional_color_hsv
+---
+<a href="http://assets.doloreslabs.com/jobs/colors/explorer/">color label explorer</a> (※やや重い) が面白かったので、日本の伝統色でやってみた。
+
+データは <a href="http://2xup.org/repos/">Japanese Traditional Colors - 日本の伝統色: 2xup</a> から抽出させてもらったのを使ってる。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080325/20080325013301.png" width="465" height="384"></center><
+こうやって分布させるだけでも、新たな気づきがあっておもしろい。
+
+内側に密集していて、外側にいくほど（彩度が高くなるほど）色が少なくなる。特に、左下の緑なんてすっからかん。伝統色には、自然を表現する色が多いのに、緑が少ないとは意外。自然界には、彩度が高い色は少ない、ということか。
+
+一応ソースものっけておく。これぐらいなら、JS ででもできそうなんだけど、日ごろの慣れで AS。
+>|javascript|
+package{
+    import flash.display.*;
+    import flash.text.TextField;
+    import sketchbook.colors.*;
+    import com.nitoyon.as3query.*;
+
+    [SWF(backgroundColor="#000000")]
+    public class TraditionalColor extends Sprite{
+        private var box:Sprite;
+
+        public function TraditionalColor(){
+            $(stage)
+                .attr({
+                    align: "TL",
+                    scaleMode: "noScale"
+                });
+
+            box = $(Sprite)
+                .attr({x : 200, y : 200})
+                .appendTo(this)[0];
+
+            for each(var col:Object in colors){
+                putColor(col);
+            }
+        }
+
+        private function putColor(col:Object):void{
+            var hsb:Object = ColorUtil.getHSB(col.value);
+
+            var rad:Number = (2 * Math.PI * hsb.h) / 360;
+            var r:Number = hsb.s * 2;
+
+            $(TextField)
+                .text(col.color)
+                .attr({
+                    textColor : col.value,
+                    autoSize: "left",
+                    selectable: false,
+                    x : r * Math.cos(rad),
+                    y : r * Math.sin(rad)
+                })
+                .appendTo(box);
+            
+        }
+
+        private var colors:Array = [
+            {value: 0xfef4f4, color: "桜色 ", yomi: "さくらいろ"},
+            {value: 0xfdeff2, color: "薄桜 ", yomi: "うすざくら"},
+            // 以下略
+        }
+    }
+}
+||<
+無駄に as3Query を使ってる。あと、HSV 変換は sketchbook の <a href="http://sketchbook.libspark.org/trac/browser/as3/trunk/src/sketchbook/colors/ColorUtil.as">ColorUtil</a> を使ってる。
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2008-03-26-tradcolors-hsv %}
+></div><
+

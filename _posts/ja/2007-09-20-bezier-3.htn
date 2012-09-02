@@ -1,0 +1,301 @@
+---
+layout: post
+title: ベジエ曲線の仕組み (3) - ３次ベジエ曲線
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070920/bezier_3
+---
+ちょっと息切れしてきたのでサンプルプログラムでごまかし。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBezierTest3.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=250&amp;title=Quadratic+curve&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+-黒い点をドラッグすると、制御点を移動できます。
+-赤いボタンの上にマウスを置くと、１つ目の２次ベジエ曲線を描きます。
+-緑のボタンの上にマウスを置くと、２つ目の２次ベジエ曲線を描きます。
+-青いボタンの上にマウスを置くと、１つ目と２つ目のベジエ曲線の間を描きます。これが３次ベジエ曲線だよ。
+
+３次ベジエ曲線といえども、２次ベジエ曲線を２つ書いてその間をとるだけです。
+
+簡単ですね！
+
+**目次
++<a href="http://d.hatena.ne.jp/nitoyon/20070918/bezier_1">ベジエ曲線の仕組み (1) - 昔話</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070919/bezier_2">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070920/bezier_3">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070921/bezier_4">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a>
+
+**ソースコード
+ソースコードは以下に(270行)。ちょっと凝ったことをすると、ソースコードが長くなるなぁ。
+====
+>|javascript|
+package
+{
+    import flash.display.Sprite;
+    import flash.display.Graphics;
+    import flash.events.TimerEvent;
+    import flash.geom.Point;
+    import flash.utils.Timer;
+    import caurina.transitions.Tweener;
+    
+    public class BezierTest3 extends Sprite
+    {
+        private var p1:BezierPoint = new BezierPoint();
+        private var p2:BezierPoint = new BezierPoint();
+        private var p0:BezierPoint = new BezierPoint(p1);
+        private var p3:BezierPoint = new BezierPoint(p2);
+
+        private var animeType:int = -1;
+        private var animeLayer:Sprite = new Sprite();
+        private var timer:Timer = new Timer(100); 
+
+        private var button1:AnimeButton = new AnimeButton(0, 0x900000);
+        private var button2:AnimeButton = new AnimeButton(1, 0x009000);
+        private var button3:AnimeButton = new AnimeButton(2, 0x000090);
+
+        public function BezierTest3()
+        {
+            addChild(animeLayer);
+
+            addChild(p0); addChild(p1);
+            addChild(p2); addChild(p3);
+            p0.x =   0;   p0.y = 120;
+            p1.x =  60;   p1.y =  20;
+            p2.x = 180;   p2.y =  40;
+            p3.x = 260;   p3.y = 160;
+
+            addChild(button1); button1.x =  0; button1.y = 150;
+            addChild(button2); button2.x = 25; button2.y = 150;
+            addChild(button3); button3.x = 50; button3.y = 150;
+
+            timer.addEventListener("timer", timerHandler);
+            addEventListener("enterFrame", function(event:*):void
+            {
+                drawBezier();
+            });
+        }
+
+        public function setAnimation(num:int = -1):void
+        {
+            animeType = Math.min(num, 2);
+
+            animeLayer.graphics.clear();
+            while(animeLayer.numChildren > 0)
+            {
+                animeLayer.removeChildAt(0);
+            }
+            timer.reset();
+
+            if(animeType >= 0)
+            {
+                timer.start();
+            }
+        }
+
+        private function timerHandler(event:TimerEvent):void
+        {
+            var c:int = event.target.currentCount;
+
+            // initialize animation
+            if(c == 1)
+            {
+                animeLayer.graphics.lineStyle(1, 0x0090ff);
+                if(animeType == 2)
+                {
+                    animeLayer.graphics.moveTo(p0.x, p0.y);
+                    animeLayer.graphics.curveTo(p1.x, p1.y, p2.x, p2.y);
+                    animeLayer.graphics.moveTo(p1.x, p1.y);
+                    animeLayer.graphics.curveTo(p2.x, p2.y, p3.x, p3.y);
+                }
+                else
+                {
+                    drawLine(p1, p2, 0x0090ff, animeLayer.graphics);
+                }
+            }
+
+            if(c <= 20)
+            {
+                var pt:Array = getBezierPoint(0.05 * c);
+                var ptNum:int = [7, 8, 9][animeType];
+                var l0Num:int = [4, 5, 7][animeType];
+                var l1Num:int = [5, 6, 8][animeType];
+
+                var dot:Sprite = new Sprite();
+                dot.graphics.beginFill(0);
+                dot.graphics.drawCircle(0, 0, 2);
+                dot.graphics.endFill();
+                dot.x = pt[ptNum].x; dot.y = pt[ptNum].y;
+                animeLayer.addChild(dot);
+
+                var line:Sprite = new Sprite();
+                drawLine(pt[l0Num], pt[l1Num], 0x666666, line.graphics);
+                animeLayer.addChild(line);
+
+                Tweener.addTween(dot, {
+                    alpha: 0, 
+                    time: 4, 
+                    onComplete: function():void
+                    {
+                        removeChild(dot);
+                    }
+                });
+                Tweener.addTween(line, {
+                    alpha: 0.5,
+                    _color: 0xcccccc, 
+                    time: 2
+                });
+            }
+            else
+            {
+                timer.stop();
+            }
+        }
+
+        public function drawBezier():void
+        {
+            graphics.clear();
+
+            drawLine(p0, p1, 0x999999);
+            drawLine(p2, p3, 0x999999);
+
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineStyle(1, 0x800000);
+            for(var t:Number = 0.0; t <= 1.0; t += 0.05)
+            {
+                var pt:Point = getBezierPoint(t)[9]
+                graphics.lineTo(pt.x, pt.y);
+            }
+            graphics.lineTo(p3.x, p3.y);
+        }
+
+        private function getBezierPoint(t:Number):Array
+        {
+            var p4:Point = getInnerPoint(p0, p1, t);
+            var p6:Point = getInnerPoint(p2, p3, t);
+            var p5:Point = getInnerPoint(p1, p2, t);
+            var p7:Point = getInnerPoint(p4, p5, t);
+            var p8:Point = getInnerPoint(p5, p6, t);
+            var p9:Point = getInnerPoint(p7, p8, t);
+
+            return [null, null, null, null, p4, p5, p6, p7, p8, p9];
+        }
+
+        private function getInnerPoint(p0:*, p1:*, t:Number):Point
+        {
+            return new Point(p0.x * (1 - t) + p1.x * t, p0.y * (1 - t) + p1.y * t);
+        }
+
+        private function drawLine(p0:*, p1:*, color:int, g:Graphics = null):void
+        {
+            g = g || graphics;
+            g.lineStyle(1, color);
+            g.moveTo(p0.x, p0.y);
+            g.lineTo(p1.x, p1.y);
+            g.lineStyle();
+        }
+    }
+}
+
+import flash.display.Sprite;
+import flash.geom.Point;
+import flash.filters.BevelFilter;
+
+internal class BezierPoint extends Sprite
+{
+    private const COLOR:int = 0x000000;
+    private const RADIUS:int = 3;
+
+    private var dragging:Boolean;
+    private var diff:Point = new Point();
+
+    private var child:Sprite;
+    
+    public function BezierPoint(_child:Sprite = null):void
+    {
+        child = _child;
+
+        graphics.beginFill(COLOR);
+        graphics.drawCircle(0, 0, RADIUS);
+        graphics.endFill();
+
+        buttonMode = true;
+
+        var dragging:Boolean = false;
+        var diff:Point = new Point();
+        addEventListener("mouseDown", mouseDownHandler);
+    }
+
+    private function mouseDownHandler(event:*):void
+    {
+        if(!dragging)
+        {
+            dragging = true;
+            startDrag();
+            if(child)
+            {
+                diff.x = child.x - x;
+                diff.y = child.y - y;
+            }
+            stage.addEventListener("mouseMove", mouseMoveHandler);
+            stage.addEventListener("mouseUp", mouseUpHandler);
+        }
+    }
+
+    private function mouseMoveHandler(event:*):void
+    {
+        if(dragging && child)
+        {
+            child.x = x + diff.x;
+            child.y = y + diff.y;
+        }
+    }
+
+    private function mouseUpHandler(event:*):void
+    {
+        if(dragging)
+        {
+            stopDrag();
+            dragging = false;
+
+            removeEventListener("mouseMove", mouseMoveHandler);
+            removeEventListener("mouseUp", mouseUpHandler);
+        }
+    }
+}
+
+internal class AnimeButton extends Sprite
+{
+    private const WIDTH:int = 20;
+    private const HEIGHT:int = 20;
+
+    private var num:int;
+    
+    public function AnimeButton(_num:int, color:int)
+    {
+        num = _num;
+
+        graphics.beginFill(color);
+        graphics.drawRoundRect(0, 0, WIDTH, HEIGHT, 10, 10);
+        graphics.endFill();
+
+        filters = [new BevelFilter(3, 45, 0xffffff, 0.6, 0x000000, 0.6)];
+        buttonMode = true;
+
+        addEventListener("mouseOver", startAnimation);
+        addEventListener("click", startAnimation);
+        addEventListener("mouseOut", endAnimation);
+    }
+
+    private function startAnimation(event:*):void
+    {
+        var main:BezierTest3 = parent as BezierTest3;
+        main.setAnimation(num);
+    }
+
+    private function endAnimation(event:*):void
+    {
+        var main:BezierTest3 = parent as BezierTest3;
+        main.setAnimation();
+    }
+}
+||<
+

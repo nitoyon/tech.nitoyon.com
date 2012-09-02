@@ -1,0 +1,137 @@
+---
+layout: post
+title: E4X の変数展開 深追い (2)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080613/p1
+---
+続き。変数展開するときに、どういうバイトコードになってるか気になったので調べてみた。
+
+ActionScript のコードはこんなの。
+>|javascript|
+var a = <hoge>{3}</hoge>;
+||<
+asc でコンパイルして、abcdump でダンプしたらこうなった。
+>||
+  0         getlocal0
+  1         pushscope
+  2         findpropstrict      XML
+  4         getproperty         XML
+  6         pushstring          "<hoge>"
+  8         pushbyte            3
+  10        esc_xelem
+  11        add
+  12        pushstring          "</hoge>"
+  14        add
+  15        construct           (1)
+  17        getglobalscope
+  18        swap
+  19        setslot             1
+  21        returnvoid
+||<
+====
+**new String() と比較
+new String() するコードと比べてみる。
+>|javascript|
+var a = new String("hoge");
+||<
+ダンプしたらこうなった。
+>||
+  0         getlocal0
+  1         pushscope
+  2         findpropstrict      String
+  4         pushstring          "hoge"
+  6         constructprop       String (1)
+  9         getglobalscope
+  10        swap
+  11        setslot             1
+  13        returnvoid
+||<
+
+ふむ、似たような形になってるね。
+
+**スタックをつむところだけ抜き出してみる
+まずは String のほう。
+>||
+  4         pushstring          "hoge"
+  6         constructprop       String (1)
+||<
+
+String は "hoge" をスタックにつんで、コンストラクタを呼び出してる。そのままだ。
+
+対して、XML。
+>||
+  6         pushstring          "<hoge>"
+  8         pushbyte            3
+  10        esc_xelem                    
+  11        add
+  12        pushstring          "</hoge>"
+  14        add
+  15        construct           (1)
+||<
+ちょっと複雑なので順番に。
+
+まず、"<hoge>" という文字列をスタックにつむ。
+>||
+   +----------------+
+   |    "<hoge>"    |
+---+----------------+---
+||<
+続けて、3 もスタックにつむ。
+>||
+   +----------------+
+   |       3        |
+   +----------------+
+   |    "<hoge>"    |
+---+----------------+---
+||<
+
+次の、esc_xelem はなんだろう。
+
+<a href="http://www.adobe.com/devnet/actionscript/articles/avm2overview.pdf">avm2overview.pdf </a> によると、XML ノードの値を決定するためのオペレーションで、スタックから値を取り出して文字列に変換するらしい。変換には E4X で定義されている <a href="http://www.ne.jp/asahi/nanto/moon/specs/ecma-357.html#sec-10.2">ToXmlString()</a> を使うようだ。
+
+ってことで、esc_xelem 実行後はこうなる。
+>||
+   +----------------+
+   |      "3"       |
+   +----------------+
+   |    "<hoge>"    |
+---+----------------+---
+||<
+続けて、add。スタックから２つを取り出して足し算する。
+>||
+   +----------------+
+   |   "<hoge>3"    |
+---+----------------+---
+||<
+次に、"</hoge>" を push して、add するので最終的には次のようになる。
+>||
+   +----------------+
+   |"<hoge>3</hoge>"|
+---+----------------+---
+||<
+で、ここで construct を呼ぶので、new XML("<hoge>3</hoge>") した結果がスタックに入るわけだ。
+
+**まとめ
+イメージ的には
+>|javascript|
+var a = <hoge>{3}</hoge>;
+||<
+は
+>|javascript|
+var a = new XML("<hoge>"
+              + ToXmlString(3)
+              + "</hoge>");
+||<
+というコードに変換される感じ。
+
+{} の中身は ToXmlString() の引数として扱われる、というイメージで捉えておくと、前回の {} の中に無名関数突っ込んだやつが動いたのも納得できる。
+
+実際には、ToXmlString は内部的な関数なので呼び出せないんだけど、あくまでイメージということで。
+
+ところで、なんで急に ABC をやりだしたかというと、<a href="http://d.hatena.ne.jp/mzp/">みずぴー日記</a> さんの <a href="http://d.hatena.ne.jp/mzp/20080522/abc">関数関連のABC</a> や <a href="http://d.hatena.ne.jp/mzp/20080518/var">変数関係の命令</a> という記事を読んで興味が沸いたから。
+
+みずぴーさんは <a href="http://d.hatena.ne.jp/mzp/19000202/scheme">Scheme-abc</a> という ABC を吐く Scheme コンパイラを OCaml で実装していたりする…。すごい！
+
+あ、あと AVM2 の資料については、公式のものより <a href="http://www.anotherbigidea.com/javaswf/avm2/AVM2Instructions.html">AVM2 Instructions</a> のほうが分かりやすかった。
+

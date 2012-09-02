@@ -1,0 +1,21 @@
+---
+layout: post
+title: AxWebBrowserをサムネール表示に使う
+tags: IEコントロール
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040915/p1
+---
+http://www11.plala.or.jp/acaccelerator/programming/cstips.html#DrawWebBrowserImage
+
+このサンプルからはいくつかのTipsが分かった。
+-C# の ActiveX ラッパー AxHost クラスには GetOcx() という関数があり、ActiveX コントロールを表すオブジェクトを取得できる。
+-System.Runtime.InteropServices.Marshal のstatic関数 GetIUnknownForObject 関数を使えば、IUnknown を取得できる。
+-System.Runtime.InteropServices.Marshal には他にも AddRef・QueryInterface・Release などがあって、生の COM を直接扱うことができそうだ。
+-OleDraw 関数を使えば、ActiveX コントロールをHDCに描画できる
+
+また、<a href="http://www.microsoft.com/japan/msdn/library/ja/csref/html/vcwlkcominteroppart1cclienttutorial.asp?frame=true">COM 相互運用性 第 1 部:C# クライアント チュートリアル</a>(MSDN) によると、COM クラスラッパーさえ作っておけばキャストで QuerryInterface できたり、new で CreateInstance できるようだ。
+
+<font size=1><s>VC#.NET では、全ての ActiveX コントロールを AxHost の継承クラスとして扱えて便利だし分かりやすいのだけど、COM を直接扱うには生でするしかないのだろうか。例えば、AxHost クラスに GetUnknown とか QueryInterface が実装されていたら分かりやすかっただろうし、COM を表すオブジェクトをキャストすれば QueryInterface したことになってくれるなら分かりやすい。
+
+この辺、調査できていないので、要調査。System.Runtime.InteropServices を眺めていると、あまりきれいに体系化されていなさそうで、嫌な予感がする・・・。解説はMSDNの「.NET Framework→.NET Frameworkを利用したプログラミング→アンマネージコードとの相互運用→高度なCOM相互運用機能」あたりにあるようだ。</s></font>
+

@@ -1,0 +1,196 @@
+---
+layout: post
+title: Fleverlight 勉強会に参加してきた
+tags: イベント
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080728/fleverlight1
+---
+<a href="http://www.silverlightsquare.com/page_1213418278477.html">Silverlight を囲む会 #3</a> と <a href="http://www.fxug.net/modules/bwiki/index.php?cmd=read&page=Flex3%CA%D9%B6%AF%B2%F1%C2%E846%B2%F3%A1%F7%C2%E7%BA%E5%BB%B2%B2%C3%BC%F5%C9%D5">FxUG勉強会#46</a> で共同開催した、通称「Fleverlight勉強会」に行ってきた。
+
+初の共催ということで、事前にも何回か打ち合わせするというすごい気合の入れよう。イベントを通して、お互いの技術のカラーやコミュニティのカラーが垣間見えて面白かった。
+
+ただ、こういう共催のときは発表者は大変だ。片方にとっては当たり前のことでも、もう片方にとっては初耳のことばかりだったり。そういう点では、途中の、5分縛りの LT 4連発は、テンポもよくてメリハリがあって面白かった。こういう勉強会では小ネタ連発のほうが分かりやすいかもね。大ネタだと、一回置いてかれると残りの時間が辛いので。といっても、LT だけにする訳にもいかないので難しい。
+
+そんなこんなで発表内容のメモを公開。
+
+**発表メモ
+Silverlight 側の発表で目新しかった内容。
+
+***Deep Zoom
+<a href="http://blog.livedoor.jp/haruka_sao/">遥佐保さん</a>
+
+- Google Maps みたいな拡大できるやつを Silverlight で作る
+- Silverlight 2 用のコンポーネント
+- Deep Zoom composer というツールで作る
+-- 高精度の写真を貼り付けると、自動的に複数の解像度の画像ファイルを作る
+-- マウスでぐりぐりできるものが完成するデモ
+- Virtual Earth の Silverlight Deep Zoom 版もある
+
+
+***Silverlight IDE
+id:coma2n さん
+
+- ブラウザ上で Silverlight 開発ができるツール
+- 詳しくは [http://d.hatena.ne.jp/coma2n/20080707/1215414408:title=Silverlight IDE - Architect Life] にて
+- コード補完はないの？という鬼質問が…！
+
+***WPF と Silverlight の XAML
+<a href="http://www.divakk.co.jp/blog/aoyagi/">青柳臣一さん</a>
+
+-WPF, silverlight は XAML のスキーマは同じだけど、ランタイムの解釈が違う。
+-WPF
+-- Windows で動く。
+--Windows 専用の最適化。
+-Silverlight
+--ブラウザで動く。
+--クラスプラットフォームなので制約が多い (3D、トリガー、Window がないとか)。
+--β2 からは Silverlight 先行で機能が追加され始めてる (Visual State Manager)。そのうち、WPF にもマージされる予定。
+
+**ライブコーディングのソース
+お題を言われてから30分で完成させないさい、という凶悪ライブコーディングだった。
+
+どんなネタかと思ったら、「42 までの数字から１つをランダムに選んで表示するルーレットを作れ」というものだった。しかも、RIA っぽくリッチな UI にしろですって。ハードル高！
+
+Flex User Group 側で参加したので、最初は MXML 使ってコーディングしてたけど、一段落したところで「AS3 だけのほうがいいや」と思って、AS3 だけで最初から作り直した。よく考えたら、Flex で layout="absolute" すればよかったんだ…。
+
+で、完成品がコレ。
+
+><center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFleverlight1.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=400&amp;title=Live+Coding&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript></center><
+
+クリックすると数字が現れる。AS3 + Tweener で作ってる。
+
+コーディングはいつもどおり、秀丸＋rascut でやった。秀丸のコード補完機能に対する反響が多かったんだけど、<a href="http://hide.maruo.co.jp/software/hidemaru7/new1.html">秀丸v7.0 の目玉新機能</a>。実際にはまったく使わなかったんだけど。
+
+ソースは以下に。
+====
+最初作った MXML のソース。すごく投げやりな感じで setTimeout のところが汚い。
+>|xml|
+<?xml version="1.0"?>
+<!-- Simple example to demonstrate the Image control. -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+    backgroundColor="#ffffff"
+    scaleX="4" scaleY="4">
+
+    <mx:Script>
+        <![CDATA[
+            import mx.controls.*;
+            import flash.utils.*;
+            
+            private function clickHandler():void{
+                var counter:int = 0;
+                btn.enabled = false;
+
+                var timerId:int = setTimeout(function():void{
+                    counter++;
+                    var i:int = Math.floor(Math.random() * 41) + 1;
+                    show(i);
+
+                    if(counter > 10){
+                        btn.enabled = true;
+                    }else{
+                        setTimeout(arguments.callee, counter * 100);
+                    }
+                }, 100);
+            }
+
+            private function show(i:int):void{
+                img1.source = "img/" + Math.floor(i / 10) + ".png";
+                img2.source = "img/" + (i % 10) + ".png";
+            }
+        ]]>
+    </mx:Script>
+
+    <mx:HBox>
+        <mx:Image id="img1" source="img/0.png"/>
+        <mx:Image id="img2" source="img/0.png"/>
+    </mx:HBox>
+
+    <mx:Button id="btn" label="click!!"
+        click="clickHandler()"/>
+
+</mx:Application>
+||<
+
+最初から作り直した AS3 のソース。
+>|javascript|
+package{
+import flash.display.*;
+import caurina.transitions.Tweener;
+
+[SWF(backgroundColor="#ffffff")]
+public class Test2 extends Sprite{
+    [Embed(source='img/0.png')]
+    private var Img0:Class;
+    [Embed(source='img/1.png')]
+    private var Img1:Class;
+    [Embed(source='img/2.png')]
+    private var Img2:Class;
+    [Embed(source='img/3.png')]
+    private var Img3:Class;
+    [Embed(source='img/4.png')]
+    private var Img4:Class;
+    [Embed(source='img/5.png')]
+    private var Img5:Class;
+    [Embed(source='img/6.png')]
+    private var Img6:Class;
+    [Embed(source='img/7.png')]
+    private var Img7:Class;
+    [Embed(source='img/8.png')]
+    private var Img8:Class;
+    [Embed(source='img/9.png')]
+    private var Img9:Class;
+
+    public function Test2():void{
+        stage.scaleMode = "noScale";
+        stage.align = "TL";
+
+        scaleX = scaleY = 5;
+
+        stage.addEventListener("click", function(event:*):void{
+            while(numChildren){
+                removeChildAt(0);
+            }
+            draw();
+        });
+    }
+
+    private function draw():void{
+        var i:int = Math.floor(Math.random() * 42) + 1;
+        var n1:int = Math.floor(i / 10);
+        var n2:int = (i % 10);
+
+        var cls:Array = [
+            Img0, Img1, Img2, Img3, Img4,
+            Img5, Img6, Img7, Img8, Img9
+        ];
+
+        var img1:Bitmap = new cls[n1]();
+        img1.rotation = 180;
+        img1.x = 10;
+        img1.y = -30;
+        addChild(img1);
+
+        var img2:Bitmap = new cls[n2]();
+        img2.rotation = 180;
+        img2.y = -30;
+        img2.x = 40;
+        addChild(img2);
+
+        Tweener.addTween(img1, {
+            rotation: 0,
+            y: 50,
+            time: 1,
+            transition: "easeOutElastic"
+        });
+        Tweener.addTween(img2, {
+            rotation: 0,
+            y: 50,
+            time: 1,
+            delay: .8,
+            transition: "easeOutElastic"
+        });
+    }
+}
+}
+||<
+画像を埋め込むための Embed が無駄に多くて悲しいけど、クラス配列から new してるあたりがアクロバティックで気に入っている。

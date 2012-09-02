@@ -1,0 +1,227 @@
+---
+layout: post
+title: JS や AS で長い関数をリファクタリングする１手法
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070710/refactoring_long_function_using_local_functions
+---
+200行ぐらいある関数を、分かりやすく書きなおそう、というお話。
+
+お題はこんなJavaScript。あとで、軽く ActionScript 3.0 も出てくるよ。
+>|javascript|
+function fly()
+{
+    // 初期化処理
+    var init = false;
+    // 50行ぐらい初期化処理
+    // うまくいったら init が true になる
+
+    // 実行
+    if(init)
+    {
+        var succeeded = false;
+        // 100行ぐらい実行
+    }
+
+    // 終了処理
+    // 30行ぐらい終了処理
+}
+||<
+
+構造化プログラミングについて知ってる人なら、きっとこうする。
+>|javascript|
+function fly()
+{
+    if(startFly())
+    {
+        doFly();
+    }
+
+    endFly();
+}
+||<
+
+構造がたいそうすっきりした。
+
+問題は、startFly()・doFly()・endFly() をどこに記述するか。
+
+**fly() の横に記述
+一番ありがちな手法。fly() 関数の横に並べる。
+>|javascript|
+function startFly()
+{
+    // ...
+}
+
+function doFly()
+{
+    // ...
+}
+
+function endFly()
+{
+    // ...
+}
+
+function fly()
+{
+    if(startFly())
+    {
+        doFly();
+    }
+
+    endFly();
+}
+||<
+
+局所的にはきれいになったけど、１個だったはずの関数が３個になってしまった。
+
+一般に、関数の数が多いほどソースコードは理解しにくくなる。だから、関数の数が増えるのはできる限り避けたい。
+
+そもそも、startFly() 関数や endFly() 関数は、fly() の中からしか呼ばないはずなのに、他の関数からも参照できるところに置くのは理にかなっていない。
+
+ならば、fly() の横ではなく、fly() の中にしまってみるのはどうだろう。
+
+**fly() の中に収納
+さっきのは C言語っぽかったけど、こうやったら JavaScript っぽい。
+
+>|javascript|
+function fly()
+{
+    var startFly = function()
+    {
+        //
+    }
+
+    var doFly = function()
+    {
+        //
+    }
+
+    var endFly = function()
+    {
+        //
+    }
+
+    // 実際の処理開始
+    if(startFly())
+    {
+        doFly();
+    }
+
+    endFly();
+}
+||<
+
+fly() 関数の行数は変わらないけど、処理の流れはすっきりする。ソースコードから流れを追いやすいし、startFly() 関数や endFly() 関数が fly() 関数の中からしか呼ばないことが一目瞭然。
+
+構造が仕様を語る。分かりやすいソースコードの基本。
+
+**一般化してみた
+>|javascript|
+function A()
+{
+    // 関数内の変数
+    var param1 = {};
+    var param2 = {};
+
+    // 関数内の関数
+    var func1 = function()
+    {
+    }
+
+    var func2 = function()
+    {
+    }
+
+    // function A() の実体
+    var AImpl = function()
+    {
+        //
+    }
+
+    AImpl();
+}
+||<
+
+変数を冒頭に、次に関数、最後に AImpl() を書く。
+
+関数 A() の中からは、AImpl() のみを呼ぶだけ。
+
+AImpl() の中では、なるべく if 文と関数呼び出しだけで書くようにするときれいなソースになりそう。
+
+面白いのが、このクラス全体が１つのクラスになっている。クロージャにより func1() と func2() から param1 や param2 を参照できる。param1 や param2 はクラスのフィールドのようだし、func1() や func2() はクラスのメソッドのように見える。AImple() 関数はコンストラクタといったところ。
+
+もう１つ面白いところ。関数内の関数を他の場所で使いたくなったら、関数の外に出して、宣言部分をちょろっと変えるだけでよい。お手軽。
+
+逆に、１箇所からしか参照してないグローバルな関数を発見したら、呼び出し元の関数に収納しちゃってもよいかもしれない。
+
+**ActionScript 3.0 でも
+>|javascript|
+public class Bird
+{
+    public function fly():void
+    {
+        if(startFly())
+        {
+            doFly();
+        }
+
+        endFly();
+    }
+
+    private function startFly():Boolean
+    {
+        // ...
+    }
+
+    private function doFly():void
+    {
+        // ...
+    }
+
+    private function endFly():void
+    {
+        // ...
+    }
+}
+||<
+と fly() の横にメソッドとして書くよりも
+>|javascript|
+public class Bird
+{
+    public function fly():void
+    {
+        var startFly:Function = function():Boolean
+        {
+            // ...
+        }
+
+        var doFly:Function = function():void
+        {
+            // ...
+        }
+
+        var endFly:Function = function():void
+        {
+            // ...
+        }
+
+        if(startFly())
+        {
+            doFly();
+        }
+
+        endFly();
+    }
+}
+||<
+
+と書いたほうが分かりやすいかもしれない。
+
+private なメソッドだから、最初のやつで別にいいような気がしないでもない。でも、private なメソッドは、クラス内部からみるとグローバルにアクセスできる関数。前者の方法で書いていくと、いつの間にか private なメソッドが30個…、意味分からん…、となってしまうことを考えると、後者の方が読みやすいソースになるかもしれない。
+
+別のクラスに分けちゃえよ、という気もしないでもないが、クラスが増えるのは、それはそれで管理対象が増えてしまうので避けておきたい。
+
+ちゃんと設計したらこんなことしなくてもいいでしょ、という意見もありそう。ごもっともなんだけど、JS とか AS みたいなスクリプト言語って、あまり設計は考えずに勢いで書いていきたいものだ。そういうときに、この方法は便利じゃね？ってことで。
+

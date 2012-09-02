@@ -1,0 +1,162 @@
+---
+layout: post
+title: 第４回 大阪てら子 で学んだ10個の Flash 製作 Tips
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070617/teraco4_10tips
+---
+タイトルが軽く煽りっぽいですが、行ってきました。Flash 勉強会＠大阪の４回目。
+
+今回は Flash ライブコーディング。
+
+「Flash だからライブオーサリングじゃないの？」と思ってたけど、蓋をあけてみると、大部分がコーディング。Flash 8 はほとんど使わずに、ActionScript だけで SWF が出来上がっていく様子は、軽くカルチャーショックでした。
+
+ソースは <a href="http://saqoosha.net/2007/06/18/590/">[Saq.] 第4回「大阪てら子」まとめ</a> からダウンロードできますよ。
+
+５時間にわたりコーディングしてくださった <a href="http://saqoosha.net/">さくーしゃさん</a>、ありがとうございます。そしてお疲れ様でした。ライブ配信と突っ込みシステムを作った <a href="http://d.hatena.ne.jp/hirossy1977/20070617/1182052639">hirossy さん</a>、お疲れ様です。
+
+
+ということで、今回、学んだポイントを10個にまとめてみましたよ、っと。ちょっと Tips じゃないのも含まれている気がするけど、そこはご愛嬌で。
+
+**1. Photoshop からの書き出しは地味
++最初に素材の各レイヤーを png に書き出す。
++それぞれを MovieClip に入れて、インスタンス名をつけていく。
++MovieClip を下絵に合わせて配置していく。ピクセル単位の細かな作業。
+
+png の書き出し部分では、Flash で画像の外側が崩れるバグに対応するために、
+-偶数ピクセルで書き出す
+-少し幅を広くとる
+-MC の右下を中心に配置する
+といったバッドノウハウが紹介されました。Flash 8 では問題なくなっている、という話も。
+
+（感想）華やかなアニメーションの裏には、こんなにも地味な下準備があるのか！　CS3 ではだいぶ改善するのかな？
+
+**2. タイムラインアニメーションのマスクは手書き
+筆で書いていくようなアニメーションはマスクの変形で行う。
+
+マスクは、１フレームずつ手書き。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070618/20070618012741.gif" width="450" height="81" alt="手書きのマスク"></center><
+
+最後に「フレーム反転」で逆に並び替えて完成。
+
+手書きの方が味がでるし、細かい調整ができるらしい。
+
+**3. Flash 8 の出番はここで終了
+ここからは Flash 8 は使わず、<a href="http://www.powerflasher.com/fdt/flashsite/flash.htm">FDT (Development for Flash)</a> という Eclipse プラグイン上でコーディング。
+
+MC のステージへの配置や、アニメーションの設定は、全て AS2.0 でやってしまいます。
+
+（感想）FDT(Development for Flash) の存在を初めて知りました。199ユーロだそう。(現在の日本円で 32,000円ぐらい)
+
+**4. ライブラリはプロジェクトごとに
+ライブラリを１箇所にまとめておくと、バージョンを上げたときに、過去の遺産が動かなくなって悲しいので、各プロジェクトのディレクトリにライブラリを展開。
+
+スタティックリンクの感覚に近い。
+
+**5. _root を自作クラスに
+ステージの１フレーム目には
+>|javascript|
+App.main(_root);
+||<
+と書いておく。
+
+App.main() の実装は次の通り。
+>|javascript|
+static public function main(target:MovieClip):Void {
+    target.__proto__ = App.prototype;
+    Function(App).apply(target, null);
+}
+||<
+
+何をやってるかというと...
+-prototype を書き換えることにより、_root を App クラスにしてしまう
+-App のコンストラクタが呼ばれたことにする
+ということ。__proto__ とか apply あたりは、かなり技術的に込み入ってるので、分からない人は おまじない と考えてもよいかも。
+
+これで準備完了。残りは全部 AS でコーディングできる。
+
+（補足）CS3 からは DocumentClass を設定できるようになるので、こういうバッドノウハウも必要なし。
+
+**6. FuseKit でアニメーション
+var f:Fuse = new Fuse({...}) 形式でコンストラクタの中に全部書いちゃう。
+
+>|javascript|
+var f:Fuse = new Fuse(
+    { target:this.bg_mc, alpha:100, time:1, easing:'linear' },
+    [
+        { target:this._memberImg_mc, y:10, time:2, easing:'easeOutCubic' },
+        { target:this._mirrorImg_mc, y:130+120, time:2, easing:'easeOutCubic' }
+    ]
+    { target:this.name_mc, y:135, time:1, easing:'easeOutCubic' },
+    { target:this, alpha:0, delay:2, time:0.5, easing:'linear' },
+    { scope:_root, func:_root.showAllMembers }
+);
+f.start();
+||<
+
+それぞれの MC は Flash 8 で アルファ 0% にしておくのを忘れずに。
+
+（感想）FuseKit は使い方を覚えたら簡単そうだ。Trick7 さんの <a href="http://www.trick7.com/blog/2006/11/05-110726.php">Fuseアニメーションの実行順序</a> が分かりよい。
+
+**7. MovieClipUtil.attachMovieRegisterClass() で MC をステージに配置
+CASA フレームワークの MovieClipUtil.attachMovieRegisterClass() を使えば、MC とクラスを関連付けてステージに配置できる。
+
+>|javascript|
+var mc:MovieClip = 
+    MovieClipUtil.attachMovieRegisterClass(
+        LogoAnimation,    // クラス名
+        this,             // 親 MC
+        'Logo Animation', // リンゲージ名
+        '_logo'           // インスタンス名
+    );
+||<
+
+１つの MC に対して、複数の実装を割り当てられるわけで、これはちょっと面白い。
+
+attachMovieRegisterClass は、内部で Object.registerClass を呼んでいるようだ。リンゲージプロパティの 「AS 2.0 クラス」をいじる関数の模様。なるほどなるほど。
+
+
+**8. XmlUtil.xmlToObject() で XML をオブジェクトに変換
+CASA フレームワークの便利な関数。XML を受け取って、Object にして返してくれる。
+
+>|javascript|
+var obj:Object = XmlUtil.xmlToObject(this._xmlLoad.getXml())
+||<
+
+Perl で言うところの XML::Simple、JavaScript で言うところの <a href="http://www.kawa.net/works/js/jkl/parsexml.html">JKL.ParseXML</a> みたいなもの。
+
+（補足）AS3.0 には E4X があるから、こういうのは不要かな。
+
+**9. LoadGroup 便利
+またまた CASA フレームワークから。LoadGroup は URL を複数登録しておいて、まとめてロード、全部読み込み終わったら教えてもらえる。
+
+１～２個の画像なら手作業でも書けるけど、たくさんの画像を読み込む場合はかなり便利。
+>|javascript|
+var loadGroup:LoadGroup = new LoadGroup();
+for (var i:Number = 0; i < info.length; i++) {
+    var mc:MovieClip = MovieClipUtil.createEmptyMovieClip(this, 'img' + i);
+    loadGroup.addLoad(new MediaLoad(mc, 'images/' + info[i].image, false));
+}
+loadGroup.addEventObserver(this, LoadGroup.EVENT_LOAD_COMPLETE, 'handleLoadComplete');
+loadGroup.start();
+||<
+
+**10. さくーしゃさんでも、はまる
+途中、Saqoosha さんが、うまくいかずに30分ぐらい(?)、はまっていた。
+
+問題解決までのプロセスまで知れるっていうのは、ライブコーディングの魅力。
+
+個人的には、はまっているときが、みんな一番いきいきして見ていた気がする。ああ、さくしゃーさんでもはまることあるんだ、ちょっと安心、みたいな。
+
+**最後に...
+掲載してるサンプルコードは さくーしゃさん が<a href="http://saqoosha.net/2007/06/18/590/">公開してくれてるソースコード</a> を、ちょっといじって分かりやすくしたものです。
+
+改めて、手の内を明かしてくれた さくーしゃさんに感謝。
+
+(追記) 参加者のレポートが続々と。
+:<a href="http://d.hatena.ne.jp/hirossy1977/20070618/1182128873">hirossy javaとFlex2と。 - 第4回大阪てら子終わりました</a> (hirossy さん):Flex2＋Red5＋つっこみシステムの裏話。
+:<a href="http://www.idv-design.com/index/020_private/teraco/20070618_065603.php">IDV-DESIGN | 第四回大阪てら子の勉強会</a> (タケさん):_root を自作クラスにする方法と HTML テンプレートについて。
+:<a href="http://gotoand.net/blog/?p=28">gotoand… ≫ 【teraco】大阪てら子　第4回「さくーしゃのFlashライヴコーディング」</a> (れんさん):詳細なメモ！　ありがたや。
+こういうレポートが、今の倍ぐらいは出てきたら素敵なのになぁ・・・＞参加者各位(笑)
+

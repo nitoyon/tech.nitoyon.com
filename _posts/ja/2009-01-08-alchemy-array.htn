@@ -1,0 +1,29 @@
+---
+layout: post
+title: Alchemy で AS3 の Array を動的生成する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090108/alchemy_array
+---
+C++ だったら動的に確保された配列は要素数と先頭へのポインタで返すのが定石なんだけど、Alchemy で AS3 のライブラリに変換するときには Array オブジェクトを返すのが妥当だろう。
+
+C++ 側のコードで AS3 の配列を動的に生成するには、次のようにする。
++AS3_Array で Array のインスタンスを作成する
++AS3_CallS で先ほど生成したインスタンスの push メソッドを呼んで要素を追加する
+といっても、あとで AS3 に変換されるんだから変な気分だが。
+
+具体的にはこうなる。
+>|cpp|
+AS3_Val arr = AS3_Array("");
+AS3_CallS("push", arr, AS3_Array("IntType", 3));
+AS3_CallS("push", arr, AS3_Array("StrType", "4"));
+||<
+AS3 でいうところのこんなコードのイメージ。
+>|javascript|
+var arr:Array = Array();
+arr.push.call(arr, Array(3));   // arr.push(3);
+arr.push.call(arr, Array("4")); // arr.push("4");
+||<
+
+C++ で使える関数は <a href="http://labs.adobe.com/wiki/index.php/Alchemy:Documentation:Developing_with_Alchemy:C_API">Alchemy:Documentation:Developing with Alchemy:C API - Adobe Labs</a> が詳しい。
+

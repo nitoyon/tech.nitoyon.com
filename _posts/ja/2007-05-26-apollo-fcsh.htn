@@ -1,0 +1,70 @@
+---
+layout: post
+title: fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き）
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070526/apollo_fcsh
+---
+<a href="http://journal.mycom.co.jp/articles/2007/05/24/apollo/index.html">Apollo mini Camp@Tokyo</a> の効果なのか、再び Apollo 熱が高まってきていますね。週末に Apollo を触ってみよう、という人も多いのでは。
+
+ActionScript や MXML を使って Flash で Apollo アプリを作る場合、Flex Builder を使うか、コマンドラインで amxmlc を使うことになります。
+
+この amxmlc はビルドに時間がかかってしまうので、fcsh を使って高速化しちゃいましょう。fcsh は <a href="http://d.hatena.ne.jp/secondlife/20070211/1171173690">川o・-・）＜2nd life - ActionScript3 (mxmlc) でのコンパイルを100倍速にする方法</a> が参考になりますが、これが Apollo 用のビルドにも使えちゃいます。
+
+やり方は簡単。
+
+**1. fcsh を導入
+<a href="http://labs.adobe.com/wiki/index.php/Flex_Compiler_Shell">Flex Compiler Shell - Adobe Labs</a> からダウンロードして、Flex SDK のディレクトリに置きます。
+
+**2. 起動
+コマンドプロンプトやシェルから fcsh を起動します。
+>||
+$ fcsh
+Adobe Flex Compiler SHell (fcsh)
+Version 2.0.1 build 162628
+Copyright (c) 2004-2006 Adobe Systems, Inc. All rights reserved.
+
+(fcsh)
+||<
+
+**3. まずは１回ビルド
+ビルド対象のファイルをビルドします。amxmlc を mxmlc +configname=apollo に置き換えてビルドするのがポイントです。
+
+例えば、amxmlc main.mxml でビルドしていた場合は...
+>||
+(fcsh) mxmlc +configname=apollo main.mxml
+fcsh: Assigned 1 as the compile target id
+Loading configuration file C:\flex\frameworks\apollo-config.xml
+c:\main.swf (216056 bytes)
+||<
+とします。
+
+(追記) AIR β版では mxmlc +configname=<strong>air</strong> main.mxml となります。
+
+**4. そして２回目以降は100倍速
+Assigned X as the compile target id、と出力されるので、この id を指定して compile を実行します。
+>||
+(fcsh) compile 1
+Loading configuration file C:\flex\frameworks\apollo-config.xml
+Nothing has changed since the last compile. Skip...
+c:\main.swf (216056 bytes)
+||<
+
+以上です。
+
+ポイントは amxmlc は mxmlc +configname=apollo と同じ、というところです。
+
+**おまけ：Apollo 参考リンク集！
+Apollo SDK の導入方法についてはこの辺がおすすめ。
+-<a href="http://zapanet.info/blog/item/953">はじめてのApolloプログラミング</a> ([Z]ZAPAブロ～グ2.0)
+-<a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe Apolloメモ</a>
+-<a href="http://gihyo.jp/dev/serial/01/adobe-apollo/0002">第2回　Apollo SDKを使ってみよう｜gihyo.jp</a>
+
+Flex Builder で開発するための設定はこの辺がおすすめ。
+-<a href="http://gihyo.jp/dev/serial/01/adobe-apollo/0003">第3回　Flex Builderによる開発｜gihyo.jp</a>
+
+チュートリアルは手前味噌ながらこの辺がおすすめ。
+-<a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる [てっく煮]</a>
+-<a href="http://tech.nitoyon.com/apollo/tutorial/as_apollo.html">ActionScript版 Apollo アプリを作ってみる [てっく煮]</a>
+第３回、早く書けよ、と自らの首を絞めつつ終わり。
+

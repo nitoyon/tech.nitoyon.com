@@ -1,0 +1,44 @@
+---
+layout: post
+title: AS3 でメソッドチェーンしたくなる話 (2)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20091126/as3_method_chain_2
+---
+{% post_link 2009-11-25-as3-method-chain %} にいくつか反応があって楽しかったので掘り下げてみた。自分で問題提起した以上は、何か作ってみなきゃいけない気になった。自分のモチベーション保つために記事にするのはいいことなんだと改めて実感した。
+
+本題に戻る。
+
+ActionScript でメソッドチェーンするライブラリを作ってみた。こんな風に書ける。
+>|actionscript|
+    $(graphics)
+        .beginFill(0xff0000)
+        .drawCircle(80, 80, 60)
+        .endFill();
+
+    $(graphics)
+        .lineStyle(3, 0x0000ff)
+        .moveTo(200, 100)
+        .lineTo(150, 150)
+        .lineTo(200, 150)
+        .lineTo(200, 100);
+||<
+====
+<code>$()</code> にオブジェクトを渡すと、戻り値を返さないメソッドを this を返すようにしくれる。たとえば、<code>Graphics.lineTo(x:Number, y:Number):void</code> は <code>Graphics.lineTo(x:Number, y:Number):Graphics</code> になる。
+
+このライブラリの肝は、<code>Graphics</code> に限らず、どんなクラスでもメソッドチェーン化してくれるところ。
+
+実装は [http://wonderfl.net/code/f8875289cdd6683fde9cc5bd38285d4de7bf9667/:title=Test impl of "Method chain library"with Proxy class. - wonderfl build flash online] にある。ライブラリ部分はわずか40行とかなりシンプルなので、興味のある人は見てみると面白いだろう。<code>Proxy</code> と <code>describeType()</code> の合わせ技で実装している。
+
+もちろん弱点もあって、思いつくまま列挙してみると
+-実行時エラー
+--dynamic class を使ってるため、<code>lineTo</code> を <code>linT</code> のように typo してしまってもコンパイル時に警告してくれず、実行時エラーになっちゃう。
+--実務につっこむには嫌な制限だが、勢いで書くコードなら勢いで全てのコードパスを試すのであまり気にならないかもしれない。
+-パフォーマンス
+--与えられたオブジェクトを毎回 describeType するため、対象のクラスごとにラッパーを作るのに比べてパフォーマンスは落ちる。キャッシュ構造を入れると改善はするだろうが限界はある。
+--逆に、どんなオブジェクトでもメソッドチェーン化できてしまうので、汎用的なのは間違いない。
+
+といったところだろうか。
+
+続く(?)。
+

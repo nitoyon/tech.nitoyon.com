@@ -1,0 +1,186 @@
+---
+layout: post
+title: jQuery.extend マニアックス
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20110324/jQuery_extend_mania
+---
+jQuery の extend メソッドは便利なんだが複雑で忘れてしまいがちなのでメモしておく。
+
+<code>jQuery.extend</code> の呼び出しパターンは次の４通り。
++<code>$.extend([deep,] target, obj1, [obj2, [obj3, ...]])</code>
++<code>$.extend([deep,] obj)</code>
++<code>$.fn.extend([deep,] obj)</code>
++<code>$(...).extend([deep,] obj)</code>
+
+全てのパターンで第一引数に <code>[deep,]</code> がある。これはオプションの引数で <code>true</code> を指定するとディープコピーしてくれる。
+
+以下では分かりやすくするために <code>deep</code> オプションは省略した一覧を掲載する。
++<code>$.extend(target, obj1, [obj2, ...]])</code>
++<code>$.extend(obj)</code>
++<code>$.fn.extend(obj)</code>
++<code>$(...).extend(obj)</code>
+
+だいぶシンプルになった。各パターンを見ていく。
+
+**<code>$.extend(target, obj1, [obj2, ...]])</code>
+まずは１つ目のパターン。
+
+>|javascript|
+$.extend(target, obj1, [obj2, ...]])
+||<
+
+<code>target</code> に <code>obj1</code> を上書きコピーし、書き換えられた <code>target</code> を返す。
+
+以下は簡単な使用例。
+>|javascript|
+>>> a = {a: 3, b: 4}
+Object { a=3, b=4}
+>>> $.extend(a, {c: 99})
+Object { a=3, b=4, c=99}
+>>> a
+Object { a=3, b=4, c=99}
+||<
+
+<code>obj1</code> は複数個指定できる。複数個が必要あるのかと思うかもしれないが、継承もどきを実現するときのが楽になる。
+>|javascript|
+// 継承元クラス
+function B() { }
+B.prototype = {
+    a: function() { }.
+    b: function() { }
+}
+
+// 派生クラス
+function D() { }
+D.prototype = $.extend({}, B.prototype, {
+    c: function() { }.
+    d: function() { }
+});
+||<
+
+もし、ここで
+>|javascript|
+D.prototype = $.extend(B.prototype, {
+    //....
+);
+||<
+とやってしまうと、<code>B.prototype</code> が書き換えられてしまう。
+
+そこで、一旦、空オブジェクトに <code>B.prototype</code> をコピーしておいて、<code>D</code> に実装したいメソッドを上書きコピーしてあげている。
+
+ちなみに
+>|javascript|
+D.prototype = $.extend({}, B.prototype, { ... });
+||<
+は、次のように<s>書いてもよい</s>書くと同じように動くように見えるが
+>|javascript|
+D.prototype = $.extend({ ... }, B.prototype);
+||<
+こうすると、B と D に同じメソッド名を作成しようとしたときに、B のものが優先されてしまうので注意が必要だ。
+
+**target を省略した extend
+次は、target を省略した extend の呼び出しパターン３つを見る。
++<code>$.extend(obj)</code>
++<code>$.fn.extend(obj)</code>
++<code>$(...).extend(obj)</code>
+
+target を省略して obj が１つしかない場合には、<code>extend</code> を呼び出したときの this が target として解釈される。
+
+====
+
+***<code>$.extend(obj)</code>
+<code>$.extend(obj)</code> は jQuery 自身を <code>obj</code> で拡張する。
+
+例えば、
+>|javascript|
+$.extend({
+    min: function(a, b) { return a < b ? a : b; }
+});
+||<
+とすると、<code>$.min(3, 5);</code> で小さいほうの値を取得できる（引用元：[http://semooh.jp/jquery/api/core/jQuery.extend/object/:title=jQuery.extend(object) - jQuery 日本語リファレンス]）。
+
+jQuery クラスに static メソッドを追加するようなイメージだ。
+
+***<code>$.fn.extend(obj)</code>
+<code>$.fn</code> は <code>jQuery.prototype</code> のこと。つまり、<code>$.fn.extend(obj)</code> を利用すると jQuery オブジェクトにメソッドを追加できる。
+
+たとえば、
+>|javascript|
+$.fn.extend({
+    log: function() { console.log(this); return this; }
+});
+||<
+とすることで、<code>log</code> メソッドを追加できる。
+
+例えばこんな風にして使う。
+>|javascript|
+$("div")
+    .log()
+    .each(function(){
+        // ...
+    })
+||<
+メソッドチェーンの途中に突っ込んでログ出力できて便利！
+
+<code>$.fn.extend</code> は各種 jQuery プラグインの実装時で利用されている。
+
+***<code>$(...).extend(obj)</code>
+実際に利用されてるのは見たことないし、公式ドキュメントにも書いていないんだけど、これが意外に便利なんじゃないかというのが今回の本題。本題までが長かった…。
+
+<code>$(...).extend(obj)</code> を使うと、<code>extend</code> されるのは jQuery オブジェクト自身。jQuery オブジェクトにメソッドを追加できる。
+
+例えば「フォームの要素を enable/disable する」という処理がソースのあちらこちらに存在しているする。
+>|javascript|
+$("<form>").submit(function(){
+    // form 配下のコントロールを disable にする
+    $(this).find(":enabled").attr("disabled", "disabled");
+
+    var self = this;
+    $.post('url', { ... }, function(){
+        // POST が完了すると、コントロールを enable にする
+        $(self).find(":disabled").attr("disabled", "");
+
+        // ...
+    }, "json");
+    return false;
+});
+||<
+
+この例ではまだ一箇所だが、<code>find(":enabled").attr("disabled", "disabled")</code> のようなコードが色んな場所にあると、ソースが煩雑になる。
+
+そこで、次のようにしてみよう。
+>|javascript|
+var enable_mixin = {
+    enableAll: function(){
+        this.find(":enabled").attr("disabled", "");
+        return this;
+    },
+    disableAll: function(){
+        this.find(":enabled").attr("disabled", "disabled");
+        return this;
+    }
+};
+
+$("<form>").submit(function(){
+    // form 配下のコントロールを disable にする
+    $(this).extend(enable_mixin).disableAll();
+
+    var self = this;
+    $.post('url', { ... }, function(){
+        // POST が完了すると、コントロールを enable にする
+        $(self).extend(enable_mixin).enableAll();
+
+        // ...
+    }, "json");
+    return false;
+});
+||<
+
+ちょっとしたメソッド集 <code>enable_mixin</code> を作成しておく。そして、メソッドチェーンの中で、<code>extend</code> を使って動的にメソッドを追加し、そのメソッドをすぐさま呼び出している。
+
+もちろん、<code>$.fn.extend</code> を使えば全ての jQuery オブジェクトにメソッドを追加できるのだが、全体で利用するほどの汎用性はないようなちょっとした処理を、その場で気楽にミックスインして使えるのがうれしい。
+
+**おわり
+<code>jQuery.extend</code> は複雑である。
+

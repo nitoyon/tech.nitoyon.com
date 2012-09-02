@@ -1,0 +1,136 @@
+---
+layout: post
+title: GMail の未読メールを自作スクリプトから読むための方法まとめ
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070317/gmail_atom
+---
+諸般の事情で GMail の未読メールの本文を取得して、ごにょごにょ するスクリプトを作ってみたので、やり方をまとめます。
+
+====
+**1. 未読メール一覧の取得
+これはご存知の方も多いとは思います。GMail の<a href="http://mail.google.com/support/bin/answer.py?answer=13465&topic=1574">ヘルプにもある通り</a>、未読メール一覧は https://mail.google.com/mail/feed/atom/ から ATOM 形式で取得できます。atom/ のあとにラベル名をつけたら、特定ラベルの未読メール一覧だけを取ってくることもできます。
+
+認証はどうなってるかというと、Google のアカウント情報が Cookie に保存されていれば普通に表示できます。Cookie がないと HTTPS で BASIC 認証して、OK なら表示できるようになります。シンプルな仕様ですね。
+
+取得できる ATOM はこんな感じ。ちゃんと個別のメールへアクセスするための URL も埋め込まれています。
+>|xml|
+<?xml version="1.0" encoding="UTF-8" ?> 
+<feed version="0.3" xmlns="http://purl.org/atom/ns#">
+  <title>Gmail - Inbox for xxxx@gmail.com</title>
+  <tagline>New messages in your Gmail Inbox</tagline>
+  <fullcount>3</fullcount> 
+  <link rel="alternate" href="http://mail.google.com/mail" type="text/html" />
+  <modified>2007-03-17T16:16:04Z</modified> 
+  <entry>
+    <title>Subject</title> 
+    <summary>本文少し</summary> 
+    <link rel="alternate" href="http://mail.google.com/mail?account_id=xxxx%40gmail.com&message_id=123456789abcdefg&view=conv&extsrc=atom" type="text/html" /> 
+    <modified>2007-03-15T00:00:00Z</modified> 
+    <issued>2007-03-15T00:00:00Z</issued> 
+    <id>tag:gmail.google.com,2004:XXXXXXXXXXXXX</id> 
+    <author>
+      <name>差出人</name> 
+      <email>xxxx@xxxx.co.jp</email> 
+    </author>
+  </entry>
+  <entry>
+    <title>....
+||<
+
+**2. メール本文の取得
+<strong>(追記) 2008/05/08 現在、この方法は使えなくなっています…。</strong>
+
+上の ATOM から個別のメールを表示するための URL は入手できました。
+
+この URL にアクセスすれば、メール本文を取得できそうです。実際にブラウザで開けば本文を表示できるのですが、スクリプトから取得するとなると話は別になります。ためしに Firebug で覗いてみると、HTML の中身はこんな具合になってます。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070318/20070318021700.jpg" width="400" height="303" alt="GMail 個別メール表示のDOM構造"></center><
+
+ごちゃごちゃしてますね。フレームあり、Ajax あり…。スクリプトから解析するとなると気が重くなります。
+
+
+じゃあ、どうすればいいかというと、簡易 HTML 表示の URL を叩けばいいのです。簡易 HTML 形式というのは、JavaScript が使えない環境のために用意されたインターフェースです。まさに打ってつけですね。
+
+簡易 HTML 表示のための URL の作り方はこうなります。
+
+><ol><li>ATOM から取得した URL のうち、message_id を抜き出す。
+<pre>
+http&#x003A;//mail.google.com/mail?account_id=xxxx%40gmail.com&<strong>message_id=123456789abcdefg</strong>&view=conv&extsrc=atom
+</pre>
+<li>message_id の前に「http://mail.google.com/mail/h/mail?view=cv&search=all&th=」をつける。
+<pre>
+http&#x003A;//mail.google.com/mail/h/mail?view=cv&search=all&th=<strong>message_id=123456789abcdefg</strong>
+</pre>
+</ol><
+
+これだけです。なんとも簡単。
+
+あとはこの URL に対して HTTP GET をはたけばいいだけです。レスポンスにはメール本文が含まれているので、必要な部分を正規表現で取り出すなり、XPath 使うなり、好きにスクレイピングしましょう。
+
+**注意点
+-ATOM で取得できるのは未読メールだけ
+-メール本文を取得すると既読になる（次に ATOM 取得したときにはそのメールは ATOM から消えている）
+
+**サンプル
+HTA+JavaScript で作ってみました。ATOM で未読メールを取得して表示して、クリックしたら本文を取得しにいきます。
+
+HTA にしたのは、Ajax のドメイン制限を取り除くためです。ただし、HTA からはプロセス起動もできてしまうので、セキュリティチェックは入念にしてください。このサンプルは悪意のある Subject からの攻撃は防いでいますが万全ではないかもしれません。
+>|javascript|
+<body>
+<script>
+var label = "";
+window.onload = function(){
+    var ajax = new ActiveXObject('Microsoft.XMLHTTP');
+    if(!ajax) return;
+
+    ajax.open('GET', 'https://mail.google.com/mail/feed/atom/'+label+"?"+(new Date()).getTime(), true);
+    ajax.onreadystatechange = function(){
+        if(ajax.readyState == 4 && ajax.status == 200) {
+            parseXML(ajax.responseXML);
+        }
+    }
+    ajax.send(null);
+}
+
+function $(id){return document.getElementById(id);}
+
+function parseXML(xml){
+    if(!xml) return;
+    var entries = xml.getElementsByTagName("entry");
+    for(var i = 0; i < entries.length; i++){
+        var entry = entries[i];
+        var title = entry.getElementsByTagName("title")[0].firstChild.nodeValue;
+        var link = entry.getElementsByTagName("link")[0].attributes;
+        var url = link.getNamedItem("href").nodeValue;
+        if(!title || !url) continue;
+        title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        if(url.match(/message_id=([0-9a-zA-Z]+)/)){
+            url = "http://mail.google.com/mail/h/mail?view=cv&search=all&th=" + RegExp.$1;
+            $("mail_list").innerHTML += '<a href="' + url + '" onclick="return _link_click(this)">' + title + '</a><br>';
+        }
+    }
+}
+
+function _link_click(elm){
+    var ajax = new ActiveXObject('Microsoft.XMLHTTP');
+    if(!ajax) return;
+
+    var url = elm.href;
+    ajax.open('GET', url, true);
+    ajax.onreadystatechange = function(){
+        if(ajax.readyState == 4 && ajax.status == 200) {
+            // ajax.responseText に本文が入ってる
+            //alert(ajax.responseText);
+        }
+    }
+    ajax.send(null);
+    return false;
+}
+</script>
+<div id="mail_list"></div>
+</body>
+||<
+
+おわり。

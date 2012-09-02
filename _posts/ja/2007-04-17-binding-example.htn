@@ -1,0 +1,107 @@
+---
+layout: post
+title: Flex の Binding 具体例と内部事情の覗き見
+tags: Flex
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070417/binding_example
+---
+昨日の <a href="http://d.hatena.ne.jp/nitoyon/20070416/bindable_intro">Flex の Bindable 入門</a> の続きです。
+
+Binding を MXML で具体的に説明してみます。
+
+**データバインディングを使わなかったら
+データバインディングを使わない場合を MXML で書いてみました。
+>|xml|
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+  applicationComplete="init()">
+    <mx:Script>
+    private function init():void
+    {
+        input1.addEventListener("change", onchange);
+    }
+
+    private function onchange(e:Event):void
+    {
+        label1.text = "Input text: " + input1.text;
+    }
+    </mx:Script>
+
+    <mx:TextInput id="input1" />
+    <mx:Label id="label1" />
+</mx:Application>
+||<
+applicationComplete は JavaScript でいう onload みたいなものです。このなかで init 関数を呼び出して初期化を行います。
+
+init 関数の中は、input1 に対して addEventListener でイベント登録してます。「input1 の中身に変化があったら onchange 関数に通知してね」とお願いしてるわけです。
+
+ハンドラ(onchange 関数)の中では、input1 に入力された文字の前に "Input text: " を加えて、label1 に表示してます。
+
+テキストボックスに入力した内容が、即座に表示される、という簡単な SWF です。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070417/20070417001453.jpg" width="300" height="134" alt="動作イメージ"></center><
+
+**データバインディングを使ってみる
+これを Binding を使って書き直してみるとこうなります。
+>|xml|
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+  applicationComplete="init()">
+    <mx:Script>
+    private function init():void
+    {
+    }
+    </mx:Script>
+
+    <mx:TextInput id="input1" />
+    <mx:Label id="label1" text="Input text: {input1.text}" />
+</mx:Application>
+||<
+<a href="http://d.hatena.ne.jp/nitoyon/20070416/bindable_intro">Flex の Bindable 入門</a> では、監視したいデータに [Bindable] をつけましょう、と説明しました。ここでは、input1 の text プロパティを監視したいのですが、実は text プロパティは [Bindable] がついた状態で定義されています。text プロパティは、変更を他に通知する前提で作られている、ということです。
+
+このことはFlex リファレンス ガイドでも確認できます。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070417/20070417002125.jpg" width="285" height="212" alt="リファレンス"></center><
+
+次は通知を受け取る側です。受け取る側は中括弧をつけて {mySlider.value} のようにやる、と説明しました。ここでは、input1 の text プロパティを label1 の text プロパティに反映させるわけですから
+>|xml|
+    <mx:Label id="label1" text="Input text: {input1.text}" />
+||<
+となります。
+
+いかがでしょう。１箇所だけだとあまり効果ははっきりしませんが、複数個所になってくると効果は歴然です。中括弧の中では関数呼び出しや演算などもできるので、自由度はかなり高いです。
+
+**技術的に掘り下げてみる
+ここからはプログラマ向け。
+
+中括弧で囲んだ場所では、いったいどういうことになってるんでしょうか。
+
+mxmlc のコンパイルオプションに -keep をつけると、MXML がどういう ActionScript に変換されているのかを知ることができます。
+
+MXML のファイル名が test.mxml だとすると generated/test-generated.as に MXML の変換結果が出力されます。
+
+データ変更のイベントを受け取る部分を抜粋してみます。
+>|javascript|
+    private function _test_bindingsSetup():void
+    {
+        // 中略
+
+        var binding:Binding;
+
+        binding = new mx.binding.Binding(this,
+            function():String
+            {
+                var result:* = "Input text: " + (input1.text);
+                var stringResult:String = (result == undefined ? null : String(result));
+                return stringResult;
+            },
+            function(_sourceFunctionReturnValue:String):void
+            {
+                label1.text = _sourceFunctionReturnValue;
+            },
+            "label1.text");
+        _bindings[0] = binding;
+    }
+||<
+mx.binding.Binding クラスが出てきて複雑ですが、イベントを受け取ったときの処理を Binding クラスを使ってと登録しています。処理内容は第２引数の関数を実行して、その戻り値を第３引数に渡す、という流れです。
+
+ソースをさらに追うと、第４引数は mx/binding/BindingManager.as の中で力技でパースしていたりして面白いのですが、なにせ Flex SDK のソースは分量も多くて複雑なので、なかなか全体像は把握しきれません。興味のある人は SDK の frameworks/source/mx の中にソースがあるので、ぜひ挑戦してみてください。
+

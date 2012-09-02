@@ -1,0 +1,118 @@
+---
+layout: post
+title: Perl 2008年のファイルオープン
+tags: Perl
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080603/perl_open
+---
+<a href="http://itpro.nikkeibp.co.jp/article/COLUMN/20080528/304549/">第1回　Perlの文法の基本：ITpro</a> という記事の <a href="http://b.hatena.ne.jp/entry/http://itpro.nikkeibp.co.jp/article/COLUMN/20080528/304549/">はてブコメント</a>を見ていたら、Perl なすごい人達が文句言ってた。
+
+>>
+<a href="/otsune/"><img src="http://www.hatena.ne.jp/users/ot/otsune/profile_s.gif" class="hatena-id-icon" alt="otsune" title="otsune" width="16" height="16" /></a> <a href="/otsune/20080602#bookmark-8806292">otsune</a>  <span class="comment">2006年のhyuki Catalyst記事を載せるのもアレなのに2003年の記事を載せるのは無しだろ……open IN, ...のあたりは有害情報なので全力で見逃せ</span><br>
+<a href="/TAKESAKO/"><img src="http://www.hatena.ne.jp/users/TA/TAKESAKO/profile_s.gif" class="hatena-id-icon" alt="TAKESAKO" title="TAKESAKO" width="16" height="16" /></a> <a href="/TAKESAKO/20080602#bookmark-8806292">TAKESAKO</a> <span class="comment"> ちょｗ→出典：日経Linux 2003年7月号　125ページより</span><br>
+<a href="/miyagawa/"><img src="http://www.hatena.ne.jp/users/mi/miyagawa/profile_s.gif" class="hatena-id-icon" alt="miyagawa" title="miyagawa" width="16" height="16" /></a> <a href="/miyagawa/20080602#bookmark-8806292">miyagawa</a>  <span class="comment"> 2008年にこの記事はねーよ、と思ったら2003年の記事をいまさら再掲か。なんでわざわざ古い記事を新しいものかのように出して混乱させる？</span>
+<<
+
+問題があるというソースコードはこんなの。
+>|perl|
+open IN, '</etc/passwd';
+||<
+えー！　どこが問題あるのかさっぱり分からん！！！！！！
+====
+**調べてみた
+2008年流の Perl な書き方を調べるなら <a href="http://perl-users.jp/">perl-users.jp</a>。
+
+早速見つけた。oldtype と modern の書き方が比較されている。
+>http://perl-users.jp/nowpast.html:title=Perl 5 今昔 - Perl-users.jp>
+open
+-oldtype: open FH, "filename" or die $!; 
+-modern: open my $fh, '<', 'filename' or die $!; または file('filename')->open('r') とか 
+<<
+
+**まず $! が分からない
+oldtype の $! すら理解できない自分…。Perl は特殊変数が多くて大変なんだよなぁ。しかも、検索エンジンで検索できないのが困り者。
+
+こういうときは、<a href="http://perldoc.perl.org/perlvar.html">perlvar</a> を眺める。どうやら $! はエラーメッセージになるらしい。
+>>
+If used as a string, yields the corresponding system error string.
+<<
+どれどれ。
+>|sh|
+> perl -e "open FH, '__not__found__' or die $!"
+No such file or directory at -e line 1.
+||<
+おー、確かに。
+
+数値リテラルだとエラーコードになるらしい。どれどれ...
+>|sh|
+> perl -e "open FH, '__not__found__' or print int($!)"
+2
+||<
+ほんとだ。
+
+**MODE を分ける
+それでは、modern その１のコードを見てみる。
+>|perl|
+open my $fh, '<', 'filename' or die $!;
+||<
+謎だ。
+
+困ってても仕方がないので、perldoc の <a href="http://perldoc.perl.org/functions/open.html">open</a> を見てみた。いくつもの書き方があるようだ。
+>|
+open FILEHANDLE,EXPR 
+<strong>open FILEHANDLE,MODE,EXPR</strong>
+open FILEHANDLE,MODE,EXPR,LIST 
+open FILEHANDLE,MODE,REFERENCE 
+open FILEHANDLE 
+|<
+なるほど。今回は２番目の形になってる。MODE を分離して書けるのはセキュリティ的にも素敵だ。これは明日からでも使いたい感じ。
+
+
+**my $fh の謎
+問題は my $fh。なんだこの書き方は。
+
+open の説明をみても良く分からなかったので、<a href="http://perldoc.perl.org/perlopentut.html">perlopentut</a> を見てみた。
+
+そしたら、<a href="http://perldoc.perl.org/perlopentut.html#Indirect-Filehandles">Indirect Filehandles</a> にズバリそのものの記述が（日本語は私が訳したもの）。
+>>
+open の第一引数はファイルハンドルのリファレンスを指定することもできます。Perl 5.6 では、第一引数が初期化されていない場合、Perl はファイルハンドルを自動的に作成し、第一引数にリファレンスを代入します。
+>>
+open's first argument can be a reference to a filehandle. As of perl 5.6.0, if the argument is uninitialized, Perl will automatically create a filehandle and put a reference to it in the first argument
+<<
+<<
+なるほど。初期化されてない変数を渡せるわけね。
+
+しかし、メリットがいまいち分からん。続きを読む（同じく、日本語は私が勝手に訳したもの）。
+>>
+Indrect filehandle を使うと、名前空間の扱いが簡単になります。ファイルハンドルはパッケージ空間に対して global なので、例えば２つのサブルーチンで INFILE を開くとクラッシュしてしまいます。indirect filehandle を利用して my $infile を開いた場合にはクラッシュする心配はありませんし、それ以後に名前の衝突が発生する恐れもありません。
+>>
+Indirect filehandles make namespace management easier. Since filehandles are global to the current package, two subroutines trying to open INFILE will clash. With two functions opening indirect filehandles like my $infile , there's no clash and no need to worry about future conflicts.
+<<
+<<
+なるほど。これは安心。
+
+open IN, ... 形式がグローバル変数で、open my $in, ... がローカル変数、というイメージ。
+
+読んだり閉じたりするには次のようにする。
+>|perl|
+print <$fh>;
+close $fh;
+||<
+
+Perl 5.6 以降限定だけど、これも明日から使えそうなテクニックだ。
+
+**modern その２
+modern その２はお手上げ。
+>|perl|
+file('filename')->open('r')
+||<
+file 関数ってなんだ？？　なんかのモジュール？？
+
+(追記) コメント欄でkzysさんに教えてもらいました。Path::Class モジュールのようです（<a href="http://search.cpan.org/dist/Path-Class/lib/Path/Class.pm">Path::Class</a>）。ありがとうございます。ファイルやディレクトリをたどるのが簡単になりそうですね。
+
+**まとめ
+-Perl は奥が深い。難しい。
+-ハブサイトは初心者にとってありがたい。
+
+(追記) 弾さんも添削してた。ありがたや。参考になります。
+-<a href="http://blog.livedoor.jp/dankogai/archives/51060112.html">404 Blog Not Found:perl -　勝手に添削 - Perl入門#1@ITPro</a>

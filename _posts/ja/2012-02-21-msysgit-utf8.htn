@@ -1,0 +1,95 @@
+---
+layout: post
+title: msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！
+tags: git
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120221/msysgit_utf8
+---
+最近、Git について勉強しています。Windows で Git をやるなら Cygwin と msysGit（Git for Windows） がメジャーなようです。
+
+**Cygwin Git のいいとこ悪いとこ
+Cygwin は UTF-8 な日本語ファイル名にも対応しており、Cygwin の中で閉じて Git を使っている分には何不自由なく使えるのでお勧めです。
+
+ただし、次のような悲しいポイントがあります。
+- Cygwin 版 Git は、Windows 向けの GUI な Git ソフト(TortoiseGit や Git Extensions)との相性が悪い
+- Windows のエディタやマージツールと連携しようとするとパスのポリシーが違うのでうまくいかない
+- nkf を噛ませようとしても、Cygwin 用の nkf バイナリは公式配布されておらず、わざわざ Cygwin 上で make する必要がある
+- チェックアウトしたフォルダーをエクスプローラーから丸ごと削除すると、「このフォルダーはほかの人と共有されています」という警告が表示されまくる。Cygwin bash で <code>rm -rf</code> しないと消せない(回避方法を探したが見つからず)。
+
+**それに比べて msysGit は...
+msysGit は Cygwin ほど硬派ではないので、Windows の他のツールと相性もいいです。
+
+しかし、UTF-8 対応していないので<strong>日本語ファイル名を扱えません</strong>でした。日本語ファイル名を含むレポジトリをチェックアウトすると、豪快に文字化けしていました。
+
+UTF-8 に対応していない問題は msysGit の <a href="http://code.google.com/p/msysgit/issues/detail?id=80">Issue 80</a> に 2008 年ごろから挙がってはいましたが、長らく放置されてきました。<a href="http://tmurakam.org/git/">UTF-8ファイル名対応版 Git for Windows</a> という派生物を作っている方もいるのですが、全部 ANSI で扱ってる TortoiseGit のダメ挙動に合わせているため、正しい解法ではありません。何よりも公式ではないのが悲しいところです。
+
+**そんな msysGit がついに UTF-8 サポート!!!
+Windows で Git するなら Cygwin 一択だった悲しい状況でしたが、昨年末あたりから <a href="http://code.google.com/p/msysgit/issues/detail?id=80">Issue 80</a> に新たな動きがあり、Karsten さんという方が積極的に UTF-8 対応に向けて動いてくれていました。
+====
+そして、2月に入って msysGit の devel ブランチに <strong>UTF-8 対応のコードがコミットされました</strong>(msysGit に同梱される <code>less</code> や <code>vim</code> も同時に UTF-8 対応しているようです)。
+
+現在の最新版 1.7.9 は UTF-8 対応する前のものです。そのため、UTF-8 対応したリリースは次のバージョン（たぶん 1.7.10）を待たねばなりません。
+
+<strong>(追記 2012/4/12) msysGit 1.7.10 がリリースされました。試してみた記事も書いたのでよければご覧ください（<a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a>）。以下は、1.7.10 がリリースされる前の情報です。</strong>
+
+次のバージョンを待ちきれない人は、Karsten さんが msysGit 1.7.8 をベースにパッチを適用して作成した <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> が公開されているので、こちらを試してみるとよいでしょう。
+
+**Git-1.7.8-preview20111229-unicode を試してみた
+ということで、早速 <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> を導入してみました。
+
+日本語ファイル名を含むレポジトリをチェックアウトしたところ、ファイル名は化けませんでした。チェックアウトしたレポジトリを <a href="http://code.google.com/p/gitextensions/">Git Extensnions</a> で表示してみたところ、ご覧のようにコミットログもファイル名も完璧に日本語を表示できています!!!!
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120221/20120221024334.png"></center><
+
+(Github の <a href="https://github.com/toooooooby/japanese_test">toooooooby / japanese_test</a> を検証に利用)
+
+diff のファイル名が化けていたのですが、これは FAQ。次の設定を実施して解決しました。
+>|sh|
+git config [--global] core.quotepath off
+||<
+
+日本語ファイル名の add やコミットログの日本語を自分でも試してみたが、全く問題なく使えています。
+
+また、msysGit に付属する bash 上で、<code>git log</code> してみましたが、同じようにファイル名やコミットログの日本語が正常に表示できていました。
+
+...
+
+一方、TortoiseGit は、日本語ファイル名のファイルに対してコミットしようとするとエラーを吐きます。日本語ファイル名のオーバーレイ アイコンも表示されていません。悲しいですね。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120221/20120221024335.png"></center><
+
+ただし、TortoiseGit 派の人に朗報です。Karsten さんが TortoiseGit V1.7.5.0 をベースに <code>CP_ACP</code> を <code>CP_UTF8</code> にしてビルドしたパッケージが msysGit のメーリングリストに流れています(<a href="http://groups.google.com/group/msysgit/browse_thread/thread/408f7613d096f2c0/b5ebf2a57c8676d2?lnk=gst&q=v15#b5ebf2a57c8676d2">Issue 80: Unicode support on Windows</a> 参照)。
+
+わたしは試していませんが、こちらを使うと快適に使えるという情報はあります。
+
+>{% tweet 167601042610061312 %}<
+
+**TortoiseGit vs Git Extensions
+Windows の GUI な Git クライアントは TortoiseGit と Git Extensions のどちらがよいでしょうか。
+
+最近、TortoiseGit と Git Extensions の開発状況をウォッチしてるのですが、
+-TortoiseGit
+--UI は小奇麗 (TortoiseSVN から派生しているだけに)
+--中身は悲惨 (<a href="http://groups.google.com/group/tortoisegit-dev/browse_thread/thread/e8d1effa21a66a27">Issue 867 in tortoisegit: Add should not run a new Git process for each file</a> ってどうなのよ…。(和訳) add すると 1 ファイルにつき 1 プロセス実行されちゃって重いよー)
+--Tortoise 系の知名度ゆえに利用者は多いが開発者は少ない
+-Git Extensions
+--UI はひどい
+--中身はそこそこまとも (UTF-8 対応してるし！)
+--知名度は低いが、Github 上で pull リクエストが結構飛び交っている (自分も pull リクエスト出してみたら取り込まれた。後日書きます！)
+という印象です。
+
+また、日本語化事情に関しても、TortoiseGit は過去には日本語化プロジェクトがあったものの更新は止まっており((（追記 2012/4/15）新たな日本語化プロジェクト「<a href="http://tortoisegitjapan.com/">TortoiseGit Japan</a>」が開始したようです。日本語化パッチが配布されています。インストール手順も日本語で解説してあります。))、それに対して Git Extensions はそこそこの UI が日本語化されています。
+
+そういった事情からも、Git Extensions を押していきたいところです。
+
+ただ、GUI があったとしても、Git のコマンドライン版の知識は必要なのが Git のつらいところでしょうか…。
+
+わたしの場合は {% amazon jp:4798023809:title %}で概要を押さえておいて、細かいところは {% amazon jp:4873114403:title %} を読んで理解していっています。{% amazon jp:4798023809:title %} は読み物のようにさっと読め、Git のメンテナさんの著書なので Git の思想も分かって面白かったです。一方、{% amazon jp:4873114403:title %} はかなり詳しいので一気に読むのはしんどいですが、気になるところをじっくり読んで、理解を深めることができました。
+>{% amazon jp:4798023809:detail %}<
+>{% amazon jp:4873114403:detail %}<
+
+**まとめ
+- msysGit 1.7.10 からは UTF-8 対応が入り、日本語ファイルを扱えるようになる (Cygwin 以外の選択肢が増える!!)
+- msysGit 1.7.10 を待てない人は <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> を試してみるとよい
+- TortoiseGit より <a href="http://code.google.com/p/gitextensions/">Git Extensions</a> がオススメ
+

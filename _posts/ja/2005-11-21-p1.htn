@@ -1,0 +1,59 @@
+---
+layout: post
+title: Text::Hatena のバグ報告
+tags: はてな
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20051121/p1
+---
+<a href="http://tech.nitoyon.com/javascript/application/texthatena/download.html">JavaScript に移植する過程</a>で、いくつかバグを見つけたので報告します。バージョン0.04について。id:jkondo さーん、とかやると気づいてもらえるのかな。
+
+ちなみに、Text::Hatena JavaScript版を使えば、<a href="http://tech.nitoyon.com/javascript/application/texthatena/wordpro/">はてな記法ワープロ</a>みたいにリアルタイムに変換できる WYSWYG な Wiki も作れちゃいますよ。
+
+**ListNode.pm の２階層目問題
+>||
+-1
+--1-1
+||<
+とすると
+>||
+<ul>
+  <li>1
+  <li>   ← !!!ここ!!!
+    <ul>
+      <li>1-1
+    </ul>
+  </li>  ← !!!ここ!!!
+</ul>
+||<
+と出力されるのですが ul タグを li で囲う必要ないのでは（!!!ここ!!!の部分）。事実、はてなダイアリーでは上の li がない状態で出力される。
+
+24行目の
+>||
+$c->htmllines("$t\t<li>");
+||<
+と30行目の
+>||
+$c->htmllines("$t\t</li>");
+||<
+が不要だと思う。
+
+**ListNode.pm の ol と ul の切り替え問題
+>||
+-hoge
++fuga
+||<
+と書くと
+>|
+・hoge
+1.fuga
+|<
+のように箇条書きと番号付き箇条書きが出力されてほしいのだけど、
+>||
+<ul>
+  <li>hoge
+  <li>fuga
+</ul>
+||<
+
+となる。これは、本家はてなダイアリーでも同じ。仕様と言えば仕様か。
+

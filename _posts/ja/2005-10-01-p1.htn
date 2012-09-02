@@ -1,0 +1,81 @@
+---
+layout: post
+title: Smarty リンク集
+tags: 開発
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20051001/p1
+---
+PHP のテンプレートエンジンとして人気の高い Smarty。まとまったドキュメントが Web 上にはなかったので、リンク集を作っておく。
+
+:本家(英語):http://smarty.php.net/
+:和訳マニュアル:http://sunset.freespace.jp/smarty/
+:Smartyの良さ:http://phpj.jugem.cc/?eid=10
+:Windows インストール方法:http://www.kashioka.net/blog/archives/000219.html
+
+**使い方
+イメージがわきやすいように使い方を。
+
+-test.php
+>|php|
+<?php
+require 'Smarty.class.php';
+
+$smarty = new Smarty;
+
+//$smarty->debugging = true;
+$smarty->assign("name","nitoyon");
+$smarty->assign("option", array("osaka","kyoto","tokyo"));
+$smarty->assign("option_output", array("大阪","京都","東京"));
+$smarty->assign("option_selected", "kyoto");
+
+$smarty->display('test.tpl');
+?>
+||<
+
+-templates/test.tpl
+>|html|
+<html>
+<body>
+<p>My name is {$name}</p>
+<p>MY NAME IS {$name|upper}</p>
+
+<form>
+<select name=states>
+{html_options values=$option
+ selected=$option_selected output=$option_output}
+</select>
+</form>
+
+</body>
+</html>
+||<
+
+-出力HTML
+>|html|
+<html>
+<body>
+<p>My name is nitoyon</p>
+<p>MY NAME IS NITOYON</p>
+
+<form>
+<select name=states>
+<option label="大阪" value="osaka">大阪</option>
+<option label="京都" value="kyoto" selected="selected">京都</option>
+<option label="東京" value="tokyo">東京</option>
+
+</select>
+</form>
+
+</body>
+</html>
+||<
+
+これを見たらなんとなく雰囲気が分かるはず。assign で変数を定義すると、テンプレートから参照できるようになる。テンプレート中には {if}{/if} などの条件分岐も書けるので表現の幅は広がるわけ。
+
+テンプレートエンジンは、MVC でいうところの V と C の分離ができるのがうれしいところ。泥臭い Web アプリばっかり書いていた人はやみつきになるでしょう。Perl の CGI.pm も HTML のパーツを出力するのが便利にはなるが、HTML の内容を完全に別ファイルに分離できるのはぜんぜん違う。
+
+MVC 分離は Web アプリでも真価を発揮する。なにより、分離の方法を与えてくれるので悩むことが少なくなる。.NET Framework や Java のライブラリが充実してくるにつれて、Web 開発にもこういったツールが流行りつつあるようだ。ということで、以下で多言語での人気をまとめてみる。この辺の情報は、id:naoya さんをウォッチしていて手に入れた情報。
+
+:Perl:HTML::Template や TT がテンプレートエンジンとして人気らしい。
+:Ruby:Ruby On Rails もしくは Rails と呼ばれるフレームワークが人気のようだ。海外で Ruby の知名度をあげているほどに人気らしい。
+

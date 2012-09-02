@@ -1,0 +1,84 @@
+---
+layout: post
+title: msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた
+tags: git
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120417/git_bash_ime
+---
+先日の <a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a> という記事で、msysGit 1.7.10 の Git Bash で IME からの日本語入力できない件を伝えていたが、この件についてもう少し深入りしてみた。
+
+**.inputrc を設定してもうまくいかない
+記事へのコメントで指摘をいただいたのが、<code>.inputrc</code> に
+>|sh|
+set convert-meta off
+set meta-flag on
+set output-meta on
+||<
+と設定してみる、という方法だった。
+
+しかし、この通りに設定しても期待通りの結果にはならなかった。
+
+いろいろ検索してみると、生の MSYS では「この方法でうまくいく」と記述してあるページは多かった。
+
+生の MSYS ではうまくいくのに、msysGit ではうまくいかない理由はなぜか。この原因を調べてみたところ、次の事実に行き当たった。
+====
+
+**msysGit は msys-1.0.dll にパッチを当てている
+msysGit は MSYS が配布している <code>msys-1.0.dll</code> に対してパッチを当てている。
+
+そのパッチがこちら。
+- <a href="https://github.com/msysgit/msysgit/blob/be1eadf11789b4ef295731a5049732c5eb4c51fa/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch">msysgit/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch at be1eadf11789b4ef295731a5049732c5eb4c51fa &#183; msysgit/msysgit</a>
+
+ざっと覗いてみると、コンソールの出力が ANSI から Unicode になるように頑張っている箇所があった。
+>|patch|
+@@ -1008,7 +1010,7 @@ fhandler_console::clear_screen (int x1, int y1, int x2, int y2)
+       tlc.X = x2;
+       tlc.Y = y2;
+     }
+-  FillConsoleOutputCharacterA (get_output_handle (), ' ',
++  FillConsoleOutputCharacterW (get_output_handle (), L' ',
+ 			       num,
+ 			       tlc,
+ 			       &done);
+@@ -1244,7 +1246,7 @@ fhandler_console::char_command (char c)
+ 	      savebuf = (PCHAR_INFO) cmalloc (HEAP_1_BUF, sizeof (CHAR_INFO) *
+ 					     savebufsiz.X * savebufsiz.Y);
+ 
+-	      ReadConsoleOutputA (get_output_handle (), savebuf,
++	      ReadConsoleOutputW (get_output_handle (), savebuf,
+ 				  savebufsiz, cob, &now.srWindow);
+ 	    }
+ 	  else          /* restore */
+@@ -1258,7 +1260,7 @@ fhandler_console::char_command (char c)
+ 	      if (!savebuf)
+ 		break;
+ 
+-	      WriteConsoleOutputA (get_output_handle (), savebuf,
++	      WriteConsoleOutputW (get_output_handle (), savebuf,
+ 				   savebufsiz, cob, &now.srWindow);
+ 
+||<
+
+そしてパッチの先頭を見ると、次のようなコメントがあった。
+>||
+Still TODO:
+- handle console input
+- add wrappers for dynamically loaded *A functions (see autoload.cc 310ff)
+||<
+
+なるほど、コンソールへの入力は ANSI のままなので、IME から直接マルチバイト文字列を流し込むとうまくいかないのだろう。
+
+なんとなく <code>ReadConsoleInputA()</code> を <code>ReadConsoleInputW()</code> に変更したら動くような気がしなくもないけど、MSYS のビルド環境を整えるところから…と思うと気が遠くなる。
+
+**おまけ
+先日の記事を書いた直後に TortoiseGit の日本語プロジェクトが新たに始まったようだ。
+- <a href="http://tortoisegitjapan.com/">TortoiseGit Japan</a>
+
+日本語化した DLL を配布していたり、インストール手順を解説してくれていたりするので、TortoiseGit を使っている人はチェックしておくとよいだろう。
+
+><div class="seealso"><
+**あわせてどうぞ
+-<a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20120221/msysgit_utf8">msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</a>
+></div><
+

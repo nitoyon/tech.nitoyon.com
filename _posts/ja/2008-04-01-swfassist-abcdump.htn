@@ -1,0 +1,203 @@
+---
+layout: post
+title: OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080401/swfassist_abcdump
+---
+Tamarin の abcdump.as を活用して、SWF をダンプしてみよう。
+
+abcdump を使うためには、まず、SWF の中から ABC(ActionScript ByteCode)を取り出す必要がある。前回取り上げた flash-decompiler を使ってもいいんだけど、せっかくなので、前々から試してみたかった <a href="http://www.libspark.org/wiki/yossy/swfassist">swfassist</a>を使ってみた。
+
+いきなり凝ったものを作るのは大変なので、まずは SWF から ABC を抽出するアプリを AIR で作ってみた。
+
+**サンプルデータ
+試しにこの簡単な AS をコンパイルして SWF にする。
+>|javascript|
+package{
+    import flash.display.Sprite;
+
+    public class Test extends Sprite{
+        public function Test()
+        {
+            trace("test");
+        }
+    }
+}
+||<
+
+SWF に対して、今回作った ABC 切り出しツールを適用する。
+
+切り出された ABC を abcdump でダンプする。
+>|javascript|
+magic 2e0010
+Cpool numbers size 3 1 %
+Cpool strings count 13 size 130 46 %
+Cpool namespaces count 5 size 9 3 %
+Cpool nssets count 0 size 1 0 %
+Cpool names count 9 size 25 8 %
+MethodInfo count 3 size 13 4 %
+InstanceInfo size 8 2 %
+ClassInfo size 2 0%
+ScriptInfo size 7 2 %
+MethodBodies size 76 27 %
+script0
+
+class Test extends flash.display::Sprite
+{
+
+  function Test():*     /* disp_id -1*/
+  {
+    // local_count=1 max_scope=1 max_stack=2 code_len=13
+    0       getlocal0           
+    1       pushscope           
+    2       getlocal0           
+    3       constructsuper      (0)
+    5       findpropstrict      trace
+    7       pushstring          "test"
+    9       callpropvoid        trace (1)
+    12      returnvoid          
+  }
+
+
+  static function Test$cinit():*        /* disp_id 0*/
+  {
+    // local_count=1 max_scope=1 max_stack=1 code_len=3
+    0       getlocal0           
+    1       pushscope           
+    2       returnvoid          
+  }
+
+}
+
+
+function script0$init():*       /* disp_id 0*/
+{
+  // local_count=1 max_scope=7 max_stack=2 code_len=35
+  0         getlocal0           
+  1         pushscope           
+  2         getscopeobject      0
+  4         getlex              Object
+  6         pushscope           
+  7         getlex              flash.events::EventDispatcher
+  9         pushscope           
+  10        getlex              flash.display::DisplayObject
+  12        pushscope           
+  13        getlex              flash.display::InteractiveObject
+  15        pushscope           
+  16        getlex              flash.display::DisplayObjectContainer
+  18        pushscope           
+  19        getlex              flash.display::Sprite
+  21        pushscope           
+  22        getlex              flash.display::Sprite
+  24        newclass            Test
+  26        popscope            
+  27        popscope            
+  28        popscope            
+  29        popscope            
+  30        popscope            
+  31        popscope            
+  32        initproperty        Test
+  34        returnvoid          
+}
+
+OPCODE  SIZE    % OF 51
+getlex          14      27%
+pushscope       9       17%
+popscope        6       11%
+getlocal0       4       7%
+returnvoid      3       5%
+callpropvoid    3       5%
+pushstring      2       3%
+constructsuper  2       3%
+newclass        2       3%
+findpropstrict  2       3%
+getscopeobject  2       3%
+initproperty    2       3%
+||<
+それっぽいものが出てきたー！
+
+abcdump.as のビルド方法は <a href="http://www.5etdemi.com/blog/archives/2007/01/as3-decompiler/">AS3 decompiler</a> あたりを参照あれ。
+
+SWF から ABC を切り出す AIR のソースコードは以下に。
+====
+Input.swf を読み出して、out*.abc としてファイル出力するだけの簡単なコードです。
+
+Flex3 + AIR 1.0 で出来てるよ。
+>|javascript|
+package{
+    import flash.display.*;
+    import flash.events.*;
+    import flash.net.*;
+    import org.libspark.swfassist.io.*;
+    import org.libspark.swfassist.swf.io.*;
+    import org.libspark.swfassist.swf.structures.SWF;
+
+    public class Test extends Sprite{
+        public function Test():void{
+            loadSWF();
+        }
+    
+        private function loadSWF():void{
+            // Input.swf をロード
+            var loader:URLLoader = new URLLoader();
+            loader.dataFormat = URLLoaderDataFormat.BINARY;
+            loader.addEventListener(Event.COMPLETE, completeHandler);
+            loader.load(new URLRequest('Input.swf'));
+        }
+
+        private function completeHandler(e:Event):void{
+            var loader:URLLoader = URLLoader(e.target);
+
+            // swfassist でダンプ
+            var input:DataInput = new ByteArrayInputStream(loader.data);
+            var context:ReadingContext = new ReadingContext();
+            context.needsABCData = true;
+            var reader:SWFReader = new SWFReader();
+            var swf:SWF = reader.readSWF(input, context);
+
+            // AbcVisitor で visit
+            var abcVisitor:AbcVisitor = new AbcVisitor();
+            swf.visit(abcVisitor);
+
+            // 情報を出力
+            var t:TextField = new TextField();
+            t.text = "frame rate: " + swf.header.frameRate + "\nVersion: " + swf.header.version
+                + "\nabc count: " + abcVisitor.count;
+            addChild(t);
+        }
+    }
+}
+
+import org.libspark.swfassist.swf.tags.AbstractTagVisitor;
+import org.libspark.swfassist.swf.tags.DoABC;
+import flash.filesystem.*;
+
+class AbcVisitor extends AbstractTagVisitor{
+    public var count:int = 0;
+    
+    // ABC に反応
+    override public function visitDoABC(tag:DoABC):void{
+        count++;
+
+        if(!tag.abcData){
+            return;
+        }
+
+        // フレーム名を取り除く
+        // framename 0x00 ABC
+        var pos:int = 0;
+        while(tag.abcData.readByte() != 0){
+        }
+
+        // ファイルに出力
+        // C:\Documents and Settings\username\Application Data\AppName\Local Store
+        var fs:FileStream = new FileStream();
+        var file:File = File.applicationStorageDirectory.resolvePath("out" + count + ".abc");
+        trace(file.nativePath);
+        fs.open(file, "write");
+        fs.writeBytes(tag.abcData, tag.abcData.position);
+        fs.close();
+    }
+}
+||<

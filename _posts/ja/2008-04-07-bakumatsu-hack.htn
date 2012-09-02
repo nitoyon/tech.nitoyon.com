@@ -1,0 +1,231 @@
+---
+layout: post
+title: 幕末古写真ジェネレータをハックする
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080407/bakumatsu_hack
+---
+<a href="http://labs.wanokoto.jp/olds">幕末古写真ジェネレーター</a> というウェブサービスがちょっと前に話題になりました。どんな写真も幕末の写真のように加工してくれる面白いサービスです。
+
+この仕組みを <a href="http://d.hatena.ne.jp/ryocotan/20080331/p2">幕末古写真ジェネレーターの仕組み？ - 将来が不安</a> で解析していたのが面白かったので、続きをやってみることにしました。
+
+→成果を先に見たい人は、<a href="http://tech.nitoyon.com/bakumatsu/">こちら</a> からご覧くださいませ。
+
+**1. 真っ黒な画像を渡す
+まずは、真っ黒な写真を幕末風にしてもらいます。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407013433.jpg" width="360" height="270"></center><
+
+これが幕末風にするための型紙です。以降は<strong>テンプレート画像</strong>と呼ぶことにします。
+
+**2. RGB の階調を渡す
+直感的に、ジェネレータの実装は
+>|
+（元画像＋色補正）＋テンプレート画像
+|<
+と考えられます。テンプレート画像は得られたので、あとは色補正のパラメータを探れればハック完了です。
+
+そのために、RGB の階調をジェネレータに渡してみました。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407013432.jpg" width="360" height="270"></center><
+
+結果はこうなりました。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407013431.jpg" width="360" height="270"></center><
+
+おー。青色がほとんど消えてますね。グラデーションの方は、白飛び・黒飛びしていて、ダイナミックレンジが小さくなっているのも一目瞭然ですね。
+
+**3. 差分をとる
+さて、2. で得られた画像ですが、テンプレート画像が邪魔なので、差分をとってやります。
+
+>|
+（元画像＋色補正）＋テンプレート画像
+|<
+からテンプレート画像を引くことで、
+>|
+（元画像＋色補正）
+|<
+を手に入れる、という算段です。
+
+プログラムで処理してもいいのですが、Photoshop が手元にある人は、レイヤースタイルの「<strong>差の絶対値</strong>」が激しく便利でしょう。
+
+２つの画像をレイヤーに配置するだけで、差分をとってくれます。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407013430.jpg" width="360" height="270"></center><
+
+だいぶ雑念が消えましたね。
+
+でも、まだノイズがあります。おそらく、ざらついた印象をつけるために、ランダムでノイズをのせているのでしょう。
+
+**4. ぼかす
+ノイズが邪魔なら、平均値を取ればいいですね。平均値を取るにはどうするか。<strong>ぼかしを入れます</strong>。
+
+Photoshop のフィルタから、「ぼかし」>「ぼかし (ガウス)」を選択します。半径 6px ぐらいにしてやればこんな画像になります。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407013429.jpg" width="360" height="270"></center><
+
+ノイズがなくなって、のっぺりしました。
+
+上側の４つの四角から、色をスポイトで抜き出します。
+>|
+#ff0000 -> #212121
+#00ff00 -> #414141
+#0000ff -> #0d0d0d
+
+#ffffff -> #6d6d6d
+#000000 -> #060606
+|<
+RGB の各成分がどの程度の強さで変換されているかがわかります。
+
+赤(#212121)と緑(#414141)と青(#0d0d0d)を足したら、だいたい白(#6d6d6d)の色になっています。RGB の色調補正を行っている、という推測が正しいことを裏付けていますね。
+
+ここから、色調補正の手順が推測できますね。書き下してみるとこんな感じです。
++ダイナミックレンジをいじる<br>真ん中 1/3～2/3 のみを生かすぐらいに絞る。トーンカーブで表すとこんな具合。<br><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080407/20080407023941.jpg" width="300" height="264">
++色あいを調整する<br>赤を 1/8、緑を 1/4、青を 1/16 ぐらいまで落とす。
+
+**5. 実装する
+アルゴリズムが分かれば、あとは ActionScript で実装するだけです。
+
+>|
+（元画像＋色補正）＋テンプレート画像
+|<
+
+を順番に実装していきます。サーバーレスで実装したかったので、BitmapData は使っていません。
+
+色調補正は ColorMatrixFilter を２回適用することで実現しました。テンプレート画像との合成は、テンプレート画像を透明度50%で重ねることで実現しました。50% で重ねても薄くならないよう、２つの画像を２倍の明るさで作成しておきました。
+
+出来上がったのが次の Flash です。URL を入力して、ボタンを押すと幕末写真化されますよ。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fbakumatsu%2FBakumatsu.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=360&amp;title=Old+Photo&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9.0 以上がインストールされていると、ここに Flash が表示されます)</noscript><
+
+かなり本家に近くなった気のではないでしょうか。アルファチャンネルの扱いがオリジナルと違うけど、それは Flash の制限上、やむなし…。
+
+本家に比べて何がすごいかというと、クライアント側だけで画像加工しているので高速です。即座に試せます。
+
+大きな写真を表示させたい場合は、<a href="http://tech.nitoyon.com/bakumatsu/">特設ページ 最速幕末古写真ジェネレータ</a> からどうぞ。
+
+**ソースコード
+ソースは以下に(120行)。
+====
+>|javascript|
+package{
+    import flash.display.*;
+    import flash.text.*;
+    import flash.events.*;
+    import flash.filters.*;
+    import flash.net.*;
+    import flash.filters.ColorMatrixFilter;
+    
+    [SWF(backgroundColor="#ffffff")]
+    public class Bakumatsu extends Sprite{
+        [Embed(source="BakumatsuTexture.jpg")]
+        private var Texture:Class;
+
+        private var canvas:Sprite;
+
+        public function Bakumatsu(){
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            // 入力欄
+            var tf:TextField = new TextField;
+            tf.border = true;
+            tf.text = "http://tech.nitoyon.com/img/title-blog.jpg";
+            tf.type = "input";
+            tf.width = 380;
+            tf.height = 22;
+            tf.x = tf.y = 5;
+            addChild(tf);
+
+            // ボタン
+            var button:Sprite = new Sprite();
+            button.graphics.beginFill(0xcccccc);
+            button.graphics.drawRect(0, 0, 50, 22);
+            button.graphics.endFill();
+            button.filters = [new BevelFilter(2, 45, 0xffffff, 0.5, 0x000000, 0.5)];
+            button.mouseChildren = false;
+            var label:TextField = new TextField();
+            label.width = 50;
+            label.height = 22;
+            label.htmlText = "<p align='center'>幕末化</p>";
+            button.addChild(label);
+            button.buttonMode = true;
+            button.x = 395;
+            button.y = 5;
+            addChild(button);
+
+            // キャンバス
+            canvas = new Sprite();
+            canvas.x = 5;
+            canvas.y = 35;
+            addChild(canvas);
+
+            button.addEventListener("click", function(event:Event):void{
+                var loader:Loader = new Loader();
+                loader.contentLoaderInfo.addEventListener(Event.COMPLETE, completeHandler);
+                loader.contentLoaderInfo.addEventListener("ioError", ioErrorHandler);
+                var req:URLRequest = new URLRequest(tf.text);
+                loader.load(req);
+
+                showMsg("Loading...");
+            });
+            button.dispatchEvent(new Event("click"));
+        }
+
+        private function completeHandler(event:Event):void{
+            var li:LoaderInfo = event.currentTarget as LoaderInfo;
+            var loader:Loader = li.loader;
+            bakumatsuNize(loader);
+        }
+
+        private function ioErrorHandler(event:Event):void{
+            showMsg("Not found!!");
+        }
+
+        private function showMsg(msg:String):void{
+            var tf:TextField = new TextField();
+            tf.htmlText = "<font size='40'>" + msg + "</font>";
+            tf.autoSize = "left";
+            tf.selectable = false;
+            bakumatsuNize(tf);
+        }
+
+        private function bakumatsuNize(img:DisplayObject):void{
+            while(canvas.numChildren > 0){
+                canvas.removeChildAt(0);
+            }
+            canvas.graphics.clear();
+            canvas.addChild(img);
+
+            var f:ColorMatrixFilter = new ColorMatrixFilter([
+                 3,  0,  0, 0, -200, 
+                 0,  3,  0, 0, -200, 
+                 0,  0,  3, 0, -200, 
+                 0,  0,  0, 1, 0
+            ]);
+
+            var f2:ColorMatrixFilter = new ColorMatrixFilter([
+                1 / 4, 1 / 2, 1 / 8, 0, 0, 
+                1 / 4, 1 / 2, 1 / 8, 0, 0, 
+                1 / 4, 1 / 2, 1 / 8, 0, 0, 
+                    0,     0,     0, 1, 0
+            ]);
+            img.filters = [f, f2];
+
+            var texture:Bitmap = new Texture();
+            texture.width = img.width;
+            texture.height = img.height;
+            canvas.addChild(texture);
+            texture.alpha = 0.5;
+
+            // 枠
+            img.x = img.y = texture.x = texture.y = 5;
+            canvas.graphics.beginFill(0xf3f3f3);
+            canvas.graphics.lineStyle(1, 0xcccccc);
+            canvas.graphics.drawRect(0, 0, img.width + 10, img.height + 10);
+            canvas.graphics.endFill();
+            canvas.filters = [new DropShadowFilter(2, 45, 0, 0.4)];
+        }
+    }
+}
+||<

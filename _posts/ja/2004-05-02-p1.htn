@@ -1,0 +1,38 @@
+---
+layout: post
+title: DESKWIN改造
+tags: ソフトウェア
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040502/p1
+---
+使い勝手が悪かったので多少改造。
+
+**ホットキーで Windows キーを使うための改造
+Ctrl, Alt, Shift のどれも使わず単体でホットキーを指定したときは、Windows キーとの組み合わせと判断する。
+
+例）
+>>
+Shift+C   -> Shift+C
+C         -> Win+C
+<<
+
+TDeskwinOptions.cpp にて。
+>|cpp|
+  void MakeRegisterHotkeyParam(THotkey aHotkey, int& aVk, int& aMod)
+  {
+        aVk = aHotkey >> 16;
+        aMod = aHotkey & 0xffff;
+ +      if(aMod == 0)
+ +            aMod = MOD_WIN;
+  }
+||<
+
+**デスクトップを切り替えるとき、きれいに切り替わるように
+ウインドウを非表示にしていく順番が逆じゃないと汚い。
+
+CDeskwinEngine.cpp にて。
+>|cpp|
+ -for (TWindowList::iterator i=aWindowList.begin() ; i!=aWindowList.end(); i++)
+ +for (TWindowList::iterator i=aWindowList.end() ; i!=aWindowList.begin(); i--)
+||<
+

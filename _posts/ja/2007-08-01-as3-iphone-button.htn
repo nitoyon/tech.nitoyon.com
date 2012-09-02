@@ -1,0 +1,78 @@
+---
+layout: post
+title: AS3 で iPhone 風ボタンを描画
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070801/as3_iphone_button
+---
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070802/20070802012324.jpg" width="450" height="128" alt="iPhone buttons">
+
+ActionScript 3 で Photoshop チュートリアル実践シリーズ 第１弾。
+
+今回は iPhone 風ボタンを作ってみました。
+
+参考にしたサイトは <a href="http://blog.jotlet.net/2007/07/05/iphone-style-icon-tutorial/">iPhone style icon tutorial ≪ Jotlet Developer Blog</a>。Photoshop 用のチュートリアルとはいえ、使っている機能は、角丸四角、ドロップシャドウ、楕円、グラデーション、オーバーレイ(レイヤースタイル)程度だったので、ほとんど苦労なく AS3 に移植できました。
+
+完成品が上の画像。文字はあとから Photoshop を使って追加しましたが、それ以外のところは正真正銘、AS3 だけで描画しています。
+
+ソースは以下の通り。
+
+====
+>|javascript|
+package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
+    
+    public class iPhoneButton extends Sprite
+    {
+        private const color:int = 0x1960CA;
+        private const SIZE:int = 60;
+        private const ROUND:int = 20;
+        
+        public function iPhoneButton():void
+        {
+            var matrix:Matrix = new Matrix();
+            matrix.createGradientBox(SIZE, SIZE, Math.PI / 2);
+            
+            var base:Shape = new Shape();
+            base.graphics.beginFill(color);
+            base.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            addChild(base);
+
+            var border:Shape = new Shape();
+            border.graphics.lineStyle(1, 0xffffff, 1);
+            border.graphics.lineGradientStyle("linear", [0xffffff, 0xffffff, 0xffffff], [1, 0.3, 1], [0, 128, 255], matrix);
+            border.graphics.drawRoundRect(1, 1, SIZE - 2, SIZE - 2, ROUND, ROUND);
+            border.blendMode = BlendMode.OVERLAY;
+            addChild(border);
+
+            var glowTop:Shape = new Shape();
+            glowTop.graphics.beginGradientFill("linear", [0xffffff, 0xffffff], [1, 0.2], [0, 128], matrix);
+            glowTop.graphics.drawEllipse(-SIZE / 2, -SIZE / 2, SIZE * 2, SIZE);
+            glowTop.blendMode = BlendMode.OVERLAY;
+            addChild(glowTop);
+            var mask:Shape = new Shape();
+            mask.graphics.beginFill(0);
+            mask.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            addChild(mask);
+            glowTop.mask = mask;
+
+            var glowBottom:Shape = new Shape();
+            glowBottom.graphics.beginGradientFill("linear", [0xffffff, 0xffffff], [0, 1], [224, 255], matrix);
+            glowBottom.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            glowBottom.blendMode = BlendMode.OVERLAY;
+            addChild(glowBottom);
+
+            var filter:DropShadowFilter = new DropShadowFilter(2, 90, 0x000000, 0.7);
+            base.filters = [filter];
+        }
+    }
+}
+||<
+
+(2007.08.07 追記)
+-b:id:trickstar_os さんのコメントを受けて、Shape を使うようにしました。
+-glowTop がはみ出ていたので、マスクで隠すようにしました。
+

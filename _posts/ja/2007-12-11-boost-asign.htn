@@ -1,0 +1,106 @@
+---
+layout: post
+title: C++ の std::vector に v += 3, 1, 4 で push_back
+tags: C++
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071211/boost_asign
+---
+<a href="http://d.hatena.ne.jp/faith_and_brave/20071127/1196154125">boost::assign使ってみた - Faith and Brave - C++で遊ぼう</a> にて boost::assign の使い方が紹介されていた。
+>|cpp|
+#include <iostream>
+#include <vector>
+#include <shand/foreach.hpp>
+#include <boost/assign/std/vector.hpp>
+
+using namespace std;
+using namespace boost::assign;
+
+int main()
+{
+    vector<int> v;
+
+    v += 3, 1, 4; // ！！！
+
+    for(unsigned int i = 0; i < v.size(); i++)
+        cout << v[i] << endl;
+
+    return 0;
+}
+||<
+おおおおお、なんかすごい…！
+
+普通なら
+>|cpp|
+    v.push_back(3);
+    v.push_back(1);
+    v.push_back(4);
+||<
+と書かなきゃならないところを
+>|cpp|
+    v += 3, 1, 4;
+||<
+と書ける。
+
+自分の C++ の常識からするとびっくりするような書き方なのだけど、C++ ではカンマ演算子は一番優先度が低く設定されていて、
+>|cpp|
+    ((v += 3), 1), 4;
+||<
+という順番で実行されるわけだ。+= 演算子では、戻り値として list_inserter クラスが返されていて、これのカンマ演算子がオーバーロードされているらしい。
+
+**boostのソースを再現
+試しに、boost のソースに当たってみたが、テンプレート使いまくりで理解が困難だったので、このサンプルを動かすのに必要な機能だけを抽出してみた。
+>|cpp|
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+// list_inserter クラスの定義
+template<class T>
+class list_inserter
+{
+private:
+    std::vector<T>& c;
+
+public:
+    list_inserter( vector<T>& c ) : c( c)
+    {}
+    
+    list_inserter& operator,( const T& r )
+    {
+        c.push_back( r );
+        return *this;
+    }
+
+    list_inserter& operator()( const T& t )
+    {
+        c.push_back( t );
+        return *this;
+    }
+};
+
+// += 演算子の定義
+template< class T >
+inline list_inserter<T>
+operator+=( std::vector<T>& c, T v )
+{
+    return list_inserter<T>( c )( v );
+}
+||<
+
+operator+=( std::vector<T>& c, T v ) で vector に対する += 演算子を定義している。普通なら、vector に push_back するだけなんだけど、ここで list_inserter を作成して返している。
+
+結果として、次のカンマで list_inserter のカンマ演算子オーバーロードが呼ばれて、vector に push_back されるというわけだ。
+
+**list_inserter を汎用的に
+上の list_inserter は型を vector<T> に決め打ちしているが、実際の boost のコードは vector だけじゃなく、他のコンテナ(map とか queue とか...)にも対応している。
+
+どうやってるかというと、コンテナに要素を追加するためのクラスが用意されている。
+-vector の場合は boost::assign_detail::call_push_back
+-map の場合は boost::assign_detail::call_insert
+といった具合。
+
+list_inserter では、このクラス経由でコンテナに追加している。上の list_inserter で c.push_back( t ) と決めうちしてる部分が、追加するためのクラスのメソッド呼び出しに変わるわけだ。
+
+この仕組みのおかげで、コンテナの実体が vector なのか map なのかによらず、同じコードで実装できるようになる。デザパタでいうところの Strategy パターンってとこだろうか。
+

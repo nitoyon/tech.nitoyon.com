@@ -1,0 +1,115 @@
+---
+layout: post
+title: C# で COM コンポーネントを公開する
+tags: C#
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080731/c_sharp_com
+---
+C# で COM コンポーネントを作って、JScript や VBScript から使う方法ですよ。
+
+以下、簡単な目次。
+
++プロジェクトを作る
++COM 参照可能にする
++C# で実装する
++COM コンポーネントとして登録する
++完成！！
+
+ここでは、Visual Studio 2005 を使ってるけど、それ以外のバージョンでも同じようにできるはず。
+
+**1. プロジェクトを作る
+Visual C# のクラス ライブラリ プロジェクトを作る。
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080731/20080731004114.jpg" width="400" height="220">
+
+**2. COM 参照可能にする
+プロジェクトのプロパティから [アプリケーション] の [アセンブリ情報] ボタンを押す。[アセンブリ情報] ダイアログが表示されるので、[アセンブリを COM 参照可能にする] をチェックして [OK] ボタンを押しておく。
+
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080731/20080731003537.jpg" height="450" height="395">
+
+これで、ComVisibleAttribute が true になって、クラスライブラリが COM として参照できるようになる。
+
+**3. 実装する
+インターフェースと実装を C# で定義していく。
+
+以下は簡単な Hello world サンプル。
+>|javascript|
+using System;
+using System.Runtime.InteropServices;
+
+namespace Test
+{
+    [Guid("E5C9BABC-CF32-46de-ADF7-B1FF56126966")]
+    public interface IFoo
+    {
+        String foo();
+    }
+
+    [ClassInterface(ClassInterfaceType.None)]
+    [ProgId("Test.Foo")]
+    [Guid("B13E1F81-991F-4498-AB1F-FF83FB97914D")]
+    public class Foo : IFoo
+    {
+        public String foo()
+        {
+            return "Hello world!";
+        }
+    }
+}
+||<
+
+Guid は [Create GUID] ツールから適宜生成していく。
+
+ProgId 属性でスクリプトから参照するときの ProgId を指定しておく。この値が重要。
+
+**4. COM コンポーネントとして登録する
+COM インターフェースとして公開するには、レジストリに登録しなきゃならん。.NET アセンブリを登録するには <strong>regasm</strong> ツールを利用する。
+
+regasm は .NET Framework にも含まれてる。.NET 2.0 の場合、
+-C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\RegAsm.exe
+にいる。
+
+登録はこう。
+>|
+regasm /codebase Test.dll
+|<
+regasm にはデフォルトでパスが通ってないので、フルパスで入力するなり、Visual Studio や Windows SDK 付属のコマンドプロンプト（Visual Studio のツールにパスが通った状態で利用できる）を使うとよいだろう。
+
+登録解除するには /u。
+>|
+regasm /u Test.dll
+|<
+
+**5. 完成！！
+JScript から呼び出してみる。
+>|javascript|
+var test = new ActiveXObject("Test.Foo");
+WScript.echo(test.foo());
+||<
+実行！
+>|
+>cscript /nologo test.js
+Hello world!
+|<
+
+VBScript から呼び出してみる。
+>|vb|
+Dim test
+Set test = CreateObject("Test.Foo")
+WScript.echo(test.foo())
+||<
+実行！
+>|
+>cscript /nologo test.vbs
+Hello world!
+|<
+
+ここまで確認できたら、C# のソースに手をいれて、どんどん拡充していくと楽しくなる。インターフェースが変化したときには、/u で登録解除して、再度登録してやる必要があるので注意。
+
+**参考URL
+-<a href="http://japan.internet.com/developer/20060627/25.html">COM相互運用機能の利用 - japan.internet.com デベロッパー</a>
+
+><div class="seealso"><
+**関連エントリ
+-<a href="http://d.hatena.ne.jp/nitoyon/20080801/atlcom_dispatch">C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話</a>
+></div><
+

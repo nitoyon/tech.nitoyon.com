@@ -1,0 +1,76 @@
+---
+layout: post
+title: ActionScriptで昭和写真化
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071004/showa_photo_as3
+---
+基礎的な内容が続いてきたので、たまには応用例を。
+
+最近、<a href="http://labs.topicmaker.com/~fujiwara/s.html">昭和の写真ジェネレータ(仮)</a> が話題になりましたが、これの<a href="http://d.hatena.ne.jp/sfujiwara/20070924/1190645783">作り方が公開されています</a>。
+ならば、ActionScript 3.0 でやってみたくなるのが人情です。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071004/20071004011511.jpg" width="450" height="208" alt="結果"></center><
+
+いい具合ですね。ザ・昭和。
+
+サーバー側の資源を使わずにこういうことができちゃうのは素敵じゃないでしょうか。
+
+Flickr は <a href="http://static.flickr.com/crossdomain.xml">crossdomain.xml を設置している</a> ので、その辺と連携する ActionScript を書いてみても面白そうですね。
+
+ソースは以下に（52行）。
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.geom.*;
+    import flash.filters.*;
+    import flash.text.*;
+
+    public class ShowaPhoto extends Sprite {
+        [Embed(source="photo3.jpg")]
+        private var SamplePic:Class;
+
+        [Embed(fontName="7barSPBd", source="7barSPBd.TTF")]
+        private var SevenBarFont:Class;
+        
+        public function ShowaPhoto() {
+            var bmp:Bitmap = new SamplePic();
+            var bmd:BitmapData = bmp.bitmapData;
+
+            // color transform
+            var colorTrans:ColorTransform = new ColorTransform(0.7, 0.7, 0.7, 0x44, 0x33, 0x22);
+            bmd.colorTransform(bmd.rect, colorTrans);
+            bmd.applyFilter(bmd, bmd.rect, new Point(), new BlurFilter(0.2, 0.2));
+
+            // add letter
+            var t:TextField = new TextField();
+            var tf:TextFormat = new TextFormat();
+            tf.size = 18;
+            tf.font = "7barSPBd";
+            tf.color = 0xffaa33;
+            t.defaultTextFormat = tf;
+            t.embedFonts = true;
+            t.text = "78 09 21";
+            var matrix:Matrix = new Matrix();
+            matrix.translate(bmd.width - t.textWidth - 10, bmd.height - t.textHeight - 5);
+            bmd.draw(t, matrix);
+
+            // add border
+            var bmd2:BitmapData = new BitmapData(bmd.width + 10, bmd.height + 10, false);
+            bmd2.fillRect(bmd2.rect, 0xffeedd);
+            matrix.identity();
+            matrix.translate(5, 5);
+            bmd2.draw(bmd, matrix);
+
+            // add noise
+            var bmdNoise:BitmapData = new BitmapData(bmd2.width, bmd2.height, false);
+            bmdNoise.noise(0, 0xee, 0xff, 7, true);
+            bmd2.draw(bmdNoise, null, null, "multiply");
+
+            // display
+            addChild(new Bitmap(bmd2)).filters = [new DropShadowFilter(4, 45, 45, 0.3)];
+        }
+    }
+}
+||<
+

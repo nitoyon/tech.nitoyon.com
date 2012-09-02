@@ -1,0 +1,129 @@
+---
+layout: post
+title: jQuery の配列系のメソッドをメモしとこ
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081121/jquery_array
+---
+jQuery は機能が豊富なので、しばらく使わないと忘れてしまう。
+
+ここでは、jQuery と配列の関係に絞って目的別に逆引きできるようにしておく。
+
+**配列から jQuery オブジェクトを作成
+$ 関数に渡せばOK
+>|javascript|
+$([1,2,3])
+||<
+
+NodeList のような配列っぽいものを渡しても解釈してくれる。
+>|javascript|
+$(document.getElementsByTagName("div"))
+// $("div") と同じ
+||<
+
+※内部的には setArray メソッドが呼ばれてるが、外から使うことは稀。
+
+**jQuery オブジェクトを配列のように扱う
+***要素数を取得する
+length プロパティを使えばOK。
+>|javascript|
+$("div").length
+// document.getElementsByTagName("div").length と同じ
+||<
+jQuery のメソッドを使って操作する限りは、適切に length が更新されていく。
+
+***特定のインデックスの要素を取得
+[] か get(index) を使えば、特定のインデックスの DOM 要素を取得できる。
+>|javascript|
+$("div")[0]
+$("div").get(0)
+// document.getElementsByTagName("div")[0] と同じ
+||<
+eq を使うと、特定のインデックスの要素のみを含む jQuery オブジェクトが返ってくる。
+>|javascript|
+$("div").eq(0)
+// $(document.getElementsByTagName("div")[0]) または
+// $("div:first") と同じ
+||<
+
+***jQuery オブジェクトから配列を作成
+jQuery オブジェクトは配列のように扱えるんだけど、Array の全てのメソッドが使えるわけではない。
+
+生の配列を取得するには get() を使う。
+>|javascript|
+$("div").get().reverse()
+// div 配列の一覧を逆順にした配列
+||<
+reverse したあとにさらに jQuery オブジェクトにするには、冒頭に紹介したように、$() に入れる。
+>|javascript|
+$($("div").get().reverse())
+||<
+
+get() の内部では $.makeArray(this) が実行されている。
+
+$.makeArray() は配列のようなもの(NodeList や arguments, jQuery オブジェクトなど)を配列に変換するとき便利だ。Array.prototype.slice.call( array_like ) という技もあるんだけど、IE7 でエラーになることがある。
+
+***each！ map！　filter！
+中身について処理を行うには <strong>each</strong> を使う。第一引数がインデックス、第二引数が要素。
+>|javascript|
+$("div").each(function(i, elem){elem.className="foo"+i;})
+// 以下のコードと同じ
+// var elems = document.getElementsByTagName("div");
+// for(var i = 0; i < elems.length; i++)
+//     elems[i].className = "foo" + i;
+||<
+
+this が第二引数にバインドされているので引数なしで this を使って要素にアクセスするとスマート。
+>|javascript|
+$("div").each(function(){this.className = "foo";})
+// $("div").attr("className", "foo") と同じ
+||<
+
+配列の要素を置き換えるには <strong>map</strong> が使える。
+>|javascript|
+$("div").map(function(){return this.className;})
+// ["", "class1", "class2", ...]
+// (クラス名一覧を含む jQuery オブジェクト)
+||<
+
+要素を絞り込むには <strong>filter</strong> が使える。関数を呼び出した結果が true のものだけに絞り込む。select みたいなもん。
+>|javascript|
+$("div").filter(function(){
+    return this.className == "foo";
+})
+// $("div.foo") と同じ
+||<
+第一引数にはインデックス番号が渡る。
+>|javascript|
+$("div").filter(function(i){
+    return i % 2 == 0;
+})
+// $("div:even") と同じ
+||<
+filter には CSS セレクタも使える。
+>|javascript|
+$("div").filter(".foo")
+||<
+
+map と filter をした後に end() を呼ぶと、元の jQuery オブジェクトに戻る。
+>|javascript|
+$("div")
+    .filter(".foo")
+        .style("display", "none")
+    .end()
+    .filter(".bar")
+        .style("display", "block")
+    .end()
+// 以下の処理と同じ
+// $("div.foo").style("display", "none");
+// $("div.bar").style("display", "none");
+||<
+end() は find(), add(), children() などを呼んだあとにも使える。ややこしくなるので使わないんだけど…。
+
+><div class="seealso"><
+**関連エントリ
+-{% post_link 2008-12-11-jquery-fast-css %}
+-{% post_link 2008-01-15-jquery-event %}
+-{% post_link 2007-12-27-cmpop %}
+></div><
+

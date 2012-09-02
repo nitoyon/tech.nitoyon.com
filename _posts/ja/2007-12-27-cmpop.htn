@@ -1,0 +1,105 @@
+---
+layout: post
+title: 論理演算子（&& と ||）を応用する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071227/cmpop
+---
+jQuery のソースコードを見ていて面白いのがあった。
+
+>|javascript|
+function add(a, b){
+    addImpl(b && a, b || a);
+}
+
+
+function addImpl(a, b){
+    // ...
+}
+||<
+
+理解するためには、論理演算子を詳しく理解する必要がある。
+
+**論理演算子詳細
+JavaScript（というか ECMAScript）の論理演算子は、評価結果が true/false で返される訳ではなく、結果が確定した時点で評価した値が返される。
+
+まずは、|| を試してみよう。
+>|javascript|
+alert(2 || 0);         // 2
+alert(2 || 3);         // 2
+alert({} || null)      // [object Object]
+
+alert(0 || 3);         // 3
+alert(0 || 0);         // 0
+alert(0 || undefined); // undefined
+||<
+左オペランドが true として評価できるなら、左オペランドの値自身が返る。右オペランドはどんな値だったとしても評価結果が返る。
+
+ECMAScript の仕様書から抜き出すと、こういう手順になってる。
++左オペランドを評価する
++左オペランドの結果を Boolean に変換
++変換結果が true なら、<strong>左オペランドの評価結果</strong>を返す
++右オペランドを評価
++<strong>右オペランドの評価結果</strong>を返す
+alert(0 || 0) と alert(0 || undefined) の結果が違うあたりが面白い。
+
+次は、&&。
+>|javascript|
+alert(2 && 3);         // 3
+alert(1 && {})         // [object Object]
+
+alert(2 && 0);         // 0
+alert(null && 3);      // null
+alert(0 && undefined); // 0
+||<
+左オペランドが true として評価できるなら、右オペランドの評価結果が返り、そうでない場合は左オペランドの結果が返る。
+
+ECMAScript の仕様書には次のようにある。
++左オペランドを評価する
++左オペランドの結果を Boolean に変換
++変換結果が false なら、<strong>左オペランドの結果</strong>を返す
++右オペランドを評価する
++<strong>右オペランドの評価結果</strong>を返す
+
+ということで、ECMAScriptは、論理演算子の結果が Boolean とは限らないわけだ。Perl や Ruby でも似たような感じなので、スクリプト系ではこういう仕様が多いのかな。
+
+ちなみに、3 > 1 は 3 とはならずに true となるので注意が必要。
+
+**で、最初の例に戻る。
+>|javascript|
+function add(a, b){
+    addImpl(b && a, b || a);
+}
+
+
+function addImpl(a, b){
+    // ...
+}
+||<
+add が呼ばれたときに、a と b が undefined でない場合、
+-b && a => a
+-b || a => b
+なので、addImpl に適切に a と b が渡る。
+
+a が undefined でなく、b が省略された場合（つまり、undefined の場合）は、
+-b && a => undefined
+-b || a => a
+となる。
+
+**まとめると、
+>|javascript|
+add(3);
+||<
+と
+>|javascript|
+add(undefined, 3);
+||<
+が同じになる。第１引数を省略できるわけだ。
+
+**感想
+デフォルト引数の感覚からいくと、省略可能な引数は後ろにあってほしいんだけどな…。
+ただ、論理演算子で処理を実行する技はよく使うので覚えておいたほうがよさげ。
+-JavaScript で undefined を防ぐために param || {};
+-Perl で open(FILE, "foo.txt") or die;
+とかはよく見るよ。
+

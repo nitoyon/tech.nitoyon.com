@@ -1,0 +1,80 @@
+---
+layout: post
+title: JavaScriptで正規表現を使わずにグローバルな文字列置換
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080917/js_global_replace
+---
+文字列置換のお話。
+
+通常、replace は１回しか置換してくれない。
+>|javascript|
+>>> "aaaa".replace("a", "A")
+"Aaaa"
+||<
+
+何度も置換させるには、正規表現を使うのが手っ取り早い。
+>|javascript|
+>>> "aaaa".replace(/a/g, "A")
+"AAAA"
+||<
+
+置換前の文字列を文字列で受け取ったときには、正規表現オブジェクトを作ればよい。RegExp コンストラクタの第二引数がフラグ。
+>|javascript|
+function myReplaceGlobal(str, before, after){
+  var reg = new RegExp(before, "g");
+  return str.replace(reg, after);
+}
+myReplaceGlobal("aaaa", "a", "A");  // AAAA
+||<
+ただ、ドット(<code>.</code>)が任意の文字にマッチしてしまったりと、弊害もある。
+>|javascript|
+myReplaceGlobal("foo.bar.", ".", "A");  // AAAAAAAA
+||<
+ドット(<code>.</code>)は正規表現で任意の文字を表しちゃう。
+
+さぁ、どうしよう、というのが今回のお題。３つの対策を考えてみた。
+
+**escape!!
+正規表現をエスケープする。とりあえず、ドット(<code>.</code>)のみ。
+>|javascript|
+function myReplaceGlobal(str, before, after){
+  var reg = new RegExp(before.replace(/./g, "\\."), "g");
+  return str.replace(reg, after);
+}
+myReplaceGlobal("foo.bar.", ".", "A");  // fooAbarA
+||<
+
+ドット(<code>.</code>)以外にも対応しなきゃいけないし、将来的に JavaScript の正規表現が拡張されたときの対応が大変。
+
+可能な限り避けたい方法。
+
+(追記) コメント欄で教えてもらいました。replace(/([^0-9A-Za-z_])/g, '\\$1'); でエスケープできるとのこと。
+
+**while!!
+泥臭い方法。
+
+正規表現を使わず、文字列の replace を使う。１回しか置換してくれないので、while で値が変わらなくなるまで回す。
+>|javascript|
+function myReplaceGlobal(str, before, after){
+  while(str != str.replace(before, after)){
+    str = str.replace(before, after);
+  }
+  return str;
+}
+myReplaceGlobal("foo.bar.", ".", "A");  // fooAbarA
+||<
+
+**split & join
+１行で書けて、ちょっとかっこいい。
+>|javascript|
+function myReplaceGlobal(str, before, after){
+  return str.split(before).join(after);
+}
+myReplaceGlobal("foo.bar.", ".", "A");  // fooAbarA
+||<
+"foo.bar." を . で split したら ["foo", "bar", ""] になって、それを A で join するので意図した結果が得られる。
+
+**まとめ
+３つ示した。どれが好き？
+

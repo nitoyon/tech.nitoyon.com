@@ -1,0 +1,25 @@
+---
+layout: post
+title: APIフックについてまとめておこう
+tags: Win32
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040109/p1
+---
+:<a href="http://help.madshi.net/madCodeHook.htm">madCodeHook</a>:概要（英語）
+:<a href="http://www.internals.com/articles/apispy/apispy.htm">API Spying Techniques for Windows 9x, NT and 2000</a>:概要その２（英語）
+:<a href="http://www.codeproject.com/system/hooksys.asp">The Code Project - API hooking revealed - System</a>:解説＠Code Project．
+:<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4756138055/ref%3Dsr%5Faps%5Fb%5F6/249-2647440-3877103">Amazon.co.jp： 本 Advanced Windows</a>:まじめにやるならこの本を購入しよう。
+:<a href="http://member.nifty.ne.jp/TaN/prog-tips.html">dchookのソース</a>:サンプルその１。Dokopopのソースコード。
+:Regmonのソース:サンプルその２。<a href="http://www.sysinternals.com/ntw2k/source/regmon.shtml">Regmon</a>のソース。昔はソース公開されていたが、現在はされていないみたい。「regsrc.zip」でぐぐってみると、誰かが昔公開されていたのを２次配布しているのが見つかる・・・かも。
+:<a href="http://www.codeproject.com/dll/apihijack.asp">APIHijack</a>:APIフック用のライブラリ解説＠code project
+:<a href="http://www.codeproject.com/dll/DLL_Injection_tutorial.asp">DLL Injection and function interception tutorial - The Code Project - DLLs</a>:同じくCode Project から
+:<a href="http://d.hatena.ne.jp/NyaRuRu/20040614#p3">NyaRuRuの日記</a>:.
+:<a href="http://japan.internet.com/developer/20050830/26.html">Japan.internet.com デベロッパー - 別のプロセスにコードを割り込ませる3つの方法</a>:.
+
+某氏に解説してもらった内容をメモ。
+>>
+Win32プロセスは EXE や DLL のファイルフォーマットである PE フォーマットのファイルをほぼそのままメモリ上にロードする形で起動される。で、PE フォーマットのバイナリでは API コールというのは全部間接ジャンプになっていて、.idata というセクションにそのジャンプ先の値を書き込んだテーブルが収められている。コンパイル後のアセンブラでは call .idata[ 52] って感じになっていて、.idata 領域に API の実アドレスが一杯並んでいる。Windows の PE ローダは .idata セクションのアドレステーブル中の値を書き換えることで、ロードされたバイナリと API の実コードのある空間とをリンクする。
+
+で、dchook がやっているのは、あるプロセスにおいて利用される API をフックするために、そのプロセスのオンメモリな .idata の中身を上書きするという作業。API のアドレスの代わりにフック関数のアドレスを書き込んでやる。この道の用語では、こういう手法を DLL Injection と呼んでいるらしい。
+<<
+

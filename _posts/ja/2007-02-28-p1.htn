@@ -1,0 +1,103 @@
+---
+layout: post
+title: getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070228/p1
+---
+<a href="http://d.hatena.ne.jp/nitoyon/20070220/p1">第1回</a>の続き。
+
+<a href="http://subtech.g.hatena.ne.jp/cho45/20070223/1172228876">subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - AS3 名前空間</a> さんによると、getter/setter のアクセス指定子が異なる場合は、名前空間を明示して呼び出してやれば動くようになるそうです。
+====
+
+前回のソースを修正すると、こうすれば動くようになるわけです。（id:cho45:detail さん、ありがとうございます）
+>|javascript|
+package
+{
+	import flash.display.Sprite;
+
+	public class Test extends Sprite
+	{
+		private var _sample:String;
+
+		// getter は public
+		public function get sample():String
+		{
+			return _sample;
+		}
+
+		// setter は internal
+		internal function set sample(v:String):void
+		{
+			_sample = v;
+		}
+
+		// コンストラクタ
+		public function Test()
+		{
+			internal::sample = "hoge";
+			trace(public::sample);
+		}
+	}
+}
+||<
+
+上のコードで動くようになった理由を簡単に解説します。
+
+AS3 では private や public も特殊な名前空間として定義されている。クラスのフィールドやメソッドごとにこれらの名前空間を指定して、どの名前空間に所属させるかを決定できるわけ。
+
+独自に名前空間を定義することもできるが、この辺の説明は割愛。詳しくは prog_actionscript30.pdf の名前空間を参照。独自名前空間としては AS3 や mx_internal が有名どころでしょうか。
+
+
+今回は getter が public、setter が internal だったため、public::sample と internal::sample の２つがクラス内に定義されていたのです。
+
+そのため、単に sample と記述すると、どっちの名前空間を参照するのかが曖昧になってしまっていたわけです。
+
+setter なのか getter なのかを文脈で判別して、自動的に名前空間も割り当てて欲しいところなのですが、そうもいかないようです。
+
+
+そこで、気になった。
+
+名前空間が異なるなら、同じ名前の関数を作れるはず？
+
+これはもちろんOK。
+>|javascript|
+package
+{
+	import flash.display.Sprite;
+
+	public class Test extends Sprite
+	{
+		public function a():void{}
+		AS3 function a():void{}
+	}
+}
+||<
+
+じゃあ、これは？？？？
+>|javascript|
+package
+{
+	import flash.display.Sprite;
+
+	public class Test extends Sprite
+	{
+		public function a():void{}
+		private function a():void{}
+	}
+}
+||<
+
+やっぱりダメだった。
+>|
+Test.as(8): col: 20 エラー: オーバーライドに対応していません。
+                private function a():void{}
+                                 ^
+
+Test.as(8): col: 20 エラー: 関数の定義が重複しています。
+                private function a():void{}
+                                 ^
+|<
+
+private や public はあくまで名前空間のようなんだけど、ちょっと違うらしい。このあたりの仕様を細かくあたるなら、Tamarin のソースを見るしかないのかな…。
+

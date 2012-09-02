@@ -1,0 +1,84 @@
+---
+layout: post
+title: PotrAs 高速化
+tags: potras
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071015/potras_keyboard
+---
+週末に時間を作って <a href="http://snippets.libspark.org/trac/wiki/nitoyon/PotrAs">PotrAs</a> を高速化してみました。
+
+デモ： KANA KEYBOARD (<a href="http://snippets.libspark.org/svn/as3/PotrAs/samples/potras/demo20070929/KanaKeyboard.as">ソース</a>)
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Fsnippets.libspark.org%2Fsvn%2Fas3%2FPotrAs%2Fsamples%2Fpotras%2Fdemo20070929%2Fbin%2FKanaKeyboard.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=360&amp;title=Kana+Keyboard&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+使い方：
+-Flash の画面をクリックする
+-キーボードを適当に叩くと文字列が迫ってくる
+
+200px のかな文字を最初にがががっとベクタ化してます。ベクタ化してるので、枠線をつけたり、回転、透明化させたり自由自在。
+
+**高速化したところ
+特にアルゴリズムには手を入れず、オブジェクトの生成回数や参照回数を減らしただけです。どれも語りつくされてきた手法ですが、実際に速度が速くなるところを目の当たりにするとうれしいものがあります。
+
+***例１：for の中で new するのをやめる
+前
+>|javascript|
+for(var i:int = 0; i < 100; i++) {
+    var p:Point = new Point();
+    // ...
+}
+||<
+後
+>|javascript|
+var p:Point = new Point();
+for(var i:int = 0; i < 100; i++) {
+    p.x = 0; p.y = 0;
+    // ...
+}
+||<
+
+***例２：関数の戻り値をオブジェクトで返さないようにする
+前
+>|javascript|
+function doHogehoge():Point {
+    var ret:Point = new Point();
+    // ...
+    ret.x = x; ret.y = y;
+    return ret;
+}
+||<
+後
+>|javascript|
+function doHogehoge(p:Point):void {
+    // ...
+    p.x = x; p.y = y;
+}
+||<
+
+***例３：配列の長さを覚えておく
+前
+>|javascript|
+for(var i:int = 0; i < array.length; i++) {
+    // ...
+}
+||<
+後
+>|javascript|
+var len:int = array.length;
+for(var i:int = 0; i < len; i++) {
+    // ...
+}
+||<
+
+これだけで、処理速度がたいたい 2/3 ぐらいになりました。他にも、ループが入り組んでるところで Math.abs をインライン展開したりしたけど、目に見えるほどの効果を感じたのは上の３つぐらいです。
+
+トレース処理は６つの部分から成り立っているのですが、細かな速度変化は次のようになってます。（サンプル画像を10回トレースしたときの所要時間）
++path: 1917ms -> 373ms
++sums: 265ms -> 269ms
++lon: 3115ms -> 2072ms
++best: 1102ms -> 798ms
++adjust: 3438ms -> 2215ms
++smooth: 144ms -> 128ms
+
+もっと最適化の余地はありそうなのですが、ソースコードが機械生成したようになっていくのが悲しいところです。
+
+-参考：<a href="http://actionscript.g.hatena.ne.jp/ConquestArrow/20070621/1182359767">actionscriptグループ - ConquestArrow.addEventListener(); - ActionScript3 最適化・高速化Tips 簡易まとめ</a>

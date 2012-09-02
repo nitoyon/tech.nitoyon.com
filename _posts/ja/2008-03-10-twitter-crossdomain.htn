@@ -1,0 +1,86 @@
+---
+layout: post
+title: Twitter の crossdomain.xml 問題について。
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080310/twitter_crossdomain
+---
+<a href="http://hamachiya.com/junk/twlog/">ついったー足あと帳</a> 関連でこんなブログ記事を発見した。
+
+>http://d.hatena.ne.jp/skubota/20080309#1205047724:title=2008-03-09 - skubotaの日記>
+今回は twitterのprotectな発言とかsettingからメールアドレスの取得や変更なんかできちゃってたわけで…
+<<
+**変更？？
+間違った情報が広がるとよくないので勝手に補足。
+
+この記事には誤解がある。
+
+確かに取得はできるけど、<strong>変更はできない</strong>。実際に試した私が言うんだから間違いない。（補足）ためしたのは、<a href="http://d.hatena.ne.jp/nitoyon/20071113/twitter_tracker">ついったー足あとちょう</a>を作ったらへん。今は仕様変わってるかも(?)
+
+たぶん、サーバー側でリファラを見て弾いてるんだと思う。SWF からリクエストする場合は、SWF の URL がリファラとしてつくようになっている。リファラをなしにして送ったらうまく行くことも確認した。
+
+だから、
+>http://d.hatena.ne.jp/rna/20080309/p1:title=twitter のアカウント乗っ取りが可能だったかもしれない件 - 児童小銃>
+swf からのクロスドメインアクセスに対しては通用しないであろう。よって、(1)メールアドレスの変更、(2)パスワードリセット (3) パスワード変更 → 完全に乗っ取り完了 という攻撃は可能だと考えられる。
+<<
+と書いてあるけど、これは間違い。
+
+変更前のゆるゆる crossdomain.xml であったとしても、リファラで弾かれるため、メールアドレスを変更させることはできない。
+
+**メールアドレス変更を実現するには
+では、ゆるい crossdomain.xml だったと仮定して、リンクを踏ませるだけでメールアドレスを変更させる方法はあるのか。
+
+1つの方向性としては、リファラを飛ばさなくする方法がある。
+
+例えば、一昔前の Flash Player はリファラを詐称してリクエストを送信できた。
+
+今はどうか知らないけど、https なサーバーからリクエストするとリファラが飛ばない、という話も聞いたことがある。
+
+（追記）はてブコメントより、https から http へのリファラを飛ばさないのはブラウザの標準的な挙動のよう（<a href="http://www.nitoka.net/archives/2006/12/httpshttp.html">参考</a>）。HTTP1.1 の RFC で SHOULD NOT と書いてあるようだ。id:os0x さん、ありがとうございます。
+
+Flash Player って、実はけっこう脆弱で、定期的にセキュリティーアップデートが行われてる。現状、<strong>脆弱じゃない Flash Player は最新の 9.0.115 のみ</strong>となっている。
+>http://www.adobe.com/jp/support/security/bulletins/apsb07-20.html:title=Adobe - セキュリティ情報 : APSB07-20 : Flash Playerのセキュリティ脆弱性に対処するためのアップデート公開>
+Adobe Flash Playerにクリティカルな脆弱性が発見されました。攻撃者がこの潜在的な脆弱性を悪用することに成功した場合、当該システムが攻撃者によって制御される恐れがあります。 この脆弱性は、エンドユーザが作為的なSWFファイルをFlash Playerに読み込ませることによって、攻撃者に悪用される恐れがあります。
+
+(中略)
+
+Adobe Flash Player 9.0.48.0およびそれ以前のバージョンをご利用のお客様には、最新バージョンの9.0.115.0（Win版、Mac版およびLinux版）へのアップグレードを推奨します。
+<<
+古いバージョンを使っている人は、可能な限り<a href="http://www.adobe.com/shockwave/download/flash/trigger/jp/3/index.html">最新版にアップグレード</a>したほうがいいだろう。バージョン確認は <a href="http://www.adobe.com/jp/support/flashplayer/ts/documents/tn_15507.htm">Adobe Flash Player のバージョンテスト</a> にて。
+
+余談だけど、9.0.115 では crossdomain.xml を含め、セキュリティーポリシーが大幅に変更になっている（<a href="http://weblogs.macromedia.com/akamijo/archives/2007/12/flash_player_90_1.cfm">akihiro kamijo: Flash Player 9.0.115.0 セキュリティポリシー変更について</a>）。逆に言えば、ここで強化されている場所は、古いバージョンの弱点でもあるわけで、その辺を攻めれば、悪いことはいくらでもできそうだ。そういう意味でも、可能な限り最新版にアップグレードしよう。
+
+
+別の方向性としては、ブラウザのバグを突いたり、Twitter のバグを突いたりする方法が考えられる。
+
+いずれにせよ、私の結論は以下の通り。
+-以前の crossdomain.xml は、壮絶にゆるゆる
+-情報の更新は（たぶん）リファラチェックで弾かれている
+-→ crossdomain.xml の問題だけを使ってのアカウント乗っ取りは不可能
+-→ ブラウザや Flash Player の脆弱性を組み合わせることで、乗っ取る方法はあるはず
+
+**コミュニケーションだけじゃなく、セキュリティも「ゆるい」Twitter
+勝手な想像だけど、Twitter は、
+-「取得」は自由にできる
+-「変更」はちょっときびしめに認証をかける
+というポリシーで作ってるんだと思う。
+
+取得のゆるさを象徴するエピソードとして、Twitter friends＋JSONP の例が挙げられる。
+>http://d.hatena.ne.jp/shinichitomita/20070520/1179659949:title=Twitterのfriendsが誰でも分かるということについて - snippets from shinichitomita’s journal>
+どうやら以下のJSONPリクエストで、いまWebサイトにアクセスして来ている人のTwitter friendsが取得できるらしい
+
+http://twitter.com/statuses/friends.json?callback=onLoadTwitterFriends
+
+かなり画期的というか挑戦的な仕様。
+<<
+これを使えば、ページを踏んだ人の Friends 一覧を取れる。つまり、「足あと帳」の１歩手前まで行ける、というわけだ。これが怖い人は、Twitter を使わないときは、ログアウトしとくしかない。
+
+(追記) コメント欄でid:shinichitomita さんに教えてもらいました。user.timeline を使えば JSONP でユーザー名を取れる模様。ということで、何も Flash を使わなくても、JavaScript で「ついったー足あと帳」は作れちゃう。確認は id:shinichitomita さんによる<a href="http://www.geocities.jp/stormriders999/twittergreeting.html">デモ</a> を参照あれ。こっちらについても、Twitter の中の人に文句を言ったら修正されるかもしれないし、修正されないかもしれない。
+
+このような「取得」のゆるさが理由で、Twitter API を活用したサービスを作る人が多発して、それがまた Twitter の人気を押し上げたのは事実。取得の「ゆるさ」は、半ば、確信犯なんじゃないかなー、と思ってたりする。
+
+他にも、Twitter には穴はいろいろあって、<a href="http://twitter.g.hatena.ne.jp/nitoyon/20071113/1194883177">http://tinyurl.com/22c7p9 遊び</a> にも書いたんだけど、http://twitter.com/account/delete_picture のリンクを踏むだけでプロフィール画像が消えてしまったりする。img src で埋め込むだけで、いじわるできちゃったりもする。KOWAINE!!
+
+**関連リンク
+-<a href="http://d.hatena.ne.jp/nitoyon/20071113/twitter_tracker">ついったー足あとちょう - てっく煮ブログ</a>
+-<a href="http://d.hatena.ne.jp/nitoyon/20071112/crossdomain_img">AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ</a>

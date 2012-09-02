@@ -1,0 +1,84 @@
+---
+layout: post
+title: ! '"XRay" - ActionScript3 版の Firebug みたいなデバッグツール'
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081015/xray_as3
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015005521.png" width="450" height="184"></center><
+
+ActionScript 2 用のデバッグツールとして有名だった XRay が <a href="http://rockonflash.wordpress.com/2008/10/11/xray-yes-it-does-as3/">ActionScript 3 に対応した</a>ようです。
+
+DisplayObject の階層を表示してくれたり、オブジェクトのプロパティを修正したり、ログ用のコンソールになったりと機能豊富です。しかも、Flash CS3 だけでなく、Flex や AIR でも使えるようです。
+
+ということで、早速、試してみました。
+
+**ダウンロードしてソースコードに２行追加するだけ
+XRay のソースコードを拾ってきます。Google Code にあるので、SVN で拾ってきましょう。
+-http://osflash-xray.googlecode.com/svn/trunk/as3/trunk/
+
+では、自分の Flash に仕込んでみましょう。
+
+ActionScript のソースコードに import 文を追加します。
+>|javascript|
+import com.blitzagency.xray.inspector.Xray;
+||<
+スクリプトの最初のほうで、インスタンスを作って addChild してあげます。
+>|javascript|
+addChild(new Xray());
+||<
+この２行だけで準備は完了です。
+
+あ、Flex の場合は、専用の Flex2Xray というクラスを new するだけで OK です。こんな感じです。
+>|xml|
+<?xml version="1.0"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+    applicationComplete="init()">
+    <mx:Script>
+        <![CDATA[
+            import com.blitzagency.xray.inspector.flex2.Flex2Xray;
+
+            private function init():void{
+               var xray:Flex2Xray = new Flex2Xray();
+            }
+        ]]>
+    </mx:Script>
+</mx:Application>
+||<
+
+**ビューワを起動する
+ログを表示するビューワは別途 SWF の形で提供されています。以下の URL からダウンロードして、ブラウザで表示するなり、スタンドアロン版 Flash Player で起動するなりしてください。
+-http://www.rockonflash.com/xray/flex/Xray.zip
+
+Application View の「Go」ボタンを押すと、階層表示できます。左側のツリーを適度に開いていくと、Flash の構造が丸見えですね。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015004411.png" width="450" height="305"></center><
+
+選択した DisplayObject は右側でプロパティが表示されてます。値を修正して反映することもできるので、ちょっとした動作チェックも可能です。このあたりは、まさに Firebug みたいな感じですね。
+
+**デバッグログを出力する
+スクリプト側で次のようにすると、XRay にログを出力できます。
+>|javascript|
+// 最初のほう
+import com.blitzagency.xray.logger.XrayLog;
+
+// スクリプトのどこか
+var log:XrayLog = new XrayLog();
+
+log.debug("StringMessage", object [, object, object...]);
+log.info("StringMessage", object [, object, object...]);
+log.warn("StringMessage", object [, object, object...]);
+log.error("StringMessage", object [, object, object...]);
+log.fatal("StringMessage", object [, object, object...]);
+||<
+出力したログを XRay のビューワで確認できます。レベルごとに絞り込み表示したり、検索したりも可能です。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015004410.png" width="450" height="276"></center><
+
+ただ、ログの表示はお世辞にも見やすいとは言えない感じで、あまり魅力的ではありません。別のツールを併用したほうがよいかもしれません。
+
+**まとめ
+AS2 時代に XRay を愛用した人にとっては嬉しいですね。
+
+AS3 になって、色んなデバッグツールが百花繚乱してるので、今更 XRay を選ぶ理由もないような気がします。ビューワの独特な見た目に抵抗ある人も少なからずいるのではないでしょうか。せっかくなので、次回は、AS3 界隈に登場しているデバッグツールをまとめてみたいと思います。
+

@@ -1,0 +1,77 @@
+---
+layout: post
+title: Alchemy で内部ログを出力するには環境変数 LOGLEVEL を設定する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090113/alchemy_loglevel
+---
+LOGLEVEL を設定すると、Alchemy の内部ログが出力されるようになる。
+
+libc 部分の組み込み関数や Alchemy の内部処理の情報が出力されるので、デバッグ時に役立つ。
+
+cygwin ではこんな感じ。
+>|sh|
+$ export LOGLEVEL=6
+||<
+LOGLEVEL は1～5まである模様。数字が大きいほど細かいログも出力するようになる。6だと1～5の全部を吐く。
+
+ログは trace として吐かれる。注意しなきゃいけないのは、LOGLEVEL の値はコンパイル時に埋め込まれるので、レベルを変更するには再コンパイルする必要がある。
+
+**ログの例
+ためしに、6 にしてビルドすると、初期化時にはこんなログが出力された。
+>||
+local system
+local system w/o gsprite
+Static init...
+Undefined sym: _abort
+Starting work...
+_init
+Caught AlchemyLibInit 3
+||<
+
+**コンパイル時の流れ
+gcc のソースを見てみる。
+
+LOGLEVEL 環境変数の値がコンパイル時のパラメータとして渡されている。
+>|perl|
+$confShell = $avmshell ? "true" : "false";
+$confNoShell = $avmshell ? "false" : "true";
+$confLogLevel = $ENV{LOGLEVEL} || "0";
+$confVector = $ENV{NOASVECTOR} ? "false" : "true";
+$confNoVector = $ENV{NOASVECTOR} ? "true" : "false";
+$setjmpAbuse = $ENV{SETJMPABUSE} ? "true" : "false";
+$confDebugger = $debug ? "true" : "false";
+$confNoDebugger = $debug ? "false" : "true";
+push(@asc,
+  "-config", "Alchemy::Debugger=$confDebugger",
+  "-config", "Alchemy::NoDebugger=$confNoDebugger",
+  "-config", "Alchemy::Shell=$confShell",
+  "-config", "Alchemy::NoShell=$confNoShell",
+  "-config", "Alchemy::LogLevel=$confLogLevel",
+  "-config", "Alchemy::Vector=$confVector",
+  "-config", "Alchemy::NoVector=$confNoVector",
+  "-config", "Alchemy::SetjmpAbuse=$setjmpAbuse"
+);
+||<
+
+**AS のコード
+gcc が吐き出す AS3 のコードはこんな感じ。
+
+（※中間ファイルの吐き出し方は <a href="http://d.hatena.ne.jp/nitoyon/20090109/alchemy_keep_intermediate_files">Alchemy で中間ファイルを消さない設定</a> を参照）
+
+>|javascript|
+public var glogLvl:int = Alchemy::LogLevel;
+
+public function log(lvl:int, msg:String):void
+{
+  if(lvl < glogLvl)
+    trace(msg);
+}
+||<
+Alchemy::LogLevel の値はコンパイル時に -config で指定された値が設定される。つまり、glogLvl には LOGLEVEL の値が格納される。
+
+よって、log 関数では LOGLEVEL の値よりも小さいログレベルのログが trace に吐かれることとなる。
+
+**ちなみに
+自分で書いた関数でログを吐くには、<a href="http://labs.adobe.com/wiki/index.php/Alchemy:Documentation:Developing_with_Alchemy:C_API#void_sztrace.28char.2A_msg.29">sztrace</a> や <a href="http://labs.adobe.com/wiki/index.php/Alchemy:Documentation:Developing_with_Alchemy:C_API#void_AS3_Trace.28AS3_Val_val.29">AS3_Trace</a> が使えるよ。
+

@@ -1,0 +1,157 @@
+---
+layout: post
+title: lineTo と moveTo あたりのケーススタディ
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070812/line_to_line_style_case_study
+---
+<a href="http://d.hatena.ne.jp/nitoyon/20070810/begin_fill_end_fill_case_study">前回</a>に引き続き、今度は Graphics クラスの lineTo と lineStyle あたりの挙動と、beginFill のからみを調べてみた。
+
+今回も環境は AS3 だけど、最後に AS2 で試した場合の補足をつけておいた。
+
+**Case 1： 普通に線を描画
+>|javascript|
+package
+{
+    import flash.display.*;
+
+    public class Test extends Sprite
+    {
+        public function erase()
+        {
+            graphics.lineStyle(3, 0xff0000);
+
+            graphics.moveTo(100, 0);
+            graphics.lineTo(0, 50);
+            graphics.lineTo(100, 100);
+
+            graphics.moveTo(150, 100);
+            graphics.curveTo(240, 50, 150, 0);
+        }
+    }
+}
+||<
+
+lineStyle で線の色と太さを設定して、moveTo で現在の位置を移動、lineTo および curveTo で描画してる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031414.gif" width="209" height="118"></center><
+
+**Case 2： beginFill と endFill の効果
+左側の図形描画を beginFill と endFill を挟んでみた。
+
+>|
+<strong>graphics.beginFill(0xffffcc);</strong>
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+<strong>graphics.endFill();</strong>
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);
+|<
+
+始点と終点が結ばれて、内側が beginFill で指定した色で塗られた。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031413.gif" width="209" height="118"></center><
+
+endFill のあとも、線のスタイルは変化していない点に注意したい。塗りの情報と線の情報は独立のようだ。
+
+塗りの情報は endFill を呼び出せば初期化される。では、線のスタイルを初期化するにはどうするかというと、lineStyle メソッドを引数なしで呼び出せばよい。
+
+例えば、次のように endFill の前に線のスタイルを初期化してみると…。
+
+>|
+graphics.beginFill(0xffffcc);
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+<strong>graphics.lineStyle();</strong>
+graphics.endFill();
+|<
+
+こうなった。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031412.gif" width="209" height="118"></center><
+
+パスを閉じる線が太さ0で初期化されているのが分かる。
+
+**Case 3： beginFill しっぱなしで、endFill しない
+最初に beginFill して、endFill しない。
+
+>|
+<strong>graphics.beginFill(0xffffcc);</strong>
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);
+|<
+
+両方塗られる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031411.gif" width="209" height="118"></center><
+
+moveTo すると、その時点でパスが閉じられて、塗られるようだ。
+
+注目すべきは、右の図形も同じ色で塗られているところ。moveTo は、塗りを発生させるが、塗りの情報は維持されたまま、次の図形にも適用されるようだ。
+
+Case 2 では、右の図形が塗られていないところと比較すると面白い。
+
+**Case 4： ２つ目のみ beginFill
+moveTo のあとに beginFill で塗りを設定。
+>|
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+graphics.moveTo(150, 100);
+<strong>graphics.beginFill(0xffffcc);</strong>
+graphics.curveTo(240, 50, 150, 0);
+|<
+
+想像通り。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031608.gif" width="209" height="118"></center><
+
+でも、moveTo の前に beginFill を持ってくると…
+>|
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+<strong>graphics.beginFill(0xffffcc);</strong>
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);
+|<
+
+ナニコレ。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031607.gif" width="209" height="118"></center><
+
+謎だ。
+
+どうも beginFill せずに描画したパスに対して、途中で beginFill を呼び出すとこうなるようだ。beginFill の手前で moveTo を挟んで、パスをいったん閉じるとバグらなくなった。endFill を挟んでも解決しなかったので、endFill は beginFill したときにしか機能しないんだろうと想像できる。
+
+**補足： AS2 で試してみた
+AS2（Flash MX 2004）で試してみたら、Case 3 と Case 4 の１つ目で、右側が黒くなるバグが発生した。コードの最後に、ちゃんと endFill してやれば、AS3 と全く同じ見た目になった。
+
+描画部分は、AS1 の時代からほとんど変わってないんだろうな。
+
+**まとめ
+-lineStyle は塗りの情報とは独立。好きなときに呼び出してよい。
+-endFill はパスを閉じて、領域を塗る。塗りの情報は初期化される。
+-moveTo はパスを閉じて、領域を塗る。塗りの情報は維持される（初期化されない）。
+-beginFill してないパスは、moveTo で閉じてから、beginFill を呼べ
+

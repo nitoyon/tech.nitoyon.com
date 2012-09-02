@@ -1,0 +1,87 @@
+---
+layout: post
+title: ubygems
+tags: Ruby
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081202/ubygems
+---
+rubygems を使ってライブラリをインストールすると、そのまま require 'sqlite3' のようにすれば使えるようになる。
+
+ところが、ライブラリパスである $LOAD_PATH を見てみると、その中に lib/ruby/gems/1.8/gems 以下のフォルダは含まれていなかった。
+>|ruby|
+irb(main):001:0> $LOAD_PATH
+=> ["c:/ruby/lib/ruby/site_ruby/1.8", 
+    "c:/ruby/lib/ruby/site_ruby/1.8/i386-msvcrt", 
+    "c:/ruby/lib/ruby/site_ruby", 
+    "c:/ruby/lib/ruby/1.8", 
+    "c:/ruby/lib/ruby/1.8/i386-mswin32", 
+    "."]
+||<
+
+不思議だったのでいろいろと情報をあたってみた。
+
+**犯人は RUBYOPT
+環境変数を見てみると RUBYOPT に -rubygems が設定されていた。ruby を起動するごとに RUBYOPT が自動的にコマンドライン引数に付加されるらしい。どうやら、One-Click Ruby のセットアップ時に、環境変数 RUBYOPT に -rubygems が設定されていたようだ。
+
+試しに RUBYOPT を空にして require 'sqlite3' するとエラーになった。
+
+次に、-rubygems オプションの仕組みが気になった。ruby 本体に rubygems 用の特殊な処理が組み込まれているとは考えづらい。
+
+**-r オプション
+ruby --help を実行すると、-r はライブラリを読み込むためのオプションだと分かった。
+
+例えば、MD5 モジュールを使うとき、-r を使わなければ次のようになる。
+>|ruby|
+ruby -e "require 'md5'; p MD5::md5('a')"
+||<
+これを、-r を使って書き換えると
+>|ruby|
+ruby -r md5 -e "p MD5::md5('a')"
+||<
+とできる。
+
+ -r のあとのスペースは省略できるので
+>|ruby|
+ruby -rmd5 -e "p MD5::md5('a')"
+||<
+としてもよい。
+
+**-rubygems の答え
+そこで、-rubygems。
+
+なんと、lib/ruby/site_ruby/1.8 に <strong>ubygems.rb</strong> というファイルが用意されていた。ubygems.rb は require 'rubygems' してるだけ。
+
+この ubygems.rb があるおかげで
+>|ruby|
+ruby -r rubygems foo.rb
+||<
+の変わりに
+
+>|ruby|
+ruby -rubygems foo.rb
+||<
+と書けるわけだ。-rubygems は -r ubygems と解釈される！
+
+ubygems.rb が rubygems.rb を require する。
+
+なるほどねー。
+
+**rubygems は何をやってるか
+最後に、rubygems が中で何をやってるかを軽く見てみた。
+
+rubygems.rb から呼ばれる rubygems/custom_require.rb では Kernel#require の処理を置き換えている。
+>|ruby|
+module Kernel
+  alias gem_original_require require # :nodoc:
+
+  # コメントいっぱい
+  def require(path) # :nodoc:
+    gem_original_require path
+  rescue LoadError => load_error
+    # 例外処理いっぱい
+  end
+end  # module Kernel
+||<
+ということで、require 'rubygems' するか -rubygems オプションを指定すると、require がラップされるようだ。
+lib/ruby/gems/1.8/gems の下の適切なバージョンのライブラリを読み込んでくれるわけですな。
+

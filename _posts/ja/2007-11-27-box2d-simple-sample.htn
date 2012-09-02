@@ -1,0 +1,215 @@
+---
+layout: post
+title: Box2DFlashAS3 の単純なサンプルと使い方
+tags: Box2d
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071127/box2d_simple_sample
+---
+><div style="background:#ffff99; color:#990000; border:2px solid red; padding: .5em; font-weight: bold;">このチュートリアルは、Box2DFlashAS3 バージョン 1.4.2 について説明しています。最新の 2.0.2 では多くの API が変更になっています。2.0.2 の使い方については、{% post_link 2009-04-28-box2dflashas3-2-0-2 %} をご覧ください</div><
+
+<a href="http://box2dflash.sourceforge.net/">Box2DFlashAS3</a> のデモは見る分には魅力的なのだけど、勉強し始めるときにはソースが複雑すぎる。
+
+ということで、分かりやすく、かつ、見てて楽しいものを作ってみた。
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBox2dSimpleSample.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=480&amp;title=Box2dFlashAS3+simple+sample&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+（表示されない場合はリロードしてください。）
+
+簡単なチュートリアルを作成してみました。参考にどうぞ。
++世界の作成
++床の作成
++積み木の作成
++シミュレーションの開始
++描画
+
+**1. 世界の作成
+シミュレーションを行うための世界を作成する。
+
+worldAABB というのは衝突判定のパラメータの模様。<a href="http://www.box2d.org/manual.html">Box2D User Manual</a> によるとあまり重要ではないパラメータらしい。お約束というところか。
+>|javascript|
+var worldAABB:b2AABB = new b2AABB();
+worldAABB.minVertex.Set(-100.0, -100.0);
+worldAABB.maxVertex.Set(100.0, 100.0);
+||<
+
+次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。
+>|javascript|
+var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+||<
+
+で、生成。第3パラメータは doSleep。詳細未調査。
+>|javascript|
+m_world = new b2World(worldAABB, gravity, true);
+||<
+
+**2. 床の作成
+まずは、床をあらわす Shape の定義を作る。
+>|javascript|
+var wallSd:b2BoxDef = new b2BoxDef();
+wallSd.extents.Set(300 / m_physScale / 2, 10 / m_physScale);
+wallSd.localRotation = Math.random() * Math.PI / 8;
+||<
+300×10 の四角形で、傾きはランダムに定める。
+
+この Shape を Body に入れる。Body は複数の Shape を格納できるグループのようなもの。たとえ１つの Shape であっても、Body に追加しなければ、Box2d の world には配置できない。
+>|javascript|
+var wallBd:b2BodyDef = new b2BodyDef();
+wallBd.position.Set(300 / m_physScale / 2, 250 / m_physScale);
+wallBd.AddShape(wallSd);
+||<
+これで、Body の定義ができた。定義を作っただけでは何も配置されない。CreateBody を使って実体を生成する。
+>|javascript|
+m_world.CreateBody(wallBd);
+||<
+定義はクラスのようなものと考えると分かりやすいかもしれない。CreateBody でインスタンスを作成するわけだ。
+
+**3. 積み木の作成
+同じようにして積み木を作成していく。
+>|javascript|
+var sd:b2BoxDef = new b2BoxDef();
+sd.density = 1;
+sd.friction = 0.2;
+
+var bd:b2BodyDef = new b2BodyDef();
+bd.AddShape(sd);
+for (var i:int = 0; i < 10; i++) {
+    sd.extents.Set(30 / m_physScale, 10 / m_physScale);
+    bd.position.Set(100 / m_physScale, (160 - 40 - i * 20) / m_physScale);
+    m_world.CreateBody(bd);
+}
+||<
+:density:0 以外に設定すると、固定されない（自由落下する）ようになる。
+:friction:摩擦ぐあいを表すパラメータ。0だとよく滑る。
+:restitution:はね返り具合。
+
+**4. シミュレーションの開始
+enterFrame の中で次の関数を実行する。
+>|javascript|
+m_world.Step(1 / 30, 10);
+||<
+-第一引数（timeStep）は１回のステップで進める秒数。
+-第二引数（iterations）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）
+
+**5. 描画
+Box2dFlashAS3 は、もともとが C++ のコードなだけに、描画処理が含まれていない。
+
+自分で描画しなきゃならないのがめんどくさいといえばめんどくさいが、物理エンジンといえば地味な見た目になりがちなので、自分で装飾できるのは魅力的にも思える。
+
+例えば、BitmapData のテクスチャを張ったり、もしくは、BitmapData 上に描画したりしてもよい。PV3D で 3D 空間に表示したりしても面白いかもしれない。
+
+ここでは、デモのソースコードから四角形を描画するコードだけを借用した。実際には、ヒモを描画するコードが必要だったりするので、それらは TestBed/Test.as をご覧いただきたい。
+
+**ソース
+106行ありますよ。ダウンロードは<a href="http://tech.nitoyon.com/misc/swf/Box2dSimpleSample.as">こちらから</a>。
+
+(追記)1.4.3 では、import Engine を import Box2d に変更すれば動きます。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+package {
+    import Engine.Dynamics.*;
+    import Engine.Collision.*;
+    import Engine.Collision.Shapes.*;
+    import Engine.Common.Math.*;
+    import flash.events.Event
+    import flash.display.*;
+    import flash.text.TextField;
+
+    [SWF(backgroundColor="#ffffff", width="350", height="200")]
+    public class Box2dSimpleSample extends Sprite {
+        private var m_world:b2World;
+        private var m_physScale:Number = 10;
+        private var count:int = 0;  // loop counter
+
+        public function Box2dSimpleSample() {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var text:TextField = new TextField();
+            text.text = "CLICK TO START!!!";
+            text.x = text.y = 100;
+            addChild(text);
+
+            stage.addEventListener("click", function(event:Event):void {
+                text.visible = false;
+                init();
+            });
+            addEventListener("enterFrame", function(event:Event):void {
+                Update();
+            });
+        }
+
+        private function init():void {
+            count = 0;
+
+            // Construct a world object
+            var worldAABB:b2AABB = new b2AABB();
+            worldAABB.minVertex.Set(-100.0, -100.0);
+            worldAABB.maxVertex.Set(100.0, 100.0);
+            var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+            m_world = new b2World(worldAABB, gravity, true);
+
+            // Create floor
+            var wallSd:b2BoxDef = new b2BoxDef();
+            wallSd.extents.Set(300 / m_physScale / 2, 10 / m_physScale);
+            wallSd.localRotation = Math.random() * Math.PI / 8;
+            var wallBd:b2BodyDef = new b2BodyDef();
+            wallBd.position.Set(300 / m_physScale / 2, 250 / m_physScale);
+            wallBd.AddShape(wallSd);
+            m_world.CreateBody(wallBd);
+
+            // Add bodies
+            var sd:b2BoxDef = new b2BoxDef();
+            sd.density = 1;
+            sd.friction = 0.2;
+            var bd:b2BodyDef = new b2BodyDef();
+            bd.AddShape(sd);
+            for (var i:int = 0; i < 10; i++) {
+                sd.extents.Set(30 / m_physScale, 10 / m_physScale);
+                bd.position.Set(100 / m_physScale, (160 - 40 - i * 20) / m_physScale);
+                m_world.CreateBody(bd);
+            }
+        }
+
+        public function Update():void {
+            if(!m_world) {
+                return;
+            }
+
+            // Update physics
+            count++;
+            if(count > 300) {
+                init();
+            }
+            m_world.Step(1 / 30, 10);
+
+            // Render
+            graphics.clear();
+            for (var bb:b2Body = m_world.m_bodyList; bb; bb = bb.m_next) {
+                for (var s:b2Shape = bb.GetShapeList(); s != null; s = s.GetNext()) {
+                    DrawShape(s);
+                }
+            }
+        }
+
+        public function DrawShape(shape:b2Shape):void {
+            if(shape.m_type == b2Shape.e_polyShape) {
+                var poly:b2PolyShape = shape as b2PolyShape;
+                var tV:b2Vec2 = b2Math.AddVV(poly.m_position, b2Math.b2MulMV(poly.m_R, poly.m_vertices[i]));
+
+                graphics.beginFill(0x999999, count > 290 ? (300 - count) / 10.0 : 1);
+                graphics.lineStyle(1,0xffffff,1);
+                graphics.moveTo(tV.x * m_physScale, tV.y * m_physScale);
+
+                for (var i:int = 0; i < poly.m_vertexCount; ++i) {
+                    var v:b2Vec2 = b2Math.AddVV(poly.m_position, b2Math.b2MulMV(poly.m_R, poly.m_vertices[i]));
+                    graphics.lineTo(v.x * m_physScale, v.y * m_physScale);
+                }
+                graphics.lineTo(tV.x * m_physScale, tV.y * m_physScale);
+
+                graphics.endFill();
+            }
+        }
+    }
+}
+||<
+></div><
+

@@ -1,0 +1,39 @@
+---
+layout: post
+title: mod_rewrite
+tags: apache
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040130/p1
+---
+mod_rewrite を使って http://www.sample.com/hoge を、内部的には http://www.samle.com/index.cgi?hoge として扱うための方法をまとめてみた。
+
+ぱっと思いつくのが次の方法。
+>|
+RewriteEngine  On
+RewriteRule    ^(.*)$ index.cgi?$1
+|<
+
+しかし、これだと
+>|
+　http://www.samle.com/hoge
+→http://www.samle.com/index.cgi?hoge
+→http://www.samle.com/index.cgi?index.cgi?hoge
+→http://www.samle.com/index.cgi?index.cgi?index.cgi?hoge
+|<
+というように無限に置き換えていってしまう。
+
+そこで、RewriteCond を使って次のようにしてやる必要がある。こうすると、index.cgi から始まるようなURLは置き換えないようになる。これでひとまずはOK。
+>|
+RewriteEngine  On
+RewriteCond    $1 !^index.cgi
+RewriteRule    ^(.*)$ index.cgi?$1
+|<
+
+このままだと画像フォルダにおいている http://www.sample.com/img/hoge.gif みたいなファイルも http://www.sample.com/index.cgi?img/hoge.gif から取得しちゃう。さすがにこれは嫌なので img フォルダは置き換えないように設定してみる。index.cgi から始まらず、かつ img から始まらないようなURLだけ、index.cgi?$1 に置き換えることができる。
+>|
+RewriteEngine  On
+RewriteCond    $1 !^index.cgi
+RewriteCond    $1 !^img
+RewriteRule    ^(.*)$ index.cgi?$1
+|<
+

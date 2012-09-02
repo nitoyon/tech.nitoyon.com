@@ -1,0 +1,61 @@
+---
+layout: post
+title: AS3 でメソッドチェーンしたくなる話
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20091125/as3_method_chain
+---
+いろんな AS3 のサンプルが掲載されていて楽しい [http://actionsnippet.com/:title=ActionSnippet | paste it in your timeline - or in your constructor] で [http://actionsnippet.com/?p=2430:title=Functions Returning Functions] が紹介されていた。
+
+シンプルで美しいのだけど、ソースに１箇所無駄があったので省いてみたものを紹介する。
+>|javascript|
+// Functions Returning Functions (Revised)
+// original: http://actionsnippet.com/?p=2430
+//  - Removed line variable by using arguments.callee.
+package {
+import flash.display.Sprite;
+
+public class FlashTest extends Sprite {
+    public function FlashTest() {
+        var connect:Function = function(xp:Number, yp:Number, col:uint=0):Function{
+            graphics.lineStyle(0,col);
+            graphics.moveTo(xp, yp);
+            return function(xp:Number, yp:Number):Function{
+                graphics.lineTo(xp, yp);
+                return arguments.callee;
+            };
+        }
+         
+        // draw a triangle
+        connect(200,100)(300,300)(100,300)(200, 100);
+
+        // draw a box
+        connect(100,100, 0xFF0000)(150,100)(150,150)(100, 150)(100,100);
+    }
+}
+}
+||<
+このサンプルがやってることは非常にシンプルで、<code>connect()</code> 関数を呼び出すと、<code>lineTo</code> するだけの関数が返ってくる。この関数を呼ぶと、さらに自分自身が返ってくるので、<code>connect(200,100)(300,300)(100,300)(200, 100);</code> のように順番に呼び出していくと三角形が描けてしまうわけだ。
+
+このサンプルはやり過ぎにしても、ActionScript の標準ライブラリではメソッドチェーンやりたいと思うことが度々ある。昔はあまり思わなかったんだけど、jQuery や Ruby などに慣れてくると、他の場所でもメソッドチェーンしたくなる病にかかる。
+
+たとえば <code>lineTo</code> は
+>|javascript|
+// (注) 実際にはこのように書くとエラーになります
+graphics.beginFill(0xff0000)
+    .moveTo(200,100)
+    .lineTo(300,300).lineTo(100,300).lineTo(200, 100)
+    .endFill();
+||<
+のように書けたら嬉しいし、あの憎き <code>Matrix</code> も
+>|javascript|
+// (注) 実際にはこのように書くとエラーになります
+var mtx:Matrix = Matrix
+    .identity()
+    .rotate(Math.PI)
+    .scale(2, 2);
+||<
+とできると immutable になってかなり嬉しい。
+
+かといって、このあたりを丸々ラップしなおすのは面倒なので、結局文句いいながら使い続けてる。他力本願。
+

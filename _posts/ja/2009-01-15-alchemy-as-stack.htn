@@ -1,0 +1,308 @@
+---
+layout: post
+title: Alchemy が吐く AS3 ソースを深追いする
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090115/alchemy_as_stack
+---
+C のソースがどんな AS3 のコードに変換されているかを細かく見ていこう。
+
+お題は<a href="http://d.hatena.ne.jp/nitoyon/20090114/alchemy_pointer">前回</a>紹介した malloc する関数。
+>|c|
+// malloc sample (C)
+static AS3_Val myAlloc(void* self, AS3_Val args)
+{
+    // 確保した値の初期値を受け取る
+    int v;
+    AS3_ArrayValue(args, "IntType", &v);
+
+    // malloc でメモリ確保
+    int* p = (int*)malloc(sizeof(int));
+
+    // 確保したメモリに初期値を代入する
+    *p = v;
+
+    // ポインタを返す
+    return AS3_Ptr((void*)p);
+}
+||<
+
+この関数を SWC に変換する過程の AS3 を見てみる。（参考：<a href="http://d.hatena.ne.jp/nitoyon/20090109/alchemy_keep_intermediate_files">Alchemy で中間ファイルを消さない設定</a>）
+
+少し長いけど全文掲載しておく。
+====
+>|javascript|
+public final class FSM_myAlloc extends Machine {
+
+    public static function start():void {
+            var result:FSM_myAlloc = new FSM_myAlloc
+        gstate.gworker = result
+    }
+
+    public var i0:int, i1:int, i2:int
+
+    public static const intRegCount:int = 3
+
+    public static const NumberRegCount:int = 0
+    public final override function work():void {
+        Alchemy::SetjmpAbuse { freezeCache = 0; }
+        __asm(label, lbl("_myAlloc_entry"))
+        __asm(push(state), switchjump(
+            "_myAlloc_errState",
+            "_myAlloc_state0",
+            "_myAlloc_state1",
+            "_myAlloc_state2",
+            "_myAlloc_state3"))
+    __asm(lbl("_myAlloc_state0"))
+    __asm(lbl("_myAlloc__XprivateX__BB75_0_F"))
+        mstate.esp -= 4; __asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
+        mstate.ebp = mstate.esp
+        mstate.esp -= 4
+        i0 =  (__2E_str99)
+        mstate.esp -= 12
+        i1 =  ((__xasm<int>(push((mstate.ebp+12)), op(0x37))))
+        i2 =  ((mstate.ebp+-4))
+        __asm(push(i1), push(mstate.esp), op(0x3c))
+        __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+        __asm(push(i2), push((mstate.esp+8)), op(0x3c))
+        state = 1
+        mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()
+        return
+    __asm(lbl("_myAlloc_state1"))
+        mstate.esp += 12
+        mstate.esp -= 8 
+        i0 =  (4)
+        i1 =  (0)
+        __asm(push(i1), push(mstate.esp), op(0x3c))
+        __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+        state = 2
+        mstate.esp -= 4;FSM_pubrealloc.start()
+        return
+    __asm(lbl("_myAlloc_state2"))
+        i0 = mstate.eax
+        mstate.esp += 8
+        i1 =  ((__xasm<int>(push((mstate.ebp+-4)), op(0x37))))
+        __asm(push(i1), push(i0), op(0x3c))
+        mstate.esp -= 4                                        
+        __asm(push(i0), push(mstate.esp), op(0x3c))
+        state = 3
+        mstate.esp -= 4;(mstate.funcs[_AS3_Ptr])()
+        return
+    __asm(lbl("_myAlloc_state3"))
+        i0 = mstate.eax
+        mstate.esp += 4
+        mstate.eax = i0
+        mstate.esp = mstate.ebp
+        mstate.ebp = __xasm<int>(push(mstate.esp), op(0x37)); mstate.esp += 4
+        //RETL
+        mstate.esp += 4
+        mstate.gworker = caller
+        return
+    __asm(lbl("_myAlloc_errState"))
+        throw("Invalid state in _myAlloc")
+    }
+}
+||<
+
+全体の構成として気になるのは、myAlloc 関数がクラスとして実現されていること。
+
+次に目に付くのは、eax や esp などのプロパティ。どうやら、AS3 上でレジスタやスタックをエミュレートしているような雰囲気だ。
+
+では細かく見ていく。まずは全体の構成。
+
+**state で実現するタイムスライス
+work 関数が関数処理の実体だ。work 関数の外側を見てみるとこうなっている。
+>|javascript|
+public final override function work():void {
+    //...
+    __asm(push(state), switchjump(
+        "_myAlloc_errState",
+        "_myAlloc_state0",
+        "_myAlloc_state1",
+        "_myAlloc_state2",
+        "_myAlloc_state3"))
+
+__asm(lbl("_myAlloc_state0"))
+    //...
+    state = 1
+    // AS3_ArrayValue 関数呼びだし
+    return
+
+__asm(lbl("_myAlloc_state1"))
+    //...
+    state = 2
+    // malloc 関数呼びだし
+    return
+
+__asm(lbl("_myAlloc_state2"))
+    //...
+    state = 3
+    // AS3_Ptr 関数呼びだし
+    return
+
+__asm(lbl("_myAlloc_state3"))
+    // myAlloc 関数終了準備
+    mstate.gworker = caller
+    return
+
+__asm(lbl("_myAlloc_errState"))
+    throw("Invalid state in _myAlloc")
+}
+||<
+このように、work 関数では、もともとの myAlloc() 関数の処理がぶつ切りにされている。FSM_myAlloc というところからも分かるとおり、関数の動作が FSM(有限オートマトン)として実現されている。work 関数が呼ばれるたびにステートが変化していくイメージだ。
+
+この work 関数を呼び出しているのが、CRunner クラスだ。CRunner クラスのメインループをざっと見てみよう。
+>|javascript|
+public class CRunner implements Debuggee
+{
+  // ...
+
+  public function startInit():void
+  {
+    log(2, "Static init...");
+    //...
+
+    timer = new Timer(1);
+    timer.addEventListener(flash.events.TimerEvent.TIMER, 
+      function(event:TimerEvent):void { work() });
+    }
+    //...
+  }
+||<
+こんな感じて定期的に work 関数を呼びだすようにしている。
+
+work 関数は次のように定義されている。
+>|javascript|
+  public function work():void
+  {
+    if(!isRunning)
+      return;
+
+    try
+    {
+      var startTime:Number = (new Date).time;
+
+      while(true)
+      {
+        var checkInterval:int = 1000;
+
+        while(checkInterval > 0)
+        {
+          try
+          {
+            while(checkInterval-- > 0)
+              gstate.gworker.work();
+          } catch(e:AlchemyDispatch) {}
+        }
+        if(((new Date).time - startTime) >= 1000 * 10)
+          throw(new AlchemyYield);
+      }
+    }
+    //...
+  }
+||<
+gstate.gworker というのが現在処理中の関数を指すようになってる。どうやら、1000ステップごとに時間経過をチェックしていて、10秒以上実行していた場合には AlchemyYield 例外を発生させている。
+
+AlchemyYield 例外が発生すると work() メソッドからは一旦抜けて、画面描画が行われる。
+
+なお、C のソース上で再描画を強制するには、flyield() メソッドを呼ぶとよい。flyield() は <code>throw new AlchemyYield())</code> という AS3 に変換される。
+
+このように、Alchemy が変換する AS3 は細かくタイムスライスされていて、細かい処理の単位でいつでも中断できるようになっている。将来的にはマルチスレッドをエミュレートできるようになるかもしれない。
+
+**疑似レジスタ
+では、関数の最初から見ていこう。
+>|javascript|
+__asm(lbl("_myAlloc_state0"))
+__asm(lbl("_myAlloc__XprivateX__BB75_0_F"))
+    mstate.esp -= 4; __asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
+    mstate.ebp = mstate.esp
+    mstate.esp -= 4
+    i0 =  (__2E_str99)
+    mstate.esp -= 12
+    i1 =  ((__xasm<int>(push((mstate.ebp+12)), op(0x37))))
+    i2 =  ((mstate.ebp+-4))
+    __asm(push(i1), push(mstate.esp), op(0x3c))
+    __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+    __asm(push(i2), push((mstate.esp+8)), op(0x3c))
+    state = 1
+    mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()
+    return
+||<
+この AS3 のコードは
+>|c|
+    // 確保した値の初期値を受け取る
+    int v;
+    AS3_ArrayValue(args, "IntType", &v);
+||<
+が変換されたものだ。
+
+なんと長くなるんだ！と思うんだけど、１個ずつ見ていけば納得の処理である。まずは最初の２行。
+>|javascript|
+// push ebp
+mstate.esp -= 4;
+__asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
+
+// mov ebp, esp
+mstate.ebp = mstate.esp
+||<
+__asm というのが初めて見るが、<code>__asm(push(a), push(b), op(0x3c))</code> は「a の値を int として b のアドレスに代入する」という意味だと推測される。op(0x3c) は load a 32 bit integer from global memory を表す op code のようだ（参考：<a href="http://llvm.org/devmtg/2008-08/Petersen_FlashCCompiler.pdf">FlaCC の p17</a>）。
+
+つまり、1行目は push ebp であり、2行目は mov ebp,esp となる。これは、C で関数呼びだしの際に最初に行うお決まりのあの処理にあたる。呼びだし元の ebp を保存して、現在の ebp を esp（現在のスタックの場所）に初期化するというあれ。
+
+このように、mstate プロパティにはレジスタの状態が擬似的に再現されているわけだ。mstate は全ての関数で共有されているグローバルな MState オブジェクトである。
+
+次の１行はだいぶ分かりやすい。
+>|javascript|
+    mstate.esp -= 4
+||<
+スタックに４バイト積んでる。アセンブリで言うところの <code>sub esp, 4h</code> で、<code>int v;</code> に相当する。ローカル変数はスタック上に確保されるということだ。
+
+どんどん進む。
+>|javascript|
+i0 =  (__2E_str99)
+mstate.esp -= 12
+i1 =  ((__xasm<int>(push((mstate.ebp+12)), op(0x37))))
+i2 =  ((mstate.ebp+-4))
+__asm(push(i1), push(mstate.esp), op(0x3c))
+__asm(push(i0), push((mstate.esp+4)), op(0x3c))
+__asm(push(i2), push((mstate.esp+8)), op(0x3c))
+||<
+関数呼びだしをするための準備として、引数をスタックに積んでいる処理だ。esp が一気に12も減っているのは、3回分の push を一気に再現するための最適化が実施されているようだ。最適化前を想像すると、こんな感じかな。
+
+>|javascript|
+// push [&v]
+mstate.esp -= 4
+i2 =  ((mstate.ebp+-4))
+__asm(push(i2), push((mstate.esp)), op(0x3c))
+
+// push "StrPtr"
+mstate.esp -= 4
+i0 =  (__2E_str99)
+__asm(push(i0), push((mstate.esp)), op(0x3c))
+
+// push args
+mstate.esp -= 4
+i1 =  ((__xasm<int>(push((mstate.ebp+12)), op(0x37))))
+__asm(push(i1), push(mstate.esp), op(0x3c))
+||<
+
+で、この部分の最後。
+>|javascript|
+mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()
+||<
+call ですな。最初の esp を -4 するところは、リターンアドレスをスタックに積むところを再現しているんだけど、AS3 では関数がクラスで再現されているのでアドレスがそもそも存在しない。なので、形式上、スタックに積んだことにしているようだ。実際には、呼びだし元は caller プロパティとして保持している。
+
+**次のステートは...
+長くなってきたけど、次のステートの最初も軽く見ておく。
+>|javascript|
+    __asm(lbl("_myAlloc_state1"))
+        mstate.esp += 12
+        mstate.esp -= 8 
+||<
+最初の esp を 12 増やしてるのは、AS3_ArrayValue 呼び出しのために積んだ引数を取り除いている。1つ前の後処理だ。
+
+２行目の、esp を 8 減らしているのは、次に呼び出す malloc() で２つの引数をスタックに積むためのもの。
+
+**まとめ
+Alchemy で変換したらどのような AS3 のコードが吐かれ、どのように実行されるかを追っていった。AVM の上に、さらに VM が実現されているのが大変興味深いですね。
+

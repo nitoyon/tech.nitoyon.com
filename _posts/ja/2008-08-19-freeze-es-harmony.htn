@@ -1,0 +1,134 @@
+---
+layout: post
+title: Object.freeze() と ECMAScript Harmony
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080819/freeze_es_harmony
+---
+ES4 のドラフトが一旦白紙になって、ES3.1 の策定を先に進めることになった。このあたりの情報が少なくて、どうなっていくのかがいまいちピンと来ないので調べてみた。
+
+現状で頼りになるのが、 <a href="http://www.hyuki.com/yukiwiki/wiki.cgi?ECMAScriptHarmony">"ECMAScript Harmony" の日本語訳</a>。この中の次の部分が気になった。
+>>
+名前空間とアーリーバインディングが仕様から外れてしまえば, クラスは lambda-coding + Object.freeze と ES3.1 のその関係機能というすっきりした(desugar)姿になります
+<<
+
+Object.freeze というキーワードがよく分からなかったので、<a href="http://wiki.ecmascript.org/doku.php?id=es3.1:es3.1_proposal_working_draft">ES3.1 のドラフト (2008/8/11)</a> を見ながら理解を進めてみた。
+====
+**ES4 から外れることになった機能
+と、その前に、外れた機能について簡単におさらいしておく。
+
+:パッケージ:クラスや関数の名前空間と言ってもいいのがパッケージ。ライブラリごとに分かれてると幸せなんだけど…。
+:名前空間:ES4 の仕様ではでは private や public も名前空間として定義していた。
+:アーリーバインディング:事前バインディングとも言う。実行前に型が決定していること。C++ や Java のような静的型付けな言語が該当する。<br>対して、「レイトバインディング（実行時バインディング）」が逆の意味。ES3 の prototype を使った疑似クラス定義は実行時バインディングと言っていいだろう。一般に、事前バインディングはコンパイル時に型が決定するので、処理速度が高速になる。
+
+**Object.freeze()
+話を元に戻して、Object.freeze() の正体を見ていく。Object.freeze() は、ES3.1 から新たに導入されたメソッド。
+
+どういう機能なのかを見るために、ES3 のプロパティ定義を思い出してみよう。
+>|javascript|
+var myObj = {
+  val : 3,
+  func : function(){alert('foo');}
+}
+||<
+上の例だと、val や func の両方がプロパティである。((言語によっては getter, setter を使ったものをプロパティということもあるけど、ES3 的には違うので注意))
+
+せっかく MyObj を定義したんだけど、ES3 ではプロパティを勝手にいじられる危険性があった。
+>|javascript|
+delete myObj.func;
+myObj.func();      // エラー: MyObj.func is not a function
+||<
+
+そこで、ES3.1 ではオブジェクトを書き換えられないように、プロパティを凍結する機能が追加された。これが Object.freeze() だ。
+
+>|javascript|
+Object.freeze(myObj);
+delete myObj.func;      // func が削除できない
+myObj.val = 10;         // 代入に失敗する
+
+myObj.func();           // alert('foo') が実行される
+myObj.val;              // 3
+||<
+
+**ES3 と属性
+Object.freeze() が何をしているかというと、全てのプロパティの Writable 属性と Flexible 属性を false にして、オブジェクトの Extensible 属性も false にしている。
+
+属性の概念は ES3 時代にもあった。例えば、Object.prototype は DontDelete 属性、DontEnum 属性、ReadOnly 属性がついていた。
+
+つまり、
+>|javascript|
+delete Object.prototype;
+Object.prototype = {foo: function(){}};
+||<
+が成功しないのは、これらの属性が書き換えを禁止してたから。ただし、ES3 では属性というのはあくまで内部的なもので、外部から属性を変更することも、知るこもできなかった。
+
+ES3.1 になって、属性を取得・設定するためのメソッドがいくつも追加されている予定になっている。Object.freeze() もそうだし、Object.defineProperty() を使って属性つきでプロパティを定義したり、Object.getOwnPropertyDescriptor() を使ってプロパティの情報を取得したりできる。
+
+Writable 属性、Flexible 属性、Extensible 属性について一応補足しておく。詳しくは ES3.1 のドラフトを参照あれ。
+:プロパティの Writable 属性:プロパティの値を書き換えられるかどうか。ES3 の ReadOnly の逆。
+:プロパティの Flexible 属性:プロパティの delete および属性変更ができるかどうか。前者は、ES3 の DontDelete の逆。
+:オブジェクトの Extensible 属性:オブジェクトにプロパティを追加できるかどうか。
+つまり、Object.freeze() すると、プロパティの追加・変更・削除ができなくなる。属性の変更も許可されないので、一度 freeze すると元に戻せなくなるようだ。
+
+**ES Harmony のクラス定義
+では、ES Harmony のクラス定義がどうなるか想像してみよう。ES Harmony というのは、ES3.1 をベースに書き直す新しい ES4 の仕様と解釈して間違いないだろう。
+
+先の<a href="http://www.hyuki.com/yukiwiki/wiki.cgi?ECMAScriptHarmony">日本語訳</a>の<a href="https://mail.mozilla.org/pipermail/es4-discuss/2008-August/003400.html">原文</a>を見ると、
+>>
+クラスは lambda-coding と ES3.1 の Object.freeze() 関連の機能を使って、desugar できる
+>https://mail.mozilla.org/pipermail/es-discuss/2008-August/003400.html:title=ECMAScript Harmony>
+classes can desugar to lambda-coding + Object.freeze and friends from ES3.1.
+<<
+<<
+と書いてある。lambda-coding はたぶん無名関数のことだとしておいて、desugar という単語が耳慣れない。おそらく syntax-sugar の sugar のことだろう。de がついているので「syntax-sugar で導くことができる」といった意味合いだろうか。
+
+ということで、もっと言い直すと
+>>
+クラス定義は無名関数と Object.freeze() 系のメソッドへの Syntax-sugar として実装すればよい
+<<
+と言い切ってるように思える。
+
+具体的なコードで考えると、
+>|javascript|
+class Foo{
+    var val = 3;
+
+    function func(){
+        // ...
+    }
+}
+
+var foo = new Foo();
+||<
+というクラスは、内部的に
+>|javascript|
+var foo = {
+    val: 3,
+    func: function(){
+        // ...
+    }
+};
+Object.freeze(foo);
+||<
+のように置き換えられる、ということだろう。
+
+一度 freeze してしまえば、属性を変更できないし、メソッドの書き換えもできない。これはまさしくクラスから生成したインスタンスだ。実行時にメソッドが定義されるので、事前バインディングでもなくなったが、その代わりに、ES3.1 の機能を使って、クラスを書き下したことになる。
+
+ES4 の仕様はだいぶシンプルになりそうな香りがする。
+
+**継承は？　private は？
+ただ、この方向性を見て、まず、継承がどうなるのか不安になった。
+
+ES Harmony のドキュメントは <a href="http://wiki.ecmascript.org/doku.php?id=harmony:harmony">harmony:harmony [ES4 Wiki]</a> にあるのだけど、現状、<a href="http://wiki.ecmascript.org/doku.php?id=harmony:types">harmony:types</a> しかない。ここからだけじゃ、情報も少なくて判断しきれないのだけど、型情報を管理するための領域が用意されて、継承関係も紐付けできるようなことが書いてある。
+
+ただ、名前空間亡き後、private はどのように実現されるかが気になるなぁ。クロージャ使って閉じ込めたりするんだろか。
+
+**雑感
+ES3.1 Draft は、ES3 をベースにしているだけに、穏やかな変更になっている。文句をいう人も少なそうだ。ドラフトには ES3 からの変更点が赤字で書いてあって、新しいところを探すのが楽しい。
+
+それに比べて、ES4 Draft は、かなり静的型付けな言語のほうに寄っていたし、仕様も複雑だった。今回の ES Harmony は、一旦白紙に戻したことで、ES3 のよさを損なわない方向でオブジェクト指向が導入されるように感じられた。
+
+AS3 をベースに ES4 の標準化を進めていきたかった Adobe にとっては災難なんだろう。特に、事前バインディングが仕様から漏れたことで、Mozilla が Tamarin を使う意義がなくなるかもしれない。よく分かってないんだけど、仕様から事前バインディングが漏れるといっても、事前バインディングによって高速化する余地は残ってるのかもしれない。
+
+Tamarin が Firefox に搭載されれば、独自拡張として名前空間やパッケージが Firefox に盛り込まれる可能性はある。Firefox に盛り込まれれば、さらに他のブラウザに取り込まれてデファクトになる可能性は十分にあるだろう。
+

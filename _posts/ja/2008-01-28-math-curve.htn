@@ -1,0 +1,154 @@
+---
+layout: post
+title: 勝手に添削：数学的な曲線を描画する
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080128/math_curve
+---
+<a href="http://moringo.moo.jp/wordpress/?p=60">[ActionScript3.0] 数学的な曲線を描画する サイクロイド、三葉線、螺旋等[AS3] | moriBlog - ActionScriptとか、気になるニュースのメモ</a> が面白かったのだけど、ソースが気になったので勝手に添削してみた。
+
+**気になったところ
+こんな調子で draw01～draw07まで並んでる。
+>|javascript|
+//円を描く(中心点座標を引数に)
+function draw01(xp:Number,yp:Number):void{
+    canvas = new MovieClip();
+    addChild(canvas)
+    canvasArray.push(canvas)
+    var shape01:DrawCircle = new DrawCircle(canvas,Math.random()*180,xp,yp);
+}
+
+//三葉線を描く(中心点座標を引数に)
+function draw02(xp:Number,yp:Number):void{
+    canvas = new MovieClip();
+    addChild(canvas)
+    canvasArray.push(canvas)
+    var shape02:DrawThreeLeaves = new DrawThreeLeaves(canvas,Math.random()*180,xp,yp);
+}
+
+//（アルキメデスの）螺旋を描く(中心点座標を引数に)
+function draw03(xp:Number,yp:Number):void{
+    canvas = new MovieClip();
+    // 以下略...
+||<
+
+draw01～draw07 を呼ぶところも悲しいぐらいの列挙。
+>|javascript|
+if(curveMode == "circle")draw01(mouseX,mouseY);
+else if(curveMode == "ThreeLeaves")	draw02(mouseX,mouseY);
+else if(curveMode == "Archimedes")	draw03(mouseX,mouseY);
+// 以下略...
+||<
+
+ほとんど同じ内容なのに、ベタッと勢いで書き下されているのは気持ち悪い。まとめて１箇所で処理したくなるのがプログラマ魂。
+
+**どうするか
+共通部分を見極めて、くくりだしていく。違うところは変数なりオブジェクトなりで表現する。
+====
+drawXX 関数をみてみると、new するクラスが違うぐらい。なので、クラス一覧を shapes という配列に入れちゃう。
+>|javascript|
+private var shapes:Array = [DrawCircle, DrawThreeLeaves, 
+    DrawArchimedes, DrawAsteroid, DrawHypocycloid, 
+    DrawLissajous, DrawFourLeaves];
+||<
+こうしてしまえば、あとは１つの関数を呼び出すだけで、７個の関数を代用できる。
+>|javascript|
+    function draw(xp:Number, yp:Number):void{
+        var Drawer:Class = shapes[curveMode] as Class;
+        if(!Drawer){
+            return;
+        }
+
+        canvas = new MovieClip();
+        addChild(canvas)
+        canvasArray.push(canvas)
+        new Drawer(canvas,Math.random()*180, xp, yp);
+    }
+||<
+curveMode は 0～7 の数字。キーボード入力イベントハンドラで次のようにして設定している。
+>|javascript|
+    private function KeyDownHandle(e:KeyboardEvent):void{
+        if(49 <= e.keyCode && e.keyCode < 49 + shapes.length){
+            curveMode = e.keyCode - 49; // ← ココ！
+            dtext.text = names[curveMode];
+        }
+        else if(e.keyCode == 49 + shapes.length){
+            eraser();
+        }
+    }
+||<
+1～8までのキーコードが１ずつ増えていってるのを利用している。49 というマジックナンバーが気持ち悪い場合は、"0".charCodeAt(0) などと書けばいいと思う。
+
+呼び出す関数が１つになったので、draw01～draw07 を呼んでいたところはこう書ける。条件分岐いらないよ！
+>|javascript|
+    function clickHandle(e:MouseEvent):void{
+        draw(mouseX, mouseY);
+    }
+||<
+
+**こうなったよ
+全体として、ソースはこんな感じになった。mxmlc でビルドできるように、一部に手は入れたが、可能な限り元々の設計は残しておいた。
+
+<a href="http://moringo.moo.jp/wordpress/?p=60">元のソース</a>に比べて、随分とすっきりした。ただ、元のものにはあった半径のパラメータが消えていたり、内サイクロイド(DrawHypocycloid)でコンストラクタの引数の数が違って例外が出たりする。
+
+まだまだ、不十分なので、もう少しいじっていくことにする。（続く）
+>|javascript|
+package{
+import flash.display.*;
+import flash.events.*;
+import flash.text.*;
+
+public class Test extends Sprite{
+    private var dtext:TextField;
+    private var canvasArray:Array = [];
+
+    private var curveMode:int = 0;
+
+    private var shapes:Array = [DrawCircle, DrawThreeLeaves, DrawArchimedes, 
+        DrawAsteroid, DrawHypocycloid, DrawLissajous, DrawFourLeaves];
+    private var names:Array = ["円", "三葉線", "螺旋", "アステロイド曲線", 
+        "内サイクロイド", "リサジュー曲線", "四葉線"];
+
+    public function Test(){
+        addChild(dtext = new TextField());
+        dtext.text = names[curveMode];
+
+        stage.addEventListener(MouseEvent.CLICK,clickHandle);
+        stage.addEventListener(KeyboardEvent.KEY_DOWN,KeyDownHandle);
+    }
+
+    private function draw(xp:Number, yp:Number):void{
+        var Drawer:Class = shapes[curveMode] as Class;
+        if(!Drawer){
+            return;
+        }
+
+        canvas = new MovieClip();
+        addChild(canvas)
+        canvasArray.push(canvas)
+        new Drawer(canvas,Math.random()*180, xp, yp);
+    }
+
+    private function clickHandle(e:MouseEvent):void{
+        draw(mouseX, mouseY);
+    }
+
+    private function eraser():void{
+        for(var i:int = 0; i < canvasArray.length; i++){
+            removeChild(canvasArray[i]);
+        }
+        canvasArray = [];
+    }
+
+    private function KeyDownHandle(e:KeyboardEvent):void{
+        if(49 <= e.keyCode && e.keyCode < 49 + shapes.length){
+            curveMode = e.keyCode - 49;
+            dtext.text = names[curveMode];
+        }
+        else if(e.keyCode == 49 + shapes.length){
+            eraser();
+        }
+    }
+}
+}
+||<

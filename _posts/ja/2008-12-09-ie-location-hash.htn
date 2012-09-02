@@ -1,0 +1,23 @@
+---
+layout: post
+title: IE＋Flash Player で Location Hash 使ったときにタイトルが変わる問題
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081209/ie_location_hash
+---
+Internet Explorer で Location Hash を利用したページに Flash を表示すると、IE のタイトルが #hoge のようになってしまうことがある。発生する条件は、Flash にフォーカスがあたったり、location.hash 値が変わったりしたとき。
+
+この問題、世間の人はどうやって解決してるんだろうと思って、swfaddress のソースをみてみた。swfaddress は Flash で location.hash 扱うための有名ライブラリ。
+
+swfaddress の JavaScript 側に次のようなソースを発見した。setInterval でこの処理が定期的に呼ばれているようだ。
+>|javascript|
+// _d は document
+var _titleCheck = function() {
+  if (_browser.isIE() && _d.title != _title)
+    SWFAddress.setTitle(_title);
+}
+||<
+要約すると、「IE でページのタイトルが勝手に変わってたら元に戻す」という処理になってる。んー、結局こうするしかないのか…。swfaddress はちょっと大げさだったので、自力で document.title を定期的に書き戻す処理を実装することにした。
+
+IE7 でもこの問題は直ってない模様。MS と Adobe のどっちが悪いんだろなぁ…。ちなみに、IE8 には <a href="http://msdn.microsoft.com/en-us/library/cc288209(VS.85).aspx">onhashchange イベント</a> が追加されるらしいので、このバグ(?)が残っていたとしても、比較的すっきりと対処できそうだ。
+

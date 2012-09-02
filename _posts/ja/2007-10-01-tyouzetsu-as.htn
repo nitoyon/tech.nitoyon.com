@@ -1,0 +1,159 @@
+---
+layout: post
+title: ActionScript 的超絶技巧発表会に参加してきました
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071001/tyouzetsu_as
+---
+Twitter 経由で企画された「ActionScript 的超絶技巧発表会」に参加してきました。日帰りで東京まで行ってきましたが、往復交通費以上に得るものは多かったです。
+
+参加条件が「発表する」だったため、ほんとにレベルが高かったです。かなりの自信作を持っていったつもりだったのに色あせてしまいました。
+
+ひとまず、勉強会まとめエントリとして投下しておきます。半分感想。
+====
+**HTML/JavaScript から SWF をいじる話(FlashBug) by <a href="http://www.muraken.biz/">muraken</a> さん
+JavaScript 経由で MovieClip を作成したり、パラメータをいじったり、中の情報を覗いたりする。AS2。→<a href="http://www.muraken.biz/?p=49">関連エントリ</a>
+
+作りこんでいけば、Flash 版デバッグ環境としても便利なものになりそう。Flash デバッグ環境って、あんまりいいのないですしね。クロスブラウザな Canvas として公開すればかなりヒットしそう。
+
+**swfassist by <a href="http://www.be-interactive.org/">yossyさん＠beinteractive</a>
+開発中の swfassist に関する発表でした。<a href="http://www.be-interactive.org/index.php?itemid=286">関連エントリ</a>。
+
+-SWF の構造を解析するツール。
+--SWF の内部は、API 経由で見せている Matrix などのデータが格納されているシンプルな構造。
+--仕様書とにらめっこして作成。クラスの数が半端じゃない。(体力勝負)
+-ShapeCollector を使えば、パースした SWF の中身の情報を描画できる。
+--Flash CS3 で定義した Shape の情報や Font の情報を読み出せる。
+--OutlineDrawer でアウトライン描画！
+-リアルタイム再生(AnimationCollector)
+--有名 Flash の ○○○○○○.swf を解析。(所要時間1分)
+--visitor pattern で実装
+--(2008.05.01追記) Flash Player のライセンス緩和に伴い、正式公開されました <a href="http://www.be-interactive.org/index.php?itemid=364">BeInteractive! [早速 AIR で FlashPlayer を作ってみた]</a>
+-ロードマップ
+--Writer は不要なのでは？ → Read だけだとプレイヤーを作ったと解釈されて、Adobe のライセンスに抵触してしまうかもしれない。
+
+さすがの内容。全員圧倒されっぱなし。
+
+swfassist の詳細は後日 yossy さんのブログで発表されるらしいよ。
+
+→ (2007.10.12追記) swfassist の<a href="http://www.be-interactive.org/index.php?itemid=289">α版がリリースされました</a>。
+
+**SFXGenerator(alpha) by <a href="http://www.zkdesign.jp/blog/">zk33</a>さん
+<a href="http://d.hatena.ne.jp/zk3/20070927/1190821779">zk_diary - 効果音ジェネレータα</a> についての発表です。<a href="http://d.hatena.ne.jp/zk3/20071001/1191245502">関連エントリ</a>。
+-文字列を指定すると音が返ってくる
+--sin波、周波数の変更、エフェクト...
+--SWF の中で効果音作成
+--リアルタイムではなく、最初に生成して使うことを想定
+-実装の話
+--<a href="http://code.google.com/p/popforge/">popforge</a> から一部拝借しながら作成。
+
+SWF＋音ネタが熱い。初音ミクの DTM ブームに乗っかっていけると面白いことになるかもしれない。
+
+(2008.5.1追記)正式版が公開されました。<a href="http://d.hatena.ne.jp/zk3/20080501/1209652053">オーディオ操作用AS3ライブラリ「sazameki」をSpark projectにコミットしました。 - zk_diary</a>
+
+**マニアックなBitmapData by <a href="http://void.heteml.jp/blog/">munegon</a> さん
+<a href="http://www.voidelement.com/randqmap/">ドラクエマップジェネレータ</a> の内部実装について。
+
+理解に必死だったので、抜けが多いです。<s>資料公開してくれるそうなのでそちらに期待。私も復習が必要です…。</s>
+
+資料が公開されました。<a href="http://www.voidelement.com/presen/tyouzetsu_070929.swf">発表資料</a>、<a href="http://void.heteml.jp/blog/archives/2007/10/tyouzetsu.html">関連エントリ</a>。
+-概要
+--128×128 のマップ要素
+--いちいち全ピクセル調べてたらとてもじゃないけど重くて使えない
+--BitmapData に 1px１パーツで保持。Filter 処理によって演算を行う。
+-noise 生成
+--BitmapData.noise() は全ての色がランダムに配置されてしまう。
+--BitmapData.pixelDissolve() なら色の種類と割合を指定できる。
+-ConvolutionFilter
+--隣接した要素による相互作用に使える
+--マップ要素の淘汰（ライフゲームのようなやつ）
+---マップチップに立てたビットで地形を決定
+---ConvolutionFilter の結果から置き換わった地形を判別
+--海岸処理 (海の横が陸地なら海岸線を書く処理)
+---threshold で海だけを取り出す
+---上下左右に海があるかを ConvolutionFilter の結果値で判断
+---[0 8 0 2 32 4 0 16 0] / 4 の 結果値で判別できる (/4 にしているのは ConvolutionFilterのバグ?)
+-DisplacementMapFilter
+--ピクセル変換に使える。
+--0x008079, 0x007980 などがキーワード
+--色からチップへの変換
+-AS1～3 の画像処理速度に大きな違いはない（経験則）
+
+AS で複雑な計算処理を行うなら、BitampData のほうが高速！　<a href="http://slashdot.jp/hardware/05/09/06/231216.shtml?topic=38">GPGPU</a> の世界。
+
+**PotrAs の説明 by nitoyon
+資料を公開しました。→ <a href="http://d.hatena.ne.jp/nitoyon/20071002/potrace">関連エントリ＋発表資料</a>。
+
+**mp3 encoder と ustream＋ニコニコの話 by <a href="http://saqoosha.net/">Saqoosha</a> さん
+<a href="http://saqoosha.net/2007/10/01/616/">関連エントリ＋ソースコード (mp3 encoder)</a>、<a href="http://saqoosha.net/2007/10/08/617/">関連エントリ2 (ustream＋ニコニコ)</a>
+-mp3 encoder
+--再生中の音の情報を popforge のビジュアライザから取ってきて、MP3 エンコードする
+--ぶちぶちなデータなので元の音が再現できない（ロボットの機械的な音）
+--ビジュアライザの値は何か使えそうなのに…。
+-ustream のチャットデータを取る
+--ustream は横長でながら見に適さない
+---最前面 AIR + ニコニコ風にすればいけるのでは
+--AS で IRC client。IRC のプロトコルは単純。
+--AIR からストリームを直接開くとなぜかうまくいかないので「ぶっこ抜き」
+
+ustream＋AIR なプレイヤーはかなり便利そうだった。公開に期待。→ <a href="http://saqoosha.net/2007/10/08/617/">公開されました</a>
+
+**いろいろな所からインスパイアされた作ったら面白そうなもの by <a href="http://www.trick7.com/blog/">trick7</a> さん
+あっちこっちに着想を得て、想像を膨らませながら作品の構想を練る過程を公開。
+
+こういう種明かしのような発表も面白い。
+
+詳細は <a href="http://www.cbc-net.com/article/2007/09/trick7_01.php">trick7 さんの CBCNET の連載記事</a> の２回目にて公開されるそうです。ネタバレになってしまいそうなので発表内容は隠蔽しておきます。
+
+(2007.11.30追記) 公開されました。→<a href="http://www.cbc-net.com/article/2007/11/trick7_02.php">CBCNET - 土日 Flash のススメ(2)：作りながら考え、考えながら作る。</a>
+
+**AS3 でパーティクル柔軟スタディーどうする by <a href="http://fladdict.net/blog/">fladdict</a> さん
+<a href="http://fladdict.net/exp/particlemap.swf">発表資料</a>、<a href="http://fladdict.net/blog/2007/09/post_92.html">関連エントリ</a>。
+-PerticleBase.as の薦め
+--サンプルコード → <a href="http://fladdict.net/exp/particlemap.zip">http://fladdict.net/exp/particlemap.zip</a>
+--PerticleBase.as は70行ほどのシンプルな構造
+--update と render をクラスの外関数レベルで委譲
+--実装を外に持てる
+--代入する関数を変えることで、レゴブロック的なデザインが可能になる
+--OOP 的には邪道かもしれないけど、実験に最適
+-<a href="http://asluv.com/2007/09/18/sandlight-as3-experiment/">sand/light AS3 experiment</a> がすごくてパーティクルブーム再来
+--画像情報からパーティクルの速度成分が影響を受ける
+--実験中の SWF を特別公開 → RGB でパワーを定義して描画情報を切り替える手法
+
+パーティクルの実験はパラメータをいじって理想的な演算やパラメータを調べていく地道な作業なんだなぁ、と実感。こうやって生み出したモーションのソースコードを、気軽に公開する気になれないのも納得してしまった。
+
+**２次会
+勉強会が濃かったためか、最初は誰も喋りだせない空気だったけれども、お酒も入って(※yossyさん除く)、経歴紹介したあたりからギアが加速。話は四方八方に。印象的だったところをメモしておきます。
+
+-各人の今に至る略歴紹介
+--音楽・VJ・デザイン から入ってきた人、５名(たぶん)
+--ブログがきっかけで転職した人、２名
+--みんな27～29歳。(N88 や FM-towns からの人も多し)
+--yossy さんだけ例外。（Windows Me から!!!!）
+--下の世代は何に興味持ってるんだろう？？
+-周辺技術
+--WPF/Silverlight はまだ触る気になれない（Flash 以上の可能性は感じない。DRMぐらい？）
+--iPod touch に Flash 載ったら面白いのに
+---Apple は Flash 嫌い？　Apple のサイトでは Flash が使われていない
+---動画関連で近い将来に正面から激突する
+--Flash Lite
+---Flash Lite 1 は絶対触りたくない (tellTarget, call, setProperty...)
+---Flash Lite 2 は昨年冬ぐらいからのケータイに搭載されている。けど注意書きをしっかり書かないと「動きません」クレームがいっぱいくる
+-Flash で不労所得は得られるか
+--成功事例はアニメータさんぐらい。やはりコンテンツホルダーにならないと勝てないのか？
+--2ch ブラウザへのキックバック。一番有名な某2chブラウザで月ウン千USD!?→AIRで作っちゃえ？
+--ジェネレータ系はアクセス数がすごくて、アフィリエイトで儲かるらしい
+--AIR で P2P したらすごくね？（あやしいウイルス）
+-Flash の楽しさをいかに広めるか
+--ブログで Flash ばっかり書いてると、Flash やってる人しか読まなくなる
+--でも、機会があれば Flash/AS をやりたいと思っている人は相当数いるはず。（はてブでで稀に発生する AS エントリ人気）
+
+※出席者の総意ではありません。念のため。
+
+刺激されまくった。
+
+さて、どうしよう。
+
+もうしばらくはブログ書きに専念する予定だけど、一段落したら物作りフェーズに入ってみようかな。ネタは色々溜まってるし。
+
+>{% amazon jp:4756150322:detail %}<

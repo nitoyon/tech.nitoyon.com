@@ -1,0 +1,320 @@
+---
+layout: post
+title: オブジェクト指向なコマンド環境「Powershell」を試してみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080806/powershell_tutorial
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080806/20080806023525.jpg" width="450" height="169"></center><
+Microsoft 製の最新のコマンドライン環境「Powershell」が面白かったので、楽しいところをまとめてみた。
+
+PowerShell の本の中では <a href="http://www.amazon.co.jp/exec/obidos/ASIN/4774133329/nitoyoncom-22/ref=nosim">プログラマブルPowerShell ～プログラマのための活用バイブル～</a> が非常に分かりやすかった。おすすめ。
+
+>{% amazon jp:4774133329:detail %}<
+
+**UNIX な人にも使いやすい親切設計
+コマンドプロンプトでファイル列挙と言えば dir だけど、Powershell では ls も使える。
+>|sh|
+PS> ls
+
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
+    Documents and Settings\nitoyon
+
+Mode             LastWriteTime   Length Name
+----             -------------   ------ ----
+d---s     2006/02/19     22:35          Cookies
+d-r--     2006/02/17     23:39          Favorites
+d-r--     2006/02/19     18:56          My Documents
+d-r--     2004/08/19      9:56          スタート メニュー
+d----     2006/02/19     23:06          デスクトップ
+||<
+
+alias の仕組みがあって、dir と ls はいずれも Get-ChildItem というコマンドの alias になってる。
+
+>|sh|
+PS> get-alias | where {$_.Definition -eq "Get-Childitem"}
+
+CommandType     Name                     Definition
+-----------     ----                     ----------
+Alias           gci                      Get-ChildItem
+Alias           ls                       Get-ChildItem
+Alias           dir                      Get-ChildItem
+||<
+
+同じ感じで、pwd、cp、mv、ps、pushd、popd、rm などの alias がデフォルトで登録されているし、追加で登録することもできる。ちなみに、このワンライナーの意味はこの記事を読み終わった頃には理解できるはず。
+
+
+**変数にオブジェクトを格納
+Powershell は強力なスクリプト環境をそなえている。
+
+まずは ls の結果を $files 変数に代入してみる。
+>|sh|
+PS> $files = ls
+||<
+
+$files と入力して Enter を押すと、$files 変数の中身が評価される。
+>|sh|
+PS> $files
+
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
+    Documents and Settings\nitoyon
+
+Mode             LastWriteTime   Length Name
+----             -------------   ------ ----
+d---s     2006/02/19     22:35          Cookies
+d-r--     2006/02/17     23:39          Favorites
+d-r--     2006/02/19     18:56          My Documents
+d-r--     2004/08/19      9:56          スタート メニュー
+d----     2006/02/19     23:06          デスクトップ
+||<
+
+で、ここで面白いのが、$files に入ってるのが実は文字列じゃないところ。なんと、$files には<strong>ファイルオブジェクトの配列</strong>が格納されている。
+
+ということで、length プロパティで数が分かる。
+>|sh|
+PS> $files.length
+5
+||<
+[0] で最初のオブジェクトにアクセスできる。
+>|sh|
+PS> $files[0]
+Mode                LastWriteTime     Length Name
+----                -------------     ------ ----
+d---s        2006/02/19     22:35            Cookies
+||<
+====
+
+[0 .. 2] で連番にしたり、[-1] で最後のオブジェクトを取得したりもできる。
+>|sh|
+PS> $files[0 .. 2]
+
+Mode                LastWriteTime     Length Name
+----                -------------     ------ ----
+d---s        2006/02/19     22:35            Cookies
+d-r--        2006/02/17     23:39            Favorites
+d-r--        2006/02/19     18:56            My Documents
+
+
+PS> $files[-1]
+
+Mode                LastWriteTime     Length Name
+----                -------------     ------ ----
+d----        2006/02/19     23:06            デスクトップ
+||<
+
+ファイルオブジェクトのプロパティを参照してもよい。
+>|sh|
+> $files[0].FullName
+C:\Documents and Settings\nitoyon\Cookies
+||<
+
+**メソッド・プロパティの列挙
+オブジェクトのメソッドやプロパティを知りたくなったら、get-member コマンドを実行するとよい。
+>|sh|
+PS> ls | get-member
+
+   TypeName: System.IO.DirectoryInfo
+
+Name                   MemberType    Definition
+----                   ----------    ----------
+Create                 Method        System.Void Create(), System.Void C...
+CreateObjRef           Method        System.Runtime.Remoting.ObjRef Crea...
+CreateSubdirectory     Method        System.IO.DirectoryInfo CreateSubdi...
+Delete                 Method        System.Void Delete(), System.Void D...
+Equals                 Method        System.Boolean Equals(Object obj)
+  :                      :                   :
+FullName               Property      System.String FullName {get;}
+LastAccessTime         Property      System.DateTime LastAccessTime {get...
+LastAccessTimeUtc      Property      System.DateTime LastAccessTimeUtc {...
+  :                      :                   :
+||<
+何気にパイプを使ってるけど、実は、Powershell では<strong>パイプで渡されるのもオブジェクト</strong>。すごいですね。
+
+おまけに、System.String などと書いてあるところからピンとくる人もいるかもしれないけど、オブジェクトは .NET Framework 的なオブジェクトになってる。.NET に親しい人ならすごく使いやすいはず。
+
+**ループも条件分岐も
+それじゃあ、ループを使ってみよう。
+
+次のプログラムは、C:\windows 以下の 1MB 以上のファイルを列挙したところ。
+>|sh|
+PS C:\WINDOWS> foreach($file in ls){
+>>   if($file.length -gt 1MB){
+>>     write $file.name
+>>   }
+>> }
+>>
+CTDVAUDY.CDF
+GEXPlugin.ax
+iis6.log
+setupapi.del
+WindowsUpdate.log
+||<
+1MB より大きいものだけを if で調べて出力してる。コマンドラインなので、> の変わりに、-gt という演算子が用意されている。
+
+ちなみに、1MB というのはあらかじめ定義されている定数。
+>|sh|
+PS C:\WINDOWS> 1MB
+1048576
+||<
+
+**よりオブジェクト指向らしく
+パイプを使って、よりオブジェクト指向らしいプログラミングを実践してみよう。
+
+***where でフィルタリング
+さっきの foreach のサンプルは手続き型っぽかったけど、これをかっこよく書き直してみた。
+>|sh|
+PS C:\WINDOWS> ls | where {$_.length -gt 1mb}
+
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
+    WINDOWS
+
+Mode             LastWriteTime    Length Name
+----             -------------    ------ ----
+-a---     2003/02/27     15:29   4481358 CTDVAUDY.CDF
+-a---     2006/09/07      1:23   1406464 GEXPlugin.ax
+-a---     2008/07/10      3:01   1124405 iis6.log
+-a---     2004/08/19     10:40   1080959 setupapi.del
+-a---     2008/08/04      1:26   1907044 WindowsUpdate.log
+||<
+
+where コマンドは、配列の中から条件にマッチするものだけを返す。絞り込みができるわけ。Perl の grep、Ruby の find_all(や select)、JavaScript 1.6 の filter みたいな感じ。
+
+***foreach で全ての要素に対して実行
+今度は、パイプの受け口として foreach を使ってみる。
+
+いままで、ファイルのサンプルばかりだったので、次はプロセス情報を使ってみよう。起動中のメモ帳をばっさり閉じる例。
+>|sh|
+PS C:\WINDOWS> ps -name notepad | foreach {$_.kill()}
+||<
+notepad.exe のプロセスを列挙して、それぞれについてプロセスオブジェクトの kill() メソッドを実行して殺している。
+
+とはいえ、kill コマンドもあって、プロセスの配列を処理できる。
+
+同じ処理は次のように書ける。
+>|sh|
+PS C:\WINDOWS> ps -name notepad | kill
+||<
+さらに、kill コマンドには -name フラグもあるので本当は１発で書けたりもする。
+>|sh|
+PS C:\WINDOWS> kill -name notepad
+||<
+でも、複雑な処理をするときには、foreach が便利ですよね、ということで。
+
+***プロパティ名で sort
+ソートも簡単。
+
+メモリ使用量が多いプロセス top 5 を調べてみる。
+>|sh|
+PS C:\WINDOWS> ps | sort WS -Descending | select -first 5
+
+Handles   NPM(K)   PM(K)   WS(K) VM(M)   CPU(s)     Id ProcessName
+-------   ------   -----   ----- -----   ------     -- -----------
+    804       21   30664   45712   189   109.97   1384 explorer
+    271       11   32776   42440   161     5.33   2392 firefox
+    404        9   42468   40712   175    26.67   3744 powershell
+    827       31   27956   32696   226    33.14   2224 msnmsgr
+   1761       66   21764   32348   169   107.77   1748 svchost
+||<
+
+sort の後にプロパティ名を指定してるだけ。UNIX 系だとソートも文字ベースなんだけど、プロパティ名で色々実現できるのが愉快！
+
+ちなみに、select コマンドは配列を置き換える map のような機能があったり、UNIX コマンドの uniq、head、tail に相当する機能があったり、色んな用途に使える。詳しくは、man select -detailed でヘルプが見れる。
+
+**関数を定義する
+関数も作れるよ。
+
+メモリ使用量が多いプロセス top N を求める関数を作ってみた。
+>|sh|
+PS C:> function psmemory([int]$n = 5){ps | sort WS -Descending | select -first $n}
+||<
+呼び出したところ。
+>|sh|
+PS C:> psmemory 1
+
+Handles  NPM(K)    PM(K)      WS(K) VM(M)   CPU(s)     Id ProcessName
+-------  ------    -----      ----- -----   ------     -- -----------
+   1121      22    31092      48496   181   227.88   1384 explorer
+||<
+引数に 1 を渡しているので、１つだけ表示される。psmemory(1) のように、括弧つきで呼び出すこともできる。パラメータを省略すると5個列挙されるように作ってる。
+
+ところで、勘のいい人なら既に気付いてるかもしれないけど、上で示したサンプル
+>|sh|
+PS C:\WINDOWS> ls | where {$_.length -gt 1mb}
+||<
+の <strong>{$_.length -gt 1mb} の部分は関数</strong>なんです。Powershell では「スクリプトブロック」という名前がついてるんだけど、無名関数と言ったほうが分かりやすいかもしれない。Ruby に詳しい人は、ブロックと言い換えるとすっきりするはず。
+
+というわけで、このサンプルは、ls した結果を where で回して、無名関数でフィルタリングしてる。うわー、オブジェクト指向っぽい！
+
+**ドライブ名
+Powershell ではドライブ名が名前空間のように振舞ってる。
+
+デフォルトで定義されているドライブ名一覧を見てみよう。
+>|sh|
+PS> Get-PSDrive
+
+Name       Provider      Root
+----       --------      ----
+A          FileSystem    A:\
+Alias      Alias
+C          FileSystem    C:\ 
+cert       Certificate   \
+D          FileSystem    D:\
+Env        Environment
+Function   Function
+HKCU       Registry      HKEY_CURRENT_USER
+HKLM       Registry      HKEY_LOCAL_MACHINE
+Variable   Variable
+||<
+A: や C: はお馴染みなんだけど、それ以外にも色々定義されている。
+
+例えば、Function: や Variable: には関数、変数の一覧が格納されてる。
+>|sh|
+PS> ls Variable:
+
+Name          Value
+----          -----
+ :             :
+PID           5324
+files         {.ssh, Contacts, Cookies, Favorites...}
+ :             :
+||<
+あらかじめ定義されている PID などに加えて、自分で定義した $files も列挙されているのが分かる。
+
+他にも、cert: は証明書ストア、HKCU: や HKLM: はレジストリ情報を表す。これらの情報をファイルシステムのように抽象化されていて、ls や cd で参照したり、検索したりできるようになってる。
+
+この仕組みの肝が Privider。列挙したり参照したりする機能を提供している。Provider は C# で自前実装することもできて、例えば、id:coma2n さんによる <a href="http://d.hatena.ne.jp/coma2n/20080222/1203633878">PowerShellで2chビューワ</a> なんかが面白い。2ch ドライブで 2ch の掲示板情報を参照できるようだ。
+
+Provider から新たなドライブを作成することも可能。例えば、FileSystem プロバイダを使って、ホームディレクトリを home: ドライブとして割り当るには次のようにする。
+>|sh|
+PS> New-PSDrive -Name home -PSProvider FileSystem -Root $home
+
+Name       Provider      Root
+----       --------      ----
+home       FileSystem    C:\Documents and Settings\nitoyon
+
+PS> ls home:
+# ホームディレクトリのファイル一覧
+||<
+
+まぁ、あくまで Powershell 内での擬似的なドライブなんだけど楽しい。
+
+**インストール方法
+最後にインストール方法を紹介しておく。当初は Vista に搭載される予定だったけど間に合わなかったので、いまのところ必ずインストールする必要がある。
+
+.NET Framework 2.0 再頒布可能パッケージが必要なので、導入してない人は事前にインストールしておくべし。
+
+本体は以下の場所からダウンロードできる。
+-<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=30125A46-B97C-4704-AA10-605E809D5933&displaylang=ja">Windows XP 用 Windows PowerShell 1.0 インストール パッケージ (KB926140)</a>
+-<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=C6EF4735-C7DE-46A2-997A-EA58FDFCBA63&displaylang=ja">Windows Vista 用 Windows PowerShell 1.0 インストール パッケージ (KB928439)</a>
+
+日本語のマニュアルがけっこう詳しく書いてあるので目を通すだけで雰囲気が分かるはず。スタートメニューから見れるよ。
+
+コマンドの詳細について知りたい場合は、man [コマンド名] -detailed を実行するとよい。ps コマンドだと、man ps -detailed。
+
+**まとめ
+Powershell のオブジェクト指向な雰囲気が楽しい。MS-DOS や UNIX 系のシェルとは系統が違うので、どちらかというと .NET Framework のインタラクティブシェルだと解釈したほうが適切かもしれない。
+
+>{% amazon jp:4797340274:detail %}<
+>{% amazon jp:4798017272:detail %}<
+>{% amazon jp:4797337362:detail %}<
+

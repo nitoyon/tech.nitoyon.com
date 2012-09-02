@@ -1,0 +1,96 @@
+---
+layout: post
+title: Google Gears の使い道
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070603/how_to_use_google_gears
+---
+<a href="http://gears.google.com/">Google Gears (BETA)</a> が発表されました。
+
+Google Gears はウェブサービスにオフライン機能を付け加えやすくするためのフレームワークです。
+
+フレームワークが提供するのは次の３つの機能です。
+:LocalServer:オフラインになったときにも HTML や JavaScript、CSS にアクセスできるようにする。ブラウザのキャッシュ（一時ファイル）を強化したイメージ。
+:Database:オフライン時に行った動作を記録しておく。SQLite ベース。ブラウザの Cookie を大容量化したイメージ。
+:WorkerPool:CPU を消費する機能をバックグラウンドで実施する機能。setTimeout で無理やり細切れに実行していた部分を任せることができる。スレッド機能とも考えられる。
+開発者は、これら３つの機能を駆使して、オフライン機能を実装することになります。
+
+ありがちな実装パターンはこうなるでしょうか。
+-LocalServer を使ってオフライン時にも必要なファイルが手に入るようにする
+-オフライン時に行われた変更はサーバーには投げずに、Database に保存
+-オンラインになったときに、WorkerPool を使って Database に蓄えたオフライン中の処理データをサーバーに送信
+
+**素朴な疑問：オフライン機能って必要？
+利用者の立場から考えて見ます。
+
+オフラインのときにも使いたくなるサービスって何があるでしょうか。RSS リーダーや GMail、Google Docs & Spreadsheets…。ここまで挙げたあと、続きが思いつきません。
+
+日曜プログラマが開発するようなちょっとしたアプリケーションでは、オフライン機能を使いたくなるところまでいかないと思います。
+
+また、オフライン中の操作を Database に保存したり、オンラインになったときに送信したりする部分の実装はかなり煩雑です。
+
+ばっさり言ってしまえば、<strong>ユーザーからの需要は少ない上に、実装コストが高い</strong>のです。
+
+
+では、Google Gears は不要な技術なのでしょうか。
+
+いいえ、実は超絶に魅力的です。
+
+<strong>３つの機能を単体利用</strong>するだけでも、実装効率は格段によくなりそうです。
+
+１つ１つ説明していきます。
+
+**LocalServer はブラウザキャッシュをコントロールするための技術
+ブラウザのキャッシュ（一時ファイル）は、キャッシュする条件がブラウザによってことなるなど、アプリケーション側から完全にコントロールするのは不可能でした。
+
+それを Google Gears の LocalServer 機能で解決します。
+
+例えば、こんな使い方はどうでしょう。
+
+-初回ロード時に読み込んだファイルを LocalServer にキャッシュする
+-次回ロードからは、LocalServer のファイルを利用してロードする → 表示の高速化
+-ロードが完了して落ち着いたころを見計らって、サーバーにアップデート確認
+--更新があった場合には、その場でページを書き換えてもいいが、何もしなくてもいい。既存のブラウザも、キャッシュがある場合には手動でリロードして初めてサーバーにとりに行く実装になっている。
+-次に読まれそうなデータを先読み（ページ遷移があっても大丈夫!!!）
+
+重要なのは、<strong>アプリケーション側からブラウザのキャッシュを完全にコントロールできる</strong>ことです。
+
+**Database は SQL ベースの大容量 Cookie
+現状のブラウザベースのアプリケーションでは、ちょっとした設定データやセッションデータを Cookie に保存します。
+
+しかし、Cookie には 4KB 容量制限が重くのしかかります。
+
+この制限を克服するために、<a href="http://www.niallkennedy.com/blog/archives/2007/01/ajax-performance-local-storage.html">Flash の SharedObject や、DOM Storage（Firefox only）、userData（IE only）を利用する</a> といったバッドノウハウがあるのですが、インターフェースもばらばらな上に、環境依存の問題も併発してしまいそうで、なるべくなら使いたくないのが現状でした。
+
+そこで、Google Gears の Database です。
+
+<strong>大容量な上に、検索も SQL ベースで高速</strong>なのです。
+
+また、Apollo β版にも Gears の Database と同様に SQLite ベースのデータベースが付属することが決まっています。
+
+Adobe の中の人のブログによると、Google Gears と Apollo はこの部分で連携していくようです。
+>>
+Apollo アプリでもウェブアプリでも、同じようにローカル DB を使えるようなインターフェースがあったら便利だよね。Adobe と Google は、そのインターフェースを連携しながら考えていくよ。
+
+>http://www.mikechambers.com/blog/2007/05/30/apollo-beta-will-include-sqlite-embedded-database/:title=Apollo Beta will include SQLite Embedded Database at Mike Chambers>
+I meant to add that we are working on aligning the Apollo DB and Gears DB apis, with the goal of making it easier to build applications and code that can leverage both API implementations (on the desktop and in the browser).
+<<
+<<
+
+Google と Adobe の連携話からも SQL ベースのローカルストレージが流行っていくような予感がします。
+
+**WorkerPool で setTimeout 地獄からの開放
+JavaScript の実装をしていると、ちょっと複雑な処理が入ると、ブラウザが応答しなくなり、CPU 使用率が 100% になってしまいます。
+
+これを解決するためには、実装すべき機能を細切れにして、setTimeout で呼び出さなければなりませんでした。
+
+しかし、ソースの可読性が下がってしまうため、あまりやりたくない手段です。
+
+そこで、Google Gears の WorkerPool です。
+
+思い処理を WorkerPool に任してしまって、バックグラウンドで処理してもらいます。ついに、<strong>JavaScript でスレッド</strong>を手に入れられるのです。
+
+**まとめ
+-Google Gears をオフライン機能のために利用するのではなく、それぞれの機能を個別に活用する。
+-いままで制御できなかった部分や、泥臭かった部分をすっきり実装できるようになる。
+-それだけでも、かなり魅力的。

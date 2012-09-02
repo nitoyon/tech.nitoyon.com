@@ -1,0 +1,197 @@
+---
+layout: post
+title: レジストリに RegSetValueEx で REG_SZ を設定するときのバイト数
+tags: Win32
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20101222/regsetvalueex_cbdata_size
+---
+Windows でレジストリにデータを格納するときに使う <code>RegSetValueEx()</code> 関数を掘り下げてみた。RegSetValueEx() の定義は次のようになってる。
+>|cpp|
+LONG RegSetValueEx(
+  HKEY    hKey,        // キーのハンドル
+  LPCTSTR lpValueName, // 値の名前
+  DWORD   Reserved,    // NULL
+  DWORD   dwType,      // 種類
+  LPCBYTE lpData,      // 値のデータ
+  DWORD   cbData       // 値のデータのサイズ
+);
+||<
+
+MSDN によると、<code>cbData</code> については、
+>http://msdn.microsoft.com/en-us/library/aa916717.aspx:title=RegSetValueEx>
+If the data is of type REG_SZ, REG_EXPAND_SZ, or REG_MULTI_SZ, cbData must include the size of the terminating null character or characters.
+>http://msdn.microsoft.com/ja-jp/library/cc429936.aspx:title=RegSetValueEx 関数>
+データの種類が REG_SZ、REG_EXPAND_SZ、REG_MULTI_SZ のいずれかである場合、cbData パラメータで終端の NULL のサイズも含めなければなりません。 
+<<
+<<
+とあるだけで、<code>NULL</code> のサイズを含めない場合にどうなるのかが分からなかった。
+
+そこで、<code>dwType</code>(種類)が REG_SZ のときに <code>lpData</code>(値のデータ) と <code>cbData</code>(値のデータのサイズ) を変化させたときの挙動を調べてみた。
+====
+**正常なケース
+REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含めたバイト数を渡してあげる必要がある。
+
+<code>test</code> を書き込むにはそれぞれ次のようなパラメータを与えると、ANSI の場合には5バイト分、Unicode の場合には10バイト分がレジストリに書き込まれる。
+|*変数名|*パラメータ|
+|<code>lpData</code>|<code>TEXT("test")</code>|
+|<code>cbData</code>|<code>5 * sizeof(TCHAR)</code>|
+
+書き込みに成功したあと、<code>RegQueryValueEx</code> を利用すると、実際に何バイト書き込まれたかどうかを調べることができる。上記の呼び出しでは、ANSI で5バイト、Unicode で10バイトが格納されており、NULL 文字も含めてレジストリ上に書き込まれたことが分かる。
+
+以下、自作テストツールの出力(ANSI の場合)。NULL 文字は _ で表現した。
+>|
+ set 5 bytes = test_ (74 65 73 74 00) -> wrote 5 bytes
+|<
+5バイト(<code>"test"</code>書き込んだら、ちゃんと5バイト分書き込めていた、という出力になっている。
+
+**NULL 文字のサイズを含めるのを忘れた場合
+<code>test</code> を書き込むには <code>cbData</code> に5文字分のバイト数を渡さなきゃいけないのだけど、忘れちゃうケースはよくあるだろう。
+
+この点に配慮してか、<code>RegSetValueEx()</code> 関数は <code>cbData</code> バイト目に NULL 文字がなく、その次が NULL 文字の場合に限り、レジストリに書き込む文字数をこっそり１増やすようだ。
+
+次のような値で書き込むと、
+|*変数名|*パラメータ|
+|<code>lpData</code>|<code>TEXT("test")</code>|
+|<code>cbData</code>|<code>4 * sizeof(TCHAR)</code>|
+4バイトだけ書き込んだはずなのに、<code>RegQueryValueEx()</code> を呼び出すと NULL 文字を含んだバイト数が書き込まれていたことが分かった。
+>|
+ set 4 bytes = test_ (74 65 73 74 00) -> wrote 5 bytes
+|<
+4バイト(<code>"test"</code>書き込んだら、なぜか5バイト分書き込めていた、という状態。
+
+余計なおせっかいと言ってしまえばそれまで。
+
+**さらに小さいサイズを指定した場合
+さらに１バイト減らしてみた。<code>test</code> を書き込むのに <code>cbData</code> に3文字分のバイト数を渡すとどうなるか。
+|*変数名|*パラメータ|
+|<code>lpData</code>|<code>TEXT("test")</code>|
+|<code>cbData</code>|<code>3 * sizeof(TCHAR)</code>|
+この場合は NULL 文字を含まない形でレジストリに格納される。
+>|
+  set 3 bytes = test_ (74 65 73 74 00) -> wrote 3 bytes
+|<
+
+このとき、レジストリ上には test のうちの何文字が格納されているのだろうか。末尾に NULL は付加されているのだろうか。
+
+3文字分のバッファを渡して <code>RegQueryValueEx()</code> で取得すると NULL を含まない形で <code>tes</code> の3文字が返ってきた。
+>|
+query 3 bytes = tesﾌﾌ (74 65 73 cc cc) (lpcbData=3)
+|<
+
+一方、NULL 文字を格納する余地を含んだバッファを <code>RegQueryValueEx()</code> に渡してあげると、NULL 文字が追加された <code>tes\0</code> が返ってきた。
+>|
+query 5 bytes = tes_ﾌ (74 65 73 00 cc) (lpcbData=3)
+|<
+ただ、このときの <code>lpcbData</code> には「NULL 文字を含んだバイト数」(=4バイト)ではなく「レジストリに保存されたバイト数」(=3バイト)が入っているので注意が必要だ。
+
+Microsoft さんの余計なおせっかいにも似た優しさに惑わされてバグを生まないように注意したい。
+
+**NULL 文字を途中に含んだ文字列を書き込んだ場合
+試しに途中に NULL 文字を含んだ文字列を書き込んでみるとどうなるだろう。
+|*変数名|*パラメータ|
+|<code>lpData</code>|<code>TEXT("t\0st")</code>|
+|<code>cbData</code>|<code>5 * sizeof(TCHAR)</code>|
+5バイト分書き込むことができる。
+>|
+  set 5 bytes = t_st_ (74 00 73 74 00) -> wrote 5 bytes
+|<
+取得すると、NULL 文字を含んだ形で取得できた。
+>|
+query 5 bytes = t_st_ (74 00 73 74 00) (size=5)
+|<
+ただし、レジストリエディタで値を確認する限りは、最初の NULL 文字までしか表示されない。C# の <code>Microsoft.Win32.RegistryKey.GetValue()</code> を使って取得しても、NULL 文字以降は取得できなかった。こっそりと秘密の情報を格納するのに使えるかもしれない。
+
+また、何も考えずにバッファサイズ分の文字をレジストリに格納していると、NULL 文字以降の情報もレジストリに保存されてしまうので、秘密のデータがこっそり漏れてしまうかもしれないので注意が必要だ。
+
+**RegSetValue と RegQueryValue
+<code>RegSetValue</code> は現在は利用を推奨されていないが、データの型に REG_SZ しか指定できない時代の関数である分、REG_SZ を書き込む場合には簡単に使える。
+>|cpp|
+RegSetValue(
+  HKEY    hKey,       // キーのハンドル
+  LPCTSTR lpSubKey,   // 値の名前
+  DWORD   dwType,     // REG_SZ でなければならない
+  LPCTSTR lpData,     // NULL 終端文字列
+  DWORD   cbData      // 無視される
+);
+||<
+<code>RegSetValue</code> の内部で文字列の長さからバイト数も決定してくれるので非常に楽だ。
+
+<code>RegQueryValue</code> も現在は利用を推奨されていないが、途中に NULL 文字を含む文字列も取得できることが確認できた。
+
+**ソース
+今回の実験に使ったソースを掲載しておく。
+><div class="fix-height-syntax"><
+>|cpp|
+#include <windows.h>
+#include <stdio.h>
+#include <tchar.h>
+
+void dump5(LPCTSTR buf);
+void testRegSetValueEx(LPCTSTR buf, DWORD size);
+
+int main(){
+    // RegSetValueEx でサイズに正しい値を与えたとき
+    testRegSetValueEx(TEXT("test"), 5 * sizeof(TCHAR));
+
+    // RegSetValueEx でサイズに NULL 文字を含めるのを忘れたとき
+    testRegSetValueEx(TEXT("test"), 4 * sizeof(TCHAR));
+
+    // RegSetValueEx でサイズに小さい値を与えたとき
+    testRegSetValueEx(TEXT("test"), 3 * sizeof(TCHAR));
+    testRegSetValueEx(TEXT("test"), 2 * sizeof(TCHAR));
+    testRegSetValueEx(TEXT("test"), 1 * sizeof(TCHAR));
+
+    // RegSetValueEx でサイズに 0 を与えたとき
+    testRegSetValueEx(TEXT("test"), 0);
+
+    // RegSetValueEx で NULL 文字を含む値を与えたとき
+    testRegSetValueEx(TEXT("t\0st"), 5 * sizeof(TCHAR));
+
+}
+
+void testRegSetValueEx(LPCTSTR buf, DWORD size) {
+    DWORD dwType;
+
+    _tprintf(_T("  set %d bytes = "), size);
+    dump5(buf);
+
+    // exec
+    RegSetValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, REG_SZ, (LPCBYTE)buf, size);
+    //RegSetValue(HKEY_LOCAL_MACHINE, NULL, REG_SZ, (LPTSTR)buf, size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &dwType, NULL, &size);
+    _tprintf(_T(" -> wrote %d bytes\n"), size);
+
+    // query value 1
+    TCHAR result1[5];
+    _tprintf(_T("query %d bytes = "), size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &dwType, (LPBYTE)result1, &size);
+
+    dump5(result1);
+    _tprintf(_T(" (lpcbData=%d)\n"), size);
+
+    // query value 2
+    TCHAR result2[5];
+    size = 5 * sizeof(TCHAR);
+    _tprintf(_T("query %d bytes = "), size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &dwType, (LPBYTE)result2, &size);
+
+    dump5(result2);
+    _tprintf(_T(" (lpcbData=%d)\n"), size);
+
+    _tprintf(_T("\n"));
+}
+
+void dump5(LPCTSTR buf) {
+    for (int i = 0; i < 5; i++) {
+        _tprintf(TEXT("%c"), buf[i] == _T('\0') ? _T('_') : buf[i]);
+    }
+    _tprintf(_T(" ("));
+    for (int i = 0; i < 5; i++) {
+        if (i != 0) _tprintf(_T(" "));
+        _tprintf(_T("%02x"), (UINT)buf[i] & 0xff);
+    }
+    _tprintf(_T(")"));
+}
+||<
+></div><
+

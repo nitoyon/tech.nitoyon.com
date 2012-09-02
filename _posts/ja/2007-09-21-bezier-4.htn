@@ -1,0 +1,263 @@
+---
+layout: post
+title: ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070921/bezier_4
+---
+今までは一般的な話だったけど、今回は ActionScript に特化した話をします。
+
+ActionScript には２次ベジエ曲線を描く Graphics.curveTo というのがありますが、３次ベジエ曲線を描画するメソッドは用意されていません。既にいろいろな方が３次ベジエ曲線を近似する方法を発表されています。
+-<a href="http://d.hatena.ne.jp/flashrod/20060905#1157462756">flashrod - AS3でフリーハンドベジェ</a>
+-<a href="http://subtech.g.hatena.ne.jp/secondlife/20070920/1190220884">subtech - PBD - AS3 で三次ベジェ曲線を Graphics.prototype を拡張して実装する</a>
+-<a href="http://hakuhin.hp.infoseek.co.jp/main/as/curve.html#CURVE_03">Flashゲーム講座＆ASサンプル集【曲線について】 - ３次ベジェ曲線を描画する</a>
+
+しかし、このどれもが直線で近似しています。直線じゃなく、２次ベジエで近似したほうが精度よくなるかも！と思って、<strong>３次ベジエ曲線を２次ベジエ曲線で近似</strong>してみました。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBezierTest4.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=300&amp;title=Bezier+Approximation&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+-緑の線が直線で近似した３次ベジエ曲線です
+-赤い線が２次ベジエ曲線で近似した３次ベジエ曲線です
+-ボタンの上にマウスを置くと、正しい３次ベジエ曲線を表示します（100分割した直線で描画）
+-ボタンを押すと分割数を切り替えられます
+
+見れば分かるとおり、４分割程度でもそれなりのものができあがります。ねじれさせると４分割では厳しくなりますが、６～８分割もすればかなりいい具合ではないでしょうか。性質上、奇数個に分割すると、端が余ります。
+
+直線で分割した場合は20分割程度で違和感はなくなるように見えます。
+
+２次ベジエ8個と直線20個のどちらが描画が高速なのかは気になるけど未調査。どこかの誰かに期待。
+
+**目次
++<a href="http://d.hatena.ne.jp/nitoyon/20070918/bezier_1">ベジエ曲線の仕組み (1) - 昔話</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070919/bezier_2">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070920/bezier_3">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070921/bezier_4">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a>
+
+**ソースコード
+以下にソースを掲載します(220行)。
+====
+>|javascript|
+package
+{
+    import flash.display.Sprite;
+    import flash.display.Graphics;
+    import flash.text.TextField;
+    import flash.geom.Point;
+    import flash.utils.Timer;
+
+    public class BezierTest4 extends Sprite
+    {
+        private var p1:BezierPoint = new BezierPoint();
+        private var p2:BezierPoint = new BezierPoint();
+        private var p0:BezierPoint = new BezierPoint(p1);
+        private var p3:BezierPoint = new BezierPoint(p2);
+
+        private var button1:AnimeButton = new AnimeButton(0, 0x900000);
+        private var button2:AnimeButton = new AnimeButton(1, 0x009000);
+        private var text:TextField = new TextField();
+
+        public var mouseOver:Boolean = false;
+
+        public function BezierTest4()
+        {
+            addChild(p0); addChild(p1);
+            addChild(p2); addChild(p3);
+            p0.x =   0;   p0.y = 120;
+            p1.x =  60;   p1.y =  20;
+            p2.x = 180;   p2.y =  40;
+            p3.x = 260;   p3.y = 160;
+
+            addChild(button1); button1.x =  0; button1.y = 150;
+            addChild(button2); button2.x = 50; button2.y = 150;
+            addChild(text);    text.x    = 25; text.y    = 150; text.width = 20;
+            text.text = "4";
+
+            addEventListener("enterFrame", function(event:*):void
+            {
+                drawBezier();
+            });
+        }
+
+        public function drawBezier():void
+        {
+            graphics.clear();
+
+            drawLine(p0, p1, 0x999999);
+            drawLine(p2, p3, 0x999999);
+
+            var pt:Point, pt2:Point, pt3:Point;
+            var t:Number;
+            var diff:Number = 1.0 / parseInt(text.text);
+
+            // line approximation
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineStyle(1, 0x339933);
+            for(t = 0.0; t <= 1.0; t += diff)
+            {
+                pt = getBezierPoint(t);
+                graphics.lineTo(pt.x, pt.y);
+            }
+            graphics.lineTo(p3.x, p3.y);
+
+            // curve approximation
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineStyle(1, 0xff9999);
+            for(t = diff * 2; t <= 1.0; t += diff * 2)
+            {
+                pt  = getBezierPoint(t);
+                pt2 = getBezierPoint(t - diff);
+                pt3 = getBezierPoint(t - 2 * diff);
+
+                pt2 = new Point(2 * pt2.x - (pt.x + pt3.x) / 2,
+                                2 * pt2.y - (pt.y + pt3.y) / 2);
+                graphics.curveTo(pt2.x, pt2.y, pt.x, pt.y);
+            }
+
+            // bezier
+            if(mouseOver)
+            {
+                graphics.moveTo(p0.x, p0.y);
+                graphics.lineStyle(1, 0x0099ff);
+                for(t = 0.0; t <= 1.0; t += 0.01)
+                {
+                    pt = getBezierPoint(t);
+                    graphics.lineTo(pt.x, pt.y);
+                }
+                graphics.lineTo(p3.x, p3.y);
+            }
+        }
+
+        private function getBezierPoint(t:Number):Point
+        {
+            return new Point(Math.pow(1 - t, 3)  * p0.x + 3 * t * Math.pow(1 - t, 2) * p1.x
+                       + 3 * t * t * (1 - t) * p2.x + t * t * t * p3.x,
+                         Math.pow(1 - t, 3)  * p0.y + 3 * t * Math.pow(1 - t, 2) * p1.y
+                       + 3 * t * t * (1 - t) * p2.y + t * t * t * p3.y);
+        }
+
+        private function drawLine(p0:*, p1:*, color:int, g:Graphics = null):void
+        {
+            g = g || graphics;
+            g.lineStyle(1, color);
+            g.moveTo(p0.x, p0.y);
+            g.lineTo(p1.x, p1.y);
+            g.lineStyle();
+        }
+
+        public function changeNum(num:int):void
+        {
+            text.text = String(Math.max(1, parseInt(text.text) + (num ? 1 : -1)));
+        }
+    }
+}
+
+import flash.display.Sprite;
+import flash.geom.Point;
+import flash.filters.BevelFilter;
+
+internal class BezierPoint extends Sprite
+{
+    private const COLOR:int = 0x000000;
+    private const RADIUS:int = 3;
+
+    private var dragging:Boolean;
+    private var diff:Point = new Point();
+
+    private var child:Sprite;
+    
+    public function BezierPoint(_child:Sprite = null):void
+    {
+        child = _child;
+
+        graphics.beginFill(COLOR);
+        graphics.drawCircle(0, 0, RADIUS);
+        graphics.endFill();
+
+        buttonMode = true;
+
+        var dragging:Boolean = false;
+        var diff:Point = new Point();
+        addEventListener("mouseDown", mouseDownHandler);
+    }
+
+    private function mouseDownHandler(event:*):void
+    {
+        if(!dragging)
+        {
+            dragging = true;
+            startDrag();
+            if(child)
+            {
+                diff.x = child.x - x;
+                diff.y = child.y - y;
+            }
+            stage.addEventListener("mouseMove", mouseMoveHandler);
+            stage.addEventListener("mouseUp", mouseUpHandler);
+        }
+    }
+
+    private function mouseMoveHandler(event:*):void
+    {
+        if(dragging && child)
+        {
+            child.x = x + diff.x;
+            child.y = y + diff.y;
+        }
+    }
+
+    private function mouseUpHandler(event:*):void
+    {
+        if(dragging)
+        {
+            stopDrag();
+            dragging = false;
+
+            removeEventListener("mouseMove", mouseMoveHandler);
+            removeEventListener("mouseUp", mouseUpHandler);
+        }
+    }
+}
+
+internal class AnimeButton extends Sprite
+{
+    private const WIDTH:int = 20;
+    private const HEIGHT:int = 20;
+
+    private var num:int;
+    
+    public function AnimeButton(_num:int, color:int)
+    {
+        num = _num;
+
+        graphics.beginFill(color);
+        graphics.drawRoundRect(0, 0, WIDTH, HEIGHT, 10, 10);
+        graphics.endFill();
+
+        filters = [new BevelFilter(3, 45, 0xffffff, 0.6, 0x000000, 0.6)];
+        buttonMode = true;
+
+        addEventListener("mouseOver", mouseOver);
+        addEventListener("click",     changeNum);
+        addEventListener("mouseOut",  mouseOut);
+    }
+
+    private function changeNum(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.changeNum(num);
+    }
+
+    private function mouseOver(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.mouseOver = true;
+    }
+
+    private function mouseOut(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.mouseOver = false;
+    }
+}
+||<
+

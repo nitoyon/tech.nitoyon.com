@@ -1,0 +1,136 @@
+---
+layout: post
+title: ActionScript 3.0 でラベリング (改)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071003/as3_labeling
+---
+id:flashrod さんのところで、AS3 でラベリングする方法が紹介されています（→<a href="http://d.hatena.ne.jp/flashrod/20070930#1191160378">AS3で画像処理入門(その3) </a>）。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FLabeling.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=318&amp;h=110&amp;title=AS3+Labeling&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+BitmapData について調べているとき <a href="http://d.hatena.ne.jp/flashrod/20061015#1160910969">第1回</a>と<a href="http://d.hatena.ne.jp/flashrod/20061117#1163771538">第2回</a> を読んで、すごく参考にさせていただきました。今回、そのお礼も兼ねて(?)、第3回にツッコミをいれてみます。
+
+flashrod さんはラベリングを自力で実装されてますが、floodFill を使えば一発です。ペイントツールでいうところの「バケツ」に相当するメソッドです。斜め方向に飛び地になったピクセルが塗られないことも確認しました。
+>|javascript|
+/** ラベリング
+ * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)
+ * @return ラベリングデータ(整数の2次元配列)
+ */
+public static function labeling2(src:BitmapData):BitmapData {
+    var dst:BitmapData = src.clone(); // ソースの複製を作る
+    var lno:int = 0;
+    for (var x:int = 0; x < dst.width; x++) {
+        for (var y:int = 0; y < dst.height; y++) {
+            if (dst.getPixel(x, y) == 0xFFFFFF) { // 白色の場合
+                dst.floodFill(x, y, ++lno);
+            }
+        }
+    }
+    return dst;
+}
+||<
+
+また、ラベルデータから画像を取り出す部分も、threshold を使えば一発でいけます。
+>|javascript|
+/** ラベル値による画像の抜き出し
+ * @param lbd ラベリングデータ
+ * @param lno ラベル番号
+ * @return 指定のラベル番号だけ抽出したイメージ
+ */
+public static function extract2(lbd:BitmapData, lno:int):BitmapData {
+    var dst:BitmapData = new BitmapData(lbd.width, lbd.height);
+    dst.threshold(dst, dst.rect, new Point(), "==", lno);
+    return dst;
+}
+||<
+
+と、ただ改善案を出すだけだとつまらないので、速度比較してみました。
+
+まずはラベリング。20回の実行したときの必要時間です。
+|*オリジナル (labeling)|9563ms|
+|*改善版 (labeling2)|62ms|
+100倍以上速くなってますね。
+
+次はラベルデータからの抜き出し。こちらは1000回の時間を測りました。
+|*オリジナル (extract)|4906ms|
+|*改善版 (extract2)|78ms|
+こちらも50倍以上早いですね。
+
+ということで、ActionScript で画像処理するなら、ビルトインのメソッドを活用する可能性を追求したほうがよさそうですね。getPixel と setPixel はあくまで最終手段です。
+
+というのは munegon さんの <a href="http://void.heteml.jp/blog/archives/2007/10/tyouzetsu.html">超絶技巧発表会の資料</a>の受け売りです。この資料は BitmapData やるなら必読でしょう。勉強会のまとめエントリなんかよりも、この発表資料をブックマークすべき。1000users 超えて３日連続はてブのトップに君臨すべき。
+
+(追記) その munegon さんが<strong>さらなる高速化</strong>のアプローチを紹介してくれました。→<a href="http://void.heteml.jp/blog/archives/2007/10/as3_labeling.html">void element blog: ActionScript 3.0 でラベリング (改)を勝手に添削</a>。getColorBoundsRect を使って、getPixel を<s>一切</s>ほとんど使わないコードに仕上がっています。匠の技だ…。毎度毎度ありがとうございます。大変参考になります。
+
+今回のデモのソースコードはこちら(66行)。
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.geom.Point;
+
+    [SWF(width="318", height="110", frameRate="2")]
+    public class Labeling extends Sprite {
+        [Embed(source="flex.gif")]
+        private var FlexImage:Class;
+
+        public function Labeling() {
+            var bmp:Bitmap = new FlexImage();
+            addChild(bmp);
+            var bmd:BitmapData = bmp.bitmapData;
+
+            // ２値化
+            var bmd2:BitmapData = new BitmapData(bmd.width, bmd.height, false, 0x000000);
+            bmd2.threshold(bmd, bmd.rect, new Point(), "<", 0xffffffff, 0xffffffff);
+
+            // ラベリング
+            var labeled:BitmapData = labeling2(bmd2);
+            var bmp2:Bitmap = new Bitmap();
+            addChild(bmp2).x = bmd.width;
+
+            // 描画
+            var lno:int = 0;
+            var bmdtmp:BitmapData = labeled.clone();
+            addEventListener("enterFrame", function(e:*):void {
+                if(bmp2.bitmapData) bmp2.bitmapData.dispose();
+                bmp2.bitmapData = extract2(labeled, ++lno);
+
+                // ラベルが見つからなかったときは 0 に戻す
+                if(!bmdtmp.threshold(bmp2.bitmapData, bmp2.bitmapData.rect, new Point(), "==", 0xffffffff)) {
+                    lno = 0;
+                }
+            });
+        }
+
+        /** ラベリング
+         * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)
+         * @return ラベリングデータ(整数の2次元配列)
+         */
+        public static function labeling2(src:BitmapData):BitmapData {
+            var dst:BitmapData = src.clone(); // ソースの複製を作る
+            var lno:int = 0;
+            for (var x:int = 0; x < dst.width; x++) {
+                for (var y:int = 0; y < dst.height; y++) {
+                    if (dst.getPixel(x, y) == 0xFFFFFF) { // 白色の場合
+                        dst.floodFill(x, y, ++lno);
+                    }
+                }
+            }
+            return dst;
+        }
+
+        /** ラベル値による画像の抜き出し
+         * @param lbd ラベリングデータ
+         * @param lno ラベル番号
+         * @return 指定のラベル番号だけ抽出したイメージ
+         */
+        public static function extract2(lbd:BitmapData, lno:int):BitmapData {
+            var dst:BitmapData = new BitmapData(lbd.width, lbd.height, true, 0xff000000);
+            dst.threshold(lbd, lbd.rect, new Point(), "==", 0xff000000 + lno, 0xffffffff);
+            return dst;
+        }
+    }
+}
+||<
+

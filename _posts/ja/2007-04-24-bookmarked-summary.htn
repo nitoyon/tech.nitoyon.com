@@ -1,0 +1,36 @@
+---
+layout: post
+title: サイトの最新被ブックマークを livedoor Reader で読むための Pipes
+tags: Yahoo! Pipies
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070424/bookmarked_summary
+---
+はてなブックマーク経由でもらうコメントが気になるので、livedoor Reader に
+>||
+http://b.hatena.ne.jp/bookmarklist?mode=rss&url=[自分のサイトのURL]
+||<
+を登録してます。この RSS は、サイト全体の新着ブックマークが入っているので大変重宝してるのですが、&lt;content:encoded&gt; にページの要約が入ってるのがうれしくない。自分のサイトなんだから要約はなくても分かるし、むしろ、ないほうが見やすい。
+
+**そこで、「それ Pipes でできるよ」。
+どーーーーん。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070424/20070424005544.jpg" width="450" height="348" alt="livedoor Reader で読む"></center><
+
+ページの要約を消してスリムになりました。さらに、ブックマークした人のアイコンを付け足して、はてブっぽい雰囲気を演出。
+
+ご利用はこちらから：<a href="http://pipes.yahoo.com/pipes/pipe.info?_id=0olatt_u2xGUHo7_qGIyXQ">http://pipes.yahoo.com/pipes/pipe.info?_id=0olatt_u2xGUHo7_qGIyXQ</a>
+
+**仕組み
++入力された URL に http://b.hatena.ne.jp/bookmarklist?mode=rss&url= と合体させて RSS 取得
++dc:creator に「はてなID」が入っているので、これを Rename で一時変数 tmp にコピー
++正規表現で tmp を置換して、アイコン＋コメントに変換<br>^([0-9a-zA-Z_]{2}).* → &lt;img src="http://www.hatena.ne.jp/users/$1/${dc:creator}/profile_s.gif"&gt;&lt;a href="${rdf:about}"&gt;${dc:creator}&lt;/a&gt; ${description}
++正規表現で tmp を description にコピー
++content:encoded を正規表現で削除
+
+正規表現、応用がききまくりです。すばらし。
+
+**タグが消えてる件
+ちなみに、この Pipes が出力する RSS からはタグの情報が消えてしまってます。
+
+これは Pipes が RSS を出力するときの仕様のようで、Pipes への要望ページにも <a href="http://suggestions.yahoo.com/detail/?prop=Pipes&fid=15228">Categories not available on final feed</a> という要望が挙がってます。私は vote しておきました。みなさんもぜひ vote しておいてください（笑）。
+

@@ -1,0 +1,72 @@
+---
+layout: post
+title: as3corelib の JSON.decode() をいい加減な JSON に対応させる
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20091228/as3corelib_lazy_json
+---
+JSON は手軽に書けていいのですが、仕様がちょっと厳密すぎるところもあるので緩い JSON で書きたくなる。
+
+JSON の仕様で個人的に面倒だと思うのは次の３つ。
++object や array の最後に <code>,</code> があるとエラーになる
++object のキーは文字列じゃないといけない
++<code>0.3</code> を <code>.3</code> と書くとエラーになる
+
+たとえば、次のような JSON はパースエラーとなる。
+>|javascript|
+{
+    a: .3, 
+    b: .4, 
+    c: .9, 
+}
+||<
+本当はこうすべき。
+>|javascript|
+{
+    // a → "a"
+    "a": 0.3, // .3 → 0.3
+    "b": 0.4, 
+    "c": 0.9  // カンマを削った
+}
+||<
+
+オレオレなプロジェクトで JSON を手書きするときには、この３つの制限を緩和してあげたくなる。json.org の仕様には違反しちゃうけど、書きやすさを優先で GO!!!
+
+そこで、ActionScript の定番 JSON パーサーである <a href="http://code.google.com/p/as3corelib/">as3corelib</a> の .92.1 に手を入れてみた。
+
+たとえば、配列末尾のカンマを許容するには <code>com/adobe/serialization/json/JSONDecoder.as</code> の parseArray() 関数に次のように手を入れた。
+
+>|actionscript|
+     } else if ( token.type == JSONTokenType.COMMA ) {
+         // move past the comma and read another value
+         nextToken();
++
++        // allow trailing comma.
++        if ( token.type == JSONTokenType.RIGHT_BRACKET ) {
++            return a;
++        }
+     } else {
+||<
+カンマだったときに次が <code>]</code> だったら、配列を返すようにする。
+
+こんな感じで、ごにょごにょといじっていく。
+
+「2. object のキーは文字列じゃないといけない」については、そもそも JSON の仕様に identifier がないので、ECMAScript の仕様を参考にしつつ、<code>JSONTokenizer.as</code> に手を入れていった。本当はキー名として日本語などの Unicode 文字も許可しなきゃいけないんだけど、めんどくさいので
+>|javascript|
+/^[a-z_$][a-z_$0-9]*$/
+||<
+を許可するキー名の条件とした。
+
+完成品のソースはここにおいてる：
+-http://tech.nitoyon.com/misc/swf/as3corelib_lazy_json.zip
+
+ここに置いてるやつを使えば
+>|javascript|
+{
+    a: .3, 
+    b: .4, 
+    c: .9, 
+}
+||<
+がパースエラーにならない。やったね。
+

@@ -1,0 +1,261 @@
+---
+layout: post
+title: AS3.0 で 3D プログラミングを１から勉強する (5) - テクスチャを張る
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080623/as_3d_lessen5
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080623/20080623025423.jpg" width="483" height="196"></center><
+面を塗ることができたので、面に画像を貼り付けるのも簡単。画像を６つ用意して、立方体の上に貼り付けてみることにする。
+
+といっても前回までとほとんど変わらなくて、各頂点の 2D 上の座標を求めてから、画像を歪めて描画するだけでよい。
+
+問題は「どうやって画像を歪ませるか」という一点のみ。
+
+**ActionScript 3 で画像を歪ませる方法
+ここからは完全に AS3 に限定したノウハウになる。
+
+答えは Graphics.beginBitmapFill() メソッドにある。
+>|javascript|
+public function beginBitmapFill(
+    bitmap:BitmapData,      // 表示するビットマップ
+    matrix:Matrix = null,   // 変形方法を Matrix で指定
+    repeat:Boolean = true,  // リピートするか
+    smooth:Boolean = false  // スムース化するか
+):void
+||<
+第二引数の Matrix をうまく渡してやれば、望みの通りの形に歪ませて描画できる。
+
+計算方法がちょっと複雑なので、既成のライブラリを使うのも手だろう。いずれも内部では beginBitmapFill() を利用している。
+-<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>
+-<a href="http://www.rubenswieringa.com/blog/distortimage">DistortImage</a>
+
+特に、前者の <a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a> では、Matrix を生成する仕組みが詳しく解説されている。図つきなのでとても分かりやすい。敬意を表して、このページで紹介されている TransformUtil クラスを活用してみることにする。
+
+><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d5.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=300&amp;title=3D+Study5&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript><
+
+ちょっと重めなので、クリックしたらスタートするようにした。やってることの大半は前回とほとんど同じ。前回は lineTo() で描画していた部分を、TransformUtil クラスを使って描画するようにしたぐらい。最後にソースコードを掲載しておくので興味ある人はご覧あれ。
+
+**Flash Player 10 では
+現在β版が公開されている Flash Player 10 では、3D 表示に便利なクラスやメソッドが追加されている。テクスチャに関しては、Graphics.drawTriangles() メソッドが便利そうだ。
+
+以下のブログが先陣を切って調査している。
+-<a href="http://blog.boreal-kiss.com/2008/06/04233309.html">[FlashPlayer10]drawTrianglesで球面にテクスチャリング</a>
+-<a href="http://unbland.org/blog/2008/05/18/22.html">unbland.net blog - [Flash Player 10 #2] 3D のプリミティブにテクスチャを適用する。</a>
+自前でがんばる Flash Player 9 に比べて、Flash Player 本体に定義されているメソッドを利用できる分、かなりの高速化が実現できるようだ。
+
+**まとめ
+テクスチャを張る方法を紹介した。今回は立方体に画像を貼り付ける方法を紹介した。球面のようななめらかな面の場合は、球の表面をいくつもの三角形に分解して同じ方法を適用する。原理は全く同じ。
+
+><div class="seealso"><
+**連載目次
+-{% post_link 2008-06-16-as-3d-lessen1 %}
+-{% post_link 2008-06-17-as-3d-lessen2 %}
+-{% post_link 2008-06-18-as-3d-lessen3 %}
+-{% post_link 2008-06-20-as-3d-lessen3 %}
+-{% post_link 2008-06-23-as-3d-lessen5 %}
+></div><
+
+ソースコードは以下に（198行）：
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.utils.Dictionary;
+    import flash.utils.setInterval;
+    import flash.text.TextField;
+    import five3D.geom.Matrix3D;
+    import five3D.geom.Point3D;
+
+    [SWF(backgroundColor="0x000000")]
+    public class Study3d5 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+        private var rad:Number;
+
+        public function Study3d5(){
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 120));
+
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 200;
+            canvas.y = 150;
+
+            var textField:TextField = new TextField();
+            textField.textColor = 0xffffff;
+            textField.text = "click to start";
+            addChild(textField);
+
+            rad = 0;
+            var f:Boolean = true;
+            stage.addEventListener("click", function(event:Event):void{
+                if(f){
+                    textField.text = "click to stop";
+                    addEventListener("enterFrame", changeHandler);
+                }else{
+                    textField.text = "click to start";
+                    addChild(textField);
+                    removeEventListener("enterFrame", changeHandler);
+                }
+                f = !f;
+            });
+        }
+
+        private function changeHandler(event:Object):void {
+            canvas.graphics.clear();
+
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateX(Math.PI / 6);
+            matrix.rotateY(rad / 180 * Math.PI * 3);
+            matrix.rotateZ(rad / 180 * Math.PI);
+
+            // それぞれの立方体の中心のZ座標を取得する
+            var dic:Dictionary = new Dictionary();
+            for each(var c:Cube in cubes){
+                var center:Point3D = matrix.transformPoint(c.center);
+                dic[c] = center.z;
+            }
+
+            // Zソート (奥のものから順番に並べる)
+            cubes.sort(function(a:Cube, b:Cube):Number {
+                return dic[b] - dic[a];
+            });
+
+            // 奥から描画
+            for each(c in cubes){
+                c.draw(canvas.graphics, matrix, 200);
+            }
+
+           // 角度更新
+            rad = (rad + 1) % 360;
+         }
+    }
+}
+
+import flash.display.Graphics;
+import flash.geom.Point;
+import flash.utils.Dictionary;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
+
+class Cube {
+    [Embed(source="1.jpg")]
+    private static var Img1:Class;
+    [Embed(source="2.jpg")]
+    private static var Img2:Class;
+    [Embed(source="3.jpg")]
+    private static var Img3:Class;
+    [Embed(source="4.jpg")]
+    private static var Img4:Class;
+    [Embed(source="5.jpg")]
+    private static var Img5:Class;
+    [Embed(source="6.jpg")]
+    private static var Img6:Class;
+
+    private var images:Array = [];
+
+    private var points:Array = [];
+    private var _center:Point3D;
+
+    public function get center():Point3D {
+        return _center;
+    }
+
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        _center = new Point3D(x, y, z);
+
+        images.push(new Img1());
+        images.push(new Img2());
+        images.push(new Img3());
+        images.push(new Img4());
+        images.push(new Img5());
+        images.push(new Img6());
+
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
+
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i < 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 < 2), z + diff(i < 4));
+            points.push(p);
+        }
+    }
+
+    public function draw(g:Graphics, matrix:Matrix3D, f:Number):void {
+        // 回転後の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i < points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
+            p.push(pt);
+        }
+
+        // 面の一覧
+        var planes:Array = [
+            [p[0], p[1], p[2], p[3], images[0].bitmapData],
+            [p[7], p[6], p[5], p[4], images[1].bitmapData],
+            [p[0], p[4], p[5], p[1], images[2].bitmapData],
+            [p[1], p[5], p[6], p[2], images[3].bitmapData],
+            [p[2], p[6], p[7], p[3], images[4].bitmapData],
+            [p[3], p[7], p[4], p[0], images[5].bitmapData]
+        ];
+
+        // 面の中心のZ座標を求める
+        var z:Dictionary = new Dictionary();
+        for(i = 0; i < planes.length; i++){
+            z[planes[i]] = (planes[i][0].z + planes[i][1].z + planes[i][2].z + planes[i][3].z) / 4;
+        }
+
+        // Zソート (奥のものから順番に並べる)
+        planes.sort(function(a:Array, b:Array):Number {
+            return z[b] - z[a];
+        });
+
+        // 奥から順番に面を描画
+        var index:int = 0;
+        for each(var plane:Array in planes){
+            drawPlane(g, plane[4], plane[0], plane[1], plane[2], plane[3]);
+        }
+    }
+
+    private function drawPlane(g:Graphics, bmd:BitmapData, p1:Point3D, p2:Point3D, p3:Point3D, p4:Point3D):void {
+        // 単位法線ベクトル
+        var v1:Point3D = p2.subtract(p1);
+        var v2:Point3D = p4.subtract(p1);
+        var n:Point3D = cross(v1, v2);
+        n.normalize(1);
+
+        // 裏側の面は描画しない
+        var l:Point3D = new Point3D(0, 0, -1);
+        var product:Number = n.dot(l);
+        if(product < 0){
+            return;
+        }
+
+        // 透視投影しつつ２次元座標に変換する
+        var p:Point3D;
+        var pp1:Point, pp2:Point, pp3:Point, pp4:Point;
+        p = p1.clone(); p.project(p.getPerspective(500)); pp1 = new Point(p.x, p.y);
+        p = p2.clone(); p.project(p.getPerspective(500)); pp2 = new Point(p.x, p.y);
+        p = p3.clone(); p.project(p.getPerspective(500)); pp3 = new Point(p.x, p.y);
+        p = p4.clone(); p.project(p.getPerspective(500)); pp4 = new Point(p.x, p.y);
+
+        // 変形してビットマップを表示
+        TransformUtil.drawBitmapQuadrangle(g, bmd, 
+            new Point(0, 0), new Point(100, 0), new Point(0, 100), new Point(100, 100), 
+            pp1, pp2, pp4, pp3);
+    }
+}
+
+// 外積
+function cross(p1:Point3D, p2:Point3D):Point3D {
+    return new Point3D(p1.y * p2.z - p1.z * p2.y,
+                       p1.z * p2.x - p1.x * p2.z,
+                       p1.x * p2.y - p1.y * p2.x);
+}
+||<
+

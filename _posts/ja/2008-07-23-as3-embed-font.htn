@@ -1,0 +1,95 @@
+---
+layout: post
+title: AS3 で埋め込みフォントを使うテクニック
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080723/as3_embed_font
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080723/20080723005315.png?1216742113" width="436" height="134" border="1"></center><
+埋め込みフォントを使う場合のちょっとしたTipsを３つ紹介しておく。
+
+**1. 何も考えずにフォントを埋め込む方法
+フォントを埋め込むには、Embed メタタグを利用する。
+>|javascript|
+package {
+    import flash.display.Sprite;
+    import flash.text.TextField;
+
+    public class EmbedFontTest extends Sprite {
+        [Embed(source='アニトＭ-教漢.TTF', fontName='anito')]
+        private var font:Class;
+
+        public function EmbedFontTest(){
+            stage.align = "TL";
+            stage.scaleMode = "noScale";
+
+            var textField:TextField = new TextField();
+            textField.embedFonts = true;
+            textField.width = 400;
+            textField.height = 300;
+            textField.x = 50;
+            textField.wordWrap = true;
+            textField.htmlText = "<font face='anito' size='30'>embedFont で回転やアルファの設定が自由自在になりますね。</font>";
+            textField.rotation = 10;
+            addChild(textField);
+        }
+    }
+}
+||<
+-Embed メタタグでは source 属性でフォントのパス、fontName 属性でFlash 中で利用するフォント名を設定する。
+-TextField ではメタタグで決定したフォント名を指定してやる。ここでは TextFormat を使うのが面倒なので、htmlText 中の font タグで直接設定してる。
+-TextField の embedFonts を true にするのを忘れずに。
+
+**2. コンパイル時間を改善する
+このままだと TTF ファイルを毎回変換するため、コンパイルに時間がかかる。
+
+これを解決するために、フォントを埋め込んだ SWF ファイルを事前に作成しておいて、動的にロードすることでコンパイル時間を削減できる。
+
+やり方は <a href="http://d.hatena.ne.jp/lalalila/20080422/1208884394">外部SWFから動的にフォント読み込み - d.lalalila.?</a> が詳しい。CS3 な人には <a href="http://level0.cuppy.co.jp/2008/06/cs3_2.php">CS3版　フォントのダイナミックなローディング｜_level0.CUPPY</a> が役立つはず。
+
+**3. 使う文字だけを埋め込んでパブリッシュ
+文章が固まってきたら、必要な文字だけを埋め込むようにするとよい。SWF のファイルサイズが小さくなるし、フォントによっては全ての文字を埋め込むのを禁止していたりする。
+
+文章から埋め込み用の記法を作成する Perl のワンライナーを作った。文章が message.txt に UTF-8 で入っているとする。
+>|sh|
+>perl -e "use utf8; binmode STDIN,':utf8'; $s = join '',<STDIN>; %h; for(@s=split //,$s){$h{$_}=1} print join ',', map {sprintf 'U+%04X', ord} sort keys %h;" < message.txt
+||<
+横に長くて読みにくいので、整形するとこんな感じ。
+>|perl|
+use utf8;
+binmode STDIN,':utf8';
+
+# 標準入力から読み込む
+$s = join '', <STDIN>;
+
+# 文字別にハッシュに詰め込む
+for (split //, $s) {$h{$_} = 1}
+
+# 小さい順に 'U+0000' 形式で出力する
+print join ',', 
+  map {sprintf 'U+%04X', ord} sort keys %h;
+||<
+
+出力はこうなる。文章の中に登場する文字を、小さいものから順に列挙してくれる。
+>|
+U+0020,U+0046,U+0062,U+0064,U+0065,U+006D,U+006E,
+U+006F,U+0074,U+3002,U+304C,U+3059,U+3067,U+306A,
+U+306B,U+306D,U+306E,U+307E,U+3084,U+308A,U+30A1,
+U+30A2,U+30D5,U+30EB,U+56DE,U+5728,U+5B9A,U+7531,
+U+81EA,U+8A2D,U+8EE2
+|<
+これを Embed メタタグの unicodeRange に突っ込めば、message.txt に含まれている文字だけを SWF に埋め込んでくれる（実際は１行で書く）。
+>|
+[Embed(source='アニトＭ-教漢.TTF', fontName='anito', 
+  unicodeRange='U+0020,U+0046,U+0062,U+0064,U+0065,U+006D,
+  U+006E,U+006F,U+0074,U+3002,U+304C,U+3059,U+3067,U+306A,U+306B,
+  U+306D,U+306E,U+307E,U+3084,U+308A,U+30A1,U+30A2,U+30D5,U+30EB,
+  U+56DE,U+5728,U+5B9A,U+7531,U+81EA,U+8A2D,U+8EE2')]
+|<
+本当なら、連続する文字は - で省略した方がソースは短くなる。例えば、U+0064,U+0065,U+0066 のような文字が並ぶところは、U+0064-U+0066 としたほうがシンプル。けども、判定が面倒なのでそこまでは実装していない。
+
+で、出来上がったのがこの Flash。表示している文字列分のフォントしか埋め込んでないので、ファイルサイズはわずか 8KB になった。
+
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FEmbedFontTest.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=460&amp;h=150&amp;title=Embed+Font+Test&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript></center><
+
+めでたし。

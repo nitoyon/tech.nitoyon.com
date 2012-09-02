@@ -1,0 +1,138 @@
+---
+layout: post
+title: asc_authoring.jar で遊んでみた
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070131/asc_authoring
+---
+<a href="http://d.hatena.ne.jp/amachang/20070130/1170144721">ActionScript の勉強会で話してキタ！ - IT戦記</a> のプレゼンで、asc_authoring.jar を使った開発が紹介されていたので早速ためしてみました。
+====
+**asc_authoring.jar の入手
+プレゼンにもあるように、まずは Flash 9 Alpha をインストールして asc_authoring.jar を入手します。
+
+**バイトコードを作ってみる
+プレゼンをたよりに実験します。
+
+>|javascript|
+// Test.as
+package {
+  public class Test {
+    public function Test() {
+      trace("Test");
+    }
+  }
+}
+||<
+
+という Test.as があったとして
+>|
+java -jar asc_authoring.jar \
+  -import global.abc \
+  -import playerglobal.abc \
+  Test.as
+|<
+とすれば、コンパイルは完了。バイトコードに相当する Test.abc ができます。abc という拡張子は ActionScript ByteCode の略なんだろうな。
+
+**SWF を作ってみる
+SWF を作るには、Sprite クラスを継承したクラスを用意する必要があります。
+>|javascript|
+// MySprite.as
+package {
+  import flash.display.*;
+  import flash.text.*;
+  public class MySprite extends Sprite {
+    public function MySprite() {
+      var test:Test = new Test();
+      var text = new TextField();
+      text.width = 400;
+      text.text = 'MySprite';
+      addChild(text);
+    }
+  }
+}
+||<
+手始めに mxmlc でコンパイルする場合を紹介します。
+>|
+mxmlc -default-size 400 300 MySprite.as 
+|<
+これだけで MySprite.swf が出力できます。
+
+MySprite.as で Test.as を参照しているのですが、そのへんも自動的に判別してリンクしてくれています。
+
+
+では、次に本題の asc_authoring.jar でのコンパイルをしてみましょう。SWF を作るには -swf でルートになる Sprite クラスを指定します。
+>|
+<font color="red"># !!実行時エラー!!</font>
+java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-swf MySprite,400,300</strong> \
+ MySprite.as
+|<
+これで MySprite.as はできるのですが、Test クラスが SWF に含まれていないため、実行時に参照エラーになります。
+
+実行時エラーがいやん、という人は -strict をつければコンパイル時にエラーになります。
+>|
+<font color="red"># !!コンパイル時エラー!!</font>
+java -jar asc_authoring.jar \
+ <strong>-strict</strong> \
+ -import global.abc \
+ -import playerglobal.abc \
+ -swf MySprite,400,300 \
+ MySprite.as
+
+[Compiler] Error #1180: Call to a possibly undefined method Test.
+   MyScript.as, Ln 7, Col 27:
+         var test:Test = new Test();
+   ..........................^
+
+1 error found
+|<
+
+さてさて、参照エラーを解決するには -in パラメータを使って、必要なクラスを列挙してやる必要があります。ここでは、Test.as があればいいので、-in Test.as ですね。
+>|
+java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-in Test.as</strong> \
+ -swf MySprite,400,300 \
+ MySprite.as
+|<
+これで成功。
+
+
+ソースコードからではなく ByteCode をリンクしてみたい気もします。直感的には -import Test.abc を使って次のようにできそうなんですが....
+>|
+<font color="red"># !!実行時エラー!!</font>
+java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-import Test.abc</strong> \
+ -swf MySprite,400,300 \
+ MySprite.as
+|<
+コンパイルもできるんだけど、実行時に参照エラーになっちゃう。
+
+MySprite.swf をバイナリエディタで覗いてみると、確かにこの場合だと Test.abc の中身が MySprite.swf には含まれていないご様子。
+
+ByteCode のリンクはできないんだろうか・・・。
+
+**strict について補足
+strict の話がでたのでついでに補足。mxmlc はデフォルトで strict オン、asc_authoring.jar はオフになってます。切り替えるにはこうします。
+|*|*ON|*OFF|
+|asc_authoring.jar|-strict|(デフォルト)|
+|mxmlc|(デフォルト)|-strict=false|
+
+**まとめ
+mxmlc と asc_authoring の違いを感覚的にまとめてみるとこんな感じ。
+-mxmlc
+--依存関係を自動的に探して、まとめてコンパイル・リンクしてくれる賢い人
+--吐けるのは .swf のみ
+--Sprite クラスを継承した ActionScript や MXML 以外はコンパイルできない
+-asc_authoring.jar
+--コンパイルやリンクはできるけど、手取り足取り依存関係を教えてあげなきゃいけない面倒な人
+--.swf だけでなく、.abc も吐ける
+--どんなクラスでもコンパイルできる
+
+asc_authoring.jar は手間はかかるけど、ネイティブに近い分だけかわいい。Tamarin の avmplus.exe から直接 .abc を扱えるから余計にかわいく見えるのかな。
+

@@ -1,0 +1,52 @@
+---
+layout: post
+title: PuTTy のストアされたセッションをIPアドレス毎に自動で切り替える方法
+tags: Net
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040422/p1
+---
+PuTTy で特定のサーバーへの接続を、自分の現在のIPアドレス毎に切り替える方法を作ってみた。
+
+というのも、自宅サーバーは、家からは直接 SSH できるけど、研究室からは SOCKS プロクシ経由じゃないと外に出られなくなったから。PuTTy は接続方法を記録できるけど、同じサーバーに接続するのに自分がいる場所によって接続方法を手動で切り替えるのがめんどくさく感じたから作ってみた。
+
+**WSHスクリプト ip-exec.vbs
+***注意点
+-どのNICのIPアドレスを調べるかを指定するために、 InStr(Nic.Description, "Realtek") <> 0 としています。複数のNICがないのならば、この部分は省略してもよいかも。
+-IPアドレスがXX.YY.ZZから始まる場合のサンプルです。XX.YY.ZZかどうかを調べている部分を書き換えると、いろんな環境に書き換えられるはず。
+-各自の環境に合わせて自由に使ってみてください。
+
+>|vb|
+Set objWshShell = WScript.CreateObject("WScript.Shell")
+
+' 引数がないときは終了
+If WScript.Arguments.Count = 0 Then
+    WScript.Quit
+End If
+
+' NIC を列挙
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set NicSet = objWMIService.ExecQuery _
+("Select * From Win32_NetworkAdapterConfiguration")
+
+' １つずつ調べていく
+For Each Nic In NicSet
+    ' Realtek の NIC を調べる
+    If Nic.IPEnabled = True And InStr(Nic.Description, "Realtek") <> 0 Then
+        ' IPアドレスが XX.YY.ZZ から始まっているか？
+        If InStr(Nic.IPAddress(0), "XX.YY.ZZ") = 1 Then
+            objWshShell.Run WScript.Arguments.Item(0) & "-lab"
+        Else
+            objWshShell.Run WScript.Arguments.Item(0)
+        End If
+        Exit For
+    End If
+Next
+||<
+
+***使い方例
+IPアドレスが XX.YY.ZZ で始まる文字列の時は、nitoyon-lab を使ってアクセス。そうでないときは、nitoyon を使ってアクセス。
+>|sh|
+cscript.exe ip-exec.vbs "putty.exe -load nitoyon"
+||<
+

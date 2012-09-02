@@ -1,0 +1,220 @@
+---
+layout: post
+title: チャンネルごとに描画するドローイングソフト
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070913/channel_drawing
+---
+BitmapData.copyChannel ネタの集大成として、チャンネルごとに描画するアプリケーションを作ってみました。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FChannelDrawer.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=210&amp;title=Channel+Draw&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+**使い方
+-黒い４つの四角がキャンバスです。
+-マウスでドラッグすると線が引けます。
+-左上が赤、右上が青、左下が緑、右下がα値を表しています。
+-右側のグラデーションをクリックすると描画の階調を変えられます。
+-希望する色を描くためには、それぞれのチャンネルに適切な階調で線を引く必要があります。
+-CLEAR ボタンを押すと最初からやり直せます
+
+**コツ
+運を天に任せて適当にマウスを動かすと、意外にきれいな絵が描けたりします。
+
+実用性はあまりないので、偶然の産物を楽しみましょう。
+
+**作品例１
+乱雑。適当にマウスを動かした例。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070913/20070913014002.jpg" width="416" height="210"></center><
+なんだか分からないけど、きれいに見えるような見えないような。
+
+**作品例２
+「てっく煮」。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070913/20070913014003.jpg" width="389" height="208"></center><
+赤い「て」、青い「っ」、緑の「く」がうっすら見えるところがチャームポイント。
+
+**ソースコード
+ソースコードは以下に(180行)
+====
+>|javascript|
+package
+{
+    import flash.display.*;
+    import flash.events.*;
+    import flash.geom.*;
+    import flash.utils.*;
+
+    public class ChannelDrawer extends Sprite
+    {
+        [Embed(source='clear.png')]
+        private var ClearImage:Class;
+
+        // 画像のサイズ
+        private const MARGIN:int = 5;
+        private const SIZE:int   = 100;
+        private const SIZE2:int  = SIZE + MARGIN;
+        private const SIZE3:int  = SIZE * 2 + MARGIN;
+        private const SIZE4:int  = SIZE3 + SIZE3 + MARGIN + 10;
+
+        // 色
+        private var color:int = 0xffffff;
+
+        // チャンネルの順番
+        private var channels:Array = [BitmapDataChannel.RED, BitmapDataChannel.GREEN, 
+            BitmapDataChannel.BLUE, BitmapDataChannel.ALPHA];
+
+        // BitmapData
+        private var bmpPreview:BitmapData = new BitmapData(SIZE, SIZE);
+        private var bmpCanvas:BitmapData = new BitmapData(SIZE3, SIZE3);
+
+        // Sprite
+        private var canvas:Sprite;
+        private var clearBtn:Sprite;
+        private var curColor:Shape;
+
+        // change flag
+        private var changed:Boolean = false;
+
+        // コンストラクタ
+        public function ChannelDrawer()
+        {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            // 左のプレビュー
+            var bmp:Bitmap = addChild(new Bitmap(bmpPreview)) as Bitmap;
+            bmp.scaleX = bmp.scaleY = 2;
+
+            // 描画領域
+            addChild(canvas = new Sprite()).x = SIZE3;
+            clear();
+            canvas.addEventListener("mouseDown", mouseDownHandler);
+
+            // 描画領域の枠
+            var mask:Sprite = new Sprite();
+            mask.graphics.beginFill(0xffffff);
+            mask.graphics.drawRect(SIZE3 + SIZE, 0   , MARGIN, SIZE3);
+            mask.graphics.drawRect(SIZE3       , SIZE, SIZE3 , MARGIN);
+            mask.graphics.endFill();
+            addChild(mask);
+
+            // CLEARボタン
+            clearBtn = new Sprite();
+            addChild(clearBtn);
+            clearBtn.addChild(new ClearImage());
+            clearBtn.buttonMode = true;
+            clearBtn.x = SIZE4;
+            clearBtn.y = SIZE3 - clearBtn.height;
+            clearBtn.addEventListener("click", clear);
+
+            // 色選択
+            var choiseColor:Sprite = new Sprite();
+            choiseColor.buttonMode = true;
+            var matrix:Matrix = new Matrix();
+            choiseColor.graphics.lineStyle(0x000000, 1);
+            matrix.createGradientBox(1, SIZE3 - clearBtn.height * 2 - MARGIN * 2, Math.PI / 2);
+            choiseColor.graphics.beginGradientFill("linear", [0xffffff, 0x000000], [100, 100], [0x00, 0xff], matrix);
+            choiseColor.graphics.drawRect(0, 0, clearBtn.width, SIZE3 - clearBtn.height * 2 - MARGIN * 2);
+            choiseColor.graphics.endFill();
+            choiseColor.x = SIZE4;
+            addChild(choiseColor);
+            choiseColor.addEventListener("click", function(event:MouseEvent):void
+            {
+                var c:int = 255 - (event.localY / choiseColor.height) * 255;
+                trace(c.toString(16));
+                color = (c << 16) + (c << 8) + c;
+                trace(color.toString(16));
+                updateCurColor();
+            });
+
+            // 色表示
+            curColor = new Shape();
+            curColor.x = SIZE4;
+            curColor.y = SIZE3 - clearBtn.height * 2 - MARGIN;
+            addChild(curColor);
+            updateCurColor();
+
+            // loop
+            var count:int = 0;
+            addEventListener("enterFrame", function(event:Event):void
+            {
+                count = (count + 1) % 5;
+                if(count == 0 && changed)
+                {
+                    updatePreview();
+                }
+            });
+        }
+
+        private function mouseDownHandler(event:MouseEvent):void
+        {
+            canvas.graphics.beginFill(0, 0);
+            canvas.graphics.lineStyle(3, color);
+            canvas.graphics.moveTo(event.localX, event.localY);
+            canvas.graphics.lineTo(event.localX, event.localY);
+
+            stage.addEventListener("mouseMove", mouseMoveHandler);
+            stage.addEventListener("mouseUp", mouseUpHandler);
+        }
+
+        private function mouseMoveHandler(event:MouseEvent):void
+        {
+            if(event.target == canvas)
+            {
+                canvas.graphics.lineStyle(3, color);
+                canvas.graphics.lineTo(event.localX, event.localY);
+                canvas.graphics.lineStyle();
+                changed = true;
+            }
+        }
+
+        private function mouseUpHandler(event:MouseEvent):void
+        {
+            canvas.graphics.lineStyle();
+            canvas.graphics.endFill();
+            stage.removeEventListener("mouseMove", mouseMoveHandler);
+            stage.removeEventListener("mouseUp", mouseUpHandler);
+        }
+
+        // チャンネルを合成する
+        private function updatePreview():void
+        {
+            var rect:Rectangle = new Rectangle(0, 0, SIZE, SIZE);
+            var zeroPoint:Point = new Point(0, 0);
+
+            // init
+            bmpCanvas.fillRect(new Rectangle(0, 0, SIZE3, SIZE3), 0xff000000);
+            bmpCanvas.draw(canvas);
+
+            // copy channel
+            bmpPreview.lock();
+            for(var i:int = 0; i < 4; i++)
+            {
+                var channel:uint = channels[i];
+                var fromRect:Rectangle = new Rectangle(Math.floor(i / 2) * (SIZE + MARGIN), (i % 2) * (SIZE + MARGIN), SIZE, SIZE);
+                bmpPreview.copyChannel(bmpCanvas, fromRect, zeroPoint, BitmapDataChannel.RED, channel);
+            }
+            bmpPreview.unlock();
+        }
+
+        // 初期化
+        private function clear(event:* = null):void
+        {
+            canvas.graphics.clear();
+            canvas.graphics.beginFill(0);
+            canvas.graphics.drawRect(0, 0, SIZE3, SIZE3);
+            canvas.graphics.endFill();
+            updatePreview();
+        }
+
+        // 色変更
+        private function updateCurColor(event:* = null):void
+        {
+            curColor.graphics.lineStyle(0x000000, 1);
+            curColor.graphics.beginFill(color);
+            curColor.graphics.drawRect(0, 0, clearBtn.width, clearBtn.height);
+            curColor.graphics.endFill();
+        }
+    }
+}
+||<
+

@@ -1,0 +1,63 @@
+---
+layout: post
+title: JavaScript の関数定義は真っ先に処理される
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080521/js_func_declaration
+---
+JavaScript のイベントハンドラについて段階を追って説明した素晴らしい資料、「<a href="http://d.hatena.ne.jp/dayflower/20080516/1210917670">JavaScript のイベントハンドラ - daily dayflower</a>」に次のような記述があった。
+>http://d.hatena.ne.jp/dayflower/20080516/1210917670:title=JavaScript のイベントハンドラ - daily dayflower>
+JavaScript で関数を定義するのには，下記の3通りの手法があります。
+
+-「function 文」による「関数定義」 
+-「function 演算子」による「関数式」 
+-Function() コンストラクタ 
+Function() コンストラクタについては今回は触れていません。XXX() は「関数定義」，YYY は「関数式」になります。「関数定義」の場合，前述のように関数定義（実装）が前方参照可能になるという大きな違いがあります。
+<<
+
+言い換えると、
+>|javascript|
+window.onload = hoge;
+function hoge(){
+  // ...
+}
+||<
+は成功するけど、
+>|javascript|
+window.onload = hoge;
+var hoge = function(){
+  // ...
+}
+||<
+は undefined になっちゃうよ、という話。
+
+なんとなくそんな気はしていたけど、改めて明言されると理由が気になる。ということで、原典をあたってみた。
+
+原典というのは、もちろん、言わずと知れた<a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm" lang="en" hreflang="en">ECMAScript Language Specification</a> (<a href="http://bclary.com/2004/11/07/" title="ECMAScript Language Specification (HTML Version)" hreflang="en">HTML 版</a>、<a href="http://www2u.biglobe.ne.jp/~oz-07ams/prog/ecma262r3/" title="Under Translation of ECMA-262 3rd Edition">日本語版</a>)。
+
+読み進めたら、14. Program に次のような記述が。
+>|
+Program :
+    SourceElements
+SourceElements :
+    SourceElement
+    SourceElements SourceElement
+SourceElement :
+    Statement
+    FunctionDeclaration
+
+Semantics
+
+The production Program : SourceElements is evaluated
+as follows:
+ 1. Process SourceElements for function declarations.
+ 2. Evaluate SourceElements.
+ 3. Return Result(2).
+|<
+最初に関数定義が処理されたあと、文が処理される模様。
+
+関数定義の処理方法については 13. Function Definition に色々書いてあるので、気になる人はそちらを読み進めていくとよいのだろう。
+
+それはそうと、JavaScript のプログラムは、文もしくは関数定義から成り立っているのか。確かに言われてみればそうなるね！
+
+いずれにせよ、<a href="http://nanto.asablo.jp/blog/2008/05/18/3522974">原典を30回は朗読しなきゃいけない</a>らしいので、自分はまだまだだと思った。

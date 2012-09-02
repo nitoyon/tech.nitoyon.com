@@ -1,0 +1,119 @@
+---
+layout: post
+title: AS3 で双方向データバインディング
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070910/as_two_way_binding
+---
+ActionScript 3.0 で双方向にデータバインディングしたいことがあったりする。
+
+MXML に {hogehoge} 形式でデータバインディングを作ると問題なく実現できるんだけど、スクリプトから BindingUtils.bindProperty でやろうとするとスタックオーバーフローしてしまうことがある。
+
+**スタックオーバーフローする例
+>|xml|
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" applicationComplete="appComplete();">
+  <mx:Script>
+    <![CDATA[
+      import mx.binding.utils.*;
+
+      [Bindable]
+      public var items:Array = ["item1", "item2", "item3"];
+
+      [Bindable]
+      public var selected:Array = [];
+
+      private function appComplete():void
+      {
+        BindingUtils.bindProperty(list, "selectedItems", this, "selected");
+        BindingUtils.bindProperty(this, "selected", list, "selectedItems");
+      }
+    ]]>
+  </mx:Script>
+
+  <mx:List id="list" dataProvider="{items}"/>
+
+</mx:Application>
+||<
+
+list.selectedItems が変更されると、this.selected が書き換えられ、今度は this.selected が変更されるので list.selectedItems を書き換えて... と無限に関数呼び出しが発生してしまうから。
+
+list.selectedItems と this.selected が等しくなればオーバーフローは発生しないはずなのだけど、List クラスは selectedItems を返すときに、新たに Array を生成して返しているので、いつまでたっても等しくならずにオーバーフローしてしまうというわけだ。（mx.controls.listClasses.listBase 参照）
+
+**問題ない例
+<strong>当初はこの例を問題ある例と紹介していましたが、問題ありませんでした。</strong>
+
+>|javascript|
+package
+{
+  import flash.display.Sprite;
+  import mx.binding.utils.*;
+
+  public class TwoWayBindingNg extends Sprite
+  {
+    [Bindable]
+    public var obj1:Object;
+
+    [Bindable]
+    public var obj2:Object;
+
+    public function TwoWayBindingNg():void
+    {
+      BindingUtils.bindProperty(this, "obj1", this, "obj2");
+      BindingUtils.bindProperty(this, "obj2", this, "obj1");
+
+      obj1 = {a : 1}; // stack overflow
+    }
+  }
+}
+||<
+
+この例だと、obj1 == obj2 になった時点で無限に呼び出しは発生ししない。
+
+**そこで汎用化
+フラグをつけて、２回以上呼び出さないようにする関数としてまとめ上げて、何も考えずに相互データバインディングできるようにする。
+>|javascript|
+    public static function createTwoWayBinding(src1:Object, prop1:String, src2:Object, prop2:String):void
+    {
+        var flag:Boolean = false;
+
+        ChangeWatcher.watch(src1, prop1, function(event:Event):void
+        {
+            if(!flag)
+            {
+                flag = true;
+                src2[prop2] = src1[prop1];
+                flag = false;
+            }
+        });
+
+        ChangeWatcher.watch(src2, prop2, function(event:Event):void
+        {
+            if(!flag)
+            {
+                flag = true;
+                src1[prop1] = src2[prop2];
+                flag = false;
+            }
+        });
+    }
+||<
+
+これで OK。
+
+最初の MXML も
+>|javascript|
+BindingUtils.bindProperty(list, "selectedItems", this, "selected");
+BindingUtils.bindProperty(this, "selected", list, "selectedItems");
+||<
+を次のように書き換えれば動くようになる。
+>|javascript|
+createTwoWayBinding(this, "selected", list, "selectedItems");
+||<
+
+**便利そうなので TwoWayBinding クラスにした
+<a href="http://www.libspark.org/">Spark Project</a> の <a href="http://snippets.libspark.org/">Snippets</a> に TwoWayBinding クラスとして公開してみた。
+-http://snippets.libspark.org/trac/wiki/nitoyon/TwoWayBinding
+
+１人だけ mx 名前空間を import していて浮いてる気がするけど気にしない。
+

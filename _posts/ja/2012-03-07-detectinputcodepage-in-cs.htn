@@ -1,0 +1,209 @@
+---
+layout: post
+title: C# から IMultiLanguage2::DetectInputCodepage() を使う方法
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120307/detectinputcodepage_in_cs
+---
+C# で文字コード判定を実現したかったので調べてみた。
+
+**DOBON.NET のコードが動かない…
+検索して引っかかったのが [http://dobon.net/vb/dotnet/string/detectcode.html:title=文字コードを判別する: .NET Tips: C#, VB.NET]。
+
+.NET 界隈でよくお世話になる DOBON さんだったので従ってみることにする。このページでは
++Jcode.pm を参考にした方法
++第三者の作成したクラス、コードを使う方法
++mlang.dllを使う方法
+の 3 つが紹介されている。
+
+このうちの 1. と 2. の自前判定は日本語にしか使えない。他言語にも対応したかったので mlang.dll を使う方法を試すことにした。mlang.dll は IE5 以上が利用する文字コード関連のライブラリだ。<code>IMultiLanguage2::DetectInputCodepage()</code> が文字コード判定の機能を提供している。
+
+このページの手順を試してみたが、どうも判定結果が正しくない。C++ から <code>IMultiLanguage2::DetectInputCodepage()</code> を呼ぶと意図したとおりの結果を返すのに、C# から呼び出すと「トルコ語」などと適当なことを言い出す。
+====
+何かおかしいので、WinDbg でブレークポイントしかけつつ見てみたところ、C# から呼び出したときにはバイト列の 1 バイト目しか渡っていなかった。（WinDbg で調べる方法は後述する）
+
+そりゃー、正しい結果にならないわけだ…。
+
+**バイト列を渡すには？
+バイト列をアンマネージ コードに渡すときには <code>GCHandle.Alloc()</code> と <code>Marshal.UnsafeAddrOfPinnedArrayElement()</code> を呼んで <code>IntPtr</code> に変換するとうまくいくらしい。
+
+元のコードはメソッドの定義をタイプ ライブラリからクラスを自動生成していて、バイト列は <code>ref sbyte</code> で受け取っていた。<code>ref sbyte</code> に正しく <code>IntPtr</code> を与える方法が分からなかった。
+
+そこで、[http://msdn.microsoft.com/ja-jp/library/aa288455%28v=vs.71%29.aspx:title=COM 相互運用性 - 第 1 部 : C# クライアント チュートリアル (C#)] を参照しつつ、自前で「COM コクラス」や「COM インターフェース」を定義することにした。
+
+その結果、見事に C# でも文字コードを判定できるようになった。
+
+以下が完成したコードである。タイプライブラリを登録する必要もなく、素の C# コンソール プロジェクトに食わせて動くはずである。
+
+コマンドライン引数で受け取ったファイルの文字コードを判定してコンソールに出力している。
+><div class="fix-height-syntax"><
+>|cs|
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace ConsoleApplication3
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            new Program().Start(args[0]);
+        }
+
+        private void Start(string path)
+        {
+            Encoding encoding = DetectEncoding(GetFileAsByteArray(path));
+            Console.WriteLine("Result: {0}", encoding.EncodingName);
+        }
+
+        private byte[] GetFileAsByteArray(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                return bytes;
+            }
+        }
+
+        private Encoding DetectEncoding(byte[] bytes)
+        {
+            IMultiLanguage2 lang = (IMultiLanguage2)new MultiLanguage();
+            int len = bytes.Length;
+            DetectEncodingInfo info = new DetectEncodingInfo();
+            int scores = 1;
+
+            // bytes to IntPtr
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            IntPtr pbytes = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+
+            try
+            {
+                lang.DetectInputCodepage(0, 0, pbytes, ref len, out info, ref scores);
+            }
+            finally
+            {
+                if (handle.IsAllocated)
+                    handle.Free();
+            }
+
+            return Encoding.GetEncoding((int)info.nCodePage);
+        }
+    }
+
+    public struct DetectEncodingInfo
+    {
+        public UInt32 nLangID;
+        public UInt32 nCodePage;
+        public Int32 nDocPercent;
+        public Int32 nConfidence;
+    };
+
+    [ComImport, Guid("275c23e2-3747-11d0-9fea-00aa003f8646")]
+    public class MultiLanguage
+    {
+    }
+
+    [Guid("DCCFC164-2B38-11D2-B7EC-00C04F8F5D9A"),
+        InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IMultiLanguage2
+    {
+        void GetNumberOfCodePageInfo();
+        void GetCodePageInfo();
+        void GetFamilyCodePage();
+        void EnumCodePages();
+        void GetCharsetInfo();
+        void IsConvertible();
+        void ConvertString();
+        void ConvertStringToUnicode();
+        void ConvertStringFromUnicode();
+        void ConvertStringReset();
+        void GetRfc1766FromLcid();
+        void GetLcidFromRfc1766();
+        void EnumRfc1766();
+        void GetRfc1766Info();
+        void CreateConvertCharset();
+        void ConvertStringInIStream();
+        void ConvertStringToUnicodeEx();
+        void ConvertStringFromUnicodeEx();
+        void DetectCodepageInIStream();
+        void DetectInputCodepage(
+            [In] UInt32 dwFlag,
+            [In] UInt32 dwPrefWinCodePage,
+            [In] IntPtr pSrcStr,
+            [In, Out] ref Int32 pcSrcSize,
+            [Out] out DetectEncodingInfo lpEncoding,
+            [In, Out] ref Int32 pnScores);
+        void ValidateCodePage();
+        void GetCodePageDescription();
+        void IsCodePageInstallable();
+        void SetMimeDBSource();
+        void GetNumberOfScripts();
+        void EnumScripts();
+        void ValidateCodePageEx();
+    }
+}
+||<
+></div><
+
+**WinDbg で COM 呼び出しをブレークする
+最後に、WinDbg で COM 呼び出しをブレークして調べる方法をまとめておく。同じ方法を使えば COM 呼び出しに限らず、Win32 の API でも同じようにブレークできるだろう。Visual Studio でもできるかもしれないが、自分の環境ではシンボル読み込みがうまくいかないことが多かったので、WinDbg を使うようになった。
+
+Debugging Tools for Windows がインストールされている前提とする。
+
++[File] [Symbol File Path] で MS のシンボルサーバーを設定されていることを確認。されていないなら次のように設定（C:\symbols フォルダに保存する場合）<pre>SRV*C:\symbols*http://msdl.microsoft.com/download/symbols</pre>
++[File] [Open Executable] からデバッグ対象の EXE を開く。
++開始直後の状態でいったん停止するので、ブレークポイントを設定する。<pre>bu mlang!CMultiLanguage2::DetectInputCodepage</pre>
++<code>g</code> と入力するなり F5 を押すなりして EXE の実行を開始する。
++ブレークポイントで止まるので、あとは引数を調べる。
+
+とても簡単ですね！
+
+最後の引数を調べるところが面倒だが、x86 なら <code>kv</code> で引数をダンプできるし、スタックを眺めればなんとかなる。
+
+自分の環境は x64 だったので、一部の引数はレジスタに置かれる。<code>IMultiLanguage2::DetectInputCodepage()</code> のプロトタイプ宣言は次の通り。
+>|cs|
+void DetectInputCodepage(
+    [In] UInt32 dwFlag,
+    [In] UInt32 dwPrefWinCodePage,
+    [In] IntPtr pSrcStr,
+    [In, Out] ref Int32 pcSrcSize,
+    [Out] out DetectEncodingInfo lpEncoding,
+    [In, Out] ref Int32 pnScores);
+||<
+
+レジスタを眺めてみると、こうなっていた。
+>|
+0:000> r
+rax=0000000000000018 rbx=0000000000000000 <strong>rcx=00000000003ee3a0</strong>
+<strong>rdx=0000000000000000</strong> rsi=000000000020eb48 rdi=000000000020ea88
+rip=000007fef5df8d84 rsp=000000000020ea48 rbp=000000000020eab0
+<strong> r8=0000000000000000</strong>  <strong>r9=00000000028d7dc8</strong> r10=000007fef5df8d84
+r11=00000000003ee3a0 r12=000000000038bac0 r13=00000000003ee3a0
+r14=000000000000001d r15=0000000000000001
+|<
+
+マークしたところがレジスタ上に設定された第１～第４引数。ただし、COM 呼び出しなので、第一引数は this ポインタとなっている。
+
+つまり、それぞれの引数の値は次のレジスタに格納されている。
+-dwFlag: rdx
+-dwPrefWinCodePage: r8
+-pSrcStr: r9
+
+知りたかったのは <code>pSrcStr</code> にバイト列が正しく渡っているか。ということで、<code>r9</code> に入っているアドレスをダンプしてみた。
+>|
+0:000> dd @r9
+00000000`028d7dc8  3042241b 3143247a 2537245b 253c2137
+00000000`028d7dd8  2473253a 42281b4e 42241b33 47246e37
+00000000`028d7de8  23213924 6e356132 3f324b24 2b245945
+   : 
+|<
+このバイト列がちゃんと意図したものならば成功。
+
+めでたし。
+
+**まとめ
+DOBON.NET を妄信してはいけない。
+

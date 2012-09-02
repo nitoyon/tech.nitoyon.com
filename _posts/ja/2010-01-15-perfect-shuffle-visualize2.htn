@@ -1,0 +1,117 @@
+---
+layout: post
+title: 続・パーフェクトシャッフルは何回で元に戻るか (AS3版)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100115/perfect_shuffle_visualize2
+---
+<a href="http://d.hatena.ne.jp/nitoyon/20100113/perfect_shuffle_visualize">前回</a>の続きで最初と最後がつながるところをアニメーションさせてみることにした。
+
+**アニメーションの雛形作成
+四角から円をどのように作るか悩んだのだけど、扇形を徐々に広げていく形で変換してやった。バームクーヘンの１人前から始まり、徐々にバームクーヘンの１ホールになっていく、と言ってもいいだろう。こんな感じ。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100115/20100115020339.png" border="1"></center><
+
+この実験は <a href="http://wonderfl.net/code/b2dbbb5b857c6ebd8ed4460e83338f3e5ce4abe8">Square to Donut</a> として Wonderfl に投稿してある。
+
+（はてなダイアリーに wonderfl の作品を iframe で貼り付けても失敗する。title="" を取り除いてもダメだけど何でだろ...）
+
+**線の当てはめ
+アニメーションの大枠ができたら、扇上に前回のシミュレーション結果を貼り付けて、変形に応じて座標を変えていけばよい。sin とか cos を駆使して座標変換を行えば終わり。
+
+><noscript>Flash Player 10 以上がインストールされている必要がありますよ</noscript><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FPerfectShuffleVisualization2.swf&amp;up_background=%23000000&amp;synd=open&amp;w=460&amp;h=440&amp;title=Perfect+Shuffle+Visualization+2&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><br>(要 Flash Player 10 以上)</center><
+
+ソースは以下に(80行)。<a href="http://wonderfl.net/code/2733fb8d3d956ad68601f145c753de4d3be8c889">wonderfl にも投稿済み</a>。
+====
+><div class="fix-height-syntax"><
+>|actionscript|
+package {
+import flash.display.*;
+import flash.events.Event;
+import flash.geom.Point;
+import flash.filters.BlurFilter;
+import flash.text.TextField;
+import org.libspark.betweenas3.BetweenAS3;
+import org.libspark.betweenas3.tweens.ITween;
+import org.libspark.betweenas3.easing.*;
+import frocessing.color.ColorHSV;
+
+[SWF(backgroundColor="0x000000")]
+public class PerfectShuffleVisualization2 extends Sprite {
+    public var r:Number = 800;
+    public var d:Number = 80;
+    public var angle:Number = 6;
+    private const NUM:int = 5;
+    private const SIZE:int = 30;
+    private var msk:Sprite;
+    
+    public function PerfectShuffleVisualization2() {
+        stage.scaleMode = "noScale";
+        stage.align = "TL";
+
+        var t:TextField = new TextField();
+        t.text = "Click to play!!";
+        t.textColor = 0xffffff;
+        addChild(t);
+        x = 240; y = 240;
+        draw();
+
+        var tween:ITween = BetweenAS3.parallel(
+            BetweenAS3.tween(this, { r: 30 }, null, 5, Quint.easeOut),
+            BetweenAS3.tween(this, { angle: 360, d: 160 }, null, 5)
+        );
+        tween.onUpdate = draw;
+        stage.addEventListener("click", function(event:Event):void {
+            if (t.parent) t.parent.removeChild(t);
+            tween.play();
+           });
+
+        filters = [new BlurFilter(2, 2)];
+    }
+
+    private function draw():void {
+        var p:Point = new Point();
+        var g:Graphics = graphics;
+        g.clear();
+
+        // draw lines
+        for (var yy:int = 0; yy < SIZE; yy++) {
+            var num:int = yy;
+            g.lineStyle(2, new ColorHSV(yy * 270 / SIZE, .7).value, .7);
+            p.x = 0; p.y = num; getXY(p);
+            g.moveTo(p.x, p.y);
+            for (var xx:int = 1; xx <= NUM; xx++) {
+                num = getNext(num);
+                p.x = xx; p.y = num; getXY(p);
+                g.lineTo(p.x, p.y);
+            }
+        }
+    }
+
+    // get next position after perfect shuffle
+    private function getNext(num:int):int {
+        if (num < SIZE / 2) {
+            return num * 2 + 1;
+        } else {
+            return (num - SIZE / 2) * 2;
+        }
+    }
+
+    private function getXY(pt:Point):Point {
+        var rad:Number = (-angle / 2.0 + angle * pt.x / NUM) / 180.0 * Math.PI;
+        pt.x =  (r + d / (SIZE - 1) * pt.y) * Math.sin(rad);
+        pt.y = -(r + d / (SIZE - 1) * pt.y) * Math.cos(rad) + r * Math.cos(angle / 2 / 180 * Math.PI);
+        return pt;
+    }
+}
+}
+||<
+></div><
+
+><div class="seealso"><
+**目次
+-{% post_link 2010-01-13-perfect-shuffle-visualize %}
+-続・パーフェクトシャッフルは何回で元に戻るか (AS3版)
+-{% post_link 2010-01-22-perfect-shuffle-visualize3 %}
+></div><
+

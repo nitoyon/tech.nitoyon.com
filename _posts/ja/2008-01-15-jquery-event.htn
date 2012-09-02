@@ -1,0 +1,80 @@
+---
+layout: post
+title: jQuery の bind, unbind の裏側
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080115/jquery_event
+---
+jQuery のソースを呼んでいて、イベント登録のところが複雑だったので備忘録として記しておく。
+
+バージョンは 1.2.1。
+
+**そもそもの目的
+DOM 標準の removeEventListener は、element と type(click, submit, blur など) と listener の３つを指定する必要がある。
+>|javascript|
+element.removeEventListener(click, listener, false);
+||<
+
+jQuery ではイベント解除に unbind という便利な関数が用意されている。
++element, type, listener を指定して解除する（通常の removeEventListener と同じ）
++element, type を指定して全てのイベントハンドラを解除する
++element から全てのイベントを解除する
+例えば、
+>|javascript|
+$("#foo").unbind();
+||<
+とすると、#foo なエレメントに（jQuery 経由で）bind したイベントを全て解除できる。
+
+1. は通常の removeEventListener そのままなんだけど、2. や 3. をどうするかが腕の見せ所。
+
+**実現方法
+3. を実現するためには、ある element に割り当てられた全てのイベントハンドラを知れる必要がある。これを実現するために、element をキーにしたハッシュを作成することにする。
+
+このハッシュを、仮に hash としておく。（実際には、element[(new Date()).getTime()] に作成される）
+
+***bind の裏側
+bind は次のようにして使う。
+>|javascript|
+$("foo").bind( type, fn );
+||<
+
+このとき、裏側では次のように動いている。
++fn に guid を設定する。guid はイベントハンドラに一意につけられた id。
++type と guid をキーにして、イベントハンドラを保持する（hash.events[type][guid] = fn）。
+--element から登録された type 一覧を知ることができる
+--element と type から登録された fn の一覧を知ることができる
++element に type のイベントが登録されていない場合は、element.addEventListener(type, <特製ハンドラ>, false) する。
+--複数回 bind しても、登録されるイベントハンドラはこの特製ハンドラ１つだけ
+--このハンドラが呼ばれると、hash.events[type] に保存されている fn（実際に bind で登録されたイベントハンドラ）を順番に呼び出す。
+element と type が同じなら、１回しか addEventListener が呼び出されず、同じイベントハンドラを使いまわしている。
+
+***unbind の裏側
+-element, type, fn を指定した場合
+++hash.events[type] から fn の guid を削除する
+++hash.events[type] が空になったときは、removeEventHandler する
+-element, type を指定した場合
+++hash.events[type] を空にする
+++removeEventListener する
+-element のみ指定されたとき
+++hash.events から全ての type を列挙して、removeEventListener する
+++hash.events も初期化する
+
+element と type について登録されているハンドラ数が 0 になったときのみ、removeEventListener が走る。複数のハンドラが登録されている場合は、ハッシュを修正するだけで OK。
+
+***さらに
+さらにもうちょっと面白いのが、addEventListener で登録される特製ハンドラは、element に対して同じ関数が使い回されている。
+
+特製ハンドラはイベントが実行されると、
++第一引数（event）から event.type でイベントの種類を調べる。
++hash.events[event.type] で実際に呼び出すべき関数一覧を取得する。
++これを順番に呼び出す。
+
+この仕組みのおかげで、element が分かれば、実際に addEventListener されている特製イベントハンドラを割り出せるわけだ。removeEventListener するときに、type によって実装を変える必要がなくなる。
+
+で、これとは別に、イベントハンドラに追加の data を渡す仕組みや、クロスブラウザの仕組みなどが入っていて、かなり複雑。
+
+**あとがき
+分かりやすく書こうと思ったけど複雑ですね…。
+
+ソース読んだほうが早いよ！という人は、直接 <a href="http://jqueryjs.googlecode.com/svn/tags/1.2.1/src/event.js">ソース（event.js）</a> を読んでみたほうがよいかも。bind から呼ばれるのが add、unbind から呼ばれるのが remove ですよ。
+

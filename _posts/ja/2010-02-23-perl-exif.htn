@@ -1,0 +1,73 @@
+---
+layout: post
+title: Image::ExifTool で写真の EXIF 時刻をまとめてずらす
+tags: Perl
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100223/perl_exif
+---
+カメラの時刻を間違えて設定してしまったり、海外旅行に行ったのに時差を変更し忘れたり、アリバイを作りたくなったり、などなど、現代人にとって写真の時刻をまとめて変更したくなることはよくあるものだ。
+
+便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。
+
+**EXIF の時間を書き換える
+perl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。
+>|perl|
+perl -MImage::ExifTool -e "for $f(glob('*.jpg')){$e = new Image::ExifTool; $e->ImageInfo($f); $e->SetNewValue($_=>240, Shift=>1) for('ModifyDate','DateTimeOriginal','CreateDate'); $e->WriteInfo($f,'out/'.$f)}"
+||<
+MS-DOS 用。UNIX shell のときは、" と ' を入れ替えるべきだろう。１行を展開してみるとこうなる。
+>|perl|
+# カレントフォルダの *.jpg を列挙
+for $f(glob('*.jpg')){
+    # ファイルの Exif 情報を読み取る
+    $e = new Image::ExifTool;
+    $e->ImageInfo($f);
+
+    # 時刻をずらす
+    $e->SetNewValue($_=>9, Shift=>-1)
+      for('ModifyDate','DateTimeOriginal','CreateDate');
+
+    # out フォルダに出力する
+    $e->WriteInfo($f,'out/'.$f)
+}
+||<
+
+ただ、こんな凝ったことしなくても Image::ExifTool と一緒に導入される exiftool を使えば、もっと手軽にできたようだ。
+>|bash|
+exiftool "-AllDates-=0:0:0 9:0:0" ./
+||<
+バックアップファイルまで作ってくれるので安心。
+
+**タイムスタンプを修正する
+この方法で EXIF を書き換えることには成功したのだけど、ファイルのタイムスタンプが現在時刻になってしまう。
+====
+そこで、タイムスタンプを EXIF のものに置き換えるスクリプトを書いた。
+>|perl|
+perl -MImage::ExifTool -MTime::Local -e "for $f(glob('*.jpg')){$e = new Image::ExifTool; $e->ImageInfo($f); @t=reverse split(/[: ]/,$e->GetValue('ModifyDate')); $t[4]--; $t=timelocal @t; utime $t,$t,$f }"
+||<
+
+インデントしてみた。
+>|perl|
+# カレントフォルダの *.jpg を列挙
+for $f(glob('*.jpg')){
+    # ファイルの Exif 情報を読み取る
+    $e = new Image::ExifTool;
+    $e->ImageInfo($f);
+
+    # 時間を取得する
+    @t=reverse split(/[: ]/,$e->GetValue('ModifyDate'));
+    $t[4]--; # month を1減らす
+
+    # epoch に変換する
+    $t=timelocal @t;
+
+    # ファイルのタイムスタンプを変更する
+    utime $t,$t,$f
+}
+||<
+
+Image::ExifTool で時刻を DateTime で取得するような方法を探してみたんだけど見つからず。諦めて、このようなかっこ悪い方法で変換している（1月には動かない!!）。
+
+**参考URL
+-[http://hippos-lab.com/blog/node/251:title=exiftoolはとっても楽ちん | hippos-lab::blog]
+-[http://www.perlmonks.org/?node_id=767176:title=Change Image File Timestamp to Match EXIF Data]
+

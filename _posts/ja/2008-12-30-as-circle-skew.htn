@@ -1,0 +1,52 @@
+---
+layout: post
+title: AS3で半径小さい円を描いて拡大したらいびつになってる
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081230/as_circle_skew
+---
+><center><a href="http://wonderfl.kayac.com/code/1b7a6ce98692bf2232ad25ae76b964f5a4939abd"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081230/20081230182050.png"></a></center><
+
+題のまま。1×1の範囲に図形を描画して、あとで倍率変更してステージ全体に広げるコードを書いていたらうまく描画されずに悩んでしまった。
+
+<s>円を描画するのはそこそこコストがかかる処理なので、半径が小さいときにはパス数を減らす最適化をしているんだろう。</s> 
+
+（追記）Flash 内部で 1/20 ピクセル以下の座標は切り捨てられているらしい。コメント欄で教えてもらいました。ありがとうございます。
+-（参考）<a href="http://f-site.org/articles/2006/04/26111538.html">F-site | XY座標の最小単位</a>
+
+適度に 100×100 などの領域に描画するのがよさそう。<s>逆に、1000×1000のような領域に図形を描画してから縮小して使うと、描画効率が悪くなると予想される。</s>
+
+以下、実証コード。<a href="http://wonderfl.kayac.com/code/1b7a6ce98692bf2232ad25ae76b964f5a4939abd">wonderfl にも置いた</a>。
+>|javascript|
+package{   
+import flash.display.Sprite;   
+public class GunyaGunya extends Sprite{   
+    public function GunyaGunya(){   
+        var s:Sprite = new Sprite();   
+        s.graphics.beginFill(0xff0000);   
+        s.graphics.drawCircle(0, 0, 0.1);   
+        s.graphics.endFill();   
+        s.scaleX = s.scaleY = 200;   
+        s.x = s.y = 100;   
+        addChild(s);   
+  
+        s = new Sprite();   
+        s.graphics.beginFill(0x0000ff);   
+        s.graphics.drawCircle(0, 0, 0.2);   
+        s.graphics.endFill();   
+        s.scaleX = s.scaleY = 100;   
+        s.x = s.y = 200;   
+        addChild(s);   
+  
+        s = new Sprite();   
+        s.graphics.beginFill(0x006600);   
+        s.graphics.drawCircle(0, 0, 0.25);   
+        s.graphics.endFill();   
+        s.scaleX = s.scaleY = 100;   
+        s.x = 240; s.y = 80;   
+        addChild(s);   
+    }   
+}   
+}  
+||<
+

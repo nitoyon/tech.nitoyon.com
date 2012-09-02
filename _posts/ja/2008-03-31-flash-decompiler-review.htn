@@ -1,0 +1,60 @@
+---
+layout: post
+title: OSS で SWF をデコンパイルする(1) - flash-decompiler を使ってみる
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080331/flash_decompiler_review
+---
+AS3 対応のデコンパイラとしては、最近 <a href="http://www.sothink.com/product/flashdecompiler/index.htm">Sothink SWF Decompiler 4</a> というのが登場したようだけど、AS3 に押し寄せる OSS 化の波の力を借りれば、無料でデコンパイルできるんじゃね？
+
+ということで、Google Code で公開されている <a href="http://code.google.com/p/flash-decompiler/">flash-decompiler</a> を試してみた。
+
+まずはどんなものなのかを知るためにビルドしてみる。
+
+**さっそくソース修正
+Flex3 SDK で r45 をビルドするにはソースの修正が必要だった。
+
+<a href="http://code.google.com/p/flash-decompiler/source/browse/trunk/FlashDecompiler/src/com/ludicast/decompiler/util/HeaderParser.as?r=45">src/com/ludicast/decompiler/util/HeaderParser.as</a> の5行目、
+>|javascript|
+    import mx.automation.codec.ArrayPropertyCodec;
+||<
+をコメントアウト。
+
+src/FlashDecompiler-app.xml で content が設定されていないので、手動で設定してあげる。
+>|xml|
+   <content>FlashDecompiler.swf</content>
+||<
+
+**ビルド＆実行
+ビルド：
+>|sh|
+amxmlc FlashDecompiler.mxml -source-path+=..\locales\en_US
+||<
+実行：
+>|sh|
+adl FlashDecompiler-app.xml
+||<
+
+**試しに実行
++URL of Remote SWF に SWF の URL を突っ込む。
++Parse ボタンを押す
++情報が表示される！
+
+Tags タブを開くと、SWF の中のタグ一覧が表示される。タグにはいろんな種類があって、シェイプとか画像とかABCの情報が入ってるようだ。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080323/20080323123718.jpg" width="350" height="297"></center><
+Tags の中から ABC(ActionScript ByteCode)のものだけを抜き出して表示するのが AS3 Classes。今は、クラス一覧を表示するだけっぽい。
+
+とある Web サービスの SWF を解析した図。
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080323/20080323123711.jpg" width="350" height="297"></center><
+channel3 とか mx.* とかがリストアップされてる。ふむふむ。
+**ソース読み
+flash-decompiler のソースを覗く。クラス列挙をどうやってるのかが気になる。
+
+まず、DoABC タグを ByteArray で取り出している。DoABC というのは ActionScript ByteCode が格納されているタグの名前のようだ。
+
+次に、ByteArray を com.ludicast.decompiler.util.tamarin.Abc でパースしている。この、Abc というクラス、よく見てみると、tamarin の abcdump.as にある Abc クラスと全く同じ。
+
+どうやら、com.ludicast.decompiler.util.tamarin.* のファイルは、abcdump.as をクラスごとにファイル分割したもののよう。asc.jar だと１ファイルに複数の public なクラスを定義できるけど、mxmlc だとビルドできないからね。
+
+ということは、もう１工夫すれば、abcdump の出力結果を画面に表示することもできるはずだな…<a href="http://d.hatena.ne.jp/nitoyon/20080401/swfassist_abcdump">（続く）</a>
+

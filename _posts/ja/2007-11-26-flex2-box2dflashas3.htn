@@ -1,0 +1,74 @@
+---
+layout: post
+title: mxmlcでBox2DFlashAS3のサンプルをビルドする方法
+tags: Box2d
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071126/flex2_box2dflashas3
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071126/20071126032920.jpg" width="450" height="166" alt="Box2DFlashAS3"></center><
+GIGAZINE などでも<a href="http://gigazine.net/index.php?/news/comments/20071118_box2dflashas3/">紹介された</a>、話題の物理エンジン <a href="http://box2dflash.sourceforge.net/">Box2DFlashAS3 1.4.2</a> を試してみました。
+
+ダウンロードは <a href="http://sourceforge.net/projects/box2dflash">SourceForge.net: Box2DFlashAS3</a> から。
+
+パッケージに含まれている主要なファイルは以下の通り。
+|*Engine フォルダ|Box2DFlashAS3 の本体です。|
+|*General フォルダ|デモで利用しているユーティリティクラスが入っています。|
+|*TestBed フォルダ|デモ８種類とその基底クラスが入っています。|
+|*Main.as|デモをカーソルキーで切り替える機能などを実装したクラスです。|
+|*PhysTest.fla|これをコンパイルすると SWF ができあがるようです。|
+|*PhysTest.swf|デモのコンパイル済み SWF です。<a href="http://box2dflash.sourceforge.net/">Box2DFlashAS3</a> に展示してあるデモがこのファイル。|
+
+Flash CS3 は持ってないので、.fla なファイルは開けません。
+
+そこで、Main.as を mxmlc でコンパイルしてみるとエラーが…。
+
+むきー！　絶対に動かしてやる！！
+
+<strong>(追記) 1.4.3 からは、mxmlc で Main.as をコンパイルできるようになっています。以下に書いてある修正および警告を出なくする工夫は不要です。</strong>
+
+**Main.as を修正
+Main.as をコンパイルして実行すると、
+>>
+変数 m_aboutTextN は定義されていません。
+<<
+という例外が出るので、まずはこれを解決。
+
+ソースを見てみると、50行目に次のような内容が。
+>|javascript|
+    // textfield pointer
+    m_aboutText = m_aboutTextN;
+||<
+m_aboutTextN は Main.as には含まれていない。おそらく PhysTest.fla で定義されたシンボルなのでしょう。
+
+ってことで、スクリプトを次のように修正。
+>|javascript|
+    // textfield pointer
+    m_aboutText = new TextField();//m_aboutTextN;
+    addChild(m_aboutText);
+||<
+これで実行時の例外は出なくなった。
+
+**コンパイル オプション
+Box2DFlashAS3 の移植が中途半端で、コンパイル時に警告が大量に出てしまう。警告をよく見ると、変数や戻り値の型宣言が行われていないようだ。CS3 では警告すらでないのかな？
+
+ということで、コンパイル オプションを次のようにしてみた。
+>|
+mxmlc --strict=false --warnings=false --default-background-color=#414647 -default-size 640 360 Main.as
+|<
+見やすくしたらこうなる。
+>|
+mxmlc --strict=false \
+      --warnings=false \
+      --default-background-color=#414647 \
+      -default-size 640 360 \
+      Main.as
+|<
+
+警告を無視するために --strict=false、警告を出力しないために --warnings=false、さらに背景色と SWF のサイズを指定するオプションもつけている。
+
+**完成
+Main.swf が出力されて、<a href="http://box2dflash.sourceforge.net/">Box2DFlashAS3</a> のトップページにある SWF を吐き出すことができた。
+
+やったー。
+
+ --strict=false にしているのが切ないので、警告が出なくなるパッチを誰かが書いてくれないかなぁ。

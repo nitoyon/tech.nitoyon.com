@@ -1,0 +1,193 @@
+---
+layout: post
+title: UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!
+tags: git
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2
+---
+先日、<a href="http://d.hatena.ne.jp/nitoyon/20120221/msysgit_utf8">msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</a> という記事で「UTF-8 対応のコードがコミットされた」ことをお伝えしましたが、ついに、<strong>UTF-8 対応の新バージョン、msysGit 1.7.10 がリリース</strong>されました。
+
+いよいよ Windows でも日本語ファイル名を扱えるようになったので、「git では "詳細設計仕様書.xlsx" をコミットできないんでしょ？」とブーブーいってた人を説得できる材料はそろいました!!!!
+
+それを記念して、この記事では
+- UTF-8 対応の msysGit 1.7.10 を試してみた
+- ブーブーいう人を黙らせるための「GUI で git する Windows 向けツール」まとめ
+の2本立てでお送りしたいと思います。
+
+**UTF-8 対応の msysGit 1.7.10 を試してみた
+さっそく Google Code の <a href="http://code.google.com/p/msysgit/">msysGit</a> から 1.7.10 をダウンロード。
+====
+インストールして、スタートメニューから [Git] > [Git Bash] を起動します。
+
+日本語ファイル名を表示できるように次の設定をしておくことをお忘れなく。
+>|sh|
+$ git config [--global] core.quotepath off
+||<
+
+***日本語ファイル名の実験！
+では早速、日本語ファイル名を含んだレポジトリーをとってきてみよう。
+
+Github の <a href="https://github.com/toooooooby/japanese_test">toooooooby / japanese_test</a> がちょうどいいので使ってみる。
+>|sh|
+$ git clone https://github.com/toooooooby/japanese_test.git
+Cloning into 'japanese_test'...
+remote: Counting objects: 43, done.
+remote: Compressing objects: 100% (22/22), done.
+remote: Total 43 (delta 21), reused 43 (delta 21)
+Unpacking objects: 100% (43/43), done.
+||<
+
+エクスプローラーで見ると…
+
+><center>[f:id:nitoyon:20120412015658p:image]</center><
+
+おー！　日本語!!!
+
+Git Bash でも…。
+>|sh|
+$ cd japanese_test/
+
+$ ls
+readme.textile                  ??????.txt
+unko.txt                        ????????????SJIS.txt
+???????????????UTF-8.txt        ????????????????????????
+?????????????????????UTF-8.txt
+||<
+あれ？
+
+less を噛ませば大丈夫。
+>|sh|
+$ ls | less
+readme.textile
+unko.txt
+噂のソフトUTF-8.txt
+日本語ファイルUTF-8.txt
+能知.txt
+能表暴予SJIS.txt
+表が怖いです！！
+||<
+※ただし、フォントを MS ゴシックなどの日本語対応のものに変更しておく必要あり
+
+(追記) <code>ls --show-control-chars</code> すれば less なしで日本語通りました。.bashrc に <code>alias ls='ls --color=auto --show-control-chars'</code> と定義しておくとよさそうです。(twitter で @hogelog さんに教えてもらいました)
+
+vector から <a href="http://www.vector.co.jp/soft/win95/util/se031296.html">nkf Win32 版</a> を落としてきて確認してみると
+>|sh|
+$ ls | nkf -g
+UTF-8
+||<
+ファイル名の出力は内部的に UTF-8 になっていますね。less も UTF-8 に対応していることが分かります。
+
+もちろんコミットログの日本語も問題なし。日本語ファイル名も余裕です!!!
+>|sh|
+$ git log --stat
+commit b20cfb6454a69242d361fedb8927b8515b97e4f7
+Author: toooooooby <example@example.com>
+Date:   Tue Jul 27 01:08:20 2010 +0900
+
+    テストテスト表が怖い噂の(ry＠msysGit UTF-8
+
+ unko.txt                 |    6 ++++++
+ 噂のソフトUTF-8.txt |   13 -------------
+ 2 files changed, 6 insertions(+), 13 deletions(-)
+||<
+
+***日本語ファイル名のコミットは少し厄介
+日本語のファイルを作って <code>git add</code> を試してましょう。
+
+しかし・・・Git Bash 上で日本語を入力できない・・・。IME の入力が無視されます(対処方法があればおしえてください)。
+
+回避方法は、コマンドラインにこだわるなら xargs でファイル名を渡すか、MS-DOS を起動して git.exe を実行しましょう・・・。
+>|sh|
+>"c:\Program Files (x86)\Git\bin\git.exe" add テスト.txt
+||<
+
+コマンドラインにこだわらないのであれば、msysGit と同時にインストールされるシェル エクステンション「git-cheetah」を使えばよいでしょう。エクスプローラーから右クリックで <code>git add</code> や <code>git commit</code> できます。
+
+***コミットメッセージに日本語を使うならエディターの設定は必須
+いざコミット・・・としてみましたが、今度は msysGit 付属の vim が日本語表示できてるのに、IME からの日本語を受け付けてくれません。
+
+仕方がないので、エディターを自分で設定しましょう。ここでは秀丸を設定してみます。
+>|sh|
+$ git config [--global] core.editor "\"C:/Program Files (x86)/Hidemaru/Hidemaru.exe\""
+||<
+空白パスを含む場合は <code>\"</code> を忘れないように注意。
+
+最初、メモ帳でやろうとしたけど、コミットメッセージの改行コードが LF のみでエディターに渡されていたので、メモ帳では改行を表示できませんでした。そこそこ高機能なエディターを選択しましょう。
+
+コミット メッセージを UTF-8 で保存してエディターを終了します。
+
+コミットしてログをみてみると・・・
+>|sh|
+$ git log --stat
+commit 6c925290f271237da7e8508916e193f53ba9552a
+Author: unknown <user@HOST.(none)>
+Date:   Thu Apr 12 00:30:58 2012 +0900
+
+    日本語コミットメッセージだよ。
+
+    いけるかな？？？
+
+ テスト.txt |    1 +
+ 1 file changed, 1 insertion(+)
+||<
+はい、無事いけました。
+
+
+**ブーブーいう人を黙らせるための「GUI で git する Windows 向けツール」まとめ
+コマンドラインに不慣れな人にも Git を使ってもらわなきゃいけない場合、GUI ツールの存在が気になります。
+
+そんな人に使ってもらえそうな GUI で git するツールをまとめてみました。
+
+***git-cheetah
+msysgit に付属するシェル拡張です。
+
+エクスプローラーから右クリックしてのコミットや GUI でのヒストリーの確認など、一通りのことは実現できます。
+
+><center>[f:id:nitoyon:20120412015659p:image]</center><
+
+カジュアルな使い方をする分にはこれで十分そうです。
+
+***GitHub for Windows
+(2012/5/23 追記) GitHub が作成、公開している Windows 向けの Git クライアント「<a href="http://windows.github.com/">GitHub for Windows</a>」です。GitHub の名前がついていますが、GitHub 以外の Git レポジトリを扱うこともできるようです。
+
+***Tortoise Git
+TortoiseSVN で有名な Tortoise シリーズの「<a href="http://code.google.com/p/tortoisegit/">TortoiseGit</a>」。TortoiseSVN をベースに git 用にカスタマイズしています。
+
+しかし、msysGit 1.7.6 の利用を推奨しているため UTF-8 対応していません。草の根版でよいなら、msysgit の UTF-8 化に尽力した Karsten さんが TortoiseGit V1.7.5.0 をベースに UTF-8 対応させたパッケージが msysGit のメーリングリストに流れています(<a href="http://groups.google.com/group/msysgit/browse_thread/thread/408f7613d096f2c0/b5ebf2a57c8676d2?lnk=gst&q=v15#b5ebf2a57c8676d2">Issue 80: Unicode support on Windows</a> 参照)。Tortoise にこだわりがあるなら、こちらを使ってもよいかもしれません。
+
+ただ、残念ながら日本語化はされていません（昔に日本語化した人はいたが、現在はメンテされていない）。
+
+(追記 2012/4/15) 新たな日本語化プロジェクト「<a href="http://tortoisegitjapan.com/">TortoiseGit Japan</a>」が開始したようです。日本語化パッチが配布されています。インストール手順も日本語で解説してあります。
+
+***Git Extensions
+知名度は低いものの <a href="http://code.google.com/p/gitextensions/">Git Extensions</a> というツールもあります。
+
+こちらは日本語の対応は完璧。msysgit 1.7.10 を利用すれば、ファイル名やコミットログを問題なく表示できるし、Git Bash で面倒だった日本語ファイル名のコミットも簡単です。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120221/20120221024334.png"></center><
+
+こちらは一部日本語化もされているので「英語を見ると吐き気がする」という人にも使ってもらいやすいです。UI は分かりにくいところも多いですが、Git の一通りの機能を Windows 的な UI で使うことができます。
+
+最新の 2.31 には私が push リクエストしたコミットもいくつか取り込まれています（宣伝）。
+
+***Git Source Control Provider
+Visual Studio をメインで開発しているなら <a href="http://visualstudiogallery.msdn.microsoft.com/63a7e40d-4d71-4fbb-a23b-d262124b8f4c">Git Source Control Provider</a> も便利そうです。
+
+ソリューション エクスプローラー上からコミットしたり、git の状態をアイコンで表示してくれるようです。
+
+***EGit
+Eclipse がメインの開発環境だよ、という人は <a href="http://www.eclipse.org/egit/">EGit</a> を試してみるとよさそうです。こちらは git の Java 実装である JGit を使っている模様です。
+
+少し古いですが <a href="http://news.mynavi.jp/column/ide/052/index.html">コラム】イマドキのIDE事情 (52) EclipseでGitを使おう! EGitを試してみる | エンタープライズ | マイナビニュース</a> に紹介記事があります。この記事の内容が現在も妥当なのかどうかは Eclipse を使っていないので分かりません。
+
+***GitHub for Eclipse
+GitHub が公開している Eclipse 用のプラグインです。http://eclipse.github.com/ で公開されています。
+
+**まとめ
+-msysGit 1.7.10 がリリースされて、いよいよ Windows で git できる環境が整った
+-GUI で git するツールもいくつかある
+-ついに git!!! git!!!
+
+>{% amazon jp:4798023809:detail %}<
+>{% amazon jp:4873114403:detail %}<
+

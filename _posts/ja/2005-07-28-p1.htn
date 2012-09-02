@@ -1,0 +1,34 @@
+---
+layout: post
+title: PHP 4.3 と MySQL 4.1 の接続性
+tags: 開発
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20050728/p1
+---
+PHP から MySQL に接続しようとすると
+>>
+Client does not support authentication protocol requested by server; consider upgrading MySQL client
+<<
+
+などと言われてしまう問題がある。
+
+**原因
+これは PHP 4.3 の MySQL ライブラリの問題があるようだ。PHP 4.1 なら接続できる、という話もある。
+http://oshiete1.goo.ne.jp/kotaeru.php3?q=1121173
+
+もしくは、MySQL 4.1 では、パスワードの暗号化方法が変わったという問題もあるようだ。MySQL 4.1 以前と PHP 4.3 なら接続できるのかもしれない。
+http://dev.mysql.com/doc/mysql/ja/old-client.html
+>>
+MySQL 4.1 では、パスワードハッシュアルゴリズムに基づく認証プロトコルが使用されていますが、これは旧クライアントが使用しているものと互換性がありません。 サーバを 4.1 にアップグレードすると、旧クライアントで接続しようとした場合に、以下のエラーメッセージが発生する可能性があります。 
+<<
+
+
+**解決策
+- --old-passwords オプションで MySQL を起動する
+-旧パスワードを設定する。
+>|
+mysql> UPDATE user SET Password = OLD_PASSWORD('mypass')
+    -> WHERE Host = 'some_host' AND User = 'some_user';
+mysql> FLUSH PRIVILEGES;
+|<
+-PHP で 改良版MySQL拡張サポート(mysqli) を利用する。

@@ -1,0 +1,62 @@
+---
+layout: post
+title: FlashでActionScriptを利用したアニメーション
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20060214/p1
+---
+Flash でアニメーションを作成する方法は、
++タイムラインにそってトゥイーンを利用する
++ActionScript を使って動きをつける
+の２つのパターンがあるようだ。
+
+トゥイーンでエフェクトを作っていくのはプログラマの頭にはちょっと堪え難い。１つのエフェクトを適用するためだけに、トゥイーンを作っていくのが手間に感じてしまうし美しくない。ムービークリップを使えば多少OOPっぽく管理できるが、インスタンスでいじれるのが色ぐらいなのは寂しい。もっとOOP的にエフェクトを実現したい、と思うのがプログラマ的発想。
+
+そこでこんなクラスを定義してみた。
+>|javascript|
+class Appear{
+	var elm;
+	var delay:Number;
+	var counter:Number;
+
+	function Appear(_elm:MovieClip, d){
+		this.elm = _elm;
+		this.elm._alpha = 0;
+		this.delay = d;
+		if(d == undefined){
+			this.delay = 10;
+		}
+
+		this.elm.onEnterFrame = appearClosure(elm, delay);
+	}
+
+	function appearClosure(mc, d){
+		var delay = d;
+		var diff = 100 /d;
+		var count = 0;
+		return function(){
+			mc._alpha = Math.min(100, mc._alpha + diff);
+			count++;
+			if(count > delay){
+				delete mc.onEnterFrame;
+			}
+		}
+	}
+}
+||<
+
+ムービークリップ mc_name に対して、new Appear(mc_name, 10); というスクリプトを書くだけで 10フレームつかってフェードインしてくれる。
+
+と思ったら、Flash のヘルプにこんなサンプルが。うーん、単純・・・。
+>|javascript|
+img1_mc.onEnterFrame = function() {
+    img1_mc._alpha -= 5;
+    if (img1_mc._alpha <= 0) {
+        img1_mc._visible = false;
+        delete img1_mc.onEnterFrame;
+    }
+};
+||<
+
+ActionScript2.0はECMAScriptだから、script.aculo.us から知恵を拝借しつつ、互換のライブラリを組んだらおもしろいかな。
+

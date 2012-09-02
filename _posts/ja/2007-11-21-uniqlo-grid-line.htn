@@ -1,0 +1,120 @@
+---
+layout: post
+title: UNIQLO_GRID みたいに「うねうね」揺れる線
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071121/uniqlo_grid_line
+---
+既に各所で話題になっている <a href="http://www.uniqlo.com/grid/">UNIQLO_GRID</a> ですが、ドラッグしたときに線が「うねうね」と揺れる様がステキだったので、マネしてみました。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FUneuneLine.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=300&amp;title=uneune+line&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+ドラッグして遊んでみてください（表示されない場合はリロードを）。
+
+手書き風効果に使えそうですね。揺れ具合など改善の余地はたくさんありそうです。
+
+それはそうと、どうやってアルゴリズムを想像したかを記録しておきます。
++右クリックから拡大して、UNIQLO_GRID の線がベクターであることを確認
++少ししか動かしていないときは直線として描画されていることを発見
++曲線になる条件は、移動距離や移動時間ではなく、mouseMove イベントの発生回数ではないかと仮定（実際は違うかも）
++曲線になった瞬間、途中に通った場所がベジェ曲線の中間点として採用されることを発見
++試験実装→そこそこそれっぽく動く
++マウスを早く動かすと、汚いことを発見→マウスの移動距離が既定値を超えると、その点をベジェ曲線の中間点、コントロールポイントとして採用するようにした
++完成！
+
+ソースコードは以下に（93行）：
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.events.*;
+    import flash.geom.*;
+
+    [SWF(backgroundColor="#ffffff")]
+    public class UneuneLine extends Sprite {
+        private var start:Point;            // 描画開始地点
+        private var controls:Array;         // コントロールのリスト
+        private var anchors:Array;          // アンカーポイントのリスト
+        private var cur:Point;              // 現在のマウス地点
+        private var prev:Point;             // 直前のコントロールもしくはアンカーポイント
+        private var count:int;              // マウスの移動数
+        private const WAIT:int = 20;        // マウスの移動数の閾値
+        private const DISTANCE:int = 20;    // マウスの移動距離の閾値
+        private const RANDOM:Number = 3;    // 揺れ具合
+
+        public function UneuneLine() {
+            stage.addEventListener("mouseDown", mouseDownHandler);
+            addEventListener("enterFrame", enterFrameHandler);
+        }
+
+        private function mouseDownHandler(event:MouseEvent):void {
+            // イベント登録
+            stage.addEventListener("mouseMove", mouseMoveHandler);
+            stage.addEventListener("mouseUp", mouseUpHandler);
+
+            // パラメータ初期化
+            count = 0;
+            start = new Point(event.stageX, event.stageY);
+            cur = start.clone();
+            prev = start.clone();;
+            controls = [null];
+            anchors = [start];
+        }
+
+        private function mouseMoveHandler(event:MouseEvent):void {
+            cur.x = event.stageX; cur.y = event.stageY;
+            count++;
+
+            if(count == WAIT || count < WAIT && Point.distance(prev, cur) > DISTANCE) {
+                // コントロールポイント追加
+                prev = cur.clone();
+                controls.push(cur.clone());
+                count = WAIT;
+            }
+            else if(count == WAIT * 2 || Point.distance(prev, cur) > DISTANCE) {
+                // アンカーポイント追加
+                prev = cur.clone();
+                anchors.push(cur.clone());
+
+                // コントロールポイントの位置を修正
+                var p1:Point = Point(anchors[anchors.length - 2]);
+                var c:Point = Point(controls[anchors.length - 1]);
+                c.x = c.x * 2 - (p1.x + cur.x) / 2;
+                c.y = c.y * 2 - (p1.y + cur.y) / 2;
+
+                count = 0;
+            }
+        }
+
+        private function mouseUpHandler(event:MouseEvent):void {
+            stage.removeEventListener("mouseMove", mouseMoveHandler);
+            stage.removeEventListener("mouseUp", mouseUpHandler);
+
+            start = null;
+            cur = null;
+        }
+
+        private function enterFrameHandler(event:Event):void {
+            graphics.clear();
+
+            if(start) {
+                // 始点へ移動
+                graphics.lineStyle();
+                graphics.moveTo(anchors[0].x, anchors[0].y);
+
+                // ベジェ曲線を描画
+                graphics.lineStyle(1, 0);
+                for(var i:int = 1; i < anchors.length; i++) {
+                    graphics.curveTo(
+                        controls[i].x + Math.random() * RANDOM - RANDOM / 2, 
+                        controls[i].y + Math.random() * RANDOM - RANDOM / 2, 
+                        anchors[i].x  + Math.random() * RANDOM - RANDOM / 2, 
+                        anchors[i].y  + Math.random() * RANDOM - RANDOM / 2);
+                }
+
+                // 終点へ移動
+                graphics.lineTo(cur.x, cur.y);
+            }
+        }
+    }
+}
+||<

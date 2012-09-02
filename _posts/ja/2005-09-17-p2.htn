@@ -1,0 +1,51 @@
+---
+layout: post
+title: display:none の状態で初期化するとバグる Google Maps API さん
+tags: Google Maps
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20050917/p2
+---
+**症状
+Google Maps を表示させる div タグのスタイルに "display : none" が設定された状態で GMap オブジェクトを作成するとマップの中心がずれてしまう。具体的には次のような症状が発生する。
+-コントロールが描画されなかいことがある。
+-地図の一部分がロードされないことがある。ロードされていない部分をドラッグしても地図は移動しない。
+-地図上でダブルクリックすると、通常はダブルクリックした場所が中心になるが、変な場所に移動する（こちらの環境では中心が地図の左上に移動した）。
+
+通常は、"display : none" のまま作成させるようなことはないかもしれないが、Google Maps の表示・非表示を動的に切り替えようと思っている人は注意。
+
+**対処法
+初期化する前に div タグを表示してやる。これだけ。
+
+・ダメな例
+>||
+<div id="map" style="display : none"></div>
+
+<script>
+var mapElement = document.getElementById("map");
+
+new GMap(mapElement);
+// その他 Google Map 初期化処理
+
+mapElement.style.display = "block";
+||<
+
+・いい例
+>||
+<div id="map" style="display : none"></div>
+
+<script>
+// 先に表示する
+var mapElement = document.getElementById("map");
+mapElement.style.display = "block";
+
+new GMap(mapElement);
+// その他 Google Map 初期化処理
+||<
+
+**追記
+<a href="http://blog.mogya.com/2009/09/load-googlemaps-on-hidden-object.html">[GoogleMapsAPI]GoogleMapを非表示でロードする - もぎゃろぐ</a> によると、
+>>
+GMap2だと、sizeプロパティを指定できるので、非表示のままロードすることも可能になっています。
+<<
+だそうです。
+

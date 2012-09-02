@@ -1,0 +1,54 @@
+---
+layout: post
+title: Selenium IDE でテストにパスワードを埋め込まない方法
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20061011/p1
+---
+**前置き
+Web アプリのテストツールとして有名な Selenium ですが、テストの中にパスワードを生で書くことに抵抗がある場合があります。そこで、Selenium IDE 限定ですが、テストが開始されるとパスワード入力ダイアログが登場し、そのパスワードを使ってログインするような方法を探しました。
+
+どういうときに便利かというと、例えば、楽天のアフィリエイトのレポートを開くのを自動化できます。このページ、１日ごとにクッキーが初期化されてしまいます。パスワードマネージャに記録させる手もあるのですが、買い物までできてしまうパスワードを可逆な形で PC に保存するのには抵抗があります。
+
+自動化以外にも、サービスインしてしまった Web サービスのテストを自動化する場合にも応用できるかもしれません。
+
+
+**やり方
+まずは、パスワード入力画面を表示して、その内容を変数に保存します。
+
+コマンドに store、値にはパスワードを保存する変数名（例えば、<font color=blue>password</font>） を指定します。そして、対象には長くなりますが次の値を設定します。
+|*コマンド|*対象|*値|
+|store|(以下の値)|<font color=blue>password</font>|
+>>
+javascript{var p={value:""};PROMPT = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);PROMPT.promptPassword(window, "Enter Password", "Enter password.", p, null, {}); p.value;}
+<<
+パスワード入力画面は FireFox の Components を使って表示しています。入力した文字が *(アスタリスク) で表示されるので安心です。
+
+あとは、このパスワードをフォームに流し込むだけです。パスワード入力欄の名前が <b>p</b> だとすると、こうなります。
+|*コマンド|*対象|*値|
+|type|p|<font color=blue>${password}</font>|
+
+**応用例
+パスワードは Selenium IDE のメモリ空間に保存され続けます。これを応用して、同じパスワードのサイトで入力の手間を省く技があります。変数名はパスワードの種類に応じて変更してください。
+>>
+javascript{if(storedVars['<font color=blue>password</font>']){storedVars['<font color=blue>password</font>'];}else{var p={value:""};PROMPT = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);PROMPT.promptPassword(window, "Enter Password", "Enter password.", p, null, {}); p.value;}}
+<<
+分かりやすく整形すると、こういう構文になってます。
+>|
+<font color="green">// 既に入力していた場合には</font>
+if(storedVars['<font color=blue>password</font>'])
+{
+	<font color="green">// 前の値を利用</font>
+	storedVars['<font color=blue>password</font>'];
+}
+else
+{
+	<パスワード入力ダイアログを表示>
+}
+|<
+
+メモリ上に変数にパスワードの値が保存されたままなことに抵抗がある方は次のようにして上書きしてください（メモリ上から消されることを保証しているわけではありません。あくまで気慰み程度に...）。
+|*コマンド|*対象|*値|
+|store| |<font color=blue>password</font>|
+
+

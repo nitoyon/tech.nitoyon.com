@@ -1,0 +1,107 @@
+---
+layout: post
+title: jQuery と object タグの怪
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090219/object_jquery
+---
+<a href="http://d.hatena.ne.jp/coma2n/20090218/1234958106">Silverlightコンテンツを埋め込むｊQueryプラグイン - Programmable Life</a> で困ってたので一緒に悩んでみた。
+>http://d.hatena.ne.jp/coma2n/20090218/1234958106:title=Silverlightコンテンツを埋め込むｊQueryプラグイン - Architect Life>
+でも何故かIEでは動かない。誰か動くようにしてけれ！
+<<
+
+**object を作れていない？
+手元に環境を作って動かしてみると、&lt;object&gt; に &lt;param&gt; を追加するところで JavaScript エラーが出る。状況を切り分けるために、&lt;param&gt; を追加する部分をコメントアウトしてみた。
+
+IE DOM Explorer で眺めてみると DIV タグが追加されている。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090219/20090219004208.png" width="296" height="195" border="1"></center><
+
+どうやら
+>|javascript|
+var obj = $('<object>').attr({ ... });
+||<
+のところで object タグが作られていないようだ。
+
+jQuery でよく見る現象だ。こういうときは閉じ括弧を入れてあげると大抵うまくいく。
+====
+>|javascript|
+var obj = $('<object/>').attr({ ... });
+||<
+IE DOM Explorer で確認したら &lt;object&gt; になってた。
+
+**でも、だめ
+一歩前進したのでコメントアウトを外してみた。
+
+が、やっぱり append のところでエラーがでる。
+>|javascript|
+            obj.append( // ←ココ
+                $('<param>').attr({
+                    name: name,
+                    value: value
+                })
+            );
+||<
+同じ作戦で <code>&lt;param&gt;&lt;/param&gt;</code> のようにやってみたが変わらず。
+
+仕方がないので、jQuery の <code>$('&lt;param&gt;')</code> から呼ばれる clean のソースを読んでみた。
+
+IE で <code>$('&lt;param&gt;')</code> とすると、内部ではこんな処理をしてる。
+>|javascript|
+var div = document.createElement("div");
+div.innerHTML = "div<div>" + html + "</div>";
+div = div.lastChild;
+return jQuery.makeArray( div.childNodes );
+||<
+空の div タグを作って、その中に innerHTML で HTML 文字列を流し込んで DOM ノードを作成しているようだ。
+
+ここでピーンときた。仕様上は param タグは、本来は object タグの内部にしか入れることができない。なので、<code>&lt;div&gt;&lt;param&gt;&lt;/div&gt;</code> のような HTML を innerHTML で設定すると、このときに生成される param タグは本来の param タグではなく、何か別のものになってるんじゃないだろうか。だから、object に appendChild すると不正なノードを追加したのでエラーになる。
+
+あくまで想像。
+
+**同じような工夫は歯が立たない
+同様の問題は既に jQuery で対応されている。例えば td タグなどを生成するときに単に innerHTML でノード生成するとエラーに出くわすので、一旦 table で囲ってから innerHTML する、といった泥臭いことをしている。
+
+param タグに関しても、同じ仕組みを使えばうまくいくはず、と信じて前後を object タグで囲ってから innerHTML してみた。
+
+が、うまく行かない…。
+
+>|javascript|
+// IE7 で検証したよ
+div.innerHTML = "<object><param></object>";
+alert(div.innerHTML);  // <OBJECT></OBJECT>
+div.innerHTML = "<object><param/></object>";
+alert(div.innerHTML);  // <OBJECT></OBJECT>
+||<
+なぜか param が消える。ナゼジャー！
+
+**仕方がないから諦めた
+ということで、諦めて次のように置き換えたらうまく行った。
+>|javascript|
+  $(document.createElement('param')).attr({
+||<
+jQuery に任せず、自分で作っちゃえ！ということですな。
+
+**そして…
+IE DOM Explorer で眺めてみたら、ちゃんと object の中に param が入って理想的な DOM ノードが構築されていた。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090219/20090219004209.png" width="435" height="243" border="1"></center><
+
+おお、完璧。
+
+しかし…肝心の Silverlight コンテンツが表示されない。
+
+ナゼダ…。
+
+さらに、代替コンテンツの「Microsoft Silverlight を取得」のリンクもなぜか object ノードに入っていない。上と同じく document.createElement 作戦を試したが、それでもエラー。
+
+不思議だ…。
+
+**まとめ
+-object は鬼門
+-謎な挙動が多い
+-同じようなことを Flash でやる超有名ライブラリの SWFObject は object 全体を innerHTML で作成してる。ソースを読んでてもバッドノウハウの塊っぽい
+
+
+→ <a href="http://d.hatena.ne.jp/nitoyon/20090220/object_jquery2">jQuery と object タグの怪 (その２)</a> に続く。
+

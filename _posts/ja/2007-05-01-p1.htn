@@ -1,0 +1,70 @@
+---
+layout: post
+title: AIR でニコニコメソッド プレゼン
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070501/p1
+---
+<a href="http://labs.cybozu.co.jp/blog/takesako/2007/04/nicovideo.html">プレゼンしているその画面の上に、聞いている人達のコメントがニコニコ動画風に流れるのが楽しそう</a>。ということで、それ、AIR でできるよ、と作ってみました。
+
+ドキュメントフォルダの niconico.txt を監視し続け、新たな行が登場したら、行の中身をニコニコ動画風に表示します。
+
+><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070502/20070502014451.jpg" width="412" height="267" alt="ニコニコ動画メソッドプレゼン"><
+
+Flash を使ってるので本家と似た表示になるのがポイントです。
+-ダウンロード：<a href="http://tech.nitoyon.com/misc/niconico.air">niconico.air</a> (要 AIR ランタイム β版)
+-ソースコード：<a href="http://tech.nitoyon.com/misc/niconico.as">niconico.as</a> (176行)
+
+このアプリケーション単体の機能はテキストの中身を出力するだけですが、次のような活用法を想定しています。
+-ローカルに Web サーバーを立てて、CGI 経由でコメントを niconico.txt に出力する
+--→ ニコニコメソッドプレゼンが可能に！
+-Plagger で取得した内容を niconico.txt に吐き出す
+--→ ニコニコメソッド RSS リーダー！
+
+<s>なお、文字が他のウインドウの背後に隠れてしまうので、最前面に表示するソフト（<a href="http://www.forest.impress.co.jp/article/2002/03/04/acewindow.html">Ace-Window</a> や <a href="http://www.forest.impress.co.jp/article/2006/04/03/toppy.html">Toppy!</a> など)を使えば、Powerpoint でのプレゼンでも利用できます。</s> (AIR β版の stage.alwaysInFront を利用するようにしたので不要です)
+
+どうぞご利用ください。
+
+関連ページ：<a href="http://labs.cybozu.co.jp/blog/nakatani/2007/05/lingrtickr.html">LingrTickr - 誰でもニコニコメソッドプレゼン (nakatani @ cybozu labs)</a>
+
+**CGI のソース
+post.html
+>|html|
+<form action="post.cgi" method="post">
+<input name="comment" type="text" size="30"><input type="submit" value="つっこみ">
+</form>
+||<
+
+post.cgi
+>|perl|
+use CGI;
+
+my $q = new CGI;
+
+if($q->param("comment") ne ""){
+	open(FILE, ">>C:\\Documents and Settings\\nitoyon\\My Documents\\niconico.txt") or die;
+	print FILE $ENV{"REMOTE_ADDR"}.":".time.",".$q->param("comment")."\n";
+	close(FILE);
+}
+
+print "Content-type: text/html\n\n";
+
+open(FILE, "post.html") or die;
+while(<FILE>){print}
+close(FILE);
+||<
+
+Active Perl で動作確認済み。
+
+**おまけ。
+実装で苦労したところ。
+-文字の外側に枠をつけるために、DropShadowFilter を使っているのだけど、2880px より大きいオブジェクトにはフィルタをかけられない。
+--2880px を超えないよう、分割して TextField を配置した
+-文字が実際に表示されるサイズを取得するために、Flash の default-size や実際に表示されているサイズを取得する必要があった
+--表示されているサイズは stage.stageWidth(or stageHeight) で取得
+--default-size は loaderInfo.width(or height) で取得
+---nium さんに Twitter で教えてもらいました。ありがとうございます。→<a href="http://blog.nium.jp/flash/actionscript3/post_15.php">関連エントリ</a>
+-ファイル読み取り時の重複チェック方法。
+--１行をカンマで id と text に分割して、id で判別する仕組みを導入している。id が省略されているときは、text の内容で重複チェック。
+ソースは勢いで書いたので、あまりじっくり見ないように…。
+

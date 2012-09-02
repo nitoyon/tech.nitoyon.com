@@ -1,0 +1,108 @@
+---
+layout: post
+title: Box2d で多角形を扱うときの注意点
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090511/box2d_polygon
+---
+Box2d で多角形を作るときには <code>b2PolygonDef</code> を使うのだけれど、はまるポイントが意外に多い。今回はそのうち４つを紹介するよ。
+
++点を定義する順番に注意
++凸包にせよ
++頂点数は８個まで
++多角形の中心を取得してる？
+
+**基本
+<code>vertexCount</code> に頂点の数、<code>vertices</code> 配列に頂点の座標を設定する。
+>|javascript|
+var shapeDef:b2PolygonDef = new b2PolygonDef();
+shapeDef.vertexCount = 3;
+shapeDef.vertices[0].Set(0, 0);
+shapeDef.vertices[1].Set(50, 50);
+shapeDef.vertices[2].Set(50, -50);
+||<
+
+<code>shapeDef</code> を作ったあとにどうすべきかは、<a href="http://d.hatena.ne.jp/nitoyon/20090428/box2dflashas3_2_0_2">Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</a> をご覧あれ。
+
+**はまりポイント１：点を定義する順番に注意
+時計回りに座標をしないとダメ。
+
+反時計周りにすると、落ちてこなかったりする。
+
+**はまりポイント２：凸包にせよ
+へっこんだ部分やクロスする部分があるとダメ。
+
+>http://gihyo.jp/dev/feature/01/box2d/0004?page=3:title=Box2DでActionScript物理プログラミング：第4回　いろいろな形の物体を作る｜gihyo.jp … 技術評論社>
+おかしな動きをする五角形
+<img src="http://image.gihyo.co.jp/assets/images/dev/feature/01/box2d/0004/04-02.jpg">
+<<
+
+どうしてもへっこんだ多角形を作りたい場合には、複数の凸包を組み合わせて作るしかない。
+
+**はまりポイント３：頂点数は８個まで
+多角形の頂点数は最大 8 個に制限されている。(※2.0.2 の場合。バージョンによって異なるかもしれない)
+====
+8個以上の頂点を作りたいときの対策は２つ。好きなほうを選ぶとよいだろう。
++<code>Box2D.Common.b2Setting</code> の <code>b2_maxPolygonVertices</code> で定義されている最大頂点数を変更する
++複数の shape に分解する
+
+2つ目の分解を選ぶときには色々と注意が必要だ。
+
+分解した多角形の頂点が特定の頂点に集まるとパフォーマンス上の問題が生じる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090511/20090511005635.png" width="445" height="204"></center><
+
+図の左側がその例。一番下の頂点に全ての四角形の頂点が集中しているが、この頂点が衝突したときの計算量が増えて処理落ちしてしまう。
+
+右の例のように頂点を分散させる工夫が必要だ。
+
+<a href="http://d.hatena.ne.jp/nitoyon/20090415/hokkaido">北海道を落とすとどう跳ねるのか</a> では特定の頂点から開始して、左回り・右回りに多角形に使う頂点を選んでいってる。少し複雑になってるが、上の図の右にある分解を実現している。
+><div class="fix-height-syntax"><
+>|javascript|
+// points には x 座標、 y 座標が順番に入ってる
+var x0:Number = points.shift(), y0:Number = points.shift();
+var y1:Number = points.pop(), x1:Number = points.pop();
+
+// 点がある限り続ける
+while(points.length){
+    // 今回の多角形の頂点数を決める。最大 8
+    var pointsLeft:int = Math.min(points.length / 2 + 2, 8);
+
+    // 1つ目と最後の頂点を設定する
+    shapeDef.vertices[0].Set(x0 / SCALE * zoom, y0 / SCALE * zoom);
+    shapeDef.vertices[pointsLeft - 1].Set(x1 / SCALE * zoom, y1 / SCALE * zoom);
+    // 残りの点を設定
+    for(var i:int = 2; i < pointsLeft; i++){
+        if (i % 2 == 0){
+            // 偶数版目は時計回りの点を設定する
+            x0 = points.shift();
+            y0 = points.shift();
+            shapeDef.vertices[i / 2].Set(x0 / SCALE * zoom, y0 / SCALE * zoom);
+        } else {
+            // 奇数版目は反時計回りの場所にある点を設定する
+            y1 = points.pop();
+            x1 = points.pop();
+            shapeDef.vertices[pointsLeft - Math.floor(i / 2) - 1].Set(x1 / SCALE * zoom, y1 / SCALE * zoom);
+        }
+    }
+
+    // 点の数を設定して、shape を追加する
+    shapeDef.vertexCount = pointsLeft;
+    body.CreateShape(shapeDef);
+}
+||<
+></div><
+ただ、このように分解した結果、分解した多角形の隙間を小さな島がすり抜けてしまう現象が発生してしまった。図形のサイズが一定ではない場合には、<code>b2_maxPolygonVertices</code> を変更する方法を選択すべきだったのかもしれない。
+
+**はまりポイント４：多角形の中心を取得してる？
+<code>b2DebugDraw</code> を使っていると気づきにくいのだけど、物体の位置は物体の重心で表現される。そのため、多角形を表示する <code>Sprite</code> は <code>Sprite</code> の <code>(0, 0)</code> を物体の重心に合わせておくべきだ。そうしないと、物体がずれて表示されてしまう。
+
+重心はあらかじめ計算しておくこともできるが、複数の shape を組み合わせたり、物体を動的に作ったりする場合には面倒だ。Box2d が認識している重心を取得するのが確実だろう。
+
+この１文で完璧。
+>|javascript|
+// SetMassFromShapes() を実行したあとに調べてね
+var center:b2Vec2 = body.GetLocalCenter();
+||<
+<code>Sprite</code> の <code>(0, 0)</code> をこの座標に対応する位置にしておこう。
+

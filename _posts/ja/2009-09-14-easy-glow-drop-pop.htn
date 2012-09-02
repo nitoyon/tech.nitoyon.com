@@ -1,0 +1,72 @@
+---
+layout: post
+title: AS3 で袋文字＋影をつけてよくある POP 文字
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090914/easy_glow_drop_pop
+---
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090914/20090914011410.png"></center><
+
+電車の吊広告で影付袋文字が多用されていたようなので {% post_link 2009-09-08-easy-open-face %} を少しだけ修正して影をつけてみた。
+
+完成品はこんな具合。
+
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FEasyOpenFaceWithGlowFilter2.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=100&amp;title=Easy+Open-Face+2&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。</noscript></center><
+
+文字を編集することもできる。編集後の文字も袋文字！
+
+**やってること
++TextField を表示
++TextField に <code>GlowFilter</code> で縁取りを作成し、<code>DropShadowFilter</code> で影を作成する
+
+<code>DropShadowFilter</code> にも <code>strength</code> プロパティがあるので、これを大き目の値にすることで、べた塗りな影をつけることができた。
+
+詳しくは {% post_link 2009-09-08-easy-open-face %} 参照あれ。
+
+**まとめ
+AS3 はテキスト表示に弱い印象があったが、フィルタを活用することで簡単なエフェクトなら簡単に付けられる。
+
+以下、ソースコード（29行）。
+====
+>|javascript|
+package{
+import flash.display.*;
+import flash.filters.GlowFilter;
+import flash.filters.DropShadowFilter;
+import flash.text.*;
+
+[SWF(backgroundColor="#ffffff", width="450", height="80")]
+public class EasyOpenFaceWithGlowFilter2 extends Sprite{
+    public function EasyOpenFaceWithGlowFilter2(){
+        stage.scaleMode = "noScale";
+
+        // initialize canvas.
+        var bmp:Bitmap = addChild(new Bitmap()) as Bitmap;
+
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.autoSize = "left";
+        text.type = "input";
+        text.htmlText = <font size="50" color="#ffffff">HELLO WORLD</font>.toXMLString();
+        addChild(text);
+
+        // Glow it
+        text.filters = [
+            new GlowFilter(0x000000, 1, 4, 4, 16, 1),
+            new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 16)
+        ];
+    }
+}
+}
+||<
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2009-09-09-text-mask %}
+-{% post_link 2009-09-08-easy-open-face %}
+-{% post_link 2009-09-07-glowing-text %}
+-{% post_link 2008-07-25-shape-of-a-dream %}
+-{% post_link 2008-07-24-embed-font-swfassist %}
+-{% post_link 2007-10-05-potras-pop %}
+></div><
+

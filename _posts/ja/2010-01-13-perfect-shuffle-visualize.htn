@@ -1,0 +1,76 @@
+---
+layout: post
+title: パーフェクトシャッフルは何回で元に戻るか (AS3版)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100113/perfect_shuffle_visualize
+---
+[http://d.hatena.ne.jp/nishiohirokazu/20100107/1262835414:title=続: パーフェクトシャッフルは何回で元に戻るか - 西尾泰和のはてなダイアリー]が面白かったので ActionScript で再現してみた。
+
+><center><a href="http://wonderfl.net/code/bb7b5c2bfec888803f118cd47e3f727b00772b62"><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100113/20100113012511.png"></a></center><
+
+オリジナルの記事のように丸くするところはまだ。<a href="http://wonderfl.net/code/bb7b5c2bfec888803f118cd47e3f727b00772b62">wonderfl にも投稿済み</a>。
+
+ソースはこんな感じ(59行)。HSV を使うところは <a href="http://www.libspark.org/wiki/nutsu/Frocessing">frocessing</a> の ColorHSV クラスを利用してる。
+====
+><div class="fix-height-syntax"><
+>|actionscript|
+//------------------------------------------------------
+// Perfect Shuffle Visualization
+//------------------------------------------------------
+package {
+import flash.display.Sprite;
+import flash.filters.BlurFilter;
+import frocessing.color.ColorHSV;
+
+[SWF(width="475",height="475",backgroundColor="0x000000")]
+public class PerfectShuffle extends Sprite {
+    private const SIZE:int = 30;
+    private const W:int = 80;
+    private const H:int = 10;
+    
+    public function PerfectShuffle() {
+        stage.scaleMode = "noScale";
+
+        graphics.beginFill(0x000000);
+        graphics.drawRect(0, 0, 475, 475);
+        graphics.endFill();
+        
+        var num:int;
+        var s:Sprite = new Sprite();
+        s.x = 40;
+        s.y = 100;
+        addChild(s);
+        for (var i:int = 0; i < SIZE; i++) {
+            num = i;
+
+            s.graphics.lineStyle(4, new ColorHSV(i * 270 / SIZE, .7).value
+            s.graphics.moveTo(0, num * H);
+            for (var j:int = 0; j < 5; j++) {
+                num = getNext(num);
+                s.graphics.lineTo(j * W + W, num * H);
+            }
+        }
+
+        s.filters = [new BlurFilter(2, 2)];
+    }
+
+    private function getNext(num:int):int {
+        if (num < SIZE / 2) {
+            return num * 2 + 1;
+        } else {
+            return (num - SIZE / 2) * 2;
+        }
+    }
+}
+}
+||<
+></div><
+
+><div class="seealso"><
+**目次
+-パーフェクトシャッフルは何回で元に戻るか (AS3版)
+-{% post_link 2010-01-15-perfect-shuffle-visualize2 %}
+-{% post_link 2010-01-22-perfect-shuffle-visualize3 %}
+></div><
+

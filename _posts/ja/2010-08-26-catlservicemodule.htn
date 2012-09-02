@@ -1,0 +1,244 @@
+---
+layout: post
+title: ATL の CAtlServiceModuleT を使ってサービスを作る
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100826/catlservicemodule
+---
+Win32 でサービス開発すると、<code>ServiceMain</code> や <code>Handler</code> の登録処理などが煩雑で、毎回サンプルコードを探して検索して時間を無駄に浪費してしまう。そこで、ATL に定義されている <code>CAtlServiceModuleT</code> クラスを使って簡単にサービスを作る方法を確立してみた。
+
+今回のコードは atlbase.h 内の <code>CAtlServiceModuleT</code> 周辺のソースコードを追いつつ、Visual C++ 2005 と Visual C++ 2008 で動作することを確認している。ただし、Microsoft の意図とは違う使い方をしているので、実戦投入する場合は十分に注意してほしい。
+
+**ソースコード
+さっそくソースコード。
+><div class="fix-height-syntax"><
+>|cpp|
+#define _ATL_NO_COM_SUPPORT
+#include <atlbase.h>
+#include <tchar.h>
+#define SERVICE_NAME TEXT("ServiceName")
+
+class CMyServiceModule : public CAtlServiceModuleT<CMyServiceModule>
+{
+public:
+    HANDLE m_hStopEvent;
+
+    CMyServiceModule()
+    {
+        m_hStopEvent = NULL;
+        _tcscpy_s(m_szServiceName, _countof(m_szServiceName), SERVICE_NAME);
+    }
+
+    bool ParseCommandLine(LPCTSTR lpCmdLine, HRESULT* pnRetCode) throw()
+    {
+        *pnRetCode = S_OK;
+        return true;
+    }
+
+    HRESULT Start(int nShowCmd) throw()
+    {
+        SERVICE_TABLE_ENTRY st[] =
+        {
+            { m_szServiceName, _ServiceMain },
+            { NULL, NULL }
+        };
+        if (::StartServiceCtrlDispatcher(st) == 0)
+            m_status.dwWin32ExitCode = GetLastError();
+        return m_status.dwWin32ExitCode;
+    }
+
+    HRESULT Run(int nShowCmd = SW_HIDE) throw()
+    {
+        m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+        if (m_hStopEvent == NULL)
+        {
+            return AtlHresultFromLastError();
+        }
+
+        LogEvent(_T("Service started"));
+        SetServiceStatus(SERVICE_RUNNING);
+
+        // ここでワーカー スレッドを作るなり、何らかの処理を実装する
+
+        WaitForSingleObject(m_hStopEvent, INFINITE);
+        CloseHandle(m_hStopEvent);
+
+        return S_OK;
+    }
+
+    void OnStop() throw()
+    {
+        SetServiceStatus(SERVICE_STOP_PENDING);
+        SetEvent(m_hStopEvent);
+    }
+};
+
+int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int nShowCmd)
+{
+    CMyServiceModule module;
+
+    //if (!module.IsInstalled())
+    //    module.Install();
+
+    return module.WinMain(nShowCmd);
+}
+||<
+></div><
+
+**使い方
+サービス登録するには、<code>sc create</code> コマンドを使うか、<code>_tWinMain()</code> のコメントアウトしてある部分を消して一度実行するとよい。
+
+登録したサービスを [開始] すると、サービスが開始する。現在の実装では何もせずに停止されるのを待機するだけのものとなっている。[停止] を実行すると無事に停止することを確認できる。
+
+**解説
+軽く解説していく。<code>atlbase.h</code> で定義されている <code>CAtlServiceModuleT</code> のソースと、上に掲載している <code>CMyServiceModule</code> のソースを見比べると理解できるはず…。
+
+***#include 処理
+まずは、<code>CAtlServiceModuleT</code> が定義されている <code>atlbase.h</code> を include する。
+
+<code>CAtlServiceModuleT</code> は ATL で定義される <code>CAtlExeModuleT</code> を継承したクラスだ。
+
+ATL の XXXXModule クラスは COM に必要な初期化などをやってくれるが、今回は COM は使わないので <code>_ATL_NO_COM_SUPPORT</code> を事前に define しておく。
+====
+>|cpp|
+#define _ATL_NO_COM_SUPPORT
+#include <atlbase.h>
+#include <tchar.h>
+||<
+
+***クラス定義
+<code>CAtlServiceModuleT</code> は ATL の <code>CComObject</code> クラスなどと同じように、クラス名をテンプレート引数に渡して継承してやる。
+
+>|cpp|
+class CMyServiceModule : public CAtlServiceModuleT<CMyServiceModule>
+{
+public:
+    // 停止用のイベント
+    HANDLE m_hStopEvent;
+
+// ...
+};
+||<
+
+<code>CAtlServiceModuleT</code> には <code>WinMain</code> メソッドや、その他のサービス実装に便利なメソッドが定義されている。
+
+ここでは、追加でサービス停止時にシグナル化される <code>m_hStopEvent</code> を追加で定義してあげた。public なのは気持ち悪いが、<code>CAtlServiceModuleT</code> クラスの他のフィールドも public なのでそれに合わせる形とした。
+
+***コンストラクタ
+>|cpp|
+    CMyServiceModule()
+    {
+        // 停止用のイベントを初期化
+        m_hStopEvent = NULL;
+
+        // サービス名を設定
+        _tcscpy_s(m_szServiceName, _countof(m_szServiceName), SERVICE_NAME);
+    }
+||<
+<code>m_szServiceName</code> にサービス名を設定している。
+
+<code>CAtlServiceModuleT</code> のコンストラクタには、リソースからサービス名を取得する実装があるのだが、リソースに依存するのは不便だったので、自力でサービス名を設定するようにしておいた。これでリソースがなくても、<code>m_szServiceName</code> にサービス名が設定される。<code>ServiceName</code> のところは自分で作るサービス名に適宜置き換えるべし。
+
+***エントリポイント
+ここでアプリケーションのエントリポイントを見ておく。
+>|cpp|
+int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int nShowCmd)
+{
+    // サービス モジュールのインスタンスを作成
+    CMyServiceModule module;
+
+    // サービスをインストールするには次のようにする
+    //if (!module.IsInstalled())
+    //    module.Install();
+
+    // モジュールの WinMain に処理を委譲すうｒ
+    return module.WinMain(nShowCmd);
+}
+||<
+
+単純に処理を <code>CAtlServiceModuleT::WinMain</code> に委譲している。呼ばれた <code>CAtlServiceModuleT::WinMain()</code> は、「<code>CAtlServiceModuleT::GetCommandLine()</code> を実行し、成功すれば <code>CAtlServiceModuleT::Start()</code> を呼ぶ」という実装になっている。
+
+コメントアウトされてる部分はサービスの登録処理だ。必要に応じて活用してもよいだろう。
+
+***ParseCommandLine メソッド
+<code>CAtlServiceModuleT::GetCommandLine()</code> は COM サーバーとして登録するための処理を実装しているので、次のように何もしない処理でオーバーライドした。
+
+>|cpp|
+    bool ParseCommandLine(LPCTSTR lpCmdLine, HRESULT* pnRetCode) throw()
+    {
+        *pnRetCode = S_OK;
+        return true;
+    }
+||<
+
+***Start メソッド
+<code>CAtlServiceModuleT::Start()</code> は、「サービスの登録を行う」以外にも、「レジストリの <code>HKCR\AppID</code> から COM サーバーの情報を読み出してサービスかどうか判定する」という処理が入っている。
+
+そこで、「サービスを登録を行う」部分だけを抜き出してオーバーライドしている。
+>|cpp|
+    HRESULT Start(int nShowCmd) throw()
+    {
+        SERVICE_TABLE_ENTRY st[] =
+        {
+            { m_szServiceName, _ServiceMain },
+            { NULL, NULL }
+        };
+        if (::StartServiceCtrlDispatcher(st) == 0)
+            m_status.dwWin32ExitCode = GetLastError();
+        return m_status.dwWin32ExitCode;
+    }
+||<
+
+この部分で StartServiceCtrlDispatcher() API を使って _ServiceMain を登録する。
+
+CAtlServiceModuleT::_ServiceMain() は Handler を登録して、成功すれば Run() を呼び出すようになっている。次は Run() の実装を見ていく。
+
+***Run メソッド
+CAtlServiceModuleT::Run() ではメッセージ ループを使った実装があるが、ここではシンプルな独自定義を行うことにした。
+
+>|cpp|
+    HRESULT Run(int nShowCmd = SW_HIDE) throw()
+    {
+        // イベントを作成
+        m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+        if (m_hStopEvent == NULL)
+        {
+            return AtlHresultFromLastError();
+        }
+
+        // サービス起動成功
+        LogEvent(_T("Service started"));
+        SetServiceStatus(SERVICE_RUNNING);
+
+        // ここでワーカー スレッドを作るなり、何らかの処理を実装する
+
+        // イベントがシグナル化するまで待機する
+        WaitForSingleObject(m_hStopEvent, INFINITE);
+        CloseHandle(m_hStopEvent);
+
+        return S_OK;
+    }
+||<
+
+***OnStop メソッド
+サービス停止が要求されると、<code>OnStop()</code> メソッドが呼ばれる。このあたりの流れは、<code>CAtlServiceModuleT::Handler()</code> の実装を確認するとよい。
+
+ここでは <code>OnStop()</code> のデフォルト実装をオーバーライドし、停止通知用のイベントをシグナル化している。
+>|cpp|
+    void OnStop() throw()
+    {
+        SetServiceStatus(SERVICE_STOP_PENDING);
+        SetEvent(m_hStopEvent);
+    }
+||<
+
+***その他
+<code>LogEvent()</code> ではデフォルトでイベントログに出力するが、これもオーバーライドしてもよいかもしれない。
+
+**まとめ
+繰り返しになるが、<code>CAtlServiceModuleT</code> クラスの内部実装に依存した形で活用しているので注意してもらいたい。メンテナンス性を考えると独自ラッパーを作ったほうが安心かもしれない。その場合にも <code>CAtlServiceModuleT</code> の実装はかなり参考になるはずだ。
+
+**追記
+この記事を書いたあとに知ったのですが、Microsoft が公開するサンプルコード集、<a href="http://1code.codeplex.com/">All-In-One Code Framework</a> に C++ で実装するサービスのサンプル「<code>CppWindowsService</code>」が含まれています。ATL と似た <code>CServiceBase</code> クラスと、それを継承した <code>CSampleService</code> クラスのコードがあるので参照してみるとよいでしょう。
+-<a href="http://1code.codeplex.com/SourceControl/changeset/view/54555#986932">ServiceBase.cpp (Change Set 54555)</a>
+

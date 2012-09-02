@@ -1,0 +1,61 @@
+---
+layout: post
+title: RubyAmf のシリアライザだけを使う
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080430/rubyamf_serialize
+---
+RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。
+
+例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。
+>|ruby|
+require 'app/amf'
+require 'io/amf_serializer'
+
+amfobj = RubyAMF::AMF::AMFObject.new()
+serializer = RubyAMF::IO::AMFSerializer.new(amfobj)
+
+serializer.reset_referencables
+serializer.write([3, 4])
+
+open("test", "w") do |f|
+    f.binmode
+    f.write serializer.stream
+end
+||<
+Flash 側で開くには、次のようにする。
+>|javascript|
+package{
+    import flash.display.*;
+    import flash.net.*;
+    import flash.events.*;
+    import flash.utils.*;
+
+    public class Client extends Sprite{
+        public function Client(){
+            var loader:URLLoader = new URLLoader();
+            loader.dataFormat = "binary";
+            loader.load(new URLRequest('test'));
+            loader.addEventListener("complete", function(event:Event):void{
+                var bytes:ByteArray = loader.data as ByteArray;
+                bytes.objectEncoding = 0; // AMFのバージョン
+
+                // AS3 でデシリアライズ
+                var obj:Object = bytes.readObject();
+                trace(obj); // [3, 4]
+            });
+        }
+    }
+}
+||<
+trace の結果、[3, 4] と表示される。Ruby でシリアライズした配列を、ActionScript で復元できたことになる。
+
+今回は静的なファイルに書き込んだけど、Ruby を CGI として使って動的にシリアライズした結果を返してもよいだろう。Flash Remoting を SOAP 的だと解釈するなら、こちらの方法は REST 的。リクエストがバイナリじゃない分、デバッグはしやすいと思う。
+
+以下、細かい補足。
+-AMFSerializer クラスには write_amf3 というメソッドもあって、こちらは AMF3 対応の模様。その場合は、ActionScript 側では objectEncoding = 3 としてやる。でも、今のところ、AMF0 で困ってない。
+-AMFSerializer を単独で利用するために、include RubyAMF::Configuration や include RubyAMF::VoHelper を適宜コメントアウトして使った。elsif(value.is_a?(VoHash)) とかも適宜コメントアウトした。
+-サーバ側でファイルに出力する前に Zlib::Deflate.deflate() してやるとデータサイズを削減できる。その場合、SWF 側では ByteArray::uncompress() を呼んでから readObject() してあげる。
+だいぶ Ruby に慣れてきた。簡単なソースコードなら読めるようになってきた！
+
+(追記) <a href="http://yoshimoto.blog.so-net.ne.jp/">Flex＆Java Blog</a> さんにて、Java で S2Flex を使って似たようなことをやる方法が紹介されているのを発見しました。<a href="http://yoshimoto.blog.so-net.ne.jp/2007-12-16">S2Flex2　Javaで圧縮しFlex2で展開する：Flex＆Java Blog：So-net blog</a>

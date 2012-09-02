@@ -1,0 +1,39 @@
+---
+layout: post
+title: Perl でひらがなをカタカナに変換する
+tags: Perl
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20040318/p2
+---
+EUC限定で全角のみに対応。
+>|perl|
+sub hiragana2katakana{
+    my $ascii = '[\x00-\x7F]';
+    my $twoBytes = '[\x8E\xA1-\xFE][\xA1-\xFE]';
+    my $threeBytes = '\x8F[\xA1-\xFE][\xA1-\xFE]';
+    my @chars = $_[0] =~ /$ascii|$twoBytes|$threeBytes/og;
+    
+    my $ret;
+    foreach(@chars){
+        if(/^\xA4([\xA1-\xF3])$/){
+            $ret .= "\xA5".$1;
+        }
+        else{
+             $ret .= $_;
+        }
+    }
+    return $ret;
+}
+||<
+
+出力例
+>|perl|
+print &hiragana2katakana("出力例はこんな感じ");
+# 出力例ハコンナ感ジ
+||<
+
+参考にしたページは...
+-<a href="http://www.din.or.jp/~ohzaki/perl.htm#JP_Split">文字単位に分割する</a>＠<a href="http://www.din.or.jp/~ohzaki/perl.htm">Perlメモ</a>
+-<a href="http://ash.jp/code/codetbl2.htm">JIS X 0208 文字コード表</a>
+-<a href="http://x68000.startshop.co.jp/~68user/webcgi/char-code-2.html">文字コードとエンコーディング (2)</a>＠ネットワークプログラミングの基礎知識
+

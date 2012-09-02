@@ -1,0 +1,49 @@
+---
+layout: post
+title: jsoncpp を試す
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20061117/p1
+---
+C++ で JSON を扱う必要があったので、jsoncpp というライブラリを試した。VC++ 2003/2005 で警告なしでビルドできた。すばらしい。
+
+パース簡単。
+>|cpp|
+std::string str = "{\"key1\":\"value\", \"key2\":true}";
+
+Json::Reader reader;
+Json::Value root;
+bool b = reader.parse(str, root);
+||<
+
+オブジェクトの参照も簡単。厳密にやったらこうなる。
+>|cpp|
+if(root.type() == Json::objectValue){
+    if(root.isMember("key1")){
+        Json::Value key1 = root["key1"];
+        if(key1.type() == Json::stringValue){
+            printf(key1.asCString());
+        }
+    }
+}
+||<
+
+いい加減にも書ける。
+>|cpp|
+printf(root["key1"].asCString());
+||<
+
+json_value.cpp にて変換に失敗したときには assert 関数が実行されるよう定義されているが、ここで例外を投げるように修正すれば、上のいい加減なコードは
+>|cpp|
+try{
+   printf(root["key1"].asCString());
+}
+catch(...){
+}
+||<
+と書けて幸せなんだけど、どうも警告がいっぱいでてしまう。そのへんは微妙にうれしくない感じ。
+
+他にも、配列は size() が使えたり、getMemberNames() でハッシュの全部のキーを取得できたり、なかなか便利。もちろん、オブジェクトの書き出しもサポート。C++ で IO 扱うには実はかなり便利なライブラリかもしれない。
+
+ライブラリの詳細は <a href="http://jsoncpp.sourceforge.net/index.html">JsonCpp Documentation</a> にて。
+

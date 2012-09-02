@@ -1,0 +1,99 @@
+---
+layout: post
+title: ECMAScript 4 のリファレンス実装を導入してみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071031/es4_reference_implementation
+---
+ecmascript.org に ES4 のリファレンス実装が公開されていたので導入してみた。
+
+といっても、まだまだ初期バージョンで<strong>ほとんど動作しない</strong>ので、導入はお薦めできない。
+
+動かしてみたらこんな感じ。
+>|sh|
+>> var a = 3;
+>> a
+3
+>> var b:int = 3;
+**ERROR** VerifyError: unable to resolve fixture for multiname: {multiname: [ns
+public '']::int } (near <no filename>:1.1-1.3)
+>> var arr = [];
+**ERROR** VerifyError: unable to resolve fixture for multiname: {multiname: [ns
+public '']::int } (near <no filename>:1.1-1.3)
+||<
+<a href="http://d.hatena.ne.jp/nitoyon/20071030/es4_overview">Draft に書いてある新機能</a> どころか、ES3 相当の文法でもエラーになっちゃう。
+
+まあ、この程度ってこった…。ほとんど遊べない。
+
+こんな状態でもインストールしてみたい、という酔狂な人に向けて手順を公開しておく。環境は Windows XP＋Cygwin。Mac 版もあるので、SML/NJ を導入すれば動くと思う。
+
+**1. Cygwin のインストール
+<a href="http://cygwin.com/">Cygwin Information and Installation</a> からインストーラをダウンロードして実行。パッケージの選択で、gcc・make・wget を追加でチェックするのを忘れずに。
+
+既に Cygwin を導入している人は、gcc・make・wget が入っているか確認しておいてね。
+
+**2. SML/NJ のインストール
+<a href="http://www.smlnj.org/dist/working/110.64/index.html">SML/NJ 110.64</a>を導入。Windows 版ではなく、Cygwin 版を導入する点に注意。
+
+cygwin の bash を開いて、以下のコマンドをコンソールに貼り付けて実行する。
+>|sh|
+# 環境変数の設定
+export SMLNJ_CYGWIN_RUNTIME=1
+
+# SML/NJ のダウンロード -> 展開 -> インストール
+d=/usr/share/smlnj
+mkdir $d
+cd $d
+v=110.64
+wget http://smlnj.cs.uchicago.edu/dist/working/$v/config.tgz
+gunzip <config.tgz | tar xf -
+config/install.sh
+||<
+
+ビルドが始まるので、しばらく待機。
+>||
+    :
+    :
+[compiling (2660-export.cm):2660-export.sml]
+[code: 221, data: 37, env: 40 bytes]
+config/install.sh: Installation complete.
+||<
+これで、成功。
+
+(参考：<a href="http://d.hatena.ne.jp/netPlant/20060918#1158592862">Isabelle のインストール for Cygwin - 箱庭のオンガク。</a>)
+
+**3. ES4 reference interpreter を導入
+<a href="http://www.ecmascript.org/download.php">http://www.ecmascript.org/download.php</a> から es4-pre-release.M0.cygwin-x86.tar.gz をダウンロードする。
+
+あとは展開して es4 を実行すればよい。smlnj にパスを通しておくのを忘れずに。
+>|sh|
+$ export PATH=$PATH:/usr/share/smlnj/bin
+
+$ ls
+es4-pre-release.M0.cygwin-x86.tar.gz
+
+$ tar xvfz es4-pre-release.M0.cygwin-x86.tar.gz
+es4
+es4/decimal.exe
+es4/es4
+es4/es4.heap.x86-cygwin
+es4/LICENSE
+
+$ cd es4
+
+$ ./es4
+>>
+||<
+
+&gt;&gt;と表示されれば成功。
+
+もし、
+>|bash|
+The Cygwin release of the ECMAScript Edition 4 Reference implementation
+currently requires an installation of SML/NJ.
+
+Please install SML/NJ version 110.64 or later.
+
+You can download the latest version of SML/NJ from http://www.smlnj.org.
+||<
+と表示されるなら、SML/NJ のインストールに失敗したか、パスが通っていないかのどちらかだろう。

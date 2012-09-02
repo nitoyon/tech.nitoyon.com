@@ -1,0 +1,39 @@
+---
+layout: post
+title: ワリオランドシェイクみたいに HTML が崩壊するブックマークレット（とそのソースコード）
+tags: Box2d
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080929/warioland_shake
+---
+<a href="http://jp.youtube.com/experiencewii">ワリオランドシェイクと YouTube のコラボプロモーション</a> が面白かったので、似たようなものを作ってみました。
+
+次の文字列をコピーしてアドレスバーに突っ込むと、HTML が崩壊します。
+>|javascript|
+javascript:(function(){var d=document; var s=d.createElement("script"); s.charset="UTF-8"; s.src="http://tech.nitoyon.com/meltdown/meltdown.js?"+(new Date()).getTime(); d.body.appendChild(s)})();
+||<
+崩壊するのは画像だけなので、画像があるページで試してみてください。このブログだとこんな具合。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080929/20080929021414.jpg?1222622074" width="450" height="179" border="1"></center><
+
+画像はドラッグすることも可能です。あまり画像が多いと重くなりすぎるのでご注意を。
+
+**仕組み
+Flash と JavaScript の連携で作り込んでます。
+
++HTML を覆い隠すように Flash を 配置する。
++JavaScript で HTML にある画像を列挙して、Flash に渡す。
++Flash では、物理エンジン（Box2dFlashAS3）上に画像の位置に対応した箱を作成する。
++HTML 内の全ての画像を消して、Box2dFlashAS3 による物理シミュレーションを開始する。
+
+ちなみに、ワリオランドシェイクでも、同じように Flash と Box2dFlashAS3 を利用している模様です。
+
+**ソースコード
+-JavaScript: <a href="http://tech.nitoyon.com/meltdown/meltdown.js">meltdown.js</a>
+-ActionScript: <a href="http://tech.nitoyon.com/meltdown/Meltdown.as">Meltdown.as</a>
+
+**関連
+-<a href="http://jp.youtube.com/experiencewii">YouTube - experiencewii さんのチャンネル</a>
+-<a href="http://d.hatena.ne.jp/KAZUMiX/20071105/meltdown">HTML崩壊 meltdown.js - KAZUMiX memo</a>
+
+（追記）nitoyon.com サーバが不安定なので、スクリプト類を Google Pages に移設しました。
+

@@ -1,0 +1,137 @@
+---
+layout: post
+title: Processing の燃えるエフェクトを AS3 に移植した
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20090326/firecube_as3
+---
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png" width="398" height="168"></center><
+
+Processing のサンプル <a href="http://processing.org/learning/topics/firecube.html">FireCube</a> が興味深かったので ActionScript 3.0 に移植してみました。
+
+完成品がこれ。
+><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=FireCube+AS3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が有効なら、ここに Flash が表示されますよ！)</noscript></center><
+
+**<b>パフォーマンス改善</b>
+Processing 版の<a href="http://processing.org/learning/topics/firecube.html
+">ソースコード</a> に比べて、AS3 版ではいくつかのパフォーマンス改善を行っています。
+
+オリジナルでは、何かと色んな処理をピクセルごとの演算をしていました。
+-ノイズの作成
+-周りのピクセルとの平均
+-色の変換
+
+それぞれ、ActionScript 3.0 では次のように実装しました。
+-ノイズの作成 → <code>BitmapData.noise()</code>
+-周りのピクセルとの平均 → <code>ConvolutionFilter</code>
+-色の変換 → <code>BitmapData.paletteMap()</code>
+その結果、ピクセルごとではなく、画像に対して一気に計算できたので、パフォーマンスが大幅に向上しました。
+
+BitmapData 系のメソッドが充実してるのは ActionScript の楽しいところですね。
+
+**<b>苦しんだところ</b>
+AS3.0 で苦しんだところといえば、HSB がネイティブにサポートされてないこと。仕方がないので、<a href="http://ja.wikipedia.org/wiki/HSV%E8%89%B2%E7%A9%BA%E9%96%93">HSV色空間 - Wikipedia</a> を参考にしながら HSVtoRGB という関数を中途半端に実装しました。
+
+あと、Cube の描画も面倒だったので、円でお茶を濁しておきました。マウスで場所を変えられるから許してね。
+
+**<b>まとめ</b>
+さらに炎っぽくさせるとしたら「ゆらめき」を与えるところでしょうか。当然、DisplacementMapFilter を使って頑張ることになります。
+
+ソースは以下に（83行）。
+====
+><div class="fix-height-syntax"><
+>|javascript|
+// Processing FireCube (AS3 version) 
+// original source: http://processing.org/learning/topics/firecube.html
+package {
+import flash.display.*;
+import flash.filters.*;
+import flash.geom.*;
+
+public class FireCube extends Sprite{
+    private const WIDTH:int = 200;
+    private const HEIGHT:int = 150;
+
+    public function FireCube(){
+        stage.align = "TL";
+        stage.scaleMode = "noScale";
+        scaleX = scaleY = 2;
+
+        // Create circle
+        var circle:Sprite = new Sprite();
+        circle.graphics.beginFill(0x808080);
+        circle.graphics.drawCircle(0, 0, 10);
+        circle.graphics.endFill();
+
+        // Create buffered image
+        var fire:BitmapData = new BitmapData(WIDTH, HEIGHT, false, 0);
+        var pg:BitmapData = fire.clone();
+        var noiseBmd:BitmapData = new BitmapData(WIDTH, 1);
+
+        var bmp:Bitmap = new Bitmap(pg);
+        addChild(bmp);
+
+        // Generate the palette
+        var r:Array = [], g:Array = [], b:Array = [];
+        for(var x:int = 0; x < 256; x++) {
+            //Hue goes from 0 to 85: red to yellow
+            //Saturation is always the maximum: 255
+            //Lightness is 0..255 for x=0..128, and 255 for x=128..255
+            HSVtoRGB(x / 3, 1, Math.min(x * 3 / 255.0, 1), r, g, b);
+        }
+
+        // Use ConvolutionFilter to calculate for every pixel
+        var filter:ConvolutionFilter = new ConvolutionFilter(3, 3, [0, 0, 0, 16, 16, 16, 0, 16, 0], 65);
+
+        // Prepare points and matrix
+        var matrix:Matrix = new Matrix();
+        var pt0:Point = new Point(0, HEIGHT - 1);
+        var pt1:Point = new Point(0, -1);
+        var pt2:Point = new Point(0, 1);
+
+        // Do loop
+        addEventListener("enterFrame", function(event:*):void{
+            // Randomize the bottom row of the fire buffer
+            noiseBmd.noise(Math.random() * 0xffffffff, 0, 190, 7, true);
+            fire.copyPixels(noiseBmd, noiseBmd.rect, pt0);
+
+            // Display circle
+            matrix.tx = mouseX;
+            matrix.ty = mouseY;
+            fire.draw(circle, matrix);
+
+            // Add pixel values around current pixel
+            fire.applyFilter(fire, fire.rect, pt1, filter);
+
+            // Output everything to screen using our palette colors
+            pg.paletteMap(fire, fire.rect, pt2, r, g, b);
+        });
+    }
+
+    // AS3 does not natively support HSV...  :-(
+    private function HSVtoRGB(h:int, s:Number, v:Number, r:Array, g:Array, b:Array):void {
+        if (h < 60) {
+            r.push((v * 255) << 16);
+            g.push((v * (1 - (1 - h / 60.0) * s) * 255) << 8)
+            b.push(v * (1 - s) * 255);
+        } else if (h < 120) {
+            r.push((v * (1 - (-h / 60.0 - 1) * s) * 255) << 16);
+            g.push((v * 255) << 8);
+            b.push(v * (1 - s) * 255);
+        } else {
+            throw Error('not implemented');
+        }
+    }
+}
+}
+||<
+></div><
+
+><div class="seealso"><
+**あわせてどうぞ
+-{% post_link 2007-09-28-bitmapdata-extend %}
+-{% post_link 2008-05-26-google-earth %}
+-{% post_link 2008-05-23-google-maps-earth2 %}
+-{% post_link 2007-10-09-as3-histogram1 %}
+></div><
+

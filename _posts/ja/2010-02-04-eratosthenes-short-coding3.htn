@@ -1,0 +1,181 @@
+---
+layout: post
+title: ActionScript3 で素数列挙を short coding (3)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20100204/eratosthenes_short_coding3
+---
+{% post_link 2010-02-02-eratosthenes-short-coding2 %} のあと、さらに進化は続いていた。前回は184文字まで縮まっていたが、現在のところ175文字にまでなった。
+
+「もう無理だろう」というようなところから、さらに10文字近くも縮まるなんて驚きである。例によって変遷の過程を紹介する。
+
+**たたき台 (184文字)
+前回の最後に紹介したのがこのコード。実際にはインデントと改行はないが、読みやすくするためにインデントしたもので紹介していく。
+>|actionscript|
+package{
+import flash.display.*;
+public class C extends Sprite{
+  function C(){
+    with(graphics)
+      for(beginFill(c=1),a=[];c++<1E3;)
+        if(!a[d=c])
+          for(drawRect(c%10*4,c/10<<2,4,4);d<1E3;)
+            a[d+=c]=1
+  }
+}
+}
+||<
+
+**if 文を消す (182文字)
+<a href="http://wonderfl.net/user/psyark">psyark さん</a>による && を活用したコード。このあたりから、解読が一層難しくなってくる。
+-[http://wonderfl.net/code/9bbad625c7cfdd2d2c9ae4f839e31892ff2413a1:title=Enumerate Prime Numbers (ignore warnings 182 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+>|actionscript|
+package{
+  import flash.display.*;
+  public class C extends Sprite{
+    function C(c=1){
+      with(graphics)
+        for(a=[];c++<1E3;)
+          for(d=c;!a[c]&&d<1E3;drawRect(c%10*4,c/10<<2,4,4))
+            beginFill(a[d+=c]=1)
+    }
+  }
+}
+||<
+使ってるテクニック
+-<code>if</code> の条件を２つ目の <code>for</code> 文の条件判定に <code>&&</code> で突っ込むことで、<code>if</code> を不要にした
+-<code>beginFill</code> を <code>for</code> 文の中にもっていくことで、<code>,</code> を省けた。<code>c=1</code> は前回登場したデフォルト引数にするテクニックでコンストラクタに移動した。
+-<code>drawRect</code> が何度も呼ばれることをいとわない
+
+
+**1重の for 文になった (181文字)
+<a href="http://wonderfl.net/user/o8que">o8que さん</a>による for が２重から１重になってしまったコード。もはや解読は不能に近い。
+-[http://wonderfl.net/code/2905d587a4ff3324e6c433cb7a868369a933e801:title=Enumerate Prime Numbers (ignore warnings 181 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+====
+>|actionscript|
+package{
+import flash.display.*;
+public class C extends Sprite{
+  function C(){
+    with(graphics)
+      for(d=c=2, a=[];
+        a[c] || d>2E3 ?
+          (d=++c)<1E3 :
+          !drawRect(c%10*4,c/10<<2,4,4);
+        )
+        beginFill(a[d+=c]=1)
+  }
+}
+}
+||<
+<s>使ってるテクニック</s>アルゴリズム解読
+-２つの <code>for</code> を２通りに使うために、三項演算子を使って分岐している
+--c が素数で d が 2E3((1E3でいいと思うが…))より小さいとき
+---<code>beginFill</code> を呼ぶ
+---d を c だけ増やす
+---a[d] にフラグを立る
+---<code>drawRect</code> する。
+--c が素数で d 2E3 を超えたとき、または、c が素数ではないとき
+---<code>d=++c</code> で c をインクリメントして d に代入する
+
+**ケチくさく1文字減らす (180文字)
+<a href="http://wonderfl.net/user/nitoyon">わたし</a> がo8queさんのコードに驚嘆しつつ、分からないなりに１文字減らすことに成功したヤツ。
+-[http://wonderfl.net/code/777ef768bf7781a93556479947b6e78324759b04:title=Enumerate Prime Numbers (ignore warnings 180 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+>|actionscript|
+package{
+import flash.display.*;
+public class C extends Sprite{
+  function C(){
+    with(graphics)
+      for(a=[d=c=2];
+          a[c] || d>2E3 ?
+              (d=++c)<1E3 :
+              !drawRect(c%10*4,c/10<<2,4,4);
+          )
+        beginFill(a[d+=c]=1)
+  }
+}
+}
+||<
+使ってるテクニック
+-<code>d=c=2,a=[]</code> を <code>a=[d=c=2]</code> にした。実は配列 a はインデックス 2 以降しか利用しないので、インデックス 0 の場所に何が入っていようが関係ない。
+
+**括弧を不要に (178文字)
+<a href="http://wonderfl.net/user/9re">9re</a> さんによる、三項演算子を for の外に出したコード。少し読みやすくなった気がする。
+-[http://wonderfl.net/code/0edf7e236cea087e38b2b3fe031df1cd675f5806:title=Enumerate Prime Numbers (178 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+>|actionscript|
+package{
+import flash.display.*;
+public class C extends Sprite{
+  function C(){
+    with(graphics)
+      for(a=[d=c=2];c<1E3;beginFill(a[d+=c]=1))
+        a[c]||d>2E3?
+            d=++c:
+            drawRect(c%10*4,c/10<<2,4,4)
+  }
+}
+}
+||<
+使ってるテクニック
+-<code>(d=++c)<1E3</code> の括弧が無駄だったので、<code>d=++c</code> を <code>for</code> から出して、三項演算子の中に突っ込んだ。
+
+**FlexSprite!! (176文字)
+このあたりから、コードの改造ではなく別の観点からのショートコード化の研究が行われる。今後、ActionScript でのショートコーディングするときには定型として使えそうである。
+
+口火を切ったのは <a href="http://wonderfl.net/user/uwi">uwi</a> さん。
+-[http://wonderfl.net/code/54528ed6e9b8300b3a69de1772d214b5a6a158a5:title=forked from: Enumerate Prime Numbers (176 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+>|actionscript|
+package{
+import mx.core.*;
+public class C extends FlexSprite{
+  function C(){
+    with(graphics)
+      for(a=[d=c=2];c<1E3;beginFill(a[d+=c]=1))
+        a[c]||d>2E3?d=++c:drawRect(c%10*4,c/10<<2,4,4)
+  }
+}
+}
+||<
+使ってるテクニック
+-<code>Sprite</code> ではなく <code>FlexSprite</code> を用いている。クラス名は長くなったが、名前空間が <code>flash.display</code> から <code>mx.core</code> になったので、トータルでは2文字減っている。
+
+**import の位置を変える (175文字)
+言われてみればなんで気づかなかったんだろう、という修正で1文字短縮。<a href="http://wonderfl.net/user/Nicolas">Nicolas</a> さんによる import の位置を変更する修正。
+-[http://wonderfl.net/code/54528ed6e9b8300b3a69de1772d214b5a6a158a5:title=forked from: Enumerate Prime Numbers (176 letters) (Sieve of Eratosthenes) - wonderfl build flash online]
+
+インデントするとこうなる。
+>|actionscript|
+package{
+public class C extends FlexSprite{
+  function C(){
+    with(graphics)
+      for(a=[d=c=2];c<1E3;beginFill(a[d+=c]=1))
+        a[c]||d>2E3?d=++c:drawRect(c%10*4,c/10<<2,4,4)
+  }
+}
+import mx.core.*
+}
+||<
+使ってるテクニック
+-<code>import</code> 文を <code>public class C</code> の手前ではなく、最後に持ってくることで、<code>import</code> 文の末尾 <code>;</code> を省略できる…!
+
+**まとめ
+さすがにそろそろ限界か。それとも常識を覆す何かが出てくるのか…。
+
+一昔前に、ブログなどでショートコーディングの話を見たときには「難しそう」と思ったのだけど、当事者になってみると無駄な努力に全力で取り組むのは楽しいものである。また、wonderfl という共通のプラットフォーム上で記録が塗り替えられていく様子を見れるのがよかった。
+
+今回の企画が始まって、改めて {% amazon jp:4839925232:title %} を読み直してみてるが、前にざっと見たときよりも楽しく読めている。
+
+>{% amazon jp:4839925232:detail %}<
+

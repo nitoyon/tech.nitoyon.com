@@ -1,0 +1,111 @@
+---
+layout: post
+title: ベジエ曲線の仕組み (1) - 昔話
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070918/bezier_1
+---
+ドローソフトなどでもお世話になることが多いベジエ曲線について解説していくシリーズ。
+
+小学生のころ、BASIC で本のサンプルを入力して遊んでいたのですが、あまりのきれいさに衝撃を受けたプログラムがありました。それはこんな絵を出力するプログラムでした。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070918/20070918025712.gif" width="223" height="220" alt="直線の図"></center><
+
+左上と左下の点をそれぞれの x 座標、y 座標を少しずつ増やしながら、直線を引いています。
+
+いくつもの四角形が端に行くにしたがって変形していくところが、いかにも近未来風の CG に見えました（当時は）。しかも、この絵は直線だけで構成されているのに、カーブして見えるところが不思議でなりませんでした。
+
+さて、15年のときを経て、このプログラムを ActionScript で実装してみました。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBezierTest1.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=300&amp;h=250&amp;title=line+art&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+点をドラッグして曲線の変化を楽しんでみてください。
+
+前置きが長くなりましたが、実はこのカーブして見える曲線の部分は２次ベジエ曲線になっています。３つの黒い点がベジエ曲線のアンカーポイントに相当します。
+
+その手がかりは <a href="http://ja.wikipedia.org/wiki/%E3%83%99%E3%82%B8%E3%82%A7%E6%9B%B2%E7%B7%9A">ベジェ曲線 - Wikipedia</a> とか <a href="http://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bezier curve - Wikipedia, the free encyclopedia</a> に書いてありますが…、もったいぶって解説は<a href="http://d.hatena.ne.jp/nitoyon/20070919/bezier_2">次回</a>にします。
+
+乞うご期待。
+
+**目次
++<a href="http://d.hatena.ne.jp/nitoyon/20070918/bezier_1">ベジエ曲線の仕組み (1) - 昔話</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070919/bezier_2">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070920/bezier_3">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a>
++<a href="http://d.hatena.ne.jp/nitoyon/20070921/bezier_4">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a>
+
+**今回のソースコード
+上の Flash のソースコードはこんな具合です。
+
+>|javascript|
+package
+{
+    import flash.display.Sprite;
+    import flash.geom.Point;
+    
+    public class BezierTest1 extends Sprite
+    {
+        private var p0:BezierPoint = new BezierPoint();
+        private var p1:BezierPoint = new BezierPoint();
+        private var p2:BezierPoint = new BezierPoint();
+
+        public function BezierTest1()
+        {
+            addChild(p0); p0.x =  10; p0.y = 220;
+            addChild(p1); p1.x =  40; p1.y =  40;
+            addChild(p2); p2.x = 240; p2.y = 240;
+
+            addEventListener("enterFrame", function(event:*):void{drawLines()});
+        }
+
+        public function drawLines():void
+        {
+            graphics.clear();
+
+            graphics.moveTo(p0.x, p0.y);
+            for(var t:Number = 0.0; t <= 1.0; t += 0.05)
+            {
+                var pt1:Point = getInnerPoint(p1, p0, t);
+                var pt2:Point = getInnerPoint(p0, p2, t);
+                drawLine(pt1, pt2, 0xcccccc);
+            }
+
+            drawLine(p0, p1, 0x0099ff);
+            drawLine(p0, p2, 0x0099ff);
+        }
+
+        private function getInnerPoint(p0:*, p1:*, t:Number):Point
+        {
+            return new Point(p0.x * (1 - t) + p1.x * t, p0.y * (1 - t) + p1.y * t);
+        }
+
+        private function drawLine(p0:*, p1:*, color:int):void
+        {
+            graphics.lineStyle(1, color);
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineTo(p1.x, p1.y);
+            graphics.lineStyle();
+        }
+    }
+}
+
+import flash.display.Sprite;
+
+internal class BezierPoint extends Sprite
+{
+    private const COLOR:int = 0x000000;
+    private const RADIUS:int = 3;
+
+    public function BezierPoint()
+    {
+        graphics.beginFill(COLOR);
+        graphics.drawCircle(0, 0, RADIUS);
+        graphics.endFill();
+
+        buttonMode = true;
+
+        addEventListener("mouseDown", function(event:*):void{startDrag()});
+        addEventListener("mouseUp", function(event:*):void{stopDrag()});
+    }
+}
+||<
+

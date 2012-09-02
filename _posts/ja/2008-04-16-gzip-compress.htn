@@ -1,0 +1,51 @@
+---
+layout: post
+title: JS を gzip 化してファイルサイズ削減してみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080416/gzip_compress
+---
+勢いよく公開したものの、全く話題になってない <a href="http://getlasterror.so-name.info/">getlasterror.so-name.info</a> ですが、ちょこちょこいじっていきますよ。
+
+errors.js が500KB弱あるのを何とかしたかったが、errors.js は巨大データを JSON 形式で保存してるものなので、minified は意味なし。そこで、gzip 圧縮してみた。errors.js.gz は gzip --best errors.js で事前に作成しておく。470KB が 120KB になった。
+
+.htaccess で mod_rewrite。データがスタティックだからなせる技。
+>|
+RewriteEngine on
+
+RewriteBase /
+
+RewriteCond %{HTTP:Accept-Encoding} (x\-)?gzip,?
+RewriteRule ^errors\.js$ errors.js.gz
+|<
+RewriteBase はさくらのレンタルサーバーの安いプランだから必要だったけど、他の環境ではたぶん不要。
+
+参考にしたのはこのへん。
+-<a href="http://sonic64.com/2005-09-15.html">mod_rewrite でリクエストに応じて gzip 圧縮ファイルを返す</a>
+
+**AS3 だと
+いまんとこ、全部 JS でやってるんだけど、AS3 でやるならどうするのがよいかも調査しておいた。
+
+ByteArray で writeObject したやつを compress しておくとよさげ。ファイルに書き出すために AIR を使った。
+>|javascript|
+var bytes:ByteArray = new ByteArray();
+bytes.writeObject(errors);
+bytes.compress();
+
+// ファイルに出力
+// C:\Documents and Settings\username\Application Data\AppName\Local Store
+var fs:FileStream = new FileStream();
+var file:File = File.applicationStorageDirectory.resolvePath("out.bin");
+trace(file.nativePath);
+fs.open(file, "write");
+fs.writeBytes(bytes);
+fs.close();
+||<
+読み出すときは、URLLoader 使って、ByteArray 化したあと、uncompress して readObject すれば復元できる。
+
+こちらは zlib 使ってるらしく、ファイルサイズは同じぐらいの130KBまで小さくなった。
+
+動的なデータで同じことやるなら、 AMF 使うのが素直だと思う。
+
+(追記) 実験してみた：<a href="http://d.hatena.ne.jp/nitoyon/20080430/rubyamf_serialize">RubyAmf のシリアライザだけを使う</a>
+

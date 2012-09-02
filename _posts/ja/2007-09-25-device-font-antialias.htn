@@ -1,0 +1,70 @@
+---
+layout: post
+title: デバイスフォントにアンチエイリアス（改）
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070925/device_font_antialias
+---
+Flash ではデバイスフォント <s>にアンチエイリアスがかかりません</s> を BitmapData.draw すると Windows ではアンチエイリアスがかからずにギザギザになってしまいます。
+
+それを解決するための方法として <a href="http://f-site.org/articles/2007/04/08165536.html">F-site | デバイスフォントにアンチエイリアス</a> という技が紹介されていますが、もっと単純に実現できたので紹介します。
+
+サンプルはこれ。一番上の行は編集可能です。日本語もいけます。
+
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FAntialiasingTest.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=250&amp;title=Anti-aliasing+Test&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script>
+
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070925/20070925141815.gif" width="41" height="152" align="right" border="1">ポイントは、new BitmapData するときの第３引数（transparent）を false にしておくこと。それだけ。true なら２行目のようにギザギザ、false なら３行目。私の環境(Windows XP)では右の図のように表示されました。
+
+<strong>(追記) Mac だとどちらでもアンチエイリアスかかってるようです。また、両方ともアンチエイリアスかからない Windows XP 環境もありました（原因は不明）。環境によって挙動が異なるようで、あまり実用的ではなさそうですね…。</strong>
+
+弊害で BitmapData が不透明になってしまうけど、同じサイズの BitmapData を作成して、copyChannel で R の値を Alpha に、Alpha の値を RGB に振り分ければ透明化できますよね。
+
+あまり知られていないのか、当たり前すぎて誰も書いていないのか分からないのですが、はまったのでエントリにしておきました。Flash 8＋AS2 でも動くようです。Mac でもアンチエイリアスかかってる…よね？
+
+sIFR のようなツールはフォントを埋め込まないと使えなかったけど、デバイスフォントでいいならこの技が使えそうですね。
+
+ソースは以下に。
+====
+>|javascript|
+package {
+    import flash.display.*;
+    import flash.text.*;
+
+    public class AntialiasingTest extends Sprite {
+        private const WIDTH:int = 400;
+        private const HEIGHT:int = 50;
+
+        public function AntialiasingTest() {
+            stage.scaleMode = "noScale";
+            stage.align = "TL";
+
+            var tf:TextFormat = new TextFormat();
+            tf.size = HEIGHT * 0.9;
+            var textField:TextField = new TextField();
+            textField.defaultTextFormat = tf;
+            textField.autoSize = "left";
+            textField.type = "input";
+            textField.text = "Hello, AS 3.0!";
+            addChild(textField);
+
+            var bmp1:Bitmap = new Bitmap(new BitmapData(WIDTH, HEIGHT));
+            bmp1.scaleX = bmp1.scaleY = 2;
+            bmp1.y = HEIGHT;
+            addChild(bmp1);
+
+            var bmp2:Bitmap = new Bitmap(new BitmapData(WIDTH, HEIGHT, false));
+            bmp2.scaleX = bmp2.scaleY = 2;
+            bmp2.y = HEIGHT * 3;
+            addChild(bmp2);
+
+            addEventListener("enterFrame", function(event:*):void {
+                bmp1.bitmapData.fillRect(bmp1.bitmapData.rect, 0xffffff);
+                bmp1.bitmapData.draw(textField);
+                bmp2.bitmapData.fillRect(bmp2.bitmapData.rect, 0xffffff);
+                bmp2.bitmapData.draw(textField);
+            });
+        }
+    }
+}
+||<
+

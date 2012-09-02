@@ -1,0 +1,91 @@
+---
+layout: post
+title: E4X の変数展開 深追い (1)
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080612/e4x_expression
+---
+E4X の変数展開が <a href="http://d.hatena.ne.jp/javascripter/20080611/1213137474">E4Xで変数展開、テンプレート - 素人がプログラミングを勉強するブログ</a> で取り上げられていた。
+
+>|javascript|
+var foo=123;
+<>変数fooは{foo}です。</>.toString();
+// "変数fooは123です。"
+||<
+
+ほー。
+
+**仕様書では
+<a href="http://os0x.g.hatena.ne.jp/os0x/20080611/1213154953">E4XのリテラルXMLでの式評価 - 0x廃棄階層 - 統治局</a> によると、仕様書には次のようなコードがあるらしい。
+>|javascript|
+var tagname = "name";
+var attributename = "id";
+var attributevalue = 5;
+var content = "Fred";
+
+var x = <{tagname} {attributename}={attributevalue}>{content}</{tagname}>;
+// <name id="5">Fred</name>
+||<
+タグ名にも属性名にも属性の値にもタグの中身にも使える模様。
+
+仕様書によると、例えばタグ名は次のように解釈される。
+>||
+XMLTagName : 
+  { Expression } 
+  XMLName 
+||<
+{} で囲まれた部分は Expression（式）として評価される。文はダメ。
+
+**試してみた
+リテラル XML が評価されるときに中の式の評価も行われる。だから、コンパイル時に値が定まってなくてもOK。
+>|javascript|
+function xml1(str){
+  return <test>{str}</test>;
+}
+
+xml1("Hello").toXMLString();
+// <test>Hello</test>
+||<
+
+ってことは、演算とか関数呼び出しもOK。
+>|javascript|
+function xml2(str){
+  return <test>{str + "," + str}</test>;
+}
+
+xml2("Hello").toXMLString();
+// <test>Hello,Hello</test>
+||<
+もいっちょ。
+>|javascript|
+function xml3(str){
+  return <test>{str.substr(2)}</test>;
+}
+
+xml3("Hello").toXMLString();
+// <test>llo</test>
+||<
+
+ってことは、無名関数実行してもいいよね。
+>|javascript|
+function xml5(str){
+  return <test>{(function(a){return a + a})(str)}</test>;
+}
+
+xml5("Hello").toXMLString();
+// <test>HelloHello</test>
+||<
+いけた。式であれば {} の中に function も入れれる。
+
+ただ、XML リテラルのときしか展開されない。new XML() の中に入れてもダメ。
+>|javascript|
+var a = 3;
+new XML("<hoge>{a}</hoge>").toXMLString()
+// <hoge>{a}</hoge>
+||<
+
+**まとめ
+ちょっと楽に書けそう。
+
+→<a href="http://d.hatena.ne.jp/nitoyon/20080613/p1">その２に続く</a>。
+

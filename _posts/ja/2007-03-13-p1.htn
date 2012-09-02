@@ -1,0 +1,52 @@
+---
+layout: post
+title: Tamarin でマルチスレッド(挫折)
+tags: tamarin
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070313/p1
+---
+Tamarin が Windows でも Mac でもビルドできるようになってるようですね。
+-<a href="http://d.hatena.ne.jp/amachang/20070312/1173696872">IT戦記 - Linux で tamarin のビルドできた</a>
+-<a href="http://subtech.g.hatena.ne.jp/cho45/20070312/1173713224">subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - Tamarin Mac OS</a>
+
+ということで、久々の Tamarin ネタ。
+
+先日の <a href="http://d.hatena.ne.jp/nitoyon/20070213/p1">Tamarin の avmplus.exe に独自関数を実装</a> のノリで、Tamarin でマルチスレッドを実装してみました。
+
+このコードを動かすのが目標でした。
+>|javascript|
+import avmplus.*;
+
+function proc():void
+{
+	for(var i:int = 0; i < 1000; i++)
+	{
+		System.write(i + " ");
+	}
+}
+
+System.threadCreate(proc);
+System.threadCreate(proc);
+||<
+
+avmplus に System.threadCreate 関数を実装して、意気揚々と動かしてみたところ、こんな警告が出力されてしまいました。
+>|
+Unsafe access to GC from wrong thread!
+|<
+
+Tamarin のソースを grep してみると、MMgc\GC.cpp に該当部分発見。
+>|
+    void GC::CheckThread()
+    {
+#ifdef _DEBUG
+#ifdef WIN32
+        GCAssertMsg(disableThreadCheck || m_gcThread == GetCurrentThreadId(), "Unsafe access to GC from wrong thread!");
+#endif
+#endif
+    }
+|<
+
+つまり、<strong>Tamarin のガベコレはマルチスレッドをサポートしていない</strong>、ということらしい。ActionScript の仕様上、マルチスレッド対応で作る必要はないから考えてみれば当たり前ですね。
+
+ちなみに、Tamarin のソースには ECMAScript の仕様で出てくる Internal Method の Function.[[Call]] が native に定義されていて、実際に呼び出すこともできます。いや、内部的にあるのは知ってましたが、実際に呼べるという事実にワクワクしてしまいますね。
+

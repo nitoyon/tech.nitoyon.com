@@ -1,0 +1,217 @@
+---
+layout: post
+title: ECMAScript 4 の Draft をざっくり読んでみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20071030/es4_overview
+---
+><div style="background: yellow; border: 1px solid red; padding: 5px; color: red">この記事では ECMAScript 4 の Draft を解説していますが、2010年現在 ECMAScript 4 の標準化はストップしており、ECMAScript 5 の標準化が進められています。詳しくは <a href="http://gihyo.jp/dev/column/newyear/2010/javascript-prospect?page=2">2010年のJavaScript：「これまで」と「これから」｜gihyo.jp</a> をご覧ください。</div><
+
+<a href="http://journal.mycom.co.jp/news/2007/10/23/032/index.html">ECMAScript 第4版の最終ドラフトが公開</a>された、というので、ざっくり読んでみた。
+
+PDF はこれ：<a href="http://www.ecmascript.org/es4/spec/overview.pdf">http://www.ecmascript.org/es4/spec/overview.pdf</a>
+
+このドキュメントは Overview の最終ドラフト。このあと、Overview が固まって、そこから Specification が作られていくものと思われる。
+
+(追記) コメント欄で mal_blue さんから間違いを指摘や補足をしていただいてます。コメント欄もあわせてご覧ください。
+
+**概要
+大まかな特徴はこんなところ。
+
+:オブジェクト指向:クラスとインターフェースがサポートされて、OOP なコーディングができるようになるよ。OOP なコーディング方法は ActionScript 3.0 と同じ（のはず）。<br>もちろん、ECMAScript 3 時代の手続き型な書き方も使える模様。
+:厳密にも書ける:namespace とか package 空間ができたので、ライブラリによるグローバル汚染の心配がなくなる。<br>型を厳密に宣言すれば、実行時じゃなく実行前型チェックができるので処理が高速になる。他にも、int, uint, double といった値は高速演算できる、Vector（後述）を使えば Array のオーバーヘッドを削減できる、といったメリットも。<br>もちろん、型なしのいい加減コーディングもできる。ライブラリでは厳密にコーディングして高速化を図り、ちょっとしたコードはいい加減に書いてコーディング時間の削減を狙う、といった使い分けもできるようだ。
+:少しのコードで:ちょっとした新機能がいくつも追加されていて、書くコードの量が大幅に削減できる。型が違って例外がでたり、他にもいろいろ。詳しくはこのあとのサーベイ。
+
+ECMAScript4（以下、ES4）の新機能をざっくり分類すると
+-ActionScript3.0 から引き継いだ仕様
+-JavaScript1.7 から引き継いだ仕様
+-新しい仕様
+の３つから成り立っている。
+
+３つのそれぞれを見ていってみよう。
+====
+**ActionScript 3.0 から引き継いだ仕様
+OOPや型に関する仕様は ActionScript 3.0 とほとんど同じになっている。
+-class、interface
+-プロパティ、const
+-継承
+-名前空間、package
+-int, double などの型 (var i:int;)
+-arguments → ...args
+-is 演算子とか as 演算子
+
+補足：
+-ActionScript 3.0 の文法は amachang の <a href="http://usrb.in/amachang/static/shibuyaes/">ActionScript for JavaScript(er).</a> が分かりよい。細かいところまで知りたいなら、<a href="http://download.macromedia.com/pub/documentation/jp/flex/2/prog_actionscript30.pdf">ActionScript 3.0 のプログラミング (PDF)</a> がお薦め。
+-JScript.NET も ECMAScript 4 を先取りする形で実装されていて、クラス定義や型宣言などがある。
+-ActionScript 3 の実行環境「Tamarin」を元にして、Firefox 3 には ECMAScript 4 準拠の JavaScript 2.0 が実装される予定になっている。
+
+**JavaScript 1.7 から引き継いだ仕様
+Firefox 2 に実装されている JavaScript が JavaScript 1.7。
+
+JavaScript 1.7 にはあまり詳しくないので、<a href="http://nanto.asablo.jp/blog/2006/08/12/481381#js17-block-scope">JavaScript 1.7 の新機能: Days on the Moon</a> を参考にさせてもらった。
+-ブロックスコープ (let)
+-分割代入 ([a, b] = [1, 2])
+-イテレータ
+-ジェネレータ (yield)
+-配列内包 (a = [[i, i * i] for each(i in [1,2,3])])
+
+これらの仕様が、ES4 Overview に入っているのを確認した。
+
+**新しい仕様
+個人的に大きいと判断した４つの機能をピックアップしてみる。
+
+***(1) 総称関数 (generic functions)
+オーバーロード、と言い換えたほうが分かりやすい人も多いかもしれない。
+
+引数の型によって、呼び出される関数を変えるもの。いままでは１箇所でしか関数を定義できなかった。
+
+こうやって書くらしい。
+>|javascript|
+generic function intersect(s1, s2); // No body here
+
+generic function intersect(s1: Shape, s2: Shape) {
+  // general intersection method
+}
+generic function intersect(s1: Rect, s2: Rect) {
+  // fast intersection for rectangles
+}
+||<
+
+***(2) テンプレート (parameterized class)
+データ型にこだわらずにいろいろ実装できるアレ。C# では Generics とも呼ばれている。
+
+実行時の型チェックが入らないので、高速に動くことが期待できる。
+>|javascript|
+// クラスで使う
+class Pair.<T> {
+    var first: T, second: T
+}
+new Pair.<int>(3, 4);
+
+// type で定義して使う
+type Box.<T> = { value: T }
+var v: Box.<boolean> = new Box.<boolean>(true);
+
+// 関数で使う
+function f.<T>( x:T ): T ...
+f.<int>(37)
+||<
+
+parameterized class に便乗して、プリミティブクラスとして Vector と Map が追加されている。まんま、STL。
+>|javascript|
+var xs = new Vector.<double>;
+var map = new Map.<*,int>;
+||<
+
+Vector は Array の厳密版、Map は Object を利用したハッシュの厳密版として使える。こっちのほうが速いし、コンパイル時のチェックも入るし、Map にはキー一覧を取得するメソッドが定義されていたりするので、メリットは多い。
+
+イテレータと parameterized class を組み合わせるのもよさげ。
+
+***(3) レコード型と配列型（Record and array types）
+レコード型ってのは、{ x:int, y:string } を型として扱えるようにした感じ。
+
+>|javascript|
+// new と共に
+var samplevar = new { x:int, y:string }( 3, "foo" );
+
+// {} と共に
+var samplevar = { x:10, y:"foo" } : { x:int, y:string };
+||<
+
+レコード型（Record type）でググってみたら、Scheme あたりドキュメントが引っかかった。その辺に影響受けているっぽい。
+
+ただ、あとからプロパティの追加・削除は可能なので、厳密に型を定めているわけではない。厳密にやりたかったら、クラスとして定義すべし。
+
+配列型ば [ int ] のようにして配列の型を規定できるもの。
+
+>|javascript|
+// new と共に
+var intarray  = new [ int ](7);
+
+// [] と共に
+var intarray  = [ 1,2,3 ] : [ int ];
+||<
+
+さらに、新たに導入されたキーワード like と wrap を組み合わせると楽にコーディングできる。
+>|javascript|
+// 不一致時に例外がでる
+function func1( pt: like { x: int, y: int } ) {...}
+
+// if 文で型チェックしている
+function func2( pt: * ) {
+    if( pt is like {x : int, y : int} ) { ... }
+}
+
+// x と y が定義されたラッパーオブジェクトを作る
+function func3( pt: wrap { x: int, y: int } ) {...}
+||<
+面白いのは、like を使うことで、Object もクラスも同等に扱えるところ。AS3 でいうと、Point と Sprite は基底クラスが違うんだけど両方に x と y がある。Record type を活用すれば、どちらにも適用できる関数になる。厳密な OOP ではインターフェースが同じでないと同じものとしては扱いにくかったけど、ES4 ではこのようなスクリプトっぽい書き方ができるわけだ。
+
+いちいち、{ x : int, y : int } のように書くのは大変なので、何度も使う場合は type で型を定義しておくとよいだろう。
+>|javascript|
+type Position = { x:Number, y:Number };
+||<
+
+他にも、配列型とデフォルト引数を組み合わせて、デフォルト引数に縛りをつけられる。
+>|javascript|
+function (int, ...[string]): void
+||<
+
+***(4) 演算子オーバーロード（Operator overloading）
+型ごと演算子の挙動を変更できる。ドキュメントには +、*、== などが例に挙がっていたが、たぶんなんでもいけるんだろう。
+
+グローバル関数として intrinsic 名前空間に定義して使う。
+
+>|javascript|
+// 複素数クラス
+class Complex {...}
+
+// 複素数の足し算
+generic intrinsic function +( a: Complex, b: Complex )
+{
+    new Complex( a.real + b.real, a.imag + b.imag )
+}
+
+// 複素数と実数の足し算
+generic intrinsic function +( a: Complex, b: AnyNumber )
+{
+    a + Complex(b)
+}
+
+// 実数と複素数の足し算
+generic intrinsic function +( a: AnyNumber, b: Complex )
+{
+    Complex(a) + b;
+}
+||<
+
+より直感的にライブラリを使えるようになりそう。
+
+算術ライブラリで Matrix クラスの掛け算が * でできたりする。C# のように addEventListener するのに window.onload += callback; といった書き方ができるようにもなったら嬉しい。
+
+**(5) その他の細々
+気になったものをピックアップ。かゆいところに手が届く仕様がいっぱい。
+:Nullability:型の後ろに ! をつけて var v : C! = ... と定義する。null になったら例外がでるようになる。Null pointer（いわゆる、ぬるぽ）を未然に防げるので、デバッグが楽になりそう。関数定義で function(val:Object!) としておくと、関数の中で null のチェックをしなくていいので、コード量も減って幸せに。
+:Tail call:末尾呼び出し。関数の末尾で関数を呼び出した場合、スタックにつむのではなく、単純に goto としてコンパイルされるようになる。OCaml や Scheme で実装されているものらしい。末尾で再帰的に呼び出すことで、実行効率が上がったり、ループを再帰でかけるようになったり、いいことがあるようだ。
+:Meta-level hook:関数呼び出しやプロパティの代入を担当する関数をかける。meta::invoke、meta::get、meta::set、meta::has、meta::delete といったものを使う。AS3 でいう Proxy のようなもの。dynamic class でしか使えない。<br>Array や Vector なども、Meta-level hook と同じ仕組みで実装されている。今までは、Array のオリジナル版を作ることはできなかったが、Meta-level hook を使うことで、同等の機能を自分で実装することも可能になるわけだ。
+:Union type:(int,string) のように書くことで、int でも string も許可する型になる。Union を利用したプリミティブな型として、type AnyNumber = (byte,int,uint,double,decimal,Number) などが定義されている。
+:switch type:型によって挙動を変える switch type。if(a is String){...}else if... という if 文の列挙を防ぎ、switch type (v) {case (s: string) {...} } と書けるようになる。
+:try-catch に型:型が導入されたことで、catch を複数書けるようになる。Error の型によって、どの catch に落ちるかが変わる。
+:Slicing:"ecmascript"[5:2:-1] == "sam" らしい。String、Array、Vector で使える。
+:正規表現の複数行、コメント:複数行が OK に、行頭の # がコメントに。複雑な正規表現のメンテナンスがしやすくなる。
+:Trailing commas:{a : 10,} が文法として認められる。Firefox では動いてたけど、IE でエラーになってて悲しい思いをした人も多いはず。
+:JSON サポート:toJSONString と string.parseJSON。サーバーに JSON で投げたり、デバッグ用に JSON で吐き出す、といった使い方が考えられる。
+
+**感想
+あーー、盛りだくさん。厳密にも適当にも書ける、というのは魅力的なのだけど、果てしてここまで複雑になった仕様は実装できるんだろうか。
+
+このドラフトに書いてあることがどれぐらい最終的に実装されるのかな。<a href="http://wiki.ecmascript.org/doku.php">ES4 Wiki</a> を見ていると、Overview にも書いてないことが提案されていたりするのだけど、今から入ることはないのかな。最終ドラフトってことは、よほどのことがない限り、このままいくのかな。
+
+**参考リンク
+-<a href="http://www.ecmascript.org/">ECMAScript.org</a>: 公式サイト
+-<a href="http://malblue.tumblr.com/">mal_blue@tumblr</a>: mal_blue さんの tumblr。ES4 情報多数。
+-<a href="http://d.hatena.ne.jp/ufcpp/20071024/1193215519">ECMAScript 4 の概要 - ++C++; // 管理人の日記</a>
+-<a href="http://www.slideshare.net/yukoba/ecmascript-4">ECMAScript4 リファレンス実装</a>: Shibuya.js での ES4 発表
+-<a href="http://blogs.msdn.com/ie/archive/2007/10/30/ecmascript-3-and-beyond.aspx">IEBlog : ECMAScript 3 and Beyond</a>: IEBlog（MS公式）に登場した ES4 に対するコメント。仕様に沿うのは重要だと考えている、後方互換に対応する、ES4 の IE 搭載予定は明言せず。
+-<a href="http://www.zeuslabs.us/2007/10/28/discover-ecmascript-4-the-future-of-actionscript/">Discover ECMAScript 4: The Future of ActionScript - Zeus Labs</a>
+

@@ -1,0 +1,100 @@
+---
+layout: post
+title: Haskell でヒープソートを書いてみた
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20081017/haskell_heapsort
+---
+関数型言語に苦手意識があったので、ここのところ Haskell を勉強していた。せっかくなので、<a href="http://d.hatena.ne.jp/nitoyon/20081014/smalltalk_heap_sort">Smalltalk でヒープソート</a> に続き、今度は Haskell でヒープソートを書いてみる。
+
+<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4764903342/nitoyoncom-22/ref=nosim">アルゴリズムイントロダクション 第1巻</a>の疑似コードが手続き型なので、それをどのように関数型に変換していくかが難しかった。アルゴリズムイントロダクションが手元にない人は、<a href="http://introductiontoalgorithms.g.hatena.ne.jp/keyword/0801006%e3%83%92%e3%83%bc%e3%83%97%e3%82%bd%e3%83%bc%e3%83%88%e3%82%b5%e3%83%b3%e3%83%97%e3%83%ab%e3%82%b3%e3%83%bc%e3%83%89">Ruby 版</a> を見ると分かりやすいだろう。
+
+**下準備
+まずは、配列のインデックスを 1 ベースにする。ライブラリの Array 型は好きな値からインデックスを始められるようだが、Haskell の基本的な使い方を覚えたいのでパス。あえてリストで書いてみる。リストの要素にアクセスする関数は !! なので、これをラップした !!! を作ってみる。
+>|haskell|
+(!!!) :: [a] -> Int -> a
+(!!!) xs i = xs !! (i - 1)
+||<
+次は、教科書の PARENT, LEFT, RIGHT。
+>|haskell|
+parent :: Int -> Int
+parent = (`div` 2)
+
+left :: Int -> Int
+left = (* 2)
+
+right :: Int -> Int
+right = (+ 1) . (* 2)
+||<
+単純な関数なので、部分適用や関数合成を使って書いてみた。
+
+次、swap。これも頑張って書き下してみる。もっとシンプルな書き方がありそうなんだが、ひとまずは泥臭く。
+>|haskell|
+swap :: Int -> Int -> [a] -> [a]
+swap m n list = take (i1 - 1) list
+             ++ [list !!! i2]
+             ++ (drop i1 $ take (i2 - 1) list)
+             ++ [list !!! i1]
+             ++ drop i2 list
+    where i1 = min m n
+          i2 = max m n
+||<
+
+**手続き型脳から脱却できぬ
+いよいよ大物へ。MAX-HEAPIFY。if 文が並んでいた THE 手続き型な関数だったので、とても苦労した。
+>|haskell|
+maxHeapify :: Int -> [Int] -> [Int]
+maxHeapify i arr = if largest i /= i
+    then maxHeapify (largest i) $ swap (largest i) i arr
+    else arr
+    where
+        largeLeft i j = 
+            if left i <= length arr && (arr !!! left i) > (arr !!! j)
+                then left i
+                else j
+        largeRight i j = 
+            if right i <= length arr && (arr !!! right i) > (arr !!! j)
+                then right i
+                else j
+        largest i = largeRight i $ largeLeft i i
+||<
+ひとまずは教科書をそのまま書き下してみた。もっとシンプルに関数型っぽく書き直してみたいんだけど、方針が思いつかない。
+
+**ループの書き直し
+BUILD-MAX-HEAP には for 文が登場。Haskell に for 文はないので、再帰か畳み込みで書き直す必要がある。ここでは畳み込み(foldr)を使ってみた。
+>|haskell|
+buildMaxHeap :: [Int] -> [Int]
+buildMaxHeap arr = foldr maxHeapify arr $ [1 .. (length arr) `div` 2]
+||<
+畳み込みにも苦手意識があったけど、<a href="http://d.hatena.ne.jp/blanketsky/20071129/1196329379" title="畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-logへ">畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-log</a> がすごく分かりやすかった。ありがたい。
+
+最後は HEAP-SORT。ここでも for 文が登場するので、今度は再帰を使ってみた。
+>|haskell|
+heapSort :: [Int] -> [Int]
+heapSort [] = []
+heapSort arr = heapSort (take (length arr - 1) $ swapped arr)
+            ++ [head $ buildMaxHeap arr]
+    where swapped arr = swap 1 (length arr) $ buildMaxHeap arr
+||<
+
+**動け！
+最後に main。
+>|haskell|
+main = print $ heapSort [4,1,3,2,16,9,10,14,8,7]
+-- [1,2,3,4,7,8,9,10,14,16]
+||<
+動いた！
+
+**感想
+なんとか動いたが、Haskell っぽいソースに見えない。誰かに添削してほしい。ujihisa とか。
+
+Haskell は次の２つの本を読んで勉強した。
+
+>{% amazon jp:4797336021:detail %}<
+
+「ふつうのHaskell」はとても丁寧で分かりやすかった。全体の構成が練りに練られていて、初心者でもすいすい理解できる！
+
+>{% amazon jp:4839919623:detail %}<
+
+「入門 Haskell」は文章が多少こなれていない感じなんだけど、「ふつうのHaskell」のあとに読むと復習になってよかった。「ふつうのHaskell」では扱っていない内容にも踏み込んでいて理解が深まった。
+

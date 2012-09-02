@@ -1,0 +1,94 @@
+---
+layout: post
+title: ExternalInterface.addCallback で定義された関数は apply できない
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070214/p1
+---
+ActionScript の関数を JavaScript から呼び出すときに、ExternalInterface.addCallback で関数を使うと便利なのですが、ここで公開された関数は apply, call, toString といったメソッドが定義されていません。
+====
+実験した ActionScript はこんなの。要は draw 関数を ExternalInterface を使って公開してます。
+>|javascript|
+package
+{
+    import flash.display.*;
+    import flash.external.ExternalInterface;
+
+    public class ExtTest extends Sprite
+    {
+        public function ExtTest()
+        {
+            draw(0);
+            ExternalInterface.addCallback("draw", draw);
+        }
+
+        private function draw(color:int):void
+        {
+            graphics.beginFill(color);
+            graphics.drawCircle(0,0,50);
+            graphics.endFill();
+        }
+    }
+}
+||<
+
+HTML は swfobject.js を使って楽チンに。
+>|html|
+<script src="swfobject.js"></script>
+<script>
+window.onload = function(){
+	var so = new SWFObject("ExtTest.swf", "ExtTest", "300", "300", "9", "white");
+	so.write("box");
+}
+</script>
+<div id="box"></div>
+||<
+
+
+準備ができたところで、FireBug のコンソールでいろいろ実験してました。
+>|
+<span class="synComment"># 関数は定義されている</span>
+<span class="synStatement">>>> $("ExtTest").draw</span>
+<span class="synComment">function()</span>
+
+<span class="synComment"># 呼び出しもできる</span>
+<span class="synStatement">>>> $("ExtTest").draw(0)</span>
+
+<span class="synComment"># でも、toString(), call(), apply() は失敗</span>
+<span class="synStatement">>>> $("ExtTest").draw.toString()</span>
+<span class="synConstant">$("ExtTest").draw.toString is not a function</span>
+<span class="synStatement">>>> $("ExtTest").draw.call()</span>
+<span class="synConstant">$("ExtTest").draw.call is not a function</span>
+<span class="synStatement">>>> $("ExtTest").draw.apply()</span>
+<span class="synConstant">$("ExtTest").draw.apply is not a function</span>
+|<
+apply, call, toString が定義されていないことが分かりますね。
+
+toString と call はいいとして、apply がないのはちょっと不便です。
+
+
+そこで、私は次のような実装ラッパー関数を作ってます。
+>|javascript|
+function applySwf(swf, method, args){
+    if(swf && typeof swf[method] == "function"){
+        switch(args ? args.length : 0){
+            case 0: return swf[method]();
+            case 1: return swf[method](args[0]);
+            case 2: return swf[method](args[0], args[1]);
+            case 3: return swf[method](args[0], args[1], args[2]);
+            case 4: return swf[method](args[1], args[1], args[2], args[3]);
+            default: throw "argument too many";
+        }
+    }
+}
+||<
+
+ちょっとかっこ悪すぎな実装ですが、いちおう呼び出せます。
+>|javascript|
+applySwf($("ExtTest"), "draw", [0xff0000])
+||<
+SWF をロードした直後に、$("ExtTest").call = function(){...} としてやってもできそうなのですが、SWF 側で ExternalInterface.addCallback するタイミングは実装依存なので難しそうです。
+
+**追記
+上のへぼ実装版 applySwf 関数をかっこよくする方法が <a href="http://la.ma.la/blog/diary_200702152107.htm">最速インターフェース研究会 :: Functionコンストラクタを使ってJavaScriptネイティブじゃない関数をラッピングする方法</a> にて紹介されています。ma.la さん、ありがとうございます。 (2007/02/16 23:00)
+

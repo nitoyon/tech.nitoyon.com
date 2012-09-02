@@ -1,0 +1,79 @@
+---
+layout: post
+title: Tamarin と遊んでみた
+tags: tamarin
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070201/tamarin_trial
+---
+<a href="http://d.hatena.ne.jp/amachang/20070130/1170144721">ActionScript の勉強会で話してキタ！ - IT戦記</a>  のプレゼンに影響されてさらに遊んでみた。
+
+前回は <a href="http://d.hatena.ne.jp/nitoyon/20070131/asc_authoring">こちら</a>。
+====
+**avmplus.exe 作成
+まずは Windows 環境で avmplus.exe をビルドしてみる。
+
+Mozilla の CVS から <a href="http://lxr.mozilla.org/mozilla/source/js/tamarin/">mozilla/source/js/tamarin</a> と <a href="http://lxr.mozilla.org/mozilla/source/modules/zlib/">mozilla/modules/zlib</a> を持ってくる。CVS の設定は <a href="http://developer.mozilla.org/ja/docs/Mozilla_Source_Code_Via_CVS">Mozilla Source Code Via CVS - MDC</a> を参考にした。
+
+VS2003 で platform\win32\avmplus.sln を開いてみると、４つのプロジェクトが存在した。ざっとソースを眺めて役割はこんなところ。
+:avmplus:ActionScript の実装。ActionScript ByteCode のパーサー、ECMAScript の仕様にあるオブジェクト(Array, String, Date...)の実装、E4X の実装などが入っている。avmplus.lib を出力。
+:MMgc:名前から想像するにガベコレ。MMgc.lib を出力する。
+:shell:avmplus.lib, MMgc.lib, zlib.lib をリンクして、avmplus.exe を出力する。avmplus.* を実装。
+:zlib:説明不要。zlib。
+
+依存関係が設定されているので、shell プロジェクトをビルドするだけで、avmplus.exe ができあがる。もちろん、バッチビルドしてもいいけど。
+
+**お試し
+プレゼンにもあったソースを試してみた。
+>|javascript|
+// hoge.as : 正規表現で grep
+import avmplus.*;
+var re = RegExp(System.argv[0]);
+var line;
+while (line = System.readLine()) 
+  if (line.match(re))
+    System.write(line + '\n');
+||<
+
+プレゼン通りに asc_authoring.jar で ByteCode を生成して、avmplus.exe で実行できました。すばらしい。
+>|sh|
+$ java -jar asc_authoring.jar -import global.abc hoge.as
+
+hoge.abc, 220 bytes written
+
+$ avmplus.exe hoge.abc var < hoge.as
+var re = RegExp(System.argv[0]);
+var line;
+||<
+
+で、この <strong>import avmplus.*</strong> って何？
+
+**avmplus パッケージの謎
+avmplus パッケージは ActionScript の言語仕様ではなく、shell プロジェクトで定義されている。
+
+例えば、avmplus.System.write の実体は tamarin/shell/SystemClass.cpp の中で次のように定義されている。
+>|cpp|
+  void SystemClass::write(Stringp s)
+  {
+    if (!s)
+      toplevel()->throwArgumentError(kNullArgumentError, "string");
+    core()->console << s;
+  }
+||<
+
+つまり、ActionScript ByteCode な世界から呼び出すパッケージを C++ で実装できる、というわけ。
+
+shell プロジェクトは高々5,000行なので、解読も比較的簡単。自分オリジナルの avmplus.exe を作れちゃう！？
+
+avmplus.Win32.CreateWindow とか avmplus.Win32.COM.CreateObject("InternetExplorer.Application") とか、avmplus.exe 側で実装さえすればできちゃうわけですよ。楽しそう！
+
+**他の楽しいこと
+Tamarin の中身を探索するだけでわくわく。
+
+-test フォルダの中に大量の ActionScript テストコードがある。undocumented な細かい仕様が分かるかも。
+-util フォルダの中に abcdump.as なる怪しげな ActionScript が...
+-core/abcFormat.txt という ByteCode の仕様書(?)のようなものが...
+
+注意したほうがいいのは、Tamarin の中には flash.* パッケージの定義はないので、SWF は実行できない。あくまで ActionScript の VM というわけですな。
+
+しばらく楽しめそう！
+

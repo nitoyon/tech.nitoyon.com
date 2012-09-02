@@ -1,0 +1,60 @@
+---
+layout: post
+title: JSDokan で JSON をファイルシステムに
+tags: JavaScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20080602/jsdokan
+---
+<a href="http://d.hatena.ne.jp/yukoba/20080527/p1">Windows版FUSE Dokan がオープンソースになったよ！！ - yukobaの日記</a> が面白そうだったので、ちょっと触ってみた。
+
+Dokan は Windows でファイルシステムを作るためのライブラリ。C, .NET, Ruby から気軽にファイルシステムが使えるようになる。それを id:yukoba さんは Java で動くようにして、さらに Rhino を使って JavaScript 製のファイルシステムをデモしている。
+
+それならば、と C# 経由で JScript を叩くライブラリを作ってみた。題して「<strong>JSDokan</strong>」。
+
+**JSDokan のサンプル「JsonFS」
+JSDokan を使ったサンプルとして JSON をファイルシステムにする「JsonFS」というのを作ってみた。
+
+例えば、このような JSON が...
+>|javascript|
+private var json:Object = {
+    'object1' : {
+        '1-1' : "hoge\r\nfuga",
+        '1-2' : 'hoge'
+    },
+    'object2' : {
+        '2-1' : 'foo',
+    },
+    'array1' : [
+        'value1', 'value2', 'value3'
+    ],
+    'param1' : 'value1',
+    'param2' : 'value2'
+};
+||<
+こんなファイル構造になる。
+
+><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080602/20080602114055.jpg" width="400" height="268"></center><
+
+オブジェクトと配列がフォルダになる。ファイルの中にはちゃんと値が入るように実装した。
+
+JavaScript のソースコードは <a href="http://coderepos.org/share/browser/lang/csharp/JSDokan/samples/JsonFS.js">こんなの</a>。90行足らずの JavaScript でファイルシステムが作れるなんて！
+
+**JSDokan の使い方
+JSDokan のバイナリは<a href="http://coderepos.org/share/browser/lang/csharp/JSDokan/bin/Release/JSDokan.zip?rev=13056&format=raw">こちら</a>。超α版なのでバーチャルマシンなどでの検証を推奨。
+
+マウントするには Dokan をインストールした上で、
+>||
+JSDokan JsonFS.js J
+||<
+と実行する。１つ目のパラメータが JavaScript、２つ目のパラメータがドライブ名。
+
+アンマウントするには、Dokan 付属の dokanctl.exe で dokanctl.exe /u J と実行する。
+
+ただし、JSDokan の実行には、<a href="http://www.microsoft.com/downloads/thankyou.aspx?familyId=0856eacb-4362-4b0d-8edd-aab15c5e04f5&displayLang=ja">.NET Framework 2.0 ランタイム</a> が必要です。また、DokanNet のパッケージに入っているバイナリが一部古いバージョンのようなので、JSDokan のパッケージに最新版の DokanNet バイナリを含めています。
+
+JSDokan は MIT ライセンスとします。
+
+**ソースコード
+ソースは Coderepos にうｐした。
+-<a href="http://coderepos.org/share/browser/lang/csharp/JSDokan">JSDokan</a> (<a href="http://svn.coderepos.org/share/lang/csharp/JSDokan">svn</a>)
+-<a href="http://coderepos.org/share/browser/lang/csharp/JSDokan/samples/JsonFS.js">JsonFS.js</a> (<a href="http://svn.coderepos.org/share/lang/csharp/JSDokan/samples/JsonFS.js">svn</a>)

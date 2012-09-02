@@ -1,0 +1,83 @@
+---
+layout: post
+title: AS3 は FLASHer には使いにくい？
+tags: ActionScript
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20070508/p1
+---
+FLASH ばりばり使ってる人たちのブログを読んでいると、AS3 が使いにくい、という文句が出てきてるようです。
+
+例えば
+>http://www.muraken.biz/?p=20:title=Muraken.biz>
+特に一番不便なのが宣言なしに気軽にSpriteとかにプロパティつけれないとこ。
+も～いちいちなにがpublic privateだgetだsetだ！ｗ
+<<
+とか
+>http://fladdict.net/blog/2007/04/processingas3.html:title=processingライクにくめるAS3が欲しい | fladdict>
+AS3って、２時間ぐらいでインタラクティブスケッチ作るとか、超不向きじゃね？
+<<
+といった感じで。
+
+プログラマ的な感覚からいくと、AS1、AS2 の createEmptyMovieClip で new + addChild するところとか、_x のアンダースコアなところのほうが許せず、私は AS3 になってやっと触れるようになりました。
+
+でも、確かに気軽にごにょごにょっとアニメーション作るには AS3 はめんどくさいところが多そうです。
+
+それを解決するために fladdict さんが <a href="http://fladdict.net/blog/2007/04/processingas3.html">構想中のフレームワーク</a> と、それに触発された <a href="http://void.heteml.jp/blog/">void element blog</a> さんの <a href="http://void.heteml.jp/blog/archives/2007/05/as1movieclip.html">AS1MovieClipクラス</a> がおもしろいので、ちょっと見てみました。
+
+**<a href="http://fladdict.net/blog/2007/04/processingas3.html">fladdict さん製</a>を見てみた
+http://twitter.com/fladdict/statuses/43108192 から開発中のコードがのぞけます。
+
+DynamicSprite クラスの
+>|javascript|
+package sketchbook.display
+{
+	import flash.display.Sprite;
+	
+	dynamic public class DynamicSprite extends Sprite
+	{
+	}
+}
+||<
+という実装が素敵。前出の「Sprite にプロパティつけれない」という問題は解決しますね。
+
+他にも、_global を実現するためのクラスがあったり、描画が簡単になりそうだったり、色を扱うためのクラスライブラリがあったりします。
+
+SpriteHelper はブログの記事にもあるとおり、Sprite を継承するのではなく、クラス内部に変数として保持しています。<strong>オブジェクト指向用語でいう委譲</strong>になります。
+
+**<a href="http://void.heteml.jp/blog/archives/2007/05/as1movieclip.html">AS1MovieClip</a> (void element さん製)を見てみた
+AS1 や AS2 と同じように使える、という点に主眼をおいて作成されています。
+
+深度管理も今まで通り。
+
+createEmptyMovieClip や attachMovie、swapDepths のメソッドはもちろん、_x などのアンダースコアつきのプロパティも使えます。
+
+AS3 ではα値は 0～1 ですが、_alpha では AS1・AS2 時代と同様 1～100 で指定できるようになってます。
+
+バリバリの FLASHer さんは嬉しいんじゃないでしょうか。
+
+
+AS1MovieClip は MovieClip クラスを<strong>継承して実装</strong>されています。委譲として実装している fladdict さんと対照的でおもしろい。
+
+<a href="http://void.heteml.jp/blog/archives/2007/05/as1movieclip2.html">delete mc.onEnterFrame できない</a> という話ですが、記事にもある通り Proxy クラスを継承するしかないでしょうが、その場合、継承ではなく委譲で実装する必要が出てきますね。
+
+**継承と委譲
+それぞれの利点など。
+
+Sprite や MovieClip のことをあえて MC と略します。
+
+-継承（void element さん）
+--new で作成したインスタンスを CS3 や AS3 の MC に addChild できる
+--でも、CS3 や AS3 が生成した MC に適用することはできない
+--MovieClip の派生クラスを機能拡張することもできない
+-委譲（fladdict さん）
+--MC (とその派生クラス）に一皮かぶせることができる
+--でも、mc is Sprite や mc is MovieClip が false になる。
+--かぶせた中身を取り出すためには、mc.target と書かなきゃならない。
+
+継承や委譲の使い分けについては、オブジェクト指向を語る上では議論が尽きないところで、それぞれにメリット・デメリットがあって難しいところです。
+
+**(追記)2007/5/9 0:25
+secondlife さんに <a href="http://subtech.g.hatena.ne.jp/secondlife/20070508/1178588402">subtech - Pink Blossom Diary StrikerS - SpriteHelper</a> にて補足してもらってます。stash 案もおもしろいですね。この辺は本当に好みの世界になってきそう。
+
+<a href="http://progression.libspark.org/">Progression</a> 開発者の nium さんが、<a href="http://blog.nium.jp/flash/actionscript3/_flasher_as30.php">で、結局 FLASHer 的に AS3.0 って・・・ (blog.nium.jp)</a> にて、AS3 の本当にめんどくさいところを書いてくれています。こちらも、かなり同意。特に、イベント登録と、navigateToURL が煩雑になる、あたりは今後も、ライブラリが色々でてきそうな予感。
+

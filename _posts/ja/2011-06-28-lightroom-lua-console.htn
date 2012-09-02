@@ -1,0 +1,73 @@
+---
+layout: post
+title: Lightroom で Lua を eval するプラグインを作った
+tags: ''
+lang: ja
+old_url: http://d.hatena.ne.jp/nitoyon/20110628/lightroom_lua_console
+---
+せっかく [http://d.hatena.ne.jp/nitoyon/20110617/lightroom_license:title=Lightroom を買った] ので、Lightroom に詳しくなろう、と思って Lightroom SDK を触ってみました。
+
+Lightroom では Lua でプラグインを書くことができます。Lua は C 言語に組み込んで使うのが簡単なようで、Wireshark やいくつかのオンラインゲームなどに組み込まれているようです。また、Lightroom はプラグインだけでなく、本体の開発も Lua で行われているようです。興味深いですね。
+>http://thinkit.co.jp/free/article/0711/4/2/:title=[Think IT] 第2回：言語開発者が目標にするパフォーマンス「Lua」 (1/3)>
+例えばAdobeの画像処理ソフトウェア「Lightroom」では、40%に相当する部分がLuaで記述されているという。
+<<
+
+**さっそくプラグインを作ってみた
+さて、その Lua を使ったらどんなことができるのか調べるために、簡単にコードを eval できるプラグインを作ってみました。
+
+><center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110628/20110628012707.jpg" width="450" height="340"></center><
+====
+例えば初期状態では、次のようなコードが入っています。
+>|lua|
+local LrApplication = import 'LrApplication'
+local catalog = LrApplication.activeCatalog()
+
+local s = ""
+for i  = 0, 5 do
+    local photos = catalog:findPhotos {
+        searchDesc = {
+             criteria = "rating",
+             operation = "==",
+             value = i,
+        }
+    }
+    s = s .. string.format("Rate %d: %05d photo(s)\\n", i, #photos)
+end
+
+return s
+||<
+これを実行すると、カタログ中のレーティング別の写真の数を表示できます。
+>|
+Rate 0: 17920 photo(s)
+Rate 1: 00033 photo(s)
+Rate 2: 00023 photo(s)
+Rate 3: 00013 photo(s)
+Rate 4: 00004 photo(s)
+Rate 5: 00010 photo(s)
+|<
+
+ただ、標準の <code>edit_field</code> でソースを編集するのはあまりに大変なので、外部エディタで編集して、自動的に更新するような仕組みを導入するよう改善したいと思っています。
+
+**github で入手してね！
+github で公開してます。
+-[https://github.com/nitoyon/lua-console-lightroom-plugin:title=nitoyon/lua-console-lightroom-plugin · GitHub]
+
+**binding がおもしろい
+Lightroom SDK はだいたい想像通りの構造になってるのですが、GUI を公開するポリシーが割り切っていて興味深いです。
+
+よくあるフレームワーク設計では、UI のパーツを表現するクラスが公開されていて、そのクラスを組み合わせて <code>addChild</code> なり <code>setText</code> なりするのが普通だと思います。
+
+けど、Lightroom は違います。UI 作成後、Lua から UI を直接触ることはできません。
+
+そのかわり、あとから変更・参照したいプロパティには UI 作成時に、binding を渡しておきます。UI 作成後は、binding 経由で UI のプロパティを設定・取得します。
+
+たとえば、ボタンが押されたときのコールバックでは、ユーザーの入力した値を binding を利用して知ることができます。visible や enable の変更も binding 経由で行います。さらに、binding には変更時のコールバックを登録できるので、例えば、テキストボックスの値を利用者が変更したら通知を受け取る、といったことも可能です。
+
+このような割り切った設計は、UI のツリー構造を動的に組み替える必要がなく、また、UI 側のフレームワークを自前で提供するならありなのかもしれません。また、Lua では<code>__index</code> でテーブルが変更されることを検知できる言語だ、というのも重要な要素だといえます。
+
+**Debugging Toolkit for Lightroom 3 SDK が便利
+Lightroom プラグインの作り方を探してるときに [http://www.johnrellis.com/lightroom/debugging-toolkit.htm:title=Debugging Toolkit for Lightroom 3 SDK] というものを見つけたんだけど、これがなかなか便利。Lua ファイルを再読み込みせずに実行できる。って、あれ？　これがあるなら今回つくったプラグインも不要だったのでは…。
+
+>{% amazon jp:B003PPAB9W:detail %}<
+>{% amazon jp:B004WA7E94:detail %}<
+
