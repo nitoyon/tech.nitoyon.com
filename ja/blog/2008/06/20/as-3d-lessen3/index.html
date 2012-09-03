@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/06/20/as-3d-lessen3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ワイヤーフレームにも飽きてきたので、色を塗ることにしよう。面に色を塗ることを、3D 用語ではシェーディングと呼ぶらしい。今回はその中でもシンプルなフラットシェーディングという技法を取り上げる。といっても、ActionScriptによるWebの3Dグラフィックス再入門 (2) - シェーディングでもっと3Dらしく：CodeZine で解説されてる通りにコーディングしているので、詳しいことはそちらの記事に譲ろう。コーディング結果はこうなった。(Flash Player 9 以上が必要です)だいぶ嬉しい感じ。これで終わるのもさすがに寂しいので、ソースの全体の流れを説明しておこう。奥の立方体から..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年06月20日</h2>
+<h1>AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080620/as_3d_lessen3" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/20/as-3d-lessen3/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080620/20080620012710.png" width="480" height="203"></center>
+<p>ワイヤーフレームにも飽きてきたので、色を塗ることにしよう。面に色を塗ることを、3D 用語ではシェーディングと呼ぶらしい。今回はその中でもシンプルなフラットシェーディングという技法を取り上げる。</p>
+<p>といっても、<a href="http://codezine.jp/a/article/aid/2235.aspx">ActionScriptによるWebの3Dグラフィックス再入門 (2) - シェーディングでもっと3Dらしく：CodeZine</a> で解説されてる通りにコーディングしているので、詳しいことはそちらの記事に譲ろう。</p>
+<p>コーディング結果はこうなった。</p>
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d4.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=300&amp;title=3D+Study4&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript>
+<p>だいぶ嬉しい感じ。</p>
+<p>これで終わるのもさすがに寂しいので、ソースの全体の流れを説明しておこう。</p>
+<ol><li>奥の立方体から描画するために並べ替える</li><li>立方体の面についても奥の面から描画するために並べ替える</li><li>各面の法線ベクトルを求める</li><li>面の明るさを求める</li><li>面を描画する</li></ol>
+<p>それぞれについて簡単にみていく。</p>
+<h1>1. 奥の立方体から描画するために並べ替える</h1>
+<p>面を塗るにあたっては、塗る順番が重要になる。先に手前の物体を描いてしまうと、奥の物体が上に描画されてしまう。</p>
+<p>そこで、奥のものから順番に塗る必要がある。ここでは一番手軽な Z ソートという手法を使う。立派な名前がついてるが、何のことはない、奥の面から順番に塗っていく手法のことである。</p>
+<p>今回のソースでは、まずは立方体ごとに塗る順番を決めることにした。Cube クラスに center プロパティを導入して、Z 座標が大きい（奥のもの）から順番に描画している。</p>
+<div class="highlight"><pre><span class="c1">// 回転行列を作成</span>
+<span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
+<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
+<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+
+<span class="c1">// それぞれの立方体の中心のZ座標を取得する</span>
+<span class="kd">var</span> <span class="nx">dic</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
+<span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">center</span><span class="p">);</span>
+    <span class="nx">dic</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">center</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Zソート (奥のものから順番に並べる)</span>
+<span class="nx">cubes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nx">Cube</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nx">Cube</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
+<span class="p">});</span>
+
+<span class="c1">// 奥から描画</span>
+<span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+    <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>Zソートは簡単な分、入り組んだ物体や面が交差するような場合には使えない。そういう複雑な物体を描画するときにどうするかはまだよく分かってない。</p>
+<h1>2. 立方体の面についても奥の面から描画するために並べ替える</h1>
+<p>立方体のそれぞれの面についても、奥の面から順番に描画していく。手順は 1. と同じなので省略。</p>
+<h1>3. 各面の法線ベクトルを求める</h1>
+<p>ここからは面の色を求める作業が始まる。まずは、面の法線ベクトルを求める。法線ベクトルというのは、面に垂直なベクトルのこと。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080620/20080620012709.png" width="443" height="221"></center>
+<p>まず、面の２辺を表すベクトル v1 と v2 を求める。Point3D のベクトルの差を求めるメソッド subtract を利用している。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">v1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">v2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>次に v1 と v2 の外積を計算する。外積は２つのベクトルに垂直なベクトルとなる。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>外積を計算する関数は Point3D に用意されていなかったので自前で作った。</p>
+<div class="highlight"><pre><span class="c1">// 外積</span>
+<span class="kd">function</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
+                       <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
+                       <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>あと、外積は順番が大事なのでそこに気をつけるべし。v1×v2 は立方体の外側に向かうベクトルだが、v2×v1だと内側に向かうベクトルになってしまう。</p>
+<p>最後に、n を単位ベクトル（長さ１のベクトル）にしておこう。</p>
+<div class="highlight"><pre><span class="nx">n</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>normalize() は Poitn3D に定義されているものをそのまま活用した。</p>
+<h1>4. 面の明るさを求める</h1>
+<p>光源の方向を表すベクトルを l とする。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">l</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>l と n の内積を面の明るさとする（ランバートの法則というらしい）。</p>
+<p>l も n も単位ベクトルのため、</p>
+<pre>l・n = |l||n|cosθ = cosθ
+(θはlとnの間の角度)</pre>
+<p>となる。つまり、l と n が同じ向きのときに最も明るくなる。</p>
+<h1>5. 面を描画する</h1>
+<p>明るさが求まれば、あとは色を求めて塗るだけ。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">product</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">b</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x3f</span> <span class="o">*</span> <span class="nx">product</span> <span class="o">+</span> <span class="mh">0xc0</span><span class="p">;</span>
+<span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span> <span class="mh">0x10000</span> <span class="o">+</span> <span class="nx">b</span> <span class="o">*</span> <span class="mh">0x100</span> <span class="o">+</span> <span class="nx">b</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">);</span>
+</pre>
+</div>
+
+<h1>まとめ</h1>
+<p>面を塗ると 3D っぽくなる。幸せ。</p>
+<p>あと、<a href="http://d.hatena.ne.jp/rch850/">id:rch850</a> さんは早く <a href="http://codezine.jp/a/article/aid/1872.aspx">ActionScriptによるWebの3Dグラフィックス再入門：CodeZine</a> の第３回を執筆すべき。</p>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20080623/as_3d_lessen5">第5回に続く</a>。</p>
+<div class="seealso">
+<h1>連載目次</h1>
+<ul><li><a href="/ja/blog/2008/06/16/as-3d-lessen1/">AS3.0 で 3D プログラミングを１から勉強する (1)</a></li><li><a href="/ja/blog/2008/06/17/as-3d-lessen2/">AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入</a></li><li><a href="/ja/blog/2008/06/18/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影</a></li><li><a href="/ja/blog/2008/06/20/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る</a></li><li><a href="/ja/blog/2008/06/23/as-3d-lessen5/">AS3.0 で 3D プログラミングを１から勉強する (5) - テクスチャを張る</a></li></ul>
+</div>
+<p>ソースコードは以下に(157行)。</p>
+<a name="seemore"></a>
+<p>要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。</p>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d4</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cubes</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d4</span><span class="p">(){</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+
+            <span class="nx">cubes</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+
+            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+
+            <span class="nx">rad</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="nx">changeHandler</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+            <span class="c1">// 回転行列を作成</span>
+            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+
+            <span class="c1">// それぞれの立方体の中心のZ座標を取得する</span>
+            <span class="kd">var</span> <span class="nx">dic</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
+            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+                <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">center</span><span class="p">);</span>
+                <span class="nx">dic</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">center</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="c1">// Zソート (奥のものから順番に並べる)</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nx">Cube</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nx">Cube</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
+            <span class="p">});</span>
+
+            <span class="c1">// 奥から描画</span>
+            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+                <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+            <span class="p">}</span>
+
+           <span class="c1">// 角度更新</span>
+            <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
+         <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Cube</span> <span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_center</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">center</span><span class="p">()</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_center</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Cube</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="nb">Number</span><span class="p">){</span>
+        <span class="nx">_center</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span><span class="k">return</span> <span class="nx">f</span> <span class="o">?</span> <span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">:</span> <span class="o">-</span><span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;};</span>
+
+        <span class="c1">// 立方体の頂点８つを作成する</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>  <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">z</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">));</span>
+            <span class="nx">points</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="c1">// 回転後の座標を計算</span>
+        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="nx">p</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pt</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// 面の一覧</span>
+        <span class="kd">var</span> <span class="nx">planes</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="p">];</span>
+
+        <span class="c1">// 面の中心のZ座標を求める</span>
+        <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">planes</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">z</span><span class="p">[</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">1</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">2</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">3</span><span class="p">].</span><span class="nx">z</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Zソート (奥のものから順番に並べる)</span>
+        <span class="nx">planes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">z</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">z</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
+        <span class="p">});</span>
+
+        <span class="c1">// 奥から順番に面を描画</span>
+        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">plane</span><span class="o">:</span><span class="nb">Array</span> <span class="k">in</span> <span class="nx">planes</span><span class="p">){</span>
+            <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p4</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="c1">// 単位法線ベクトル</span>
+        <span class="kd">var</span> <span class="nx">v1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">v2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">);</span>
+        <span class="nx">n</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+        <span class="c1">// 光源の方向ベクトルとの内積</span>
+        <span class="kd">var</span> <span class="nx">l</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">product</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+
+        <span class="c1">// 透視投影しつつ面を塗る</span>
+        <span class="kd">var</span> <span class="nx">b</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x3f</span> <span class="o">*</span> <span class="nx">product</span> <span class="o">+</span> <span class="mh">0xc0</span><span class="p">;</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span> <span class="mh">0x10000</span> <span class="o">+</span> <span class="nx">b</span> <span class="o">*</span> <span class="mh">0x100</span> <span class="o">+</span> <span class="nx">b</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x666666</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
+        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// 外積</span>
+<span class="kd">function</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
+                       <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
+                       <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080620/as_3d_lessen3" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/20/as-3d-lessen3/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/06/18/as-3d-lessen3/" rel="previous">AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/06/23/as-3d-lessen5/" rel="next">AS3.0 で 3D プログラミングを１から勉強する (5) - テクスチャを張る&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

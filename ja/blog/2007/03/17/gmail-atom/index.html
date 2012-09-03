@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>GMail の未読メールを自作スクリプトから読むための方法まとめ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="GMail の未読メールを自作スクリプトから読むための方法まとめ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/03/17/gmail-atom/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="諸般の事情で GMail の未読メールの本文を取得して、ごにょごにょ するスクリプトを作ってみたので、やり方をまとめます。1. 未読メール一覧の取得これはご存知の方も多いとは思います。GMail のヘルプにもある通り、未読メール一覧は https://mail.google.com/mail/feed/atom/ から ATOM 形式で取得できます。atom/ のあとにラベル名をつけたら、特定ラベルの未読メール一覧だけを取ってくることもできます。認証はどうなってるかというと、Google のアカウント情報が Cookie に保存されていれば普通に表示できます。Cookie がないと HT..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年03月17日</h2>
+<h1>GMail の未読メールを自作スクリプトから読むための方法まとめ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070317/gmail_atom" class="hatena-bookmark-button" data-hatena-bookmark-title="GMail の未読メールを自作スクリプトから読むための方法まとめ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/17/gmail-atom/" data-lang="ja" data-size="horizontal" data-text="GMail の未読メールを自作スクリプトから読むための方法まとめ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>諸般の事情で GMail の未読メールの本文を取得して、ごにょごにょ するスクリプトを作ってみたので、やり方をまとめます。</p>
+<a name="seemore"></a>
+<h1>1. 未読メール一覧の取得</h1>
+<p>これはご存知の方も多いとは思います。GMail の<a href="http://mail.google.com/support/bin/answer.py?answer=13465&topic=1574">ヘルプにもある通り</a>、未読メール一覧は <a href="https://mail.google.com/mail/feed/atom/">https://mail.google.com/mail/feed/atom/</a> から ATOM 形式で取得できます。atom/ のあとにラベル名をつけたら、特定ラベルの未読メール一覧だけを取ってくることもできます。</p>
+<p>認証はどうなってるかというと、Google のアカウント情報が Cookie に保存されていれば普通に表示できます。Cookie がないと HTTPS で BASIC 認証して、OK なら表示できるようになります。シンプルな仕様ですね。</p>
+<p>取得できる ATOM はこんな感じ。ちゃんと個別のメールへアクセスするための URL も埋め込まれています。</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span> 
+<span class="nt">&lt;feed</span> <span class="na">version=</span><span class="s">&quot;0.3&quot;</span> <span class="na">xmlns=</span><span class="s">&quot;http://purl.org/atom/ns#&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Gmail - Inbox for xxxx@gmail.com<span class="nt">&lt;/title&gt;</span>
+  <span class="nt">&lt;tagline&gt;</span>New messages in your Gmail Inbox<span class="nt">&lt;/tagline&gt;</span>
+  <span class="nt">&lt;fullcount&gt;</span>3<span class="nt">&lt;/fullcount&gt;</span> 
+  <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;alternate&quot;</span> <span class="na">href=</span><span class="s">&quot;http://mail.google.com/mail&quot;</span> <span class="na">type=</span><span class="s">&quot;text/html&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;modified&gt;</span>2007-03-17T16:16:04Z<span class="nt">&lt;/modified&gt;</span> 
+  <span class="nt">&lt;entry&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Subject<span class="nt">&lt;/title&gt;</span> 
+    <span class="nt">&lt;summary&gt;</span>本文少し<span class="nt">&lt;/summary&gt;</span> 
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;alternate&quot;</span> <span class="na">href=</span><span class="s">&quot;http://mail.google.com/mail?account_id=xxxx%40gmail.com&amp;message_id=123456789abcdefg&amp;view=conv&amp;extsrc=atom&quot;</span> <span class="na">type=</span><span class="s">&quot;text/html&quot;</span> <span class="nt">/&gt;</span> 
+    <span class="nt">&lt;modified&gt;</span>2007-03-15T00:00:00Z<span class="nt">&lt;/modified&gt;</span> 
+    <span class="nt">&lt;issued&gt;</span>2007-03-15T00:00:00Z<span class="nt">&lt;/issued&gt;</span> 
+    <span class="nt">&lt;id&gt;</span>tag:gmail.google.com,2004:XXXXXXXXXXXXX<span class="nt">&lt;/id&gt;</span> 
+    <span class="nt">&lt;author&gt;</span>
+      <span class="nt">&lt;name&gt;</span>差出人<span class="nt">&lt;/name&gt;</span> 
+      <span class="nt">&lt;email&gt;</span>xxxx@xxxx.co.jp<span class="nt">&lt;/email&gt;</span> 
+    <span class="nt">&lt;/author&gt;</span>
+  <span class="nt">&lt;/entry&gt;</span>
+  <span class="nt">&lt;entry&gt;</span>
+    <span class="nt">&lt;title&gt;</span>....
+</pre>
+</div>
+
+<h1>2. メール本文の取得</h1>
+<p><strong>(追記) 2008/05/08 現在、この方法は使えなくなっています…。</strong></p>
+<p>上の ATOM から個別のメールを表示するための URL は入手できました。</p>
+<p>この URL にアクセスすれば、メール本文を取得できそうです。実際にブラウザで開けば本文を表示できるのですが、スクリプトから取得するとなると話は別になります。ためしに Firebug で覗いてみると、HTML の中身はこんな具合になってます。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070318/20070318021700.jpg" width="400" height="303" alt="GMail 個別メール表示のDOM構造"></center>
+<p>ごちゃごちゃしてますね。フレームあり、Ajax あり…。スクリプトから解析するとなると気が重くなります。</p>
+<br />
+<p>じゃあ、どうすればいいかというと、簡易 HTML 表示の URL を叩けばいいのです。簡易 HTML 形式というのは、JavaScript が使えない環境のために用意されたインターフェースです。まさに打ってつけですね。</p>
+<p>簡易 HTML 表示のための URL の作り方はこうなります。</p>
+<ol><li>ATOM から取得した URL のうち、message_id を抜き出す。
+<pre>
+http&#x003A;//mail.google.com/mail?account_id=xxxx%40gmail.com&<strong>message_id=123456789abcdefg</strong>&view=conv&extsrc=atom
+</pre>
+<li>message_id の前に「<a href="http://mail.google.com/mail/h/mail?view=cv&search=all&th=">http://mail.google.com/mail/h/mail?view=cv&amp;search=all&amp;th=</a>」をつける。
+<pre>
+http&#x003A;//mail.google.com/mail/h/mail?view=cv&search=all&th=<strong>message_id=123456789abcdefg</strong>
+</pre>
+</ol>
+<p>これだけです。なんとも簡単。</p>
+<p>あとはこの URL に対して HTTP GET をはたけばいいだけです。レスポンスにはメール本文が含まれているので、必要な部分を正規表現で取り出すなり、XPath 使うなり、好きにスクレイピングしましょう。</p>
+<h1>注意点</h1>
+<ul><li>ATOM で取得できるのは未読メールだけ</li><li>メール本文を取得すると既読になる（次に ATOM 取得したときにはそのメールは ATOM から消えている）</li></ul>
+<h1>サンプル</h1>
+<p>HTA+JavaScript で作ってみました。ATOM で未読メールを取得して表示して、クリックしたら本文を取得しにいきます。</p>
+<p>HTA にしたのは、Ajax のドメイン制限を取り除くためです。ただし、HTA からはプロセス起動もできてしまうので、セキュリティチェックは入念にしてください。このサンプルは悪意のある Subject からの攻撃は防いでいますが万全ではないかもしれません。</p>
+<div class="highlight"><pre><span class="o">&lt;</span><span class="nx">body</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="nx">script</span><span class="o">&gt;</span>
+<span class="kd">var</span> <span class="nx">label</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">ajax</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ActiveXObject</span><span class="p">(</span><span class="s1">&#39;Microsoft.XMLHTTP&#39;</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">ajax</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;https://mail.google.com/mail/feed/atom/&#39;</span><span class="o">+</span><span class="nx">label</span><span class="o">+</span><span class="s2">&quot;?&quot;</span><span class="o">+</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()).</span><span class="nx">getTime</span><span class="p">(),</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">onreadystatechange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">ajax</span><span class="p">.</span><span class="nx">readyState</span> <span class="o">==</span> <span class="mi">4</span> <span class="o">&amp;&amp;</span> <span class="nx">ajax</span><span class="p">.</span><span class="nx">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">parseXML</span><span class="p">(</span><span class="nx">ajax</span><span class="p">.</span><span class="nx">responseXML</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">$</span><span class="p">(</span><span class="nx">id</span><span class="p">){</span><span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">id</span><span class="p">);}</span>
+
+<span class="kd">function</span> <span class="nx">parseXML</span><span class="p">(</span><span class="nx">xml</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">xml</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">entries</span> <span class="o">=</span> <span class="nx">xml</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">entries</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">entries</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">firstChild</span><span class="p">.</span><span class="nx">nodeValue</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">link</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">attributes</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">link</span><span class="p">.</span><span class="nx">getNamedItem</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">).</span><span class="nx">nodeValue</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">title</span> <span class="o">||</span> <span class="o">!</span><span class="nx">url</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+        <span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&lt;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;lt;&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&gt;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;gt;&quot;</span><span class="p">);</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">url</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/message_id=([0-9a-zA-Z]+)/</span><span class="p">)){</span>
+            <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://mail.google.com/mail/h/mail?view=cv&amp;search=all&amp;th=&quot;</span> <span class="o">+</span> <span class="nb">RegExp</span><span class="p">.</span><span class="nx">$1</span><span class="p">;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;mail_list&quot;</span><span class="p">).</span><span class="nx">innerHTML</span> <span class="o">+=</span> <span class="s1">&#39;&lt;a href=&quot;&#39;</span> <span class="o">+</span> <span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;&quot; onclick=&quot;return _link_click(this)&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nx">title</span> <span class="o">+</span> <span class="s1">&#39;&lt;/a&gt;&lt;br&gt;&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">_link_click</span><span class="p">(</span><span class="nx">elm</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">ajax</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ActiveXObject</span><span class="p">(</span><span class="s1">&#39;Microsoft.XMLHTTP&#39;</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">ajax</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">elm</span><span class="p">.</span><span class="nx">href</span><span class="p">;</span>
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="nx">url</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">onreadystatechange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">ajax</span><span class="p">.</span><span class="nx">readyState</span> <span class="o">==</span> <span class="mi">4</span> <span class="o">&amp;&amp;</span> <span class="nx">ajax</span><span class="p">.</span><span class="nx">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// ajax.responseText に本文が入ってる</span>
+            <span class="c1">//alert(ajax.responseText);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nx">ajax</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/script&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;mail_list&quot;</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;</span>
+<span class="o">&lt;</span><span class="err">/body&gt;</span>
+</pre>
+</div>
+
+<p>おわり。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070317/gmail_atom" class="hatena-bookmark-button" data-hatena-bookmark-title="GMail の未読メールを自作スクリプトから読むための方法まとめ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/17/gmail-atom/" data-lang="ja" data-size="horizontal" data-text="GMail の未読メールを自作スクリプトから読むための方法まとめ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/03/13/p1/" rel="previous">Tamarin でマルチスレッド(挫折)</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/03/20/apollo-preview1/" rel="next">Apollo 触ってみた。すごすぎ。&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

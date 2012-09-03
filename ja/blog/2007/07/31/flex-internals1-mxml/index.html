@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Flex Internals1 ～MXML 再入門～ 発表資料 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Flex Internals1 ～MXML 再入門～ 発表資料"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/07/31/flex-internals1-mxml/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Flex2勉強会第２０回＠大阪工業大学 で発表してきました。発表資料はこちらです。Flex Internals 1 ～MXML 再入門～ソースコード (156KB)MXML の裏側がどうなっているかを掘り下げています。もっとマニアックに行く予定だったのですが、作っているうちに、結局初心者向けになってしまいました。注目してほしいのは後半に出てくる「インスペクタ」。今年のお正月に作ったまま放置してたものを、この機会に発掘してみました。ソースコードの中にインスペクタのソースも入っているので、興味がある人は見てください。あまり Flex を理解していない時代の作品なので、Flex っぽくないソー..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年07月31日</h2>
+<h1>Flex Internals1 ～MXML 再入門～ 発表資料</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070731/flex_internals1_mxml" class="hatena-bookmark-button" data-hatena-bookmark-title="Flex Internals1 ～MXML 再入門～ 発表資料 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/07/31/flex-internals1-mxml/" data-lang="ja" data-size="horizontal" data-text="Flex Internals1 ～MXML 再入門～ 発表資料 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070801/20070801014036.jpg" width="300" height="207"></p>
+<p><a href="http://www.fxug.net/modules/bwiki/index.php?Flex2%CA%D9%B6%AF%B2%F1%C2%E8%A3%B2%A3%B0%B2%F3%A1%F7%C2%E7%BA%E5%B9%A9%B6%C8%C2%E7%B3%D8">Flex2勉強会第２０回＠大阪工業大学</a> で発表してきました。</p>
+<p>発表資料はこちらです。</p>
+<ul><li><a href="http://tech.nitoyon.com/misc/flex_internals1/">Flex Internals 1 ～MXML 再入門～</a></li><li><a href="http://tech.nitoyon.com/misc/flex_internals1/FlexInternals1.zip">ソースコード (156KB)</a></li></ul>
+<p>MXML の裏側がどうなっているかを掘り下げています。もっとマニアックに行く予定だったのですが、作っているうちに、結局初心者向けになってしまいました。</p>
+<p>注目してほしいのは後半に出てくる「インスペクタ」。今年のお正月に作ったまま放置してたものを、この機会に発掘してみました。<a href="http://tech.nitoyon.com/misc/flex_internals1/FlexInternals1.zip">ソースコード</a>の中にインスペクタのソースも入っているので、興味がある人は見てください。あまり Flex を理解していない時代の作品なので、Flex っぽくないソースになってますが…。</p>
+<p>第２回はどうしようかと色々悩んだのですが、次回はてら子と共催ということで、レイアウトネタにしてみようかな、と構想中です。</p>
+<h1>以下、スライド作りの苦労話</h1>
+<p>今回は、Flex 勉強会ということで、資料を Flex で作ってみました……。が、これが予想以上に大変。</p>
+<p>MXML でページ内で文字列を配置していくわけなのですが、&lt;Text x="30" y="10" width="... といちいち座標指定するところにイライラ。fcwrap を導入してからは、かなり生産性は向上したのだけど、それでも絶対座標指定だと限界がある。</p>
+<p>痛感したのは、テキストを配置するなら Flex よりも HTML+CSS の方が簡単だということ。もちろん、Flex Builder を使えば楽になるんだろうけど、それはそれで負けた気分。Flex でやるなら、GUI の MXML 配置ツールを作ってしまいたいところ。</p>
+<p>本っぽいアニメーション効果は <a href="http://www.rubenswieringa.com/blog/flex-book-component-beta">Flex book component (beta)</a> を使って実現しています。ショートカットキーを割り当ててスライドっぽく操作できるようにしてます。[数字]＋Enter という PowerPoint 風のショートカットキーを実装してます。自動ページ送りが始まって、なかなか気分爽快。</p>
+<p>スライド資料って、普通は横長なんだけど、こういう２アップのレイアウトもなかなか面白いかもしれません。特に、ソース比較の部分が分かりやすい。</p>
+<p>ちょっと裏話。Flex book component は左のページと右のページが別々の UIComponent として設計されています。これが見開きページを作るときに大きな壁になりました。どうやって解決してるかというと、左ページの文字と右ページの文字を、異なる Text として作成して逃げてます。ああ、場当たり的対処……。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070731/flex_internals1_mxml" class="hatena-bookmark-button" data-hatena-bookmark-title="Flex Internals1 ～MXML 再入門～ 発表資料 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/07/31/flex-internals1-mxml/" data-lang="ja" data-size="horizontal" data-text="Flex Internals1 ～MXML 再入門～ 発表資料 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/07/25/p1/" rel="previous">Flex2勉強会第20回で発表します</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/08/01/as3-iphone-button/" rel="next">AS3 で iPhone 風ボタンを描画&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Apollo アプリを AIR β版で動かすための方法 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Apollo アプリを AIR β版で動かすための方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/06/12/apollo-to-air-build/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="まだ途中のため、中途半端かもしれないけど参考程度に。(2007.6.13 1:00 追記) Adobe AIRメモ さんが早速 AIR β版に対応しています。すばやい対応！　ここよりも、Adobe AIRメモ さんのほうがお勧め。1. 開発環境のアップグレードFlex Builder 2 を使っている人は 3 を、Flex 2 SDK を使っている人は Flex 3 SDK を導入します。Builder はどうか知らないけど、Flex SDK は共存できるので Flex 2 が必要な人は残しておいたほうがいいでしょう。2. ADF の修正ADF(Apollo Descriptor Fil..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年06月12日</h2>
+<h1>Apollo アプリを AIR β版で動かすための方法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070612/apollo_to_air_build" class="hatena-bookmark-button" data-hatena-bookmark-title="Apollo アプリを AIR β版で動かすための方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/12/apollo-to-air-build/" data-lang="ja" data-size="horizontal" data-text="Apollo アプリを AIR β版で動かすための方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><s>まだ途中のため、中途半端かもしれないけど参考程度に。</s></p>
+<p>(2007.6.13 1:00 追記) <a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe AIRメモ</a> さんが早速 AIR β版に対応しています。すばやい対応！　ここよりも、<a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe AIRメモ</a> さんのほうがお勧め。</p>
+<h1>1. 開発環境のアップグレード</h1>
+<p>Flex Builder 2 を使っている人は 3 を、Flex 2 SDK を使っている人は Flex 3 SDK を導入します。</p>
+<p>Builder はどうか知らないけど、Flex SDK は共存できるので Flex 2 が必要な人は残しておいたほうがいいでしょう。</p>
+<h1>2. ADF の修正</h1>
+<p>ADF(Apollo Descriptor File) と呼ばれるアプリケーションの情報を記述した XML ファイルの仕様が変更になっています。</p>
+<p>手順はこう。</p>
+<ul><li>xmlns の apollo/application/1.0.M3 を air/application/1.0.M4 に変更</li><li>properies タグを取り除いて、name や publisher を application 直下に配置</li></ul>
+<p>例。</p>
+<p>Apollo α版でこうだとすると</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;application</span> <span class="na">appId=</span><span class="s">&quot;com.nitoyon.sample&quot;</span> <span class="na">version=</span><span class="s">&quot;0.1&quot;</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://ns.adobe.com/apollo/application/1.0.M3&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;properties&gt;</span>
+    <span class="nt">&lt;name&gt;</span>application name<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;publisher&gt;</span>nitoyon<span class="nt">&lt;/publisher&gt;</span>
+    <span class="nt">&lt;description&gt;</span>sample application<span class="nt">&lt;/description&gt;</span>
+    <span class="nt">&lt;copyright&gt;</span>2007 nitoyon<span class="nt">&lt;/copyright&gt;</span>
+  <span class="nt">&lt;/properties&gt;</span>
+  <span class="nt">&lt;rootContent</span> <span class="na">systemChrome=</span><span class="s">&quot;standard&quot;</span> <span class="na">visible=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>hoge.html<span class="nt">&lt;/rootContent&gt;</span>
+<span class="nt">&lt;/application&gt;</span>
+</pre>
+</div>
+
+<p>AIR β版ではこうするよ。</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;application</span> <span class="na">appId=</span><span class="s">&quot;com.nitoyon.sample&quot;</span> <span class="na">version=</span><span class="s">&quot;0.1&quot;</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://ns.adobe.com/air/application/1.0.M4&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>application name<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;publisher&gt;</span>nitoyon<span class="nt">&lt;/publisher&gt;</span>
+  <span class="nt">&lt;description&gt;</span>sample application<span class="nt">&lt;/description&gt;</span>
+  <span class="nt">&lt;copyright&gt;</span>2007 nitoyon<span class="nt">&lt;/copyright&gt;</span>
+  <span class="nt">&lt;rootContent</span> <span class="na">systemChrome=</span><span class="s">&quot;standard&quot;</span> <span class="na">visible=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>hoge.html<span class="nt">&lt;/rootContent&gt;</span>
+<span class="nt">&lt;/application&gt;</span>
+</pre>
+</div>
+
+<p>あとは、仕様変更になったクラスを使っていなければ、そのままのソースで動くと思います。</p>
+<p>再コンパイル(amxmlc)・パッケージング(adl) はまだ試してないので中途半端だけど時間切れ。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070612/apollo_to_air_build" class="hatena-bookmark-button" data-hatena-bookmark-title="Apollo アプリを AIR β版で動かすための方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/12/apollo-to-air-build/" data-lang="ja" data-size="horizontal" data-text="Apollo アプリを AIR β版で動かすための方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/06/11/apollo-product-name/" rel="previous">Apollo の正式名称は Air？</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/06/12/flex3-sdk-review/" rel="next">Flex3 SDK 速攻レビュー&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

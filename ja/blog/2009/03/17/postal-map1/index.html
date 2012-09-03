@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/03/17/postal-map1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回予告した通り、郵便番号マップを作った手順を紹介していこう。ビジュアライジングのためにはデータ収集が重要だ。今回はデータベースに郵便番号データを入れていくところを説明する。泥臭いけど避けては通れない作業だ。郵便番号データを入手まずは郵便番号のデータを手に入れる。といっても日本郵便が郵便番号データを CSV の形で提供してくれてるので、特に凝ったことはしなくてもよい。以下のサイトから全国一括のファイルをダウンロードするだけ。ありがたや。郵便番号データダウンロード - 日本郵便Shift-JIS なので utf-8 に変換しておいた。% wget http://www.post.japan..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年03月17日</h2>
+<h1>郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090317/postal_map1" class="hatena-bookmark-button" data-hatena-bookmark-title="郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/17/postal-map1/" data-lang="ja" data-size="horizontal" data-text="郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>前回予告した通り、<a href="http://d.hatena.ne.jp/nitoyon/20090316/postal_map">郵便番号マップ</a>を作った手順を紹介していこう。</p>
+<p>ビジュアライジングのためにはデータ収集が重要だ。今回はデータベースに郵便番号データを入れていくところを説明する。泥臭いけど避けては通れない作業だ。</p>
+<h1>郵便番号データを入手</h1>
+<p>まずは郵便番号のデータを手に入れる。といっても日本郵便が郵便番号データを CSV の形で提供してくれてるので、特に凝ったことはしなくてもよい。</p>
+<p>以下のサイトから全国一括のファイルをダウンロードするだけ。ありがたや。</p>
+<ul><li><a href="http://www.post.japanpost.jp/zipcode/download.html">郵便番号データダウンロード - 日本郵便</a></li></ul>
+<p>Shift-JIS なので utf-8 に変換しておいた。</p>
+<pre>% wget <a href="http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh">http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh</a>
+<font color="#999999">--00:23:50--  <a href="http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh">http://www.post.japanpost.jp/zipcode/dl/oogaki/lzh/ken_all.lzh</a>
+           => `ken_all.lzh.1'
+www.post.japanpost.jp をDNSに問いあわせています... 122.215.192.22
+www.post.japanpost.jp|122.215.192.22|:80 に接続しています... 接続しました。
+HTTP による接続要求を送信しました、応答を待っています... 200 OK
+長さ: 1,726,157 (1.6M) [application/octet-stream]
+
+100%[=============================================&gt;] 1,726,157      1.11M/s
+
+00:23:52 (1.11 MB/s) - `ken_all.lzh.1' を保存しました [1726157/1726157]</font>
+
+% lha -x ken_all.lzh
+<font color="#999999">ken_all.csv     - Melted   :  ooooooooooooooooooooooooooooooooooooooooooooooo</font>
+% nkf -w ken_all.csv &gt; ken_all_utf8.csv</pre>
+<h1>データベースへの作成</h1>
+<p><a href="http://www.amazon.co.jp/%E3%83%93%E3%82%B8%E3%83%A5%E3%82%A2%E3%83%A9%E3%82%A4%E3%82%B8%E3%83%B3%E3%82%B0%E3%83%BB%E3%83%87%E3%83%BC%E3%82%BF-%E2%80%95Processing%E3%81%AB%E3%82%88%E3%82%8B%E6%83%85%E5%A0%B1%E8%A6%96%E8%A6%9A%E5%8C%96%E6%89%8B%E6%B3%95-Ben-Fry/dp/4873113784%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873113784">ビジュアライジング・データ ―Processingによる情報視覚化手法</a> でのアメリカ版では CSV データに経度緯度データも入っていたんだけど、日本郵便のデータには入っていない。ならば、ジオコーディングで取得するしかない。</p>
+<p>今回はその準備のためにデータベース環境を整えていく。言語は Ruby を選択した。O/R マッパーとして Ruby on Rails の ActiveRecord を使って省エネを狙う。DB は手軽に使える sqlite3 を使う。</p>
+<p>バージョンはこんな感じ。</p>
+<ul><li>Ruby 1.8.5<ul><li>ActiveRecord 1.15</li><li>sqlite3-ruby 1.2.4</li></ul></li><li>sqlite3 3.6.6.2</li></ul>
+<h1>テーブルの準備</h1>
+<p>まずは、DB とテーブルの作成。ActiveRecord の Migration 機能を使ってテーブル構造を定義してやる。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1"># EntrySchema.rb</span>
+<span class="nb">require</span> <span class="s1">&#39;rubygems&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
+
+<span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
+  <span class="ss">:adapter</span> <span class="o">=&gt;</span> <span class="s1">&#39;sqlite3&#39;</span><span class="p">,</span>
+  <span class="ss">:dbfile</span> <span class="o">=&gt;</span> <span class="s2">&quot;geocode.db&quot;</span>
+  <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">EntrySchema</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">up</span>
+    <span class="n">create_table</span><span class="p">(</span><span class="ss">:codes</span><span class="p">){</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:high</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:low</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:pref</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:city</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:lat</span><span class="p">,</span> <span class="ss">:float</span>
+      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:lng</span><span class="p">,</span> <span class="ss">:float</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">down</span>
+    <span class="n">drop_table</span> <span class="ss">:codes</span>
+   <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Code</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+</div>
+<p>こう書いておくと、次のようなコードを実行させるだけでテーブルを作成してくれる。</p>
+<pre>% ruby -e 'require "EntrySchema"; EntrySchema.migrate(:up)'
+<font color="#999999">== EntrySchema: migrating
+ ====================================================
+ -- create_table(:codes)
+   -&gt; 0.0397s
+ == EntrySchema: migrated (0.0402s) ============================================</font></pre>
+<p>素晴らしい。</p>
+<p>Migration については、以下のサイトを参考にした。</p>
+<ul><li><a href="http://tam.qmix.org/wiki/Migration.html">pylori*style wiki - MigrationによるDB管理</a></li><li><a href="http://tech.feedforce.jp/railsmigration.html">FFTT : RailsのMigration</a></li><li><a href="http://wota.jp/ac/?date=20050817">優しいRailsの育て方 - ヽ( ・∀・)ノくまくまー(2005-08-17)</a></li></ul>
+<h1>CSV を DB に流し込む</h1>
+<p>お次は DB に CSV のデータを流し込むところ。</p>
+<p>Ruby には標準で CSV クラスがついてくる。こいつを使えば１行を配列としてパースしてくれる。</p>
+<p>DB 側は ActiveRecord と併用すればいとも簡単。コードがこれ。</p>
+<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;EntrySchema&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;csv&#39;</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="no">CSV</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;ken_all_utf8.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">row</span><span class="o">|</span>
+  <span class="c1"># 下４桁が 0000 のだけ突っ込む</span>
+  <span class="k">next</span> <span class="k">unless</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;0000&quot;</span>
+
+  <span class="c1"># 既に突っ込んだ場合はそのデータを読み取る</span>
+  <span class="n">code</span> <span class="o">=</span> <span class="no">Code</span><span class="o">.</span><span class="n">find_by_id</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+  <span class="n">code</span> <span class="o">=</span> <span class="no">Code</span><span class="o">.</span><span class="n">new</span> <span class="k">if</span> <span class="n">code</span><span class="o">.</span><span class="n">nil?</span>
+
+  <span class="c1"># CSV のデータを保存する</span>
+  <span class="n">code</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+  <span class="n">code</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+  <span class="n">code</span><span class="o">.</span><span class="n">pref</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">6</span><span class="o">]</span>
+  <span class="n">code</span><span class="o">.</span><span class="n">city</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">7</span><span class="o">]</span>
+  <span class="n">code</span><span class="o">.</span><span class="n">save</span>
+
+  <span class="c1"># 出力</span>
+  <span class="nb">puts</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">pref</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">city</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+<p>ActiveRecord のおかげで、Code オブジェクトのプロパティを設定して save するだけで DB に格納してくれる。抽象度が高くて幸せ。</p>
+<p>実行してみる。</p>
+<pre>% ruby script/parse_postal.rb
+<font color="#999999">北海道 札幌市中央区
+北海道 札幌市北区
+北海道 札幌市東区
+北海道 札幌市白石区
+北海道 札幌市豊平区
+  : (略)
+沖縄県 沖縄市
+沖縄県 宮古島市
+沖縄県 八重山郡竹富町</font></pre>
+<p>いい具合に DB に突っ込まれていく。</p>
+<p>ActiveRecord については以下のサイトがとても参考になる。</p>
+<ul><li><a href="http://dev.ariel-networks.com/articles/workshop/rails-activerecord/">Ruby on Rails - ActiveRecord -— ありえるえりあ</a></li></ul>
+<h1>sqlite3 コンソールで確認</h1>
+<p>ちゃんと入ってることを確認する。</p>
+<pre>sqlite&gt; select * from codes;
+<font color="#999999">      :
+784|904|0000|沖縄県|沖縄市||
+785|906|0000|沖縄県|宮古島市||
+786|907|0000|沖縄県|八重山郡竹富町||</font></pre>
+<p>786件のデータが入力されている。やったね。</p>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20090318/postal_map2">次回</a>は、経度緯度を埋めていくところから。</p>
+<div class="seealso">
+<h1>連載目次（予定）</h1>
+<ul><li><a href="/ja/blog/2009/03/16/postal-map/">郵便番号マップを作ってみた</a></li><li>郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる</li><li><a href="/ja/blog/2009/03/18/postal-map2/">郵便番号マップ作成記 (2) - ジオコーディングで経度緯度を求める</a></li><li><a href="/ja/blog/2009/03/20/postal-map3/">郵便番号マップ作成記 (3) - 経度緯度から動的に郵便番号を描画する</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090317/postal_map1" class="hatena-bookmark-button" data-hatena-bookmark-title="郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/17/postal-map1/" data-lang="ja" data-size="horizontal" data-text="郵便番号マップ作成記 (1) - 郵便番号データをデータベースに入れる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/03/16/postal-map/" rel="previous">郵便番号マップを作ってみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/03/18/postal-map2/" rel="next">郵便番号マップ作成記 (2) - ジオコーディングで経度緯度を求める&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

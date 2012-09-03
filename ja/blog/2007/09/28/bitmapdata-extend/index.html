@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>BitmapData の範囲拡張を実装するなら… - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="BitmapData の範囲拡張を実装するなら…"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/09/28/bitmapdata-extend/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="グレースケールの BitmapData を拡張をしてみるテストです。Photoshop でいう選択範囲の拡張のイメージ。BitmapData に描画した文字を太くしたり、縁取りしたりするのに使えるんじゃないかと。地味なので、見た目をちょっとだけ凝ってみました。クリックすれば、ブラシのサイズが変わります。仕組みはこう。円を BitampData に描くgetPixel で円の全てのピクセルの色を取得する全てのピクセルに対して、色の濃さに応じた透明度で大元の画像を出力していく単純ですね。ただ、拡張範囲のピクセル数を n とすると、描画には O(n2) の時間がかかってしまっているのが大変ださ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年09月28日</h2>
+<h1>BitmapData の範囲拡張を実装するなら…</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070928/bitmapdata_extend" class="hatena-bookmark-button" data-hatena-bookmark-title="BitmapData の範囲拡張を実装するなら… - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/09/28/bitmapdata-extend/" data-lang="ja" data-size="horizontal" data-text="BitmapData の範囲拡張を実装するなら… - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>グレースケールの BitmapData を拡張をしてみるテストです。Photoshop でいう選択範囲の拡張のイメージ。</p>
+<p>BitmapData に描画した文字を太くしたり、縁取りしたりするのに使えるんじゃないかと。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBitmapOffset.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=130&amp;title=extend+BitmapData&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>地味なので、見た目をちょっとだけ凝ってみました。クリックすれば、ブラシのサイズが変わります。</p>
+<p>仕組みはこう。</p>
+<ol><li>円を BitampData に描く</li><li>getPixel で円の全てのピクセルの色を取得する</li><li>全てのピクセルに対して、色の濃さに応じた透明度で大元の画像を出力していく</li></ol>
+<p>単純ですね。ただ、拡張範囲のピクセル数を n とすると、描画には O(n<sup>2</sup>) の時間がかかってしまっているのが大変ださいところです。Photoshop の選択範囲の拡張はどういうアルゴリズムで実装してるんだろうなぁ…。</p>
+<p>(追記) <strong>munegon さんが高速に実行する技を教えてくれました！！</strong>（→<a href="http://void.heteml.jp/blog/archives/2007/09/dilate_erode.html" title="void element blog: BitmapDataの範囲拡張＆収縮へ">void element blog: BitmapDataの範囲拡張＆収縮</a>）。</p>
+<p>仕組みを簡単に見てみると…</p>
+<dl><dt>拡張</dt><dd>BlurFilter でぼかして、threshold でボケを抑える。blendMode "multiply" で draw。</dd><dt>収縮</dt><dd>ConvolutionFilterでぼかす。blendMode "add" で draw。</dd></dl>
+<p>すごくスマートだ…。BlurFilter とか ConvolutionFilter を使えばできそうだとは思ってたのですが、試行錯誤の末にギブアップしてました。blendMode を使えばよかったんですね。完全に盲点でした。ありがとうございます！！！（追記ここまで）</p>
+<p>ちなみに、ベジェ曲線を範囲拡張するアルゴリズムについては <a href="http://www.junko-k.com/cthema/44bezier.htm">コロキウム室(Bezier曲線の問題)</a> で触れられていました。画像処理のアルゴリズムって、数式がいっぱい出てきて難しい…。</p>
+<p>ソースは以下に（84行）。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">BitmapOffset</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;techni.png&#39;</span><span class="p">)]</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">Logo</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">size</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">SIGN</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MARGIN</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">brush</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd1</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BitmapOffset</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Logo</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+
+            <span class="nx">bmd</span>  <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">;</span>
+            <span class="nx">bmd1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+            <span class="nx">bmd2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+
+            <span class="kd">var</span> <span class="nx">curX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">curY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+
+            <span class="c1">// x</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+
+            <span class="c1">// brush</span>
+            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">SIGN</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">brush</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">()).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">curX</span> <span class="o">+</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">;</span>
+            <span class="nx">brush</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">curY</span><span class="p">;</span>
+
+            <span class="c1">// =</span>
+            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mh">0x0099ff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
+
+            <span class="c1">// result</span>
+            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">SIGN</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">curX</span><span class="p">;</span>
+
+            <span class="nx">draw</span><span class="p">();</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="nx">size</span> <span class="o">=</span> <span class="nx">size</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">?</span> <span class="nx">size</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="nx">draw</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">bmd1</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+
+            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+            <span class="kd">var</span> <span class="nx">m</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
+            <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="nx">bmd1</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">brush</span><span class="p">,</span> <span class="nx">m</span><span class="p">);</span>
+
+            <span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">ColorTransform</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorTransform</span><span class="p">();</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">size</span> <span class="o">*</span> <span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">%</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">5</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmd1</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">tx</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0x100</span><span class="p">;</span>
+                <span class="nx">c</span><span class="p">.</span><span class="nx">alphaOffset</span> <span class="o">=</span> <span class="nx">alpha</span><span class="p">;</span>
+                <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">-=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">-=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="nx">bmd2</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">m</span><span class="p">,</span> <span class="nx">c</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070928/bitmapdata_extend" class="hatena-bookmark-button" data-hatena-bookmark-title="BitmapData の範囲拡張を実装するなら… - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/09/28/bitmapdata-extend/" data-lang="ja" data-size="horizontal" data-text="BitmapData の範囲拡張を実装するなら… - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/09/27/ria-books/" rel="previous">Flex の本も Silverlight の本も Blend の本も…盛りだくさん</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/01/tyouzetsu-as/" rel="next">ActionScript 的超絶技巧発表会に参加してきました&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

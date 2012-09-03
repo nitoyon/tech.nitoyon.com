@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/02/28/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="第1回の続き。subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - AS3 名前空間 さんによると、getter/setter のアクセス指定子が異なる場合は、名前空間を明示して呼び出してやれば動くようになるそうです。前回のソースを修正すると、こうすれば動くようになるわけです。（id:cho45 さん、ありがとうございます）package{ import flash.display.Sprite; public class Test extends Sprite { private var _sample:String; // getter は public ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年02月28日</h2>
+<h1>getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070228/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/02/28/p1/" data-lang="ja" data-size="horizontal" data-text="getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p><a href="http://d.hatena.ne.jp/nitoyon/20070220/p1">第1回</a>の続き。</p>
+<p><a href="http://subtech.g.hatena.ne.jp/cho45/20070223/1172228876">subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - AS3 名前空間</a> さんによると、getter/setter のアクセス指定子が異なる場合は、名前空間を明示して呼び出してやれば動くようになるそうです。</p>
+<a name="seemore"></a>
+<p>前回のソースを修正すると、こうすれば動くようになるわけです。（<a href="http://d.hatena.ne.jp/cho45/" class="hatena-id-icon"><img src="http://www.st-hatena.com/users/ch/cho45/profile_s.gif" width="16" height="16" alt="id:cho45" class="hatena-id-icon">id:cho45</a> さん、ありがとうございます）</p>
+<div class="highlight"><pre><span class="kr">package</span>
+<span class="p">{</span>
+	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+
+	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
+	<span class="p">{</span>
+		<span class="kr">private</span> <span class="kd">var</span> <span class="nx">_sample</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span>
+
+		<span class="c1">// getter は public</span>
+		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">sample</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span>
+		<span class="p">{</span>
+			<span class="k">return</span> <span class="nx">_sample</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="c1">// setter は internal</span>
+		<span class="nx">internal</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">sample</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
+		<span class="p">{</span>
+			<span class="nx">_sample</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span>
+		<span class="p">}</span>
+
+		<span class="c1">// コンストラクタ</span>
+		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
+		<span class="p">{</span>
+			<span class="nx">internal</span><span class="o">::</span><span class="nx">sample</span> <span class="o">=</span> <span class="s2">&quot;hoge&quot;</span><span class="p">;</span>
+			<span class="nx">trace</span><span class="p">(</span><span class="kr">public</span><span class="o">::</span><span class="nx">sample</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>上のコードで動くようになった理由を簡単に解説します。</p>
+<p>AS3 では private や public も特殊な名前空間として定義されている。クラスのフィールドやメソッドごとにこれらの名前空間を指定して、どの名前空間に所属させるかを決定できるわけ。</p>
+<p>独自に名前空間を定義することもできるが、この辺の説明は割愛。詳しくは prog_actionscript30.pdf の名前空間を参照。独自名前空間としては AS3 や mx_internal が有名どころでしょうか。</p>
+<br />
+<p>今回は getter が public、setter が internal だったため、public::sample と internal::sample の２つがクラス内に定義されていたのです。</p>
+<p>そのため、単に sample と記述すると、どっちの名前空間を参照するのかが曖昧になってしまっていたわけです。</p>
+<p>setter なのか getter なのかを文脈で判別して、自動的に名前空間も割り当てて欲しいところなのですが、そうもいかないようです。</p>
+<br />
+<p>そこで、気になった。</p>
+<p>名前空間が異なるなら、同じ名前の関数を作れるはず？</p>
+<p>これはもちろんOK。</p>
+<div class="highlight"><pre><span class="kr">package</span>
+<span class="p">{</span>
+	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+
+	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
+	<span class="p">{</span>
+		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
+		<span class="nx">AS3</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>じゃあ、これは？？？？</p>
+<div class="highlight"><pre><span class="kr">package</span>
+<span class="p">{</span>
+	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+
+	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
+	<span class="p">{</span>
+		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
+		<span class="kr">private</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>やっぱりダメだった。</p>
+<pre>Test.as(8): col: 20 エラー: オーバーライドに対応していません。
+                private function a():void{}
+                                 ^
+
+Test.as(8): col: 20 エラー: 関数の定義が重複しています。
+                private function a():void{}
+                                 ^</pre>
+<p>private や public はあくまで名前空間のようなんだけど、ちょっと違うらしい。このあたりの仕様を細かくあたるなら、Tamarin のソースを見るしかないのかな…。</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070228/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/02/28/p1/" data-lang="ja" data-size="horizontal" data-text="getter/setter のアクセス制御指定子は同じでなければいけない？ (2) － 解決編 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/02/20/p1/" rel="previous">getter/setter のアクセス制御指定子は同じでなければいけない？(1)‐AS で自己カプセル化</span></a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/03/05/design-catalog/" rel="next">CSS をリニューアルするときに参考にしたいページ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

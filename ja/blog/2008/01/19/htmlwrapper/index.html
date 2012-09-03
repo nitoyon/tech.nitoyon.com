@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>htmlwrapper は使えない - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="htmlwrapper は使えない"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/01/19/htmlwrapper/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="htmlwrapper - Google Code が気になったので触ってみた。AS3 で HTML をパースして Sprite に表示してしまおう、という代物。AS3 でブラウザ実装か！？と期待を抱かせる。試しに crossdomain.xml を置いてる Twitter を開いてみたところYour HTML is not well formed, check this out for help...http://infohound.net/tidy/と怒られた。へー、HTML チェックが厳格なんだー、と思ってソースをよくよく眺めてたら、URLLoader で拾った結果を XML クラ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年01月19日</h2>
+<h1>htmlwrapper は使えない</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080119/htmlwrapper" class="hatena-bookmark-button" data-hatena-bookmark-title="htmlwrapper は使えない - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/19/htmlwrapper/" data-lang="ja" data-size="horizontal" data-text="htmlwrapper は使えない - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p><a href="http://code.google.com/p/htmlwrapper/">htmlwrapper - Google Code</a> が気になったので触ってみた。</p>
+<p>AS3 で HTML をパースして Sprite に表示してしまおう、という代物。AS3 でブラウザ実装か！？と期待を抱かせる。</p>
+<p>試しに crossdomain.xml を置いてる Twitter を開いてみたところ</p>
+<pre>Your HTML is not well formed, check this out for help...
+<a href="http://infohound.net/tidy/">http://infohound.net/tidy/</a></pre>
+<p>と怒られた。</p>
+<p>へー、HTML チェックが厳格なんだー、と思ってソースをよくよく眺めてたら、URLLoader で拾った結果を XML クラスのコンストラクタに突っ込んでるだけ…。</p>
+<p>おいおい、XHTML しかダメなのか。ならばと、XHTML なサイトを表示させようとしてみるも、XML クラスに突っ込む前にこんな文字列になった。</p>
+<pre><html><<html>s<html>c<html>r<html>i<html>p<html>t<html> <html>t<html>y<html>p<ht
+ml>e<html>=<html>"<html>t<html>e<html>x<html>t<html>/<html>j<html>a<html>v<html>
+a<html>s<html>c<html>r<html>i<html>p<html>t<html>"<html> <html>s<html>r<html>c<h
+tml>=<html>"<html>/<html>j<html>s<html>/<html>g<html>a<html>.<html>j<html>s<html
+<html>l>><html><<html>/<html>s<html>c<html>r<html>i<html>p<html>t<html>><html></pre>
+<p>そこそこ適当な HTML でも valid な XML になるように正規表現でごにょごにょしてるんだけど、そこが暴走しているご様子。</p>
+<p>このライブラリは、どうやら既存の HTML を表示することを狙ってるんじゃなく、ある程度厳格に書いた HTML を Flash で表示できるようにして、簡単に View を組み立てることを目標にしているようだ。</p>
+<p><a href="http://htmlwrapper.googlecode.com/svn/trunk/docs/json_notes.txt">json_notes.txt</a>を見てると、独自 CSS を定義して、</p>
+<div class="highlight"><pre><span class="nc">.myClassStyle</span> <span class="p">{</span>
+    <span class="n">shape</span><span class="o">:</span> <span class="n">json</span><span class="p">(</span><span class="s1">&#39;{&quot;type&quot;:&quot;box&quot;}&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>とかやって図形表示したいよねー、みたいな話が出てきてる。</p>
+<p>うーん。微妙。</p>
+<p>誰か、Firefox を AS3 に移植してよ。猛者現れろ！</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080119/htmlwrapper" class="hatena-bookmark-button" data-hatena-bookmark-title="htmlwrapper は使えない - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/19/htmlwrapper/" data-lang="ja" data-size="horizontal" data-text="htmlwrapper は使えない - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/01/17/primitive-and-object/" rel="previous">オブジェクトと参照の分かりやすい説明</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/01/20/designer-and-flasher/" rel="next">Flash 屋さんは世間が思うほどデザイナではない&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

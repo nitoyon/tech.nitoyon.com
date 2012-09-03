@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ブラウザ上で Python を試せる「IPYWEB」を作ってみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ブラウザ上で Python を試せる「IPYWEB」を作ってみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/04/07/ipyweb-released/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Silverlight2 の IronRuby を使って ブラウザ上で Ruby を試せる「IRBWEB」を作ってみた ので、その延長でブラウザ上で Python を試せる IPYWEB を作ってみた。IPYWEBSilverlight のソースは Silverlight Dynamic Languages SDK 0.5.0 の Repl サンプルそのまま。修正したのは HTML・JavaScript・CSS だけ。IronPython さまさま。Firefox の謎現在の *.xap は、Iron*** を含んでいて 1MB 近くあるので、ローディング中は Silverlight を..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年04月07日</h2>
+<h1>ブラウザ上で Python を試せる「IPYWEB」を作ってみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090407/ipyweb_released" class="hatena-bookmark-button" data-hatena-bookmark-title="ブラウザ上で Python を試せる「IPYWEB」を作ってみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/07/ipyweb-released/" data-lang="ja" data-size="horizontal" data-text="ブラウザ上で Python を試せる「IPYWEB」を作ってみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Silverlight2 の IronRuby を使って <a href="http://d.hatena.ne.jp/nitoyon/20090406/irbweb_released">ブラウザ上で Ruby を試せる「IRBWEB」を作ってみた</a> ので、その延長でブラウザ上で Python を試せる <a href="http://tech.nitoyon.com/ipy/">IPYWEB</a> を作ってみた。</p>
+<center><a href="http://tech.nitoyon.com/ipy/"><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090407/20090407014321.png?1239036637"><br>IPYWEB</a></center>
+<p>Silverlight のソースは <a href="http://www.codeplex.com/sdlsdk">Silverlight Dynamic Languages SDK</a> 0.5.0 の <a href="http://github.com/jschementi/agdlr/blob/446d01e6ba570c7a489a4f02d1f7dc60781bc132/samples/python/repl/python/app.py">Repl サンプル</a>そのまま。修正したのは HTML・JavaScript・CSS だけ。IronPython さまさま。</p>
+<h1>Firefox の謎</h1>
+<p>現在の *.xap は、Iron*** を含んでいて 1MB 近くあるので、ローディング中は Silverlight を表示したい。ただ、ロードが完了すれば Silverlight の表示は不要になるので、*.xap の初期化が完了した段階で JS を使って *.xap を隠している。</p>
+<p>けれども、これをやると IE では動くのに、何故か Firefox で *.xap が再度実行されてしまう。対処方法は全く不明で、JS 経由であれやこれやするのがいけないのかもしれない。全く意味が分からん。</p>
+<p>手がかりは昨日のエントリで <a href="http://d.hatena.ne.jp/matarillo/" class="hatena-id-icon"><img src="http://www.st-hatena.com/users/ma/matarillo/profile_s.gif" width="16" height="16" alt="id:matarillo" class="hatena-id-icon">id:matarillo</a> さんがコメントしてくれた</p>
+<blockquote><p>bodyのスタイルを後からoverflow:hiddenにするとapp.rbが再度動いてしまいREPLのdivがさらに追加されるのでJSでセットしない</p><cite><a href="http://b.hatena.ne.jp/matarillo/20090406#bookmark-12830524">はてなブックマーク - matarilloのブックマーク - 2009年4月6日</a></cite></blockquote>
+<p>というコメントのみ。んー、これってどこかに情報があるんでしょうか。。。対処法はないんだろうか。。。</p>
+<div class="seealso">
+<h1>関連エントリ</h1>
+<ul><li><a href="/ja/blog/2009/04/06/irbweb-released/">ブラウザ上で Ruby を試せる「IRBWEB」を作ってみた</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090407/ipyweb_released" class="hatena-bookmark-button" data-hatena-bookmark-title="ブラウザ上で Python を試せる「IPYWEB」を作ってみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/07/ipyweb-released/" data-lang="ja" data-size="horizontal" data-text="ブラウザ上で Python を試せる「IPYWEB」を作ってみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/04/06/irbweb-released/" rel="previous">ブラウザ上で Ruby を試せる「IRBWEB」を作ってみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/04/09/kmeans-visualise/" rel="next">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

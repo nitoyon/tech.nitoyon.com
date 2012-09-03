@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Processing のトンネルを AS3 で書いてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Processing のトンネルを AS3 で書いてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/03/27/tunnel-as3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="昨日に続き、Processing 本体に付属しているサンプルで面白かった Tunnel を ActionScript 3 に移植してみました。完成品はこちら。重めなのでクリックすると始まりますよ。（Flash Player 9 以降がインストールされていると、ここにトンネルが表示されますよ）仕組みぐるぐる吸い込まれるように見えますが、「トンネルの中をまっすぐ進むアニメーション」と「絵全体の平行移動」を組み合わせです。平行移動は単にずらすだけなので、「トンネルの中を進むアニメーション」について説明していきましょう。トンネルの壁面は red_smoke.jpg という上下左右がつながったテク..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年03月27日</h2>
+<h1>Processing のトンネルを AS3 で書いてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090327/tunnel_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="Processing のトンネルを AS3 で書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/27/tunnel-as3/" data-lang="ja" data-size="horizontal" data-text="Processing のトンネルを AS3 で書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309003805.png" width="450" height="166"></center>
+<p>昨日に続き、Processing 本体に付属しているサンプルで面白かった <a href="http://processing.org/learning/topics/tunnel.html">Tunnel</a> を ActionScript 3 に移植してみました。</p>
+<p>完成品はこちら。重めなのでクリックすると始まりますよ。</p>
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FTunnel.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=300&amp;title=Tunnel+AS3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>（Flash Player 9 以降がインストールされていると、ここにトンネルが表示されますよ）</noscript></center>
+<h1><b>仕組み</b></h1>
+<p>ぐるぐる吸い込まれるように見えますが、「トンネルの中をまっすぐ進むアニメーション」と「絵全体の平行移動」を組み合わせです。平行移動は単にずらすだけなので、「トンネルの中を進むアニメーション」について説明していきましょう。</p>
+<p>トンネルの壁面は red_smoke.jpg という上下左右がつながったテクスチャ画像を貼り付けてます。そこで気になるのが、テクスチャを貼り付けるときの計算式。</p>
+<p>実はこのような式で計算しています。</p>
+<ul><li><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%7B%5Crm+depth%7D+%3D+%5Cfrac%7B%5Crm+ratio%7D%7Bl_%7Bx%2Cy%7D%7D+%5Ctimes+h_%7B%5Crm+texture%7D+%5C%2C+%7B%5Crm+mod%7D+%5C%2C+h_%7B%5Crm+texture%7D" class="tex" alt="{\rm depth} = \frac{\rm ratio}{l_{x,y}} \times h_{\rm texture} \, {\rm mod} \, h_{\rm texture}"></li><li><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%7B%5Crm+angle%7D+%3D++%5Cfrac%7B%5Ctheta%7D%7B2%5Cpi%7D+%5Ctimes+w_%7B%5Crm+texture%7D" class="tex" alt="{\rm angle} =  \frac{\theta}{2\pi} \times w_{\rm texture}"></li></ul>
+<p>まずは depth。l<sub>x,y</sub> が中心からの距離、ratio が定数（ここでは32）です。つまり、中心からの距離に応じて、縦方向の座標が決まります。</p>
+<p>続いて angle。こちらは、中心からの角度に応じて横方向の位置が決まります。</p>
+<p>図にすると、こうなります。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090326/20090326020632.png" width="406" height="269" border="1"></center>
+<p>もっと直感的に考えると、テクスチャを縦に並べて、右と左をわっかにして上から覗き込んだイメージでしょうか。</p>
+<h1><b>高速化必須！</b></h1>
+<p>オリジナルのはピクセル単位に演算していたのですが、これをそのまま移植してみたらデュアルコアで CPU 常時 50% になってしまった。ちなみに、オリジナルの Processing 版は 30% 程度。</p>
+<p>高速化しようにも getPixel/setPixel は必須そうだったので、あらかじめバッファに必要な画像を描画しておく作戦をとりました。流れとしてはこんな感じです。</p>
+<ol><li>回転中の映像が一定周期でループするようにパラメータを調整する</li><li>再生前に１ループを50個の BitmapData に描画しておく</li><li>実際にアニメーションが始まったら、BitmapData を順番に表示していく</li></ol>
+<p>結果として、CPU 2～3% 程度に収まったので、なんとか Web 上で公開できるレベルになりました。</p>
+<p>以下、ソースコードです。高速化のために、だいぶ長くなっちゃいました。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="c1">// Processing Tunnel (AS3 version) </span>
+<span class="c1">// original source: http://processing.org/learning/topics/tunnel.html</span>
+<span class="kr">package</span> <span class="p">{</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">;</span>
+
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;320&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Tunnel</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;red_smoke.jpg&#39;</span><span class="p">)]</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">Texture</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">textureImg</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">tunnelEffect</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">distanceTable</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">angleTable</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">w</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">CYCLE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmdCache</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Tunnel</span><span class="p">(){</span>
+        <span class="c1">// Load texture 512 x 512</span>
+        <span class="nx">textureImg</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Texture</span><span class="p">().</span><span class="nx">bitmapData</span><span class="p">;</span>
+
+        <span class="c1">// Create buffer screen</span>
+        <span class="nx">tunnelEffect</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">tunnelEffect</span><span class="p">));</span>
+        <span class="nx">w</span> <span class="o">=</span> <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+        <span class="nx">h</span> <span class="o">=</span> <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+
+        <span class="kd">var</span> <span class="nx">ratio</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">32.0</span>
+
+        <span class="c1">// Make the tables twice as big as the screen. </span>
+        <span class="c1">// The center of the buffers is now the position (w,h).</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">){</span>
+                <span class="kd">var</span> <span class="nx">depth</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="kr">int</span><span class="p">(</span><span class="nx">ratio</span> <span class="o">*</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">((</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">)))</span> <span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">angle</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="kr">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">atan2</span><span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">,</span> <span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="p">;</span>
+
+                <span class="c1">// The distance table contains for every pixel of the </span>
+                <span class="c1">// screen, the inverse of the distance to the center of </span>
+                <span class="c1">// the screen this pixel has.</span>
+                <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="nx">depth</span> <span class="p">;</span>
+
+                <span class="c1">// The angle table contains the angle of every pixel of the screen, </span>
+                <span class="c1">// where the center of the screen represents the origin.</span>
+                <span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="nx">angle</span> <span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Click to start...&quot;</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>
+            <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">i</span> <span class="o">&gt;=</span> <span class="nx">CYCLE</span><span class="p">){</span>
+                    <span class="c1">// Buffering finish. Start animating.</span>
+                    <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">draw</span><span class="p">()});</span>
+                    <span class="nx">removeChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+                    <span class="k">return</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="c1">// Create buffered images.</span>
+                <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Buffering &quot;</span> <span class="o">+</span> <span class="kr">int</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="nx">CYCLE</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%...&quot;</span><span class="p">;</span>
+                <span class="nx">createBmdCache</span><span class="p">(</span><span class="nx">i</span><span class="o">++</span><span class="p">);</span>
+                <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+            <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Create i-th buffered image.</span>
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createBmdCache</span><span class="p">(</span><span class="nx">i</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">timeDisplacement</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">count</span><span class="o">++</span> <span class="err">/ CYCLE;</span>
+
+        <span class="c1">// Calculate the shift values out of the time value</span>
+        <span class="kd">var</span> <span class="nx">shiftX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">timeDisplacement</span><span class="p">;</span> <span class="c1">// speed of zoom</span>
+        <span class="kd">var</span> <span class="nx">shiftY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="nx">timeDisplacement</span><span class="p">;</span> <span class="c1">//speed of spin</span>
+
+        <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>  <span class="p">{</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// Make sure that x + shiftLookX never goes outside </span>
+                <span class="c1">// the dimensions of the table</span>
+                <span class="kd">var</span> <span class="nx">texture_x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="p">(</span><span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">+</span> <span class="nx">shiftX</span><span class="p">)</span> <span class="o">%</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">texture_y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="p">(</span><span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">+</span> <span class="nx">shiftY</span> <span class="o">+</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span> <span class="o">%</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+
+                <span class="kd">var</span> <span class="nx">color</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">texture_x</span><span class="p">,</span> <span class="nx">texture_y</span><span class="p">);</span>
+                <span class="nx">color</span> <span class="o">=</span> <span class="nx">darken</span><span class="p">(</span><span class="nx">color</span><span class="p">,</span> <span class="mi">300</span> <span class="o">/</span> <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]);</span>
+                <span class="nx">bmd</span><span class="p">.</span><span class="nx">setPixel</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">color</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nx">bmdCache</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="c1">// looking left/right and up/down</span>
+        <span class="kd">var</span> <span class="nx">shiftLookX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">w</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">w</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">count</span> <span class="o">/</span> <span class="mi">20</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">shiftLookY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">h</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">count</span> <span class="o">/</span> <span class="mi">20</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">shiftLookX</span><span class="p">,</span> <span class="nx">shiftLookY</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">);</span>
+
+        <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">bmdCache</span><span class="p">[</span><span class="nx">count</span> <span class="o">%</span> <span class="nx">CYCLE</span><span class="p">],</span> <span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
+        <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">darken</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="nx">uint</span><span class="p">,</span> <span class="nx">brightness</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">uint</span><span class="p">{</span>
+        <span class="nx">brightness</span> <span class="o">=</span> <span class="nx">brightness</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="nx">brightness</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">brightness</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xff0000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+             <span class="o">+</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x00ff00</span><span class="p">)</span> <span class="o">&gt;&gt;</span>  <span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span><span class="p">)</span>
+             <span class="o">+</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x0000ff</span><span class="p">)</span>      <span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span>      <span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">atan2</span><span class="p">(</span><span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="p">.</span><span class="mi">5</span> <span class="o">:</span> <span class="o">-</span><span class="p">.</span><span class="mi">5</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">x</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090327/tunnel_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="Processing のトンネルを AS3 で書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/27/tunnel-as3/" data-lang="ja" data-size="horizontal" data-text="Processing のトンネルを AS3 で書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/03/26/firecube-as3/" rel="previous">Processing の燃えるエフェクトを AS3 に移植した</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/03/30/processing-trial/" rel="next">Processing をちょっと触ってみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

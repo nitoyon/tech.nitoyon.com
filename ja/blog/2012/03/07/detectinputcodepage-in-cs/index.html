@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>C# から IMultiLanguage2::DetectInputCodepage() を使う方法 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="C# から IMultiLanguage2::DetectInputCodepage() を使う方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/03/07/detectinputcodepage-in-cs/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="C# で文字コード判定を実現したかったので調べてみた。DOBON.NET のコードが動かない…検索して引っかかったのが 文字コードを判別する: .NET Tips: C#, VB.NET。.NET 界隈でよくお世話になる DOBON さんだったので従ってみることにする。このページではJcode.pm を参考にした方法第三者の作成したクラス、コードを使う方法mlang.dllを使う方法の 3 つが紹介されている。このうちの 1. と 2. の自前判定は日本語にしか使えない。他言語にも対応したかったので mlang.dll を使う方法を試すことにした。mlang.dll は IE5 以上が利..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2012年03月07日</h2>
+<h1>C# から IMultiLanguage2::DetectInputCodepage() を使う方法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120307/detectinputcodepage_in_cs" class="hatena-bookmark-button" data-hatena-bookmark-title="C# から IMultiLanguage2::DetectInputCodepage() を使う方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/03/07/detectinputcodepage-in-cs/" data-lang="ja" data-size="horizontal" data-text="C# から IMultiLanguage2::DetectInputCodepage() を使う方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>C# で文字コード判定を実現したかったので調べてみた。</p>
+<h1>DOBON.NET のコードが動かない…</h1>
+<p>検索して引っかかったのが <a href="http://dobon.net/vb/dotnet/string/detectcode.html">文字コードを判別する: .NET Tips: C#, VB.NET</a>。</p>
+<p>.NET 界隈でよくお世話になる DOBON さんだったので従ってみることにする。このページでは</p>
+<ol><li>Jcode.pm を参考にした方法</li><li>第三者の作成したクラス、コードを使う方法</li><li>mlang.dllを使う方法</li></ol>
+<p>の 3 つが紹介されている。</p>
+<p>このうちの 1. と 2. の自前判定は日本語にしか使えない。他言語にも対応したかったので mlang.dll を使う方法を試すことにした。mlang.dll は IE5 以上が利用する文字コード関連のライブラリだ。<code>IMultiLanguage2::DetectInputCodepage()</code> が文字コード判定の機能を提供している。</p>
+<p>このページの手順を試してみたが、どうも判定結果が正しくない。C++ から <code>IMultiLanguage2::DetectInputCodepage()</code> を呼ぶと意図したとおりの結果を返すのに、C# から呼び出すと「トルコ語」などと適当なことを言い出す。</p>
+<a name="seemore"></a>
+<p>何かおかしいので、WinDbg でブレークポイントしかけつつ見てみたところ、C# から呼び出したときにはバイト列の 1 バイト目しか渡っていなかった。（WinDbg で調べる方法は後述する）</p>
+<p>そりゃー、正しい結果にならないわけだ…。</p>
+<h1>バイト列を渡すには？</h1>
+<p>バイト列をアンマネージ コードに渡すときには <code>GCHandle.Alloc()</code> と <code>Marshal.UnsafeAddrOfPinnedArrayElement()</code> を呼んで <code>IntPtr</code> に変換するとうまくいくらしい。</p>
+<p>元のコードはメソッドの定義をタイプ ライブラリからクラスを自動生成していて、バイト列は <code>ref sbyte</code> で受け取っていた。<code>ref sbyte</code> に正しく <code>IntPtr</code> を与える方法が分からなかった。</p>
+<p>そこで、<a href="http://msdn.microsoft.com/ja-jp/library/aa288455%28v=vs.71%29.aspx">COM 相互運用性 - 第 1 部 : C# クライアント チュートリアル (C#)</a> を参照しつつ、自前で「COM コクラス」や「COM インターフェース」を定義することにした。</p>
+<p>その結果、見事に C# でも文字コードを判定できるようになった。</p>
+<p>以下が完成したコードである。タイプライブラリを登録する必要もなく、素の C# コンソール プロジェクトに食わせて動くはずである。</p>
+<p>コマンドライン引数で受け取ったファイルの文字コードを判定してコンソールに出力している。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.IO</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Text</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="nn">ConsoleApplication3</span>
+<span class="p">{</span>
+    <span class="k">class</span> <span class="nc">Program</span>
+    <span class="p">{</span>
+        <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">new</span> <span class="nf">Program</span><span class="p">().</span><span class="n">Start</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">private</span> <span class="k">void</span> <span class="nf">Start</span><span class="p">(</span><span class="kt">string</span> <span class="n">path</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Encoding</span> <span class="n">encoding</span> <span class="p">=</span> <span class="n">DetectEncoding</span><span class="p">(</span><span class="n">GetFileAsByteArray</span><span class="p">(</span><span class="n">path</span><span class="p">));</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Result: {0}&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="p">.</span><span class="n">EncodingName</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">private</span> <span class="kt">byte</span><span class="p">[]</span> <span class="nf">GetFileAsByteArray</span><span class="p">(</span><span class="kt">string</span> <span class="n">path</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">using</span> <span class="p">(</span><span class="n">FileStream</span> <span class="n">fs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FileStream</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">FileMode</span><span class="p">.</span><span class="n">Open</span><span class="p">,</span> <span class="n">FileAccess</span><span class="p">.</span><span class="n">Read</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="kt">byte</span><span class="p">[]</span> <span class="n">bytes</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="p">[</span><span class="n">fs</span><span class="p">.</span><span class="n">Length</span><span class="p">];</span>
+                <span class="n">fs</span><span class="p">.</span><span class="n">Read</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">bytes</span><span class="p">.</span><span class="n">Length</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">bytes</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">private</span> <span class="n">Encoding</span> <span class="nf">DetectEncoding</span><span class="p">(</span><span class="kt">byte</span><span class="p">[]</span> <span class="n">bytes</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">IMultiLanguage2</span> <span class="n">lang</span> <span class="p">=</span> <span class="p">(</span><span class="n">IMultiLanguage2</span><span class="p">)</span><span class="k">new</span> <span class="n">MultiLanguage</span><span class="p">();</span>
+            <span class="kt">int</span> <span class="n">len</span> <span class="p">=</span> <span class="n">bytes</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
+            <span class="n">DetectEncodingInfo</span> <span class="n">info</span> <span class="p">=</span> <span class="k">new</span> <span class="n">DetectEncodingInfo</span><span class="p">();</span>
+            <span class="kt">int</span> <span class="n">scores</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+
+            <span class="c1">// bytes to IntPtr</span>
+            <span class="n">GCHandle</span> <span class="n">handle</span> <span class="p">=</span> <span class="n">GCHandle</span><span class="p">.</span><span class="n">Alloc</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="n">GCHandleType</span><span class="p">.</span><span class="n">Pinned</span><span class="p">);</span>
+            <span class="n">IntPtr</span> <span class="n">pbytes</span> <span class="p">=</span> <span class="n">Marshal</span><span class="p">.</span><span class="n">UnsafeAddrOfPinnedArrayElement</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
+
+            <span class="k">try</span>
+            <span class="p">{</span>
+                <span class="n">lang</span><span class="p">.</span><span class="n">DetectInputCodepage</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">pbytes</span><span class="p">,</span> <span class="k">ref</span> <span class="n">len</span><span class="p">,</span> <span class="k">out</span> <span class="n">info</span><span class="p">,</span> <span class="k">ref</span> <span class="n">scores</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">finally</span>
+            <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">IsAllocated</span><span class="p">)</span>
+                    <span class="n">handle</span><span class="p">.</span><span class="n">Free</span><span class="p">();</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">GetEncoding</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">info</span><span class="p">.</span><span class="n">nCodePage</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">struct</span> <span class="nc">DetectEncodingInfo</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="n">UInt32</span> <span class="n">nLangID</span><span class="p">;</span>
+        <span class="k">public</span> <span class="n">UInt32</span> <span class="n">nCodePage</span><span class="p">;</span>
+        <span class="k">public</span> <span class="n">Int32</span> <span class="n">nDocPercent</span><span class="p">;</span>
+        <span class="k">public</span> <span class="n">Int32</span> <span class="n">nConfidence</span><span class="p">;</span>
+    <span class="p">};</span>
+
+<span class="na">    [ComImport, Guid(&quot;275c23e2-3747-11d0-9fea-00aa003f8646&quot;)]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">MultiLanguage</span>
+    <span class="p">{</span>
+    <span class="p">}</span>
+
+<span class="na">    [Guid(&quot;DCCFC164-2B38-11D2-B7EC-00C04F8F5D9A&quot;),</span>
+<span class="na">        InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]</span>
+    <span class="k">public</span> <span class="k">interface</span> <span class="n">IMultiLanguage2</span>
+    <span class="p">{</span>
+        <span class="k">void</span> <span class="nf">GetNumberOfCodePageInfo</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetCodePageInfo</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetFamilyCodePage</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">EnumCodePages</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetCharsetInfo</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">IsConvertible</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertString</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringToUnicode</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringFromUnicode</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringReset</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetRfc1766FromLcid</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetLcidFromRfc1766</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">EnumRfc1766</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetRfc1766Info</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">CreateConvertCharset</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringInIStream</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringToUnicodeEx</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ConvertStringFromUnicodeEx</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">DetectCodepageInIStream</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">DetectInputCodepage</span><span class="p">(</span>
+<span class="na">            [In]</span> <span class="n">UInt32</span> <span class="n">dwFlag</span><span class="p">,</span>
+<span class="na">            [In]</span> <span class="n">UInt32</span> <span class="n">dwPrefWinCodePage</span><span class="p">,</span>
+<span class="na">            [In]</span> <span class="n">IntPtr</span> <span class="n">pSrcStr</span><span class="p">,</span>
+<span class="na">            [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pcSrcSize</span><span class="p">,</span>
+<span class="na">            [Out]</span> <span class="k">out</span> <span class="n">DetectEncodingInfo</span> <span class="n">lpEncoding</span><span class="p">,</span>
+<span class="na">            [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pnScores</span><span class="p">);</span>
+        <span class="k">void</span> <span class="nf">ValidateCodePage</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetCodePageDescription</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">IsCodePageInstallable</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">SetMimeDBSource</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">GetNumberOfScripts</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">EnumScripts</span><span class="p">();</span>
+        <span class="k">void</span> <span class="nf">ValidateCodePageEx</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<h1>WinDbg で COM 呼び出しをブレークする</h1>
+<p>最後に、WinDbg で COM 呼び出しをブレークして調べる方法をまとめておく。同じ方法を使えば COM 呼び出しに限らず、Win32 の API でも同じようにブレークできるだろう。Visual Studio でもできるかもしれないが、自分の環境ではシンボル読み込みがうまくいかないことが多かったので、WinDbg を使うようになった。</p>
+<p>Debugging Tools for Windows がインストールされている前提とする。</p>
+<ol><li>[File] [Symbol File Path] で MS のシンボルサーバーを設定されていることを確認。されていないなら次のように設定（C:\symbols フォルダに保存する場合）<pre>SRV*C:\symbols*<a href="http://msdl.microsoft.com/download/symbols">http://msdl.microsoft.com/download/symbols</a></pre></li><li>[File] [Open Executable] からデバッグ対象の EXE を開く。</li><li>開始直後の状態でいったん停止するので、ブレークポイントを設定する。<pre>bu mlang!CMultiLanguage2::DetectInputCodepage</pre></li><li><code>g</code> と入力するなり F5 を押すなりして EXE の実行を開始する。</li><li>ブレークポイントで止まるので、あとは引数を調べる。</li></ol>
+<p>とても簡単ですね！</p>
+<p>最後の引数を調べるところが面倒だが、x86 なら <code>kv</code> で引数をダンプできるし、スタックを眺めればなんとかなる。</p>
+<p>自分の環境は x64 だったので、一部の引数はレジスタに置かれる。<code>IMultiLanguage2::DetectInputCodepage()</code> のプロトタイプ宣言は次の通り。</p>
+<div class="highlight"><pre><span class="k">void</span> <span class="nf">DetectInputCodepage</span><span class="p">(</span>
+<span class="na">    [In]</span> <span class="n">UInt32</span> <span class="n">dwFlag</span><span class="p">,</span>
+<span class="na">    [In]</span> <span class="n">UInt32</span> <span class="n">dwPrefWinCodePage</span><span class="p">,</span>
+<span class="na">    [In]</span> <span class="n">IntPtr</span> <span class="n">pSrcStr</span><span class="p">,</span>
+<span class="na">    [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pcSrcSize</span><span class="p">,</span>
+<span class="na">    [Out]</span> <span class="k">out</span> <span class="n">DetectEncodingInfo</span> <span class="n">lpEncoding</span><span class="p">,</span>
+<span class="na">    [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pnScores</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>レジスタを眺めてみると、こうなっていた。</p>
+<pre>0:000> r
+rax=0000000000000018 rbx=0000000000000000 <strong>rcx=00000000003ee3a0</strong>
+<strong>rdx=0000000000000000</strong> rsi=000000000020eb48 rdi=000000000020ea88
+rip=000007fef5df8d84 rsp=000000000020ea48 rbp=000000000020eab0
+<strong> r8=0000000000000000</strong>  <strong>r9=00000000028d7dc8</strong> r10=000007fef5df8d84
+r11=00000000003ee3a0 r12=000000000038bac0 r13=00000000003ee3a0
+r14=000000000000001d r15=0000000000000001</pre>
+<p>マークしたところがレジスタ上に設定された第１～第４引数。ただし、COM 呼び出しなので、第一引数は this ポインタとなっている。</p>
+<p>つまり、それぞれの引数の値は次のレジスタに格納されている。</p>
+<ul><li>dwFlag: rdx</li><li>dwPrefWinCodePage: r8</li><li>pSrcStr: r9</li></ul>
+<p>知りたかったのは <code>pSrcStr</code> にバイト列が正しく渡っているか。ということで、<code>r9</code> に入っているアドレスをダンプしてみた。</p>
+<pre>0:000> dd @r9
+00000000`028d7dc8  3042241b 3143247a 2537245b 253c2137
+00000000`028d7dd8  2473253a 42281b4e 42241b33 47246e37
+00000000`028d7de8  23213924 6e356132 3f324b24 2b245945
+   : </pre>
+<p>このバイト列がちゃんと意図したものならば成功。</p>
+<p>めでたし。</p>
+<h1>まとめ</h1>
+<p>DOBON.NET を妄信してはいけない。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120307/detectinputcodepage_in_cs" class="hatena-bookmark-button" data-hatena-bookmark-title="C# から IMultiLanguage2::DetectInputCodepage() を使う方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/03/07/detectinputcodepage-in-cs/" data-lang="ja" data-size="horizontal" data-text="C# から IMultiLanguage2::DetectInputCodepage() を使う方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2012/03/06/inexpensive-moving/" rel="previous">段ボール15箱の引っ越し（東京→京都）が2万円以内になった節約術</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2012/03/13/newdesign2012/" rel="next">ブログのデザインを新しくしてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

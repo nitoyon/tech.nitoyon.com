@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Silverlight 2 開発のバリエーション - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Silverlight 2 開発のバリエーション"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/05/16/silverlight-xaml-and-js/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Silverlight のサンプルを見ていると、ものによって書き方が違って混乱しがち。１つのサンプルをいくつもの書法で書いておくと、頭の中で変換ができるようになるので学習が進みやすい。以下、Silverlight 2.0 Beta 1 SDK + Chiron.exe で開発する前提。導入方法はSilverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)始めよう！Silverlight：第6回　Dynamic SilverlightでHello world｜gihyo.jp … 技術評論社あたりを参考に。基本形HTM..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年05月16日</h2>
+<h1>Silverlight 2 開発のバリエーション</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080516/silverlight_xaml_and_js" class="hatena-bookmark-button" data-hatena-bookmark-title="Silverlight 2 開発のバリエーション - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/05/16/silverlight-xaml-and-js/" data-lang="ja" data-size="horizontal" data-text="Silverlight 2 開発のバリエーション - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Silverlight のサンプルを見ていると、ものによって書き方が違って混乱しがち。</p>
+<p>１つのサンプルをいくつもの書法で書いておくと、頭の中で変換ができるようになるので学習が進みやすい。</p>
+<p>以下、Silverlight 2.0 Beta 1 SDK + Chiron.exe で開発する前提。導入方法は</p>
+<ul><li><a href="http://labs.cybozu.co.jp/blog/kaorun/2008/04/silverlight2sdk_with_javascript_1.html">Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)</a></li><li><a href="http://gihyo.jp/dev/serial/01/silverlight/0006">始めよう！Silverlight：第6回　Dynamic SilverlightでHello world｜gihyo.jp … 技術評論社</a></li></ul>
+<p>あたりを参考に。</p>
+<h1>基本形</h1>
+<h2>HTML の基本形</h2>
+<p>object タグで埋め込む方法。一番シンプルなのがこれ。</p>
+<div class="highlight"><pre><span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;object</span> <span class="na">data=</span><span class="s">&quot;data:application/x-silverlight,&quot;</span>
+    <span class="na">type=</span><span class="s">&quot;application/x-silverlight&quot;</span>
+    <span class="na">width=</span><span class="s">&quot;100%&quot;</span> <span class="na">height=</span><span class="s">&quot;100%&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;source&quot;</span> <span class="na">value=</span><span class="s">&quot;app.xap&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/object&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</pre>
+</div>
+
+<p>debug を有効にするには、initParams を利用するとよい。</p>
+<div class="highlight"><pre><span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;out&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+
+  <span class="nt">&lt;object</span> <span class="na">data=</span><span class="s">&quot;data:application/x-silverlight,&quot;</span>
+    <span class="na">type=</span><span class="s">&quot;application/x-silverlight&quot;</span>
+    <span class="na">width=</span><span class="s">&quot;100%&quot;</span> <span class="na">height=</span><span class="s">&quot;100%&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;source&quot;</span> <span class="na">value=</span><span class="s">&quot;app.xap&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;initParams&quot;</span> <span class="na">value=</span><span class="s">&quot;debug=true,reportErrors=out&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/object&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</pre>
+</div>
+
+<p>エラーがあると、&lt;div id="out"&gt; タグの中にエラーが書き出される。</p>
+<h2>XAML の基本形</h2>
+<p>app/app.xaml に作成。100×100 の赤い四角を (0, 50) の位置に配置している。</p>
+<div class="highlight"><pre><span class="nt">&lt;Canvas</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://schemas.microsoft.com/client/2007&quot;</span>
+  <span class="na">xmlns:x=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;</span>
+  <span class="na">x:Class=</span><span class="s">&quot;System.Windows.Controls.Canvas&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Rectangle</span> <span class="na">Canvas.Top=</span><span class="s">&quot;50&quot;</span> <span class="na">Width=</span><span class="s">&quot;100&quot;</span> <span class="na">Height=</span><span class="s">&quot;100&quot;</span>
+    <span class="na">Fill=</span><span class="s">&quot;Red&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/Canvas&gt;</span>
+</pre>
+</div>
+
+<p>Y座標が Canvas.Top プロパティで指定するのがちょっと違和感ある。Canvas クラスが処理をするから、こういう書き方をするらしい。</p>
+<h2>スクリプトの基本形</h2>
+<p>app/app.js を作成する。これが xap のエントリポイントとなる。</p>
+<div class="highlight"><pre><span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Application&quot;</span><span class="p">)</span>
+<span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Controls.Canvas&quot;</span><span class="p">)</span> 
+
+<span class="kd">function</span> <span class="nx">App</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">this</span><span class="p">.</span><span class="nx">scene</span> <span class="o">=</span> <span class="nx">Application</span><span class="p">.</span><span class="nx">Current</span><span class="p">.</span><span class="nx">LoadRootVisual</span><span class="p">(</span><span class="k">new</span> <span class="nx">Canvas</span><span class="p">(),</span> <span class="s2">&quot;app.xaml&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="nx">App</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">start</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">App</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+</pre>
+</div>
+
+<p>LoadRootVisual() を呼び出して、XAML を読み込んでいる。</p>
+<p>start() はあとで拡張するために空にしてある。</p>
+<h1>スクリプトのバリエーション</h1>
+<p>まずは、スクリプトをいくつかの方法で書き直してみる。</p>
+<p>Silverlight の魅力はなんといっても DLR（Dynamic Language Runtime）。JavaScript だけじゃなく、他の言語でもスクリプトを書ける。</p>
+<p>app.py とすれば Python、app.rb とすれば Ruby のスクリプトとして認識されるようだ。</p>
+<h2>app/app.py</h2>
+<p>Python で書いてみる。</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">System.Windows</span> <span class="kn">import</span> <span class="n">Application</span>
+<span class="kn">from</span> <span class="nn">System.Windows.Controls</span> <span class="kn">import</span> <span class="n">Canvas</span>
+
+<span class="k">class</span> <span class="nc">App</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">Application</span><span class="o">.</span><span class="n">Current</span><span class="o">.</span><span class="n">LoadRootVisual</span><span class="p">(</span><span class="n">Canvas</span><span class="p">(),</span> <span class="s">&quot;app.xaml&quot;</span><span class="p">)</span>
+   <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span><span class="k">pass</span>
+
+<span class="n">App</span><span class="p">()</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre>
+</div>
+
+<p>:pass というのは空のメソッドを書くための方法。Twitter で教えてもらった。ありがたや。</p>
+<p>実は Python 初体験。インデント狂っただけでエラーになって、「これが噂の！」と思った。</p>
+<h2>app/app.rb</h2>
+<p>Ruby で書いてみる。</p>
+<div class="highlight"><pre><span class="kp">include</span> <span class="no">System</span><span class="o">::</span><span class="no">Windows</span>
+<span class="kp">include</span> <span class="no">System</span><span class="o">::</span><span class="no">Windows</span><span class="o">::</span><span class="no">Controls</span>
+
+<span class="k">class</span> <span class="nc">App</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@scene</span> <span class="o">=</span> <span class="no">Application</span><span class="o">.</span><span class="n">Current</span><span class="o">.</span><span class="n">LoadRootVisual</span><span class="p">(</span><span class="no">Canvas</span><span class="o">.</span><span class="n">new</span><span class="p">,</span> <span class="s2">&quot;app.xaml&quot;</span><span class="p">)</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="nf">start</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">App</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">start</span>
+</pre>
+</div>
+
+<h1>XAML のバリエーション</h1>
+<p>お次は XAML をいくつかの方法で書き直してみよう。</p>
+<h2>基本形（再掲）</h2>
+<div class="highlight"><pre><span class="nt">&lt;Canvas</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://schemas.microsoft.com/client/2007&quot;</span>
+  <span class="na">xmlns:x=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;</span>
+  <span class="na">x:Class=</span><span class="s">&quot;System.Windows.Controls.Canvas&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Rectangle</span> <span class="na">Canvas.Top=</span><span class="s">&quot;50&quot;</span> <span class="na">Width=</span><span class="s">&quot;100&quot;</span> <span class="na">Height=</span><span class="s">&quot;100&quot;</span>
+    <span class="na">Fill=</span><span class="s">&quot;Red&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/Canvas&gt;</span>
+</pre>
+</div>
+
+<h2>Fill プロパティを変形</h2>
+<p>Fill プロパティに Red という文字列ではなく、オブジェクトを渡してみる。</p>
+<div class="highlight"><pre><span class="nt">&lt;Canvas</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://schemas.microsoft.com/client/2007&quot;</span>
+  <span class="na">xmlns:x=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;</span>
+  <span class="na">x:Class=</span><span class="s">&quot;System.Windows.Controls.Canvas&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Rectangle</span> <span class="na">Canvas.Top=</span><span class="s">&quot;50&quot;</span> <span class="na">Width=</span><span class="s">&quot;100&quot;</span> <span class="na">Height=</span><span class="s">&quot;100&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;Rectangle.Fill&gt;</span>
+      <span class="nt">&lt;SolidColorBrush</span> <span class="na">Color=</span><span class="s">&quot;Red&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/Rectangle.Fill&gt;</span>
+  <span class="nt">&lt;/Rectangle&gt;</span>
+<span class="nt">&lt;/Canvas&gt;</span>
+</pre>
+</div>
+
+<p>「クラス名.プロパティ」タグの中にオブジェクトをあらわす XML を書く。</p>
+<p>このままだと最初の例を冗長にしたにすぎないが、例えば LinearGradientBrush に書き換えれば、グラデーションで塗られるようになる。</p>
+<h2>Rectangle をスクリプトで生成</h2>
+<p>全部 XAML でやろうというサンプルが多くて嫌。スクリプトだけでやる方法を知りたい！</p>
+<p>まずは、XAML を空っぽに。</p>
+<div class="highlight"><pre><span class="nt">&lt;Canvas</span>
+  <span class="na">xmlns=</span><span class="s">&quot;http://schemas.microsoft.com/client/2007&quot;</span>
+  <span class="na">xmlns:x=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;</span>
+  <span class="na">x:Class=</span><span class="s">&quot;System.Windows.Controls.Canvas&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/Canvas&gt;</span>
+</pre>
+</div>
+
+<p>Rectangle タグをスクリプトで動的に作成してみた。</p>
+<div class="highlight"><pre><span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Application&quot;</span><span class="p">)</span>
+<span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Controls.Canvas&quot;</span><span class="p">)</span> 
+<span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Shapes.Rectangle&quot;</span><span class="p">)</span> 
+<span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Media.*&quot;</span><span class="p">)</span> <span class="c1">// Colors, SolidColorBrush</span>
+
+<span class="kd">function</span> <span class="nx">App</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">this</span><span class="p">.</span><span class="nx">scene</span> <span class="o">=</span> <span class="nx">Application</span><span class="p">.</span><span class="nx">Current</span><span class="p">.</span><span class="nx">LoadRootVisual</span><span class="p">(</span><span class="k">new</span> <span class="nx">Canvas</span><span class="p">(),</span> <span class="s2">&quot;app.xaml&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">App</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">start</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="kd">var</span> <span class="nx">rect</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">();</span>
+   <span class="nx">rect</span><span class="p">.</span><span class="nx">SetValue</span><span class="p">(</span><span class="nx">Canvas</span><span class="p">.</span><span class="nx">TopProperty</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+   <span class="nx">rect</span><span class="p">.</span><span class="nx">Width</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+   <span class="nx">rect</span><span class="p">.</span><span class="nx">Height</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+   <span class="nx">rect</span><span class="p">.</span><span class="nx">Fill</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SolidColorBrush</span><span class="p">(</span><span class="nx">Colors</span><span class="p">.</span><span class="nx">Red</span><span class="p">);</span>
+   <span class="k">this</span><span class="p">.</span><span class="nx">scene</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nx">rect</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">App</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+</pre>
+</div>
+
+<p>new Rectangle() して、プロパティを設定して、Add している。</p>
+<p>Cnavas.Top プロパティを設定するには SetValue() メソッドを使ってる。Silverlight 1.0 のドキュメントを見ると rect["Canvas.Top"] でいけてるようなんだけど、2.0 ではエラーが出る。理由はまだよく分からない。</p>
+<h1>HTML のバリエーション</h1>
+<p>最後に HTML のバリエーションを紹介。</p>
+<p>object タグで埋め込むのをやめて、silverlight.js を使って埋め込んでもよい。</p>
+<div class="highlight"><pre><span class="nt">&lt;head&gt;</span>
+   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;silverlight.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+
+  <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;</span>
+    <span class="kd">var</span> <span class="nx">controlID</span> <span class="o">=</span> <span class="s2">&quot;SilverlightControl&quot;</span>
+    <span class="nx">Silverlight</span><span class="p">.</span><span class="nx">createObjectEx</span><span class="p">({</span>
+      <span class="nx">source</span><span class="o">:</span> <span class="s2">&quot;app.xap&quot;</span><span class="p">,</span>
+      <span class="nx">parentElement</span><span class="o">:</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;container&quot;</span><span class="p">),</span>
+      <span class="nx">id</span><span class="o">:</span> <span class="nx">controlID</span><span class="p">,</span>
+      <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">width</span><span class="o">:</span><span class="s1">&#39;100%&#39;</span><span class="p">,</span> 
+        <span class="nx">height</span><span class="o">:</span><span class="s1">&#39;100%&#39;</span><span class="p">,</span>
+        <span class="nx">version</span><span class="o">:</span><span class="s1">&#39;1.1&#39;</span>
+      <span class="p">},</span>
+      <span class="nx">events</span><span class="o">:</span> <span class="p">{}</span>
+    <span class="p">});</span>
+  <span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</pre>
+</div>
+
+<p>silverlight.js は SDK インストール時に C:\Program Files\Microsoft SDKs\Silverlight\v2.0\Tools に展開されている。HTML で書くよりも細かな設定ができる印象だ。いくつかの付加機能も魅力的。Flash での swfobject みたいな感じ。</p>
+<p>その中でも素敵なのが、エラー発生時に alert でエラーの詳細をレポートしてくれる機能。</p>
+<p>alert は嫌だよ、とかリリースするときには抑制したいよね、というときには、</p>
+<pre>events: {onError: function(){}}</pre>
+<p>として独自のエラーハンドラを指定するとよい。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080516/silverlight_xaml_and_js" class="hatena-bookmark-button" data-hatena-bookmark-title="Silverlight 2 開発のバリエーション - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/05/16/silverlight-xaml-and-js/" data-lang="ja" data-size="horizontal" data-text="Silverlight 2 開発のバリエーション - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/05/16/flash-news/" rel="previous">Flash がらみで動きが</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/05/18/google-guruguru/" rel="next">Google Maps をぐーるぐる&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

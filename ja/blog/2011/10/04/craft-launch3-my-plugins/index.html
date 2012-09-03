@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>CraftLaunch 3 を便利にする自作プラグイン６つ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="CraftLaunch 3 を便利にする自作プラグイン６つ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2011/10/04/craft-launch3-my-plugins/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="プログラマブルなコマンドライン ランチャー CraftLaunch 3 が楽しい で CraftLaunch 3.Xを紹介しました。いままで自作プラグインとして、window_command プラグインopen_folder プラグインを公開しましたが、そのあと、さらに６つ作って便利に使っているので紹介しておきます。ソースは全て https://github.com/nitoyon/clnch3_extensions に置いています。url_alias - URL を開きやすくするプラグインCraftLaunch から特定の URL を開くのが便利になります。本体の機能でも特定の URL..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2011年10月04日</h2>
+<h1>CraftLaunch 3 を便利にする自作プラグイン６つ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20111004/craft_launch3_my_plugins" class="hatena-bookmark-button" data-hatena-bookmark-title="CraftLaunch 3 を便利にする自作プラグイン６つ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/10/04/craft-launch3-my-plugins/" data-lang="ja" data-size="horizontal" data-text="CraftLaunch 3 を便利にする自作プラグイン６つ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20110831/programmable_launcher_clnch3">プログラマブルなコマンドライン ランチャー CraftLaunch 3 が楽しい</a> で CraftLaunch 3.Xを紹介しました。</p>
+<p>いままで自作プラグインとして、</p>
+<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20110831/programmable_launcher_clnch3#seemore">window_command</a> プラグイン</li><li><a href="http://d.hatena.ne.jp/nitoyon/20110902/clnch3_open_folder">open_folder</a> プラグイン</li></ul>
+<p>を公開しましたが、そのあと、さらに６つ作って便利に使っているので紹介しておきます。</p>
+<p>ソースは全て <a href="https://github.com/nitoyon/clnch3_extensions">https://github.com/nitoyon/clnch3_extensions</a> に置いています。</p>
+<h1>url_alias - URL を開きやすくするプラグイン</h1>
+<p>CraftLaunch から特定の URL を開くのが便利になります。本体の機能でも特定の URL を開く機能はありますが、「コマンド名;パラメータ」の形で入力する必要があって不便なので、<code>;</code> を不要にしてみました。</p>
+<p>入力例：</p>
+<ul><li><code>@nitoyon</code> と入力して Enter を押すと <a href="http://twitter.com/nitoyon">http://twitter.com/nitoyon</a> を開く</li><li><code>rfc822</code> と入力して Enter を押すと <a href="http://www.ietf.org/rfc/rfc822.txt">http://www.ietf.org/rfc/rfc822.txt</a> を開く</li></ul>
+<p>登録は、<code>config.py</code> に次のようにして正規表現で定義します。</p>
+<div class="highlight"><pre><span class="c"># config.py の configure() 関数に次のように記載します</span>
+
+<span class="kn">import</span> <span class="nn">url_alias</span>
+<span class="c">#reload(url_alias)</span>
+<span class="n">url_alias</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> 
+                   <span class="p">{</span> <span class="s">&#39;regex&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^rfc(\d+)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span> 
+                     <span class="s">&#39;url&#39;</span><span class="p">:</span> <span class="s">&#39;http://www.ietf.org/rfc/rfc%param%.txt&#39;</span> <span class="p">},</span>
+                   <span class="p">{</span> <span class="s">&#39;regex&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^@(\w+)$&#39;</span><span class="p">),</span> 
+                     <span class="s">&#39;url&#39;</span><span class="p">:</span> <span class="s">&#39;http://twitter.com/%param%&#39;</span> <span class="p">},</span>
+                  <span class="p">)</span>
+</pre>
+</div>
+
+<p>BTS やメーリングリストの番号をブラウザで開けるようにするとお仕事でも便利！</p>
+<h1>control_panel - コントロールパネルや管理ツールをコマンド化する プラグイン</h1>
+<p>コントロールパネルや管理ツールのアイテムを開けます。</p>
+<ul><li>[ネットワーク接続] を開くには <code>cpl:Network</code> と入力</li><li>[イベント ビューワー] を開くには <code>cpl:EventViewer</code> と入力</li></ul>
+<p>コントロールパネルや管理ツールの各アイテムは日本語版 Windows ではキーボードでアクセスしにくいので、キーボード派の人には便利じゃないでしょうか。</p>
+<a name="seemore"></a>
+<p>どういうコマンドが登録されるかは、<code><a href="https://github.com/nitoyon/clnch3_extensions/blob/master/control_panel.py#L45">ControlCommandList.__init__()</a></code> を見るとだいたい分かると思います。</p>
+<p><code>cpl:</code> を入力するのが面倒な人は、<code>prefix=''</code> とすればプレフィックスなしで登録できますが、不要なものまで登録されて名前空間が汚染されるので嫌な人も多いでしょう。そんな人は、後述の <code>misc.py</code> の <code>addAlias</code> 関数で別名を登録するほうがお勧めです。</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">misc</span>
+<span class="n">misc</span><span class="o">.</span><span class="n">addAlias</span><span class="p">(</span> <span class="n">window</span><span class="p">,</span> <span class="s">u&#39;cpl:Date/Time&#39;</span><span class="p">,</span> <span class="s">u&#39;ClockSet&#39;</span> <span class="p">)</span>
+</pre>
+</div>
+
+<h1>path_plus - 相対パス・フォルダエイリアスを可能にするプラグイン</h1>
+<p>登録したコマンドからサブフォルダに移動しやすくなります。</p>
+<p>たとえば、マイ ドキュメントを <code>~</code> コマンドとして登録しておけば、</p>
+<ul><li><code>~\</code> でマイドキュメント以下のファイルが補完で現れる</li><li><code>~\memo.txt</code> でマイドキュメント直下の <code>memo.txt</code> を開ける</li></ul>
+<p>のように使えます。同じように、デスクトップやダウンロードフォルダを登録しておけば便利です。</p>
+<p>また、実行ファイルを登録したコマンドについても、コマンド名のあとに <code>\</code> をつけることで、実行ファイルのフォルダ内のファイルを補完してくれます。たとえば、<code>CraftLaunch</code> コマンドを登録していたとすると、</p>
+<ul><li><code>CraftLaunch\</code> で CraftLaunch インストールフォルダ以下のファイルが補完で現れる</li><li><code>CraftLaunch\readme.txt</code> で CraftLaunch の readme を表示できる</li></ul>
+<p>といった使い方ができます。</p>
+<p>相対パス対応としては、<code>.\hoge\foo</code> のようにしてファイルを開けるようにしています。デフォルトの CraftLaunch では、<code>.\</code> でカレントフォルダ直下のファイルは開けるものの、１階層以上深いファイルは開けないバグがあります。これは、<code>ShellExecute</code> をするとき、実行するファイルがあるフォルダをカレントディレクトリに設定するのが原因です。この挙動自体は絶対パスで指定するときにはうまくいくのですが、相対パスのときは二重に相対化してしまうので、勝手に修正してみました。</p>
+<p>ところで、CraftLaunch のカレントフォルダは、CraftLaunch のショートカットの [初期フォルダー] で指定できます。これは Windows の Tips ですね…。</p>
+<p>実装面では、<code>commandline_Launcher</code> と <code>commandline_ExecuteFile</code> をラップして置き換えるというアグレッシブなことをしています。何か予想外の問題を引き起こす可能性があるかもしれませんが、私が日常的に使っている限りは問題は起きていません。</p>
+<h1>python_console - Python のインタラクティブシェルが使えるプラグイン</h1>
+<p>Python が使えるんなら、Python のコードの評価も CraftLaunch 上でできるようにしてしまおうというプラグインです。</p>
+<p><code>&gt;&gt;&gt; </code> を先頭に入力することで、Python のインタラクティブ シェルと同等の動作をしてくれます。</p>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+<span class="o">...</span>     <span class="k">print</span> <span class="n">i</span>
+<span class="o">...</span> 
+<span class="mi">1</span>
+<span class="mi">3</span>
+<span class="mi">5</span>
+</pre>
+</div>
+
+<p>すごいことをしてそうですが、標準ライブラリの <code>code.InteractiveConsole</code> の機能にほとんどの処理を任せています。ただ、CraftLaunch ではスペースキーが入力できないようになっているので、これを迂回するためのハックを施しています。</p>
+<h1>run_as_administrator - 管理者として実行できるプラグイン</h1>
+<p>管理者として実行させたいコマンドを Ctrl-Shift-Enter で実行すると、管理者権限で実行してくれます。Vista 以降で UAC を有効のまま使っている人には便利です。</p>
+<p>この挙動は、Windows Vista 以降のスタートメニュー中の [プログラムとファイルの検索] で Ctrl-Shift-Enter を押すと、管理者として実行してくれる動作と合わせています。</p>
+<p>実装上は、<code>ShellExecuteW</code> の処理を置き換えていて、Ctrl-Shift-Enter が押されていたときに、<code>lpVerb</code> に <code>runas</code> を指定するようにしています。そのため、コマンドだけではなく、直接パスを入力した場合にも、Ctrl-Shift-Enter が押されていれば管理者として実行してくれます。</p>
+<br />
+<h1>misc - 雑多な拡張</h1>
+<p>独立して作るほどではない雑多な機能を実装しています。</p>
+<p>次の２つの機能が入っています。</p>
+<dl><dt><code>command_ClearConsole</code> コマンド</dt><dd>コンソールをクリアします。<code>python_console</code> プラグインの出力を消したいときや、プラグイン開発していて例外メッセージに満ち溢れてきたときに便利。</dd><dt><code>addAlias</code> 関数</dt><dd>コマンドに別名を設定する関数です。<code>control_panel</code> プラグインで便利。</dd></dl>
+<h1>まとめ</h1>
+<p>工夫次第で自分好みにできる CraftLaunch 3 はやっぱり楽しい！</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20111004/craft_launch3_my_plugins" class="hatena-bookmark-button" data-hatena-bookmark-title="CraftLaunch 3 を便利にする自作プラグイン６つ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/10/04/craft-launch3-my-plugins/" data-lang="ja" data-size="horizontal" data-text="CraftLaunch 3 を便利にする自作プラグイン６つ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2011/09/29/async-await-in-js/" rel="previous">WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた)</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2011/10/11/boost-component-ranking/" rel="next">Boost の定番機能はこれだ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>microsoft.comのポップアップメニュー - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="microsoft.comのポップアップメニュー"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2004/02/22/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="microsoft.com のポップアップメニューはどのようにして実現されているかを調べてみた。どうやら、スタイルシートで behavior を指定してるらしい（http://www.microsoft.com/library/flyoutmenu/default.cssより）。.flyoutMenu { (snip) behavior: url(/library/flyoutmenu/default.htc);}behavior ってIE限定の機能じゃん。開発効率が上がるけど、クロスブラウザを考えると嫌ですな。この時点で、さすがMSのサイト！という雰囲気がぷんぷん。気になったのが、ポッ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2004年02月22日</h2>
+<h1>microsoft.comのポップアップメニュー</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20040222/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="microsoft.comのポップアップメニュー - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2004/02/22/p1/" data-lang="ja" data-size="horizontal" data-text="microsoft.comのポップアップメニュー - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>microsoft.com のポップアップメニューはどのようにして実現されているかを調べてみた。</p>
+<p>どうやら、スタイルシートで behavior を指定してるらしい（<a href="http://www.microsoft.com/library/flyoutmenu/default.css">http://www.microsoft.com/library/flyoutmenu/default.css</a>より）。</p>
+<div class="highlight"><pre><span class="nc">.flyoutMenu</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">snip</span><span class="p">)</span>
+    <span class="n">behavior</span><span class="o">:</span> <span class="sx">url(/library/flyoutmenu/default.htc)</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>behavior ってIE限定の機能じゃん。開発効率が上がるけど、クロスブラウザを考えると嫌ですな。この時点で、さすがMSのサイト！という雰囲気がぷんぷん。</p>
+<p>気になったのが、ポップアップメニューに影がついているのはどうやっているか(上図参照)。若干後ろの画像が透けてます。デフォルトのfilterを使っただけじゃ、ああはならないはずなのに。調べてみて驚愕。影を表示する関数を抜粋するとこんな感じ（<a href="http://www.microsoft.com/library/flyoutmenu/default.htc">http://www.microsoft.com/library/flyoutmenu/default.htc</a>より抜粋）。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">makeRectangularDropShadow</span><span class="p">(</span><span class="nx">el</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">size</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">--</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">rect</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">rs</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">style</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="s1">&#39;absolute&#39;</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">left</span> <span class="o">=</span> <span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">posLeft</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">top</span> <span class="o">=</span> <span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">posTop</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">offsetWidth</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">offsetHeight</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">zIndex</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">zIndex</span> <span class="o">-</span> <span class="nx">i</span><span class="p">;</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">backgroundColor</span> <span class="o">=</span> <span class="nx">color</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">opacity</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">/</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="nx">rs</span><span class="p">.</span><span class="nx">filter</span> <span class="o">=</span> <span class="s1">&#39;alpha(opacity=&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="nx">opacity</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">;</span>
+        <span class="nx">el</span><span class="p">.</span><span class="nx">insertAdjacentElement</span><span class="p">(</span><span class="s1">&#39;afterEnd&#39;</span><span class="p">,</span> <span class="nx">rect</span><span class="p">);</span>
+        <span class="nx">global</span><span class="p">.</span><span class="nx">fo_shadows</span><span class="p">[</span><span class="nx">global</span><span class="p">.</span><span class="nx">fo_shadows</span><span class="p">.</span><span class="nx">length</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>el は親エレメント、colorが影の色、sizeが影のサイズ（4で固定みたい）として呼び出されます。なんと、div エレメントを影のサイズ分だけ作成し、それぞれの場所を1pxずつ右下に配置し、どんどん透明にしていっている模様。ひえー、無茶苦茶するなぁ！</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20040222/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="microsoft.comのポップアップメニュー - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2004/02/22/p1/" data-lang="ja" data-size="horizontal" data-text="microsoft.comのポップアップメニュー - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2004/02/21/p1/" rel="previous">WSHでキーボードメッセージ送信</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2004/03/03/p3/" rel="next">FLASHをプログラムから作成する方法&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

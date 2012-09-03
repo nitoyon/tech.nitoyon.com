@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Ruby で Web2.0（笑） - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Ruby で Web2.0（笑）"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/12/07/ruby-abc2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Ruby 勉強第２弾。前回の スイーツ（笑）で関数定義 に引き続いて、今回はクラスと Mix-in を試してみた。ModuleO に O というメソッドを定義しておき、クラスメソッド、インスタンスメソッド、特異メソッドとして Mix-in している。# モジュールを定義module ModuleO def O(*args) # クラスを取得する cls = self.kind_of?(Class) ? self : self.class # &amp;lt;class name&amp;gt;.0 を出力 print &amp;quot;#{cls.to_s}.0&amp;quot; # 引数があれば出力 unless..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年12月07日</h2>
+<h1>Ruby で Web2.0（笑）</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071207/ruby_abc2" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby で Web2.0（笑） - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/07/ruby-abc2/" data-lang="ja" data-size="horizontal" data-text="Ruby で Web2.0（笑） - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Ruby 勉強第２弾。前回の <a href="http://d.hatena.ne.jp/nitoyon/20071203/ruby_abc">スイーツ（笑）で関数定義</a> に引き続いて、今回はクラスと Mix-in を試してみた。</p>
+<p>ModuleO に O というメソッドを定義しておき、クラスメソッド、インスタンスメソッド、特異メソッドとして Mix-in している。</p>
+<div class="highlight"><pre><span class="c1"># モジュールを定義</span>
+<span class="k">module</span> <span class="nn">ModuleO</span>
+  <span class="k">def</span> <span class="nf">O</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="c1"># クラスを取得する</span>
+    <span class="n">cls</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">kind_of?</span><span class="p">(</span><span class="no">Class</span><span class="p">)</span> <span class="p">?</span> <span class="nb">self</span> <span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span>
+
+    <span class="c1">#  &lt;class name&gt;.0 を出力</span>
+    <span class="nb">print</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cls</span><span class="o">.</span><span class="n">to_s</span><span class="si">}</span><span class="s2">.0&quot;</span>
+
+    <span class="c1"># 引数があれば出力</span>
+    <span class="k">unless</span> <span class="n">args</span><span class="o">.</span><span class="n">empty?</span>
+      <span class="nb">print</span> <span class="s2">&quot;(</span><span class="si">#{</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="n">to_s</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">end</span>
+
+    <span class="c1"># 改行</span>
+    <span class="nb">puts</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># クラスメソッドとして Mix-in</span>
+<span class="k">class</span> <span class="nc">Web2</span>
+  <span class="kp">extend</span> <span class="no">ModuleO</span>
+<span class="k">end</span>
+
+<span class="c1"># インスタンスメソッドとして Mix-in</span>
+<span class="k">class</span> <span class="nc">DoCoMo2</span>
+  <span class="kp">include</span> <span class="no">ModuleO</span>
+<span class="k">end</span>
+<span class="err">ドコモ</span><span class="mi">2</span> <span class="o">=</span> <span class="no">DoCoMo2</span><span class="o">.</span><span class="n">new</span>
+
+<span class="c1"># 特異メソッドとして Mix-in</span>
+<span class="no">ActionScript3</span> <span class="o">=</span> <span class="s2">&quot;AS3&quot;</span>
+<span class="no">ActionScript3</span><span class="o">.</span><span class="n">extend</span> <span class="no">ModuleO</span>
+
+<span class="c1"># 実験！</span>
+<span class="no">Web2</span><span class="o">.</span><span class="n">O</span><span class="p">(</span><span class="s2">&quot;笑&quot;</span><span class="p">)</span>       <span class="c1"># Web2.0(笑)</span>
+<span class="err">ドコモ</span><span class="mi">2</span><span class="o">.</span><span class="n">O</span><span class="p">(</span><span class="s2">&quot;笑&quot;</span><span class="p">)</span>    <span class="c1"># DoCoMo2.0(笑)</span>
+<span class="no">ActionScript3</span><span class="o">.</span><span class="n">O</span>    <span class="c1"># String.0</span>
+</pre>
+</div>
+
+<h1>ポイント</h1>
+<p>どのケースでもクラスを取得するために</p>
+<div class="highlight"><pre><span class="nb">self</span><span class="o">.</span><span class="n">kind_of?</span><span class="p">(</span><span class="no">Class</span><span class="p">)</span> <span class="p">?</span> <span class="nb">self</span> <span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span>
+</pre>
+</div>
+
+<p>と書いてみた。</p>
+<p>クラスメソッドとして Mix-in されるときは、self はクラス自身を指す（上の例だと Web2 クラス）。だから、self.kind_of?(Class) は true になる。</p>
+<p>インスタンスメソッドおよび特異メソッドとして Mix-in されるときは、self がインスタンスを指す（上の例だと ドコモ2 と ActionScript3）。なので、self.kind_of?(Class) は false になって、self.class でクラスを取得している。</p>
+<p>もっといい書き方はあるんだろか。</p>
+<h1>ちなみに</h1>
+<p>Web2.O とあるけど、メソッド名に 0（ゼロ）は使えないので、大文字の O（オー）で代用してます。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071207/ruby_abc2" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby で Web2.0（笑） - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/07/ruby-abc2/" data-lang="ja" data-size="horizontal" data-text="Ruby で Web2.0（笑） - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/12/06/recent-bookmark/" rel="previous">最近ブックマークしたページ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/12/10/adobe-new-design/" rel="next">アドビの新サイトがすごいことになってる&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

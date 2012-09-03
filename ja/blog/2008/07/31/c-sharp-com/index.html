@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>C# で COM コンポーネントを公開する - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="C# で COM コンポーネントを公開する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/07/31/c-sharp-com/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="C# で COM コンポーネントを作って、JScript や VBScript から使う方法ですよ。以下、簡単な目次。プロジェクトを作るCOM 参照可能にするC# で実装するCOM コンポーネントとして登録する完成！！ここでは、Visual Studio 2005 を使ってるけど、それ以外のバージョンでも同じようにできるはず。1. プロジェクトを作るVisual C# のクラス ライブラリ プロジェクトを作る。2. COM 参照可能にするプロジェクトのプロパティから [アプリケーション] の [アセンブリ情報] ボタンを押す。[アセンブリ情報] ダイアログが表示されるので、[アセンブリを..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年07月31日</h2>
+<h1>C# で COM コンポーネントを公開する</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080731/c_sharp_com" class="hatena-bookmark-button" data-hatena-bookmark-title="C# で COM コンポーネントを公開する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/07/31/c-sharp-com/" data-lang="ja" data-size="horizontal" data-text="C# で COM コンポーネントを公開する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>C# で COM コンポーネントを作って、JScript や VBScript から使う方法ですよ。</p>
+<p>以下、簡単な目次。</p>
+<ol><li>プロジェクトを作る</li><li>COM 参照可能にする</li><li>C# で実装する</li><li>COM コンポーネントとして登録する</li><li>完成！！</li></ol>
+<p>ここでは、Visual Studio 2005 を使ってるけど、それ以外のバージョンでも同じようにできるはず。</p>
+<h1>1. プロジェクトを作る</h1>
+<p>Visual C# のクラス ライブラリ プロジェクトを作る。</p>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080731/20080731004114.jpg" width="400" height="220"></p>
+<h1>2. COM 参照可能にする</h1>
+<p>プロジェクトのプロパティから [アプリケーション] の [アセンブリ情報] ボタンを押す。[アセンブリ情報] ダイアログが表示されるので、[アセンブリを COM 参照可能にする] をチェックして [OK] ボタンを押しておく。</p>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080731/20080731003537.jpg" height="450" height="395"></p>
+<p>これで、ComVisibleAttribute が true になって、クラスライブラリが COM として参照できるようになる。</p>
+<h1>3. 実装する</h1>
+<p>インターフェースと実装を C# で定義していく。</p>
+<p>以下は簡単な Hello world サンプル。</p>
+<div class="highlight"><pre><span class="nx">using</span> <span class="nx">System</span><span class="p">;</span>
+<span class="nx">using</span> <span class="nx">System</span><span class="p">.</span><span class="nx">Runtime</span><span class="p">.</span><span class="nx">InteropServices</span><span class="p">;</span>
+
+<span class="nx">namespace</span> <span class="nx">Test</span>
+<span class="p">{</span>
+    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;E5C9BABC-CF32-46de-ADF7-B1FF56126966&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">interface</span> <span class="nx">IFoo</span>
+    <span class="p">{</span>
+        <span class="nb">String</span> <span class="nx">foo</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="p">[</span><span class="nx">ClassInterface</span><span class="p">(</span><span class="nx">ClassInterfaceType</span><span class="p">.</span><span class="nx">None</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nx">ProgId</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;B13E1F81-991F-4498-AB1F-FF83FB97914D&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Foo</span> <span class="o">:</span> <span class="nx">IFoo</span>
+    <span class="p">{</span>
+        <span class="kr">public</span> <span class="nb">String</span> <span class="nx">foo</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="s2">&quot;Hello world!&quot;</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>Guid は [Create GUID] ツールから適宜生成していく。</p>
+<p>ProgId 属性でスクリプトから参照するときの ProgId を指定しておく。この値が重要。</p>
+<h1>4. COM コンポーネントとして登録する</h1>
+<p>COM インターフェースとして公開するには、レジストリに登録しなきゃならん。.NET アセンブリを登録するには <strong>regasm</strong> ツールを利用する。</p>
+<p>regasm は .NET Framework にも含まれてる。.NET 2.0 の場合、</p>
+<ul><li>C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\RegAsm.exe</li></ul>
+<p>にいる。</p>
+<p>登録はこう。</p>
+<pre>regasm /codebase Test.dll</pre>
+<p>regasm にはデフォルトでパスが通ってないので、フルパスで入力するなり、Visual Studio や Windows SDK 付属のコマンドプロンプト（Visual Studio のツールにパスが通った状態で利用できる）を使うとよいだろう。</p>
+<p>登録解除するには /u。</p>
+<pre>regasm /u Test.dll</pre>
+<h1>5. 完成！！</h1>
+<p>JScript から呼び出してみる。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ActiveXObject</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">);</span>
+<span class="nx">WScript</span><span class="p">.</span><span class="nx">echo</span><span class="p">(</span><span class="nx">test</span><span class="p">.</span><span class="nx">foo</span><span class="p">());</span>
+</pre>
+</div>
+
+<p>実行！</p>
+<pre>>cscript /nologo test.js
+Hello world!</pre>
+<p>VBScript から呼び出してみる。</p>
+<div class="highlight"><pre><span class="k">Dim</span> <span class="n">test</span>
+<span class="k">Set</span> <span class="n">test</span> <span class="o">=</span> <span class="n">CreateObject</span><span class="p">(</span><span class="s">&quot;Test.Foo&quot;</span><span class="p">)</span>
+<span class="n">WScript</span><span class="p">.</span><span class="n">echo</span><span class="p">(</span><span class="n">test</span><span class="p">.</span><span class="n">foo</span><span class="p">())</span>
+</pre>
+</div>
+
+<p>実行！</p>
+<pre>>cscript /nologo test.vbs
+Hello world!</pre>
+<p>ここまで確認できたら、C# のソースに手をいれて、どんどん拡充していくと楽しくなる。インターフェースが変化したときには、/u で登録解除して、再度登録してやる必要があるので注意。</p>
+<h1>参考URL</h1>
+<ul><li><a href="http://japan.internet.com/developer/20060627/25.html">COM相互運用機能の利用 - japan.internet.com デベロッパー</a></li></ul>
+<div class="seealso">
+<h1>関連エントリ</h1>
+<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20080801/atlcom_dispatch">C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080731/c_sharp_com" class="hatena-bookmark-button" data-hatena-bookmark-title="C# で COM コンポーネントを公開する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/07/31/c-sharp-com/" data-lang="ja" data-size="horizontal" data-text="C# で COM コンポーネントを公開する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/07/28/fleverlight1/" rel="previous">Fleverlight 勉強会に参加してきた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/08/01/atlcom-dispatch/" rel="next">C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

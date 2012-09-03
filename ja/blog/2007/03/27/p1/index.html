@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>あまり語られていない Apollo のセキュリティについてまとめてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="あまり語られていない Apollo のセキュリティについてまとめてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/03/27/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="(2007年10月追記) この記事は、Adobe AIR と呼ばれている技術のα版時点でのセキュリティについて述べています。2007年10月現在での最新版についての情報は、以下のページを参照してください。akihiro kamijo: Adobe AIR ベータ 2 セキュリティ関連の変更点akihiro kamijo: Adobe AIR のデジタル署名機能について(追記ここまで)void element blog: いろんな意味でしゃれにならないApollo にて Apollo はセキュリティ的に危ないよ、という話が出ていたので、ちょっと調べてみました。Web 技術を使っているとはい..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年03月27日</h2>
+<h1>あまり語られていない Apollo のセキュリティについてまとめてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070327/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="あまり語られていない Apollo のセキュリティについてまとめてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/27/p1/" data-lang="ja" data-size="horizontal" data-text="あまり語られていない Apollo のセキュリティについてまとめてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>(2007年10月追記) <strong>この記事は、Adobe AIR と呼ばれている技術のα版時点でのセキュリティについて述べています。2007年10月現在での最新版についての情報は、以下のページを参照してください。</strong></p>
+<ul><li><a href="http://weblogs.macromedia.com/akamijo/archives/2007/10/adobe_air_2_1.cfm">akihiro kamijo: Adobe AIR ベータ 2 セキュリティ関連の変更点</a></li><li><a href="http://weblogs.macromedia.com/akamijo/archives/2007/10/adobe_air_1.cfm">akihiro kamijo: Adobe AIR のデジタル署名機能について</a></li></ul>
+<p>(追記ここまで)</p>
+<br />
+<p><a href="http://void.heteml.jp/blog/archives/2007/03/apollo.html">void element blog: いろんな意味でしゃれにならないApollo</a> にて Apollo はセキュリティ的に危ないよ、という話が出ていたので、ちょっと調べてみました。</p>
+<p>Web 技術を使っているとはいえ、ローカル環境で動くので、ある程度の覚悟をもってインストールする必要があります。今回は、その心構え（？）のようなものをまとめてみました。セキュリティは専門ではないので、つっこみは大歓迎です。</p>
+<a name="seemore"></a>
+<h1>Apollo アプリはローカル アクセス自由</h1>
+<p>Apollo はアプリケーションとして動くわけですから、ローカル ファイルの読み・書き・追加・削除は自由にできます。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001744.jpg" width="377" height="264" alt="自由にアクセスするよ"></center>
+<h1>どう対策するか？</h1>
+<p>冒頭に紹介した <a href="http://void.heteml.jp/blog/archives/2007/03/apollo.html">void element blog: いろんな意味でしゃれにならないApollo</a> では、簡単に作れるから誰でも悪用できる、という主張がされていますが、その危険性は今に始まったことではありません。</p>
+<p>Firefox の Greasemonkey や拡張機能 (.xpi) にも同様の危険性はあります（参考：<a href="http://d.hatena.ne.jp/nazoking/20050701/1120190176">nazonoDiary - Greasemonkeyは恐ろしい</a>）。拡張機能に及んでは、ローカルファイルにもアクセスできます。どちらも Web 技術を応用しています。</p>
+<p>我々がとれる対策は１つだけです。<strong>信頼できる人が作っているか</strong>で判断するしかありません。フリーソフトが流行っていた昔も、Web サービスが人気の今も、ローカル アプリが流行るかもしれない今後も変わらない対策方法です。</p>
+<h1>Apollo ランタイムの今後の流れ</h1>
+<p>とはいえ、信頼できないアプリを安全に実行するための仕組みもほしいところです。<a href="http://labs.adobe.com/wiki/index.php/Apollo:Documentation:Understanding_Apollo_security">Apollo:Documentation:Understanding Apollo security - Adobe Labs</a> には次のような記述があります。</p>
+<blockquote><p>α版では Apollo アプリはローカル ファイルへのアクセスは自由だよ。でも、今後のバージョンでは、Apollo アプリ自体の設定やインストール時の設定によって、アクセスの自由度は変わってくると思うよ(意訳)。</p></blockquote>
+<p>将来的には Apollo アプリが「俺、ローカル ファイルは読みとらへんから、インストールしてーな」などと主張してくるようになるわけです。それを見て、あなたはインストールするのか、しないのか、それとも制限つきでインストールするのかを選べるのです。</p>
+<p>たとえ名も知らぬ信頼できそうにない作者のアプリだったとしても、アクセス範囲が狭ければ気軽にインストールできます。もしくは、動作イメージをしるために、ファイルの読み書きを禁止した上で、動かしてみることだってできるようになるのです。</p>
+<br />
+<h1>実はリモート ファイルからもローカル アクセス自由</h1>
+<p>これはちょっとびっくりです。</p>
+<p>インターネットから JavaScript や SWF をダウンロードして表示すると、その<strong>インターネット上のファイルから Apollo API 経由でローカル アクセスできてしまう</strong>のです。</p>
+<p>HTML 版 Apollo アプリでも、</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001743.jpg" width="377" height="209" alt="HTML 版ロード"></center>
+<p>SWF 版 Apollo アプリもそうです。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070328/20070328001742.jpg" width="377" height="249" alt="SWF 版ロード"></center>
+<p>図にも描きましたが、１つだけ例外があります。SWF 版 Apollo アプリから HTML を表示するときには、exposeRuntime というフラグで「ロードする HTML にローカル アクセスを認めるか」を制御できます。しかも、デフォルト値は false（認めない）と安全側に倒れています。</p>
+<br />
+<p>Apollo のマニュアル(<a href="http://labs.adobe.com/wiki/index.php/Apollo:Documentation:Understanding_Apollo_security">Apollo:Documentation:Understanding Apollo security - Adobe Labs</a>)には次のような注意書きが載っています（日本語は意訳）。</p>
+<ul><li>セキュリティ ホールを作らないために一番気をつけなきゃいけないのは、外部のデータを読み取るときだよ<ul><li>信頼できないページへのリンクを張っちゃダメ</li><li>信頼できない SWF をロードしちゃダメ</li><li>JSON をロードしたら、実行されるかもしれないよ (訳注：JSONP のことかな？)</li><li>外部ソースからのデータを読み取ってファイル書き込みするときは、必ず validate しようね</li></ul></li><li>まだα版だから、潜在的な脆弱性つながりそうなところがあったら教えてね</li></ul>
+<p>つまり、善意のつもりで作ったはずの Apollo アプリが、インターネット上の悪意のあるファイルをロードしてしまった段階で、危険な行動をしてしまうかもしれないのです。</p>
+<p>正式版がでるまでには、ローカルアクセスを禁じた上で外部リソースを表示するような仕組みがほしいものです。パッケージに含まないファイルをロードするときには、デフォルトで安全側に倒れているような設計なら最高です。</p>
+<h1>自作サンプルに紛れていたセキュリティー ホール</h1>
+<p>恥ずかしながら、先日公開した、<a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる</a> のサンプルにはセキュリティ ホールが紛れていました。</p>
+<p>簡単な RSS リーダーを作ってみよう、という企画だったのですが、RSS で取得した URL を Apollo アプリ中で素直に &lt;a&gt; タグでリンクしてしまっていたのです。リンクをクリックした先のページに悪意があれば、ローカル ファイルにアクセスができてしまう状態でした。</p>
+<p>現在は、リンクはしないバージョンに修正していますが、これじゃ RSS リーダーというよりも、ただのヘッドライン リーダーです。flash.net.navigateToURL 関数を使えば、ブラウザで開くこともできるのですが、サンプルのソースが複雑になるので掲載は諦めました。</p>
+<p>危険なコードを排除してから表示する、といった方法も考えられますが、そこまでやるのはさすがに馬鹿馬鹿しい気分です。安全な Sandbox でページを表示するための仕組みの登場が望まれます。</p>
+<h1>まとめ</h1>
+<p>まとめるとこうなります。</p>
+<ul><li>Apollo のα版はセキュリティ的には怖い。</li><li>正式版では改善されるはず。</li><li>でも、結局は他人のアプリをインストールするなら自己責任で。</li></ul>
+<p>Apollo の今後のバージョンにおいて、セキュリティ機能がどのように強化されるのか、興味を持って見ていきたいと思います。</p>
+<p>セキュリティ機能が複雑になれば、その分、開発の手間が増えてしまうかもしれません。しかし、このままセキュリティー的にずぶずぶなままリリースされると、Apollo＝危険という図式ができあがってしまって、Active X の二の舞になってしまいかねません。</p>
+<p>設計にセンスを問われる部分ですが、Apollo 開発陣が優秀なことを信じて、α版のセキュリティ解説はひとまず終わりにします。</p>
+<h1>おまけ：サンプル ソース</h1>
+<h2>HTML+JavaScript 版 Apollo アプリでの危険性テスト</h2>
+<p>Apollo アプリとして利用する HTML</p>
+<div class="highlight"><pre><span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;http://www.example.com/test.html&quot;</span><span class="nt">&gt;</span>test<span class="nt">&lt;/a&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</pre>
+</div>
+
+<p>サーバーにおいておく HTML</p>
+<div class="highlight"><pre><span class="nt">&lt;script&gt;</span>
+<span class="kd">var</span> <span class="nx">file</span> <span class="o">=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">filesystem</span><span class="p">.</span><span class="nx">File</span><span class="p">.</span><span class="nx">desktopDirectory</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;test.txt&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">stream</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">filesystem</span><span class="p">.</span><span class="nx">FileStream</span><span class="p">();</span>
+<span class="nx">stream</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">filesystem</span><span class="p">.</span><span class="nx">FileMode</span><span class="p">.</span><span class="nx">WRITE</span><span class="p">);</span>
+<span class="nx">stream</span><span class="p">.</span><span class="nx">writeUTFBytes</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">);</span>
+<span class="nx">stream</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
+<span class="nt">&lt;/script&gt;</span>
+test
+</pre>
+</div>
+
+<p>リンクをクリックすると、デスクトップに test.txt が作成される。</p>
+<h2>SWF 版 Apollo アプリでの危険性テスト</h2>
+<p>Apollo アプリとして利用する mxml</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="nt">&lt;mx:Application</span> <span class="na">xmlns:mx=</span><span class="s">&quot;http://www.adobe.com/2006/mxml&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;mx:SWFLoader</span> <span class="na">source=</span><span class="s">&quot;http://www.example.com/test.swf&quot;</span> <span class="na">width=</span><span class="s">&quot;100%&quot;</span> <span class="na">height=</span><span class="s">&quot;100%&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/mx:Application&gt;</span>
+</pre>
+</div>
+
+<p>サーバーにおいておく SWF の元になる ActionScript。</p>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filesystem</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">sec_test</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">sec_test</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">file</span><span class="o">:</span><span class="nx">File</span> <span class="o">=</span> <span class="nx">File</span><span class="p">.</span><span class="nx">desktopDirectory</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;test.txt&quot;</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">stream</span><span class="o">:</span><span class="nx">stream</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">stream</span><span class="p">();</span>
+            <span class="nx">stream</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">FileMode</span><span class="p">.</span><span class="nx">WRITE</span><span class="p">);</span>
+            <span class="nx">stream</span><span class="p">.</span><span class="nx">writeUTFBytes</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">);</span>
+            <span class="nx">stream</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>Apollo アプリを起動すると、デスクトップに test.txt が作成される。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070327/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="あまり語られていない Apollo のセキュリティについてまとめてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/27/p1/" data-lang="ja" data-size="horizontal" data-text="あまり語られていない Apollo のセキュリティについてまとめてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/03/23/p1/" rel="previous">Apollo チュートリアル執筆中</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/04/03/twitter/" rel="next">twitter はじめました&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

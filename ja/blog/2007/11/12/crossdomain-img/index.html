@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS で別ドメインの画像を読み込むときの注意点"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ActionScript を使って 外部ドメインの画像を読み込むときの注意点を調べてみた。AS3 で調べたけど、AS2 でもセキュリティの機構自体は同じ（だと思う）。読み込み方Loader クラスを使えば外部ドメインの画像をロードできる。var loader:Loader = new Loader();var req:URLRequest = new URLRequest(&amp;quot;http://www.example.com/sample.gif&amp;quot;);loader.load(req);addChild(loader);画像形式は PNG、GIF、JPEG のみ。BMP はダ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年11月12日</h2>
+<h1>AS で別ドメインの画像を読み込むときの注意点</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071112/crossdomain_img" class="hatena-bookmark-button" data-hatena-bookmark-title="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-lang="ja" data-size="horizontal" data-text="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>ActionScript を使って 外部ドメインの画像を読み込むときの注意点を調べてみた。</p>
+<p>AS3 で調べたけど、AS2 でもセキュリティの機構自体は同じ（だと思う）。</p>
+<h1>読み込み方</h1>
+<p>Loader クラスを使えば<strong>外部ドメインの画像をロードできる</strong>。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
+<span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">);</span>
+<span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>画像形式は PNG、GIF、JPEG のみ。BMP はダメ。アニメーション GIF の場合は１フレーム目しか描画されない。</p>
+<p>読み込み完了したことを知るためには、contentLoaderInfo プロパティの complete イベントを監視すればよい。ファイルが存在しなかったり、ファイル形式が不正だった場合は ioError イベントが発生する。ioError を listen していない場合には例外が投げられる。</p>
+<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="nx">completeHandler</span><span class="p">);</span>
+<span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;ioError&quot;</span><span class="p">,</span> <span class="nx">ioErrorHandler</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>読み込んだ画像は、回転・拡大したり、透明度を変えたり、フィルタをかけたりすることが可能だ。以下の例を見ていただきたい。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FImageLoader1.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=200&amp;h=80&amp;title=magnify+mixi+logo&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>この例では、mixi のロゴを img.mixi.jp のドメインから動的に読み込んでいる。ColorMatrixFilter で紫色に変色させ、DisplacementMapFilter でマウスの上を歪ませている。</p>
+<p>ソースは <a href="http://tech.nitoyon.com/misc/swf/ImageLoader1.as">こちら (77行)</a>。（歪ませる部分は <a href="http://yamasv.blog92.fc2.com/blog-entry-80.html">miscellaneous [ActionScript 3.0] DisplacementMapFilterで虫眼鏡効果</a> を参考にさせてもらいました）</p>
+<h1>セキュリティサンドボックス侵害への対応</h1>
+<p>外部ドメインから画像を読み込んで、いろいろできるのは分かっていただけただろうか。だが、１つできないことがある。BitmapData.draw() を使って BitmapData に転写しようとすると、セキュリティサンドボックス侵害の例外が発生するのだ。</p>
+<blockquote><p>セキュリティサンドボックス侵害 : BitmapData.draw:<a href="http://localhost/ImageLoader1.swf">http://localhost/ImageLoader1.swf</a> は <a href="http://img.mixi.jp/img/basic/common/mixilogo001.gif">http://img.mixi.jp/img/basic/common/mixilogo001.gif</a> にアクセスできません。ポリシーファイルが必要ですが、このメディアがロードされたとき、checkPolicyFile フラグが設定されませんでした。</p></blockquote>
+<p>同様に、Loader で読み込んだ音声ファイルを SoundMixer.computeSpectrum() しようとしたときにも例外が発生する。</p>
+<p>このように、<strong>外部ドメインからロードしたメディアに対して、ピクセルデータやオーディオデータに直接アクセスすることは許可されない</strong>。表示・再生はできるのに、そのメディアを構成するデータを見ることはできない、というわけだ。</p>
+<p>対処法は以下の２通り。</p>
+<h2>1. crossdomain.xml が用意されている場合</h2>
+<p>画像が置いてあるドメインのクロスドメインポリシーファイル（いわゆる crossdomain.xml）で、アクセスが許可されている場合、データとしてアクセスできる。</p>
+<p>(追記) AS2 では crossdomain.xml があっても、BitmapData.draw() できないらしい。</p>
+<p>例えば、Flickr のようなサービスでは、全てのドメインからのアクセスを認める設定が<a href="http://farm2.static.flickr.com/crossdomain.xml">記述されている</a>。</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> 
+<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;</span>
+<span class="nt">&lt;cross-domain-policy&gt;</span>
+  <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
+<span class="nt">&lt;/cross-domain-policy&gt;</span>
+</pre>
+</div>
+
+<p>一方、mixi にも crossdomain.xml はあるのだけど、現時点では<a href="http://mixi.jp/crossdomain.xml">任意のドメインからのアクセスは許可されていない</a>。</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> 
+<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;</span>
+<span class="nt">&lt;cross-domain-policy&gt;</span>
+  <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*.mixi.jp&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
+<span class="nt">&lt;/cross-domain-policy&gt;</span>
+</pre>
+</div>
+
+<p>では、実際にロード時に crossdomain.xml を読み込ませてみよう。といっても２箇所修正するだけだ。</p>
+<div class="highlight"><pre><span class="c1">// LoaderContextを準備</span>
+<span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">LoaderContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LoaderContext</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
+<span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span> <span class="c1">// 第２引数に context を渡す</span>
+<span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>LoaderContext の checkPolicyFile を true にするところがポイント。これ以外に、Security.loadPolicyFile() メソッドを使って、事前に読み込んでおく方法もある。loadPolicyFile() を使うと、crossdomain.xml 以外の URL からクロスドメインポリシーファイルを読み取ることができる。</p>
+<p>crossdomain.xml が存在しない場合、もしくは許可されなかった場合にも、<strong>画像はロードされる</strong>。ロードした段階では例外も発生しない。BitmapData.draw() しようとした段階になって初めて例外が出るので注意が必要だ。</p>
+<p>では、どうやって許可されたかを調べるかというと、実際に試してみて例外を拾うのが一番簡単。</p>
+<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+    <span class="k">try</span><span class="p">{</span>
+        <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">SecurityError</span><span class="p">){</span>
+        <span class="nx">trace</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+<p>もう１つの方法として、loader.contentLoaderInfo.childAllowsParent で調べることもできる。</p>
+<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">childAllowsParent</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// あとはお好きに</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+<p>どちらでもお好きな方を。</p>
+<p>具体例を１つ。</p>
+<p></p>
+<p><s>assets2.twitter.com から動的に twitter のロゴを読み取って getPixel している。ロゴの上にマウスを持っていくと、マウスの下の色が表示される。ソースは <a href="http://tech.nitoyon.com/misc/swf/ImageLoader2.as">こちら (44行)</a></s>。</p>
+<p>（追記）twitter.com の crossdomain.xml の制約が強化されて、getPixel 出来なくなりました。</p>
+<p>Firebug の Net タブを見れば、crossdomain.xml とロゴを拾ってきていることが確認できるだろう。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071112/20071112015258.png" width="352" height="192" alt="Firebugで確認"></center>
+<h2>2. crossdomain.xml が用意されていない場合</h2>
+<p>諦めろ。もしくは、自鯖に proxy となる CGI を設置するしかない。</p>
+<h1>おまけ</h1>
+<p>その他、注意点、気づいたことなど。</p>
+<ul><li>crossdomain.xml が用意されているサイトでも、BitmapData として扱う必要がなければ普通に load したほうがよい。リクエストするファイルが少なくなる分、処理が早くなる</li><li>今回は Loader で別ドメインの画像を読み取る話だったが、別ドメインの SWF を読み取るときにはもう少し複雑になる。ApplicationDomain や System.allowDomain() が関係してくる。</li><li>Loader でロードするときには、Cookie も一緒に投げられる。例えば、<a href="http://mixi.jp/logout.pl">http://mixi.jp/logout.pl</a> を踏ませることで、mixi からログアウトさせることも可能だし、自分のプロフィールページを開かせて足跡帳を作ることも可能。とはいえ、&lt;img src&gt; で踏ませるのと同じことなので、Flash だから危険、という問題でもない。</li><li>URLLoader で別ドメインのデータを読み取るときには、必ず crossdomain.xml がチェックされる。URLLoader 自体がデータを読み取るものだから、と考えると納得のいく仕様だろう。</li></ul>
+<p>関連URL：</p>
+<ul><li><a href="http://livedocs.adobe.com/flex/201_jp/html/05B_Security_176_09.html">ロードされたメディアへのデータとしてのアクセス -- Flex 2.01</a></li><li><a href="http://livedocs.adobe.com/flex/2_jp/docs/00001857.html">コンテンツの動的ロード -- Flex 2</a></li><li><a href="http://level0.cuppy.co.jp/2007/10/_bitmap.php">外部ドメインの画像を Bitmap 操作する際に｜_level0.CUPPY</a></li><li><a href="http://blog.graffiti-web.org/archives/2006/01/post_113.html">graffiti-blog: 画像を単色に平均化</a> のコメント欄</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071112/crossdomain_img" class="hatena-bookmark-button" data-hatena-bookmark-title="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-lang="ja" data-size="horizontal" data-text="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/11/09/ie-activex-activation/" rel="previous">さらば！「このコントロールをアクティブ化して使用するにはクリックしてください」</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/11/13/twitter-tracker/" rel="next">ついったー足あとちょう&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

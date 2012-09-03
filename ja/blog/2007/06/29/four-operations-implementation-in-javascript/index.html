@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>四則演算を JavaScript で実装する - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="四則演算を JavaScript で実装する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/06/29/four-operations-implementation-in-javascript/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="aki note ≫ Google 電話面接を受けました orz （いまは消えてるけど）にて割り算が壊れました。自分で実装してみてくださいという質問が紹介されていた。せっかく(?)の機会なので、割り算だけでなく、四則演算を全部壊してみて、JavaScript で実装して見ることにした。JavaScript を選んだのは、コンパイル不要、ビット演算がある、Firebug で手軽に確認できる、という理由から。それ以上の深い意味はない。ということで、次のような問題に一般化してみた。問い四則演算を JavaScript で実装しなさい。演算子は ==、!= およびビット演算子のみ使ってよいものと..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年06月29日</h2>
+<h1>四則演算を JavaScript で実装する</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070629/four_operations_implementation_in_javascript" class="hatena-bookmark-button" data-hatena-bookmark-title="四則演算を JavaScript で実装する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/29/four-operations-implementation-in-javascript/" data-lang="ja" data-size="horizontal" data-text="四則演算を JavaScript で実装する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://www.ikomaru.com/aki_note/?p=1278">aki note ≫ Google 電話面接を受けました orz</a> （いまは消えてるけど）にて</p>
+<blockquote><p>割り算が壊れました。自分で実装してみてください</p></blockquote>
+<p>という質問が紹介されていた。</p>
+<p>せっかく(?)の機会なので、割り算だけでなく、四則演算を全部壊してみて、JavaScript で実装して見ることにした。</p>
+<p>JavaScript を選んだのは、コンパイル不要、ビット演算がある、Firebug で手軽に確認できる、という理由から。それ以上の深い意味はない。</p>
+<p>ということで、次のような問題に一般化してみた。</p>
+<h1>問い</h1>
+<p>四則演算を JavaScript で実装しなさい。</p>
+<p>演算子は ==、!= およびビット演算子のみ使ってよいものとします。</p>
+<h2>補足</h2>
+<p>例えば、for 文で</p>
+<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>と書くためには、< 演算子と ++ 演算子を自前で実装しなきゃならない。</p>
+<p>++ 演算子は次のように定義できる。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">increment</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">i</span> <span class="o">&amp;</span> <span class="nx">c</span><span class="p">){</span>
+            <span class="nx">i</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="nx">c</span><span class="p">;</span>
+            <span class="nx">c</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="nx">i</span> <span class="o">|=</span> <span class="nx">c</span><span class="p">;</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">i</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>一番右のビットから見ていって、1 である限りは 0 にしていく。0 ならそのビットを 1 して終わり。桁あふれなら終了、としている。</p>
+<p>例を書くと分かりやすいかもしれない。</p>
+<pre>   01001111
+ +)       1
+ ----------
+   01010000</pre>
+<p>ソースコード中の while や if の条件式では != 0 を省略している。厳密にはいちいち書くべきなんだけど、めんどくさいし読みにくいので。</p>
+<h1>加算</h1>
+<p>前置きが長くなったけど、まずは足し算から。</p>
+<p>すごく簡単にやるなら、さっきの increment を使って</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add_simple</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
+        <span class="nx">a</span> <span class="o">=</span> <span class="nx">increment</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>
+        <span class="nx">b</span> <span class="o">=</span> <span class="nx">decrement</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">a</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>と書いてしまえば終わり。decrement は increment とほぼ同じコードで実装できる。</p>
+<p>ただ、この実装だと、b が -1 (0xffffffff) のときに42億回 while 文が回ってしまうのでダメすぎ、実用に耐えなさすぎ。</p>
+<p>ということで、改良。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">sum</span> <span class="o">=</span> <span class="nx">a</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">carry</span> <span class="o">=</span> <span class="p">(</span><span class="nx">a</span> <span class="o">&amp;</span> <span class="nx">b</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="nx">sum</span> <span class="o">=</span> <span class="nx">a</span> <span class="o">^</span> <span class="nx">b</span><span class="p">;</span>
+
+        <span class="nx">a</span> <span class="o">=</span> <span class="nx">sum</span><span class="p">;</span>
+        <span class="nx">b</span> <span class="o">=</span> <span class="nx">carry</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">sum</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>a ^ b で各桁単独の足し算を取得しつつ、a & b で繰り上げを計算。繰り上げがある場合は、繰り上げ部分を足して、それでも繰り上がればまた足して・・・の繰り返し。</p>
+<pre>a   01011010
+b +)01001001
+  ----------
+a   00010011 <- a ^ b
+b +)10010000 <- (a & b) << 1
+  ----------
+a   10000011
+b +)00100000
+  ----------
+a   10100011
+b   00000000 <- b が 0 なので終了</pre>
+<p>だいぶ早くなる。</p>
+<p>Firebug で試してみる。</p>
+<pre>>>> add(1, 1)
+2
+>>> add(99, 1)
+100
+>>> add(99, -1)
+98
+>>> add(-3, 5)
+2</pre>
+<p>負の数でもうまく理由が分からない人は２の補数（後述）を勉強してね。</p>
+<h1>減算</h1>
+<p>これはだいぶ簡単。</p>
+<div class="highlight"><pre><span class="c1">// 正・負を入れ替える</span>
+<span class="kd">function</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">){</span>
+    <span class="k">return</span> <span class="nx">add</span><span class="p">(</span><span class="o">~</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="k">return</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>2の補数って知ってる？ で終わり。</p>
+<p>2の補数は慣れるまで分かりにくい概念だけど、こう考えてみるのはどうだろう。</p>
+<ul><li>10進数で12桁の電卓があります</li><li>でも、壊れていて下4桁しか表示できません</li><li>3 + 9999 は 10002 だけど、この電卓で表示したら 2</li><li>同じように 5 + 9999 = 4、9 + 9999 = 8</li><li>この壊れた電卓では 9999 は -1 と同じ！？</li><li>9999 = 10000 - 1</li><li>10000 を足そうが引こうが表示中の値は変わらない</li><li>3 + 9999 = 3 + (10000 - 1) = 3 - 1</li></ul>
+<h1>乗算</h1>
+<p>次は掛け算。桁あふれは無視してる。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">product</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">){</span>
+            <span class="nx">product</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">product</span><span class="p">,</span> <span class="nx">a</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">a</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="nx">b</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">product</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>筆算のやり方を思い出せば簡単。</p>
+<pre class="">     1010
+   x)0101
+   ------
+     1010
+    0000
+   1010
++)0000
+---------
+  0110010</pre>
+<p>b の i ビット目が 1 なら、a を i ビット左にシフトしたものを足す、というだけの実装。</p>
+<p>上の実装は負の値を無視してしまってるので、まじめにやるならこうなる。</p>
+<div class="highlight"><pre><span class="c1">// 正の数かどうか調べる</span>
+<span class="kd">function</span> <span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">){</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nx">a</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">31</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">mul2</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">b</span><span class="p">)){</span>
+        <span class="k">return</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">)){</span>
+        <span class="k">return</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">mul</span><span class="p">(</span><span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">b</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">b</span><span class="p">)){</span>
+        <span class="k">return</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">)));</span>
+    <span class="p">}</span>
+    <span class="k">else</span><span class="p">{</span>
+        <span class="k">return</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>is_positive 関数で int が 32bit だと仮定しているあたりがかっこ悪いけど、これが一番シンプルかと。</p>
+<h1>除算</h1>
+<p>長かった。いよいよ割り算。Google の電話面接で聞かれるだけあって複雑。</p>
+<p>0 での除算や正負は考えずに実装した。</p>
+<div class="highlight"><pre><span class="c1">// 比較演算子の代わり</span>
+<span class="kd">function</span> <span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">s</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">is_positive</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// MSB = 最上位ビット(Most Significant Bit) を取得</span>
+<span class="kd">function</span> <span class="nx">msb</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
+        <span class="nx">i</span> <span class="o">&gt;&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="nx">ret</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">ret</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">div</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">quotient</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">msb</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">msb</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
+    <span class="k">while</span><span class="p">(</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">i</span><span class="p">)){</span>
+        <span class="nx">quotient</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span> <span class="o">&gt;&gt;</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+            <span class="nx">a</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">&lt;&lt;</span> <span class="nx">i</span><span class="p">);</span>
+            <span class="nx">quotient</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">quotient</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">i</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">quotient</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>これも筆算をイメージして実装。でも複雑なので説明する体力なし。</p>
+<p>もっとスマートな実装はないものか...　もしくはもっとアクロバティックなの。</p>
+<p>すごい人達に期待。改良案や別の言語での実装をお待ちしています。</p>
+<h1>まとめ代わりに種明かし</h1>
+<p>こうやって記事にすると、私がすごくできる人間に見えるかもしれないけど、実はかなり苦しみました。</p>
+<p>そんな中、非常に参考になったのが <a href="http://rryu.sakura.ne.jp/compfund/index.html">基礎から学ぶコンピュータ</a> というサイト。そこに書いてあることを理解して、JavaScript に移植しただけ、といっても過言ではない。</p>
+<p>四則演算の実装といえば、コンピュータ・サイエンスの基礎中の基礎なんだけど、そこをちゃんと理解しているか聞いてくる Google 先生はさすが。普段からコンピュータの仕組みを理解した上で使っているかを問われているわけですね。</p>
+<p>この辺の内容を基礎から勉強するなら、パタヘネがよいんじゃないでしょうか。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E3%82%B3%E3%83%B3%E3%83%94%E3%83%A5%E3%83%BC%E3%82%BF%E3%81%AE%E6%A7%8B%E6%88%90%E3%81%A8%E8%A8%AD%E8%A8%88%7E%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A8%E3%82%A2%E3%81%A8%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A8%E3%82%A2%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%95%E3%82%A7%E3%83%BC%E3%82%B9-%E7%AC%AC3%E7%89%88-%E4%B8%8A-%E3%83%87%E3%82%A4%E3%83%93%E3%83%83%E3%83%89%E3%83%BBA-%E3%83%91%E3%82%BF%E3%83%BC%E3%82%BD%E3%83%B3/dp/482228266X%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D482228266X"><img src="http://ecx.images-amazon.com/images/I/51uSKqOBn7L._SL160_.jpg" class="hatena-asin-detail-image" alt="コンピュータの構成と設計~ハードウエアとソフトウエアのインタフェース 第3版 (上)" title="コンピュータの構成と設計~ハードウエアとソフトウエアのインタフェース 第3版 (上)"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E3%82%B3%E3%83%B3%E3%83%94%E3%83%A5%E3%83%BC%E3%82%BF%E3%81%AE%E6%A7%8B%E6%88%90%E3%81%A8%E8%A8%AD%E8%A8%88%7E%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A8%E3%82%A2%E3%81%A8%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A8%E3%82%A2%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%95%E3%82%A7%E3%83%BC%E3%82%B9-%E7%AC%AC3%E7%89%88-%E4%B8%8A-%E3%83%87%E3%82%A4%E3%83%93%E3%83%83%E3%83%89%E3%83%BBA-%E3%83%91%E3%82%BF%E3%83%BC%E3%82%BD%E3%83%B3/dp/482228266X%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D482228266X">コンピュータの構成と設計~ハードウエアとソフトウエアのインタフェース 第3版 (上)</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> デイビッド・A. パターソン</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 日経BP社</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2006-03-16</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/482228266X%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D482228266X">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070629/four_operations_implementation_in_javascript" class="hatena-bookmark-button" data-hatena-bookmark-title="四則演算を JavaScript で実装する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/29/four-operations-implementation-in-javascript/" data-lang="ja" data-size="horizontal" data-text="四則演算を JavaScript で実装する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/06/20/p1/" rel="previous">Adobe Edge にコメントが掲載されたよ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/07/04/p1/" rel="next">JavaScript で Number 型の数値を２進数表現してみる&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/12/12/pipes-page-fetch/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="このブログでも何度か Yahoo! Pipes の話題は取り上げてきましたが、先日実装された「Page Fetch」モジュールは素敵すぎます。ほんとに。今まで、Yahoo! Pipes といえば、XML・CSV か Yahoo が提供してるサービスのデータを加工することしかできませんでした。それが、「Page Fetch」モジュールの登場により、任意の Web ページを加工できるようになったのです。Yahoo! Pipes の使い道といえば、次の２つだと思います。1. RSSリーダーで読むための XML 作り複数の RSS を結合したり、見た目を整えたりして、自分専用の RSS を作る。..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年12月12日</h2>
+<h1>Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071212/pipes_page_fetch" class="hatena-bookmark-button" data-hatena-bookmark-title="Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/12/pipes-page-fetch/" data-lang="ja" data-size="horizontal" data-text="Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>このブログでも何度か Yahoo! Pipes の話題は取り上げてきましたが、<a href="http://blog.pipes.yahoo.com/2007/12/06/new-fetch-page-module-and-nice-web-path-enhancement/">先日実装された「Page Fetch」モジュール</a>は素敵すぎます。ほんとに。</p>
+<p>今まで、Yahoo! Pipes といえば、XML・CSV か Yahoo が提供してるサービスのデータを加工することしかできませんでした。それが、「Page Fetch」モジュールの登場により、<strong>任意の Web ページを加工</strong>できるようになったのです。</p>
+<p>Yahoo! Pipes の使い道といえば、次の２つだと思います。</p>
+<dl><dt>1. RSSリーダーで読むための XML 作り</dt><dd>複数の RSS を結合したり、見た目を整えたりして、自分専用の RSS を作る。<br>（例）<a href="http://d.hatena.ne.jp/nitoyon/20070424/bookmarked_summary">サイトの最新被ブックマークを livedoor Reader で読むための Pipes</a></dd><dt>2. Web サービスとの連携</dt><dd>JSONP に対応してるので、JavaScript と組み合わせてサーバーレスに色々できる。crossdomain.xml に対応しているので、ActionScript と組み合わせてサーバーレスに色々できる。<br>（例）<a href="http://d.hatena.ne.jp/nitoyon/20071025/p1">丸ビルRSSリーダー</a></dd></dl>
+<p>このいずれに関しても、「Page Fetch」モジュールで可能性が広がってきます。</p>
+<h1>1. RSSリーダーで読むための XML 作り</h1>
+<p>任意のページの HTML を取ってこれるようになったおかげで</p>
+<ul><li>RSS 配信していないページの RSS を作れます。</li><li>全文配信していないページの RSS の全文配信版を作れます。</li></ul>
+<p>ためしに、作ったのがこれ。<a href="http://www.fujiwarashinya.com/talk/index.php">Shinya talk</a> という藤原新也さんのブログの RSS を作成してみました。</p>
+<ul><li><a href="http://pipes.yahoo.com/nitoyon/shinya_talk_rss">Shinya talk を RSS 化</a></li></ul>
+<p>ソースはこんな感じ。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093138.jpg" width="450" height="353"></center>
+<ol><li>Fetch Page でページを取得して、「&lt;a id="」で分割（配列ができる）</li><li>Rename を使って title, description, link に移動（配列を RSS 形式に変換）</li><li>Regex を使って不要な部分を取り除いて、URL や本文を抽出</li></ol>
+<p>RSS は <a href="http://pipes.yahoo.com/nitoyon/shinya_talk_rss?_render=rss">http://pipes.yahoo.com/nitoyon/shinya_talk_rss?_render=rss</a> から取得できます。レッツ購読。</p>
+<h1>2. Web サービスとの連携</h1>
+<p>こっちは例を見てもらうほうが早いかな。<a href="http://pipes.yahoo.com/nitoyon/hatebucount">はてブ ブックマーク件数一括取得API</a> というのを作ってみました。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093137.jpg" width="350" height="155"></center>
+<p>はてなブックマークのブックマーク件数を一括で取得するための Pipe です。Web サービスから使うイメージを醸し出すために API と名づけてます。</p>
+<p>はてなが用意する <a href="http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A4%CA%A5%D6%A5%C3%A5%AF%A5%DE%A1%BC%A5%AF%B7%EF%BF%F4%BC%E8%C6%C0API?kid=146686">ブックマーク件数取得 API</a> は XML-RPC なので JS や AS からは扱いづらいし、RSS にもブックマーク数が入っていません。<a href="http://i.hatena.ne.jp/idea/3693">はてなアイデア - HTML→RSS で情報が落ちすぎ。ブックマーク数、できればタグとカテゴリもつけてほしい</a> という要望が放置されているところを見ると、今後も RSS にブックマーク件数が追加される予定はなさそうです。</p>
+<p>ってことで、「Page Fetch」モジュールを使って、ページ内のブックマーク一覧をスクレイピングしてます。JS や AS からこの API を使うこともできますし、サーバー側の Perl や PHP から XML をパースして利用も OK。</p>
+<p>Yahoo! Pipes 側にキャッシュが効いてるので、はてなのサーバーに負荷をかけすぎる心配もありません。</p>
+<h2>応用例</h2>
+<p>この Pipe を活用して、<a href="http://pipes.yahoo.com/nitoyon/hatebu_bookmark_ranking">複数ドメインの人気エントリランキング</a> というのを作ってみました。雰囲気を知るには <a href="http://pipes.yahoo.com/nitoyon/hatebu_bookmark_ranking?url1=http%3A%2F%2Fwww.100shiki.com%2F&url2=http%3A%2F%2Fgigazine.net%2F&url3=http%3A%2F%2Fd.hatena.ne.jp%2F">サンプルデータつき</a> のものを見たほうがイメージが沸きやすいかもしれません。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071212/20071212093134.jpg" width="350" height="175"></center>
+<p>通常、URL 別でしか人気エントリを見れないのですが、複数のURLで集計できます。</p>
+<p>複数の場所でサイトを運営してる人は、自分が運営してるサイトを入れてみるとちょっと楽しいと思います。ブログの端っこに貼り付けてもいいかもしれませんね。</p>
+<h1>注意点</h1>
+<p>ちょっとはまったところ。</p>
+<dl><dt>正規表現が必要</dt><dd>正規表現が分からないと自作するのはきつい。HTML はたいてい複数行なので s オプションをつけるのを忘れずに。</dd><dt>なぜかパースできない HTML がある</dt><dd>ヘルプには「robots.txt を設置していたり、meta タグで noindex しているサイトはパースできない」とあるが、それ以外のページでも失敗することがある。どうせ正規表現でパースするんだから好きにさせてほしい。</dd><dt>最後に正規化される</dt><dd>a タグに rel="nofolow" が追加されたり、相対リンクが消えたり、HTML 的に変なところを正規化する。途中のモジュールをプレビューしたときも HTML が正規化されているが、正規化は一番最後に走るので混乱しないよう。スクレイピングするサイトのソースを見ながら作業したほうがよさそう。</dd><dt>かなり面倒</dt><dd>Yahoo! Pipes の応答速度が結構遅くて、１箇所変更しては２～３秒待っては確認を繰り返す必要あり。根気が必要。</dd></dl>
+<p>地味に少しずつ機能追加されていってる Yahoo! Pipes ですが、まだまだできることは限られています。やりたいことを実現するには頭をひねらないといけません。けれども、そういうところも含めて論理パズルのようで楽しかったりもします。</p>
+<h1>関連リンク</h1>
+<ul><li><a href="http://blog.fkoji.com/2007/12071331.html">Yahoo! Pipesに任意のウェブページを切り取って分割できるFetch Pageモジュールが追加された - F.Ko-Jiの「一秒後は未来」</a></li><li><a href="http://muumoo.jp/news/2007/12/12/0pageloader.html">URLを渡すとページの内容(htmlソース)をJSONPとかで取得できるAPIをYahoo! Pipesで作った(管理人日記) - むぅもぉ.jp</a></li><li><a href="http://www.ac.cyberhome.ne.jp/~mattn/cgi-bin/blosxom.cgi/software/lang/javascript/20071212120815.htm">Big Sky :: JSONでHTMLを取得するYahoo! Pipesが凄い</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071212/pipes_page_fetch" class="hatena-bookmark-button" data-hatena-bookmark-title="Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/12/pipes-page-fetch/" data-lang="ja" data-size="horizontal" data-text="Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/12/11/boost-asign/" rel="previous">C++ の std::vector に v += 3, 1, 4 で push_back</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/12/13/jquery-jsonp/" rel="next">jQuery で JSONP ２通り&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

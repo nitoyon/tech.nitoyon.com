@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>RubyAmf のシリアライザだけを使う - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="RubyAmf のシリアライザだけを使う"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。require &amp;#39;app/amf&amp;#39;require &amp;#39;io/amf_serializer&amp;#39;amfobj = RubyAMF::AMF::AMFObject.new()serializer = RubyAMF::IO::AMFSerializer.new(amfobj)serializer.reset_referencables..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年04月30日</h2>
+<h1>RubyAmf のシリアライザだけを使う</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080430/rubyamf_serialize" class="hatena-bookmark-button" data-hatena-bookmark-title="RubyAmf のシリアライザだけを使う - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-lang="ja" data-size="horizontal" data-text="RubyAmf のシリアライザだけを使う - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。</p>
+<p>例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。</p>
+<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;app/amf&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;io/amf_serializer&#39;</span>
+
+<span class="n">amfobj</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">AMF</span><span class="o">::</span><span class="no">AMFObject</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">serializer</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">IO</span><span class="o">::</span><span class="no">AMFSerializer</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">amfobj</span><span class="p">)</span>
+
+<span class="n">serializer</span><span class="o">.</span><span class="n">reset_referencables</span>
+<span class="n">serializer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="o">]</span><span class="p">)</span>
+
+<span class="nb">open</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">binmode</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span> <span class="n">serializer</span><span class="o">.</span><span class="n">stream</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+<p>Flash 側で開くには、次のようにする。</p>
+<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">net</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Client</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Client</span><span class="p">(){</span>
+            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">dataFormat</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span><span class="p">;</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">));</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">bytes</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">data</span> <span class="nx">as</span> <span class="nx">ByteArray</span><span class="p">;</span>
+                <span class="nx">bytes</span><span class="p">.</span><span class="nx">objectEncoding</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// AMFのバージョン</span>
+
+                <span class="c1">// AS3 でデシリアライズ</span>
+                <span class="kd">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">readObject</span><span class="p">();</span>
+                <span class="nx">trace</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span> <span class="c1">// [3, 4]</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>trace の結果、[3, 4] と表示される。Ruby でシリアライズした配列を、ActionScript で復元できたことになる。</p>
+<p>今回は静的なファイルに書き込んだけど、Ruby を CGI として使って動的にシリアライズした結果を返してもよいだろう。Flash Remoting を SOAP 的だと解釈するなら、こちらの方法は REST 的。リクエストがバイナリじゃない分、デバッグはしやすいと思う。</p>
+<p>以下、細かい補足。</p>
+<ul><li>AMFSerializer クラスには write_amf3 というメソッドもあって、こちらは AMF3 対応の模様。その場合は、ActionScript 側では objectEncoding = 3 としてやる。でも、今のところ、AMF0 で困ってない。</li><li>AMFSerializer を単独で利用するために、include RubyAMF::Configuration や include RubyAMF::VoHelper を適宜コメントアウトして使った。elsif(value.is_a?(VoHash)) とかも適宜コメントアウトした。</li><li>サーバ側でファイルに出力する前に Zlib::Deflate.deflate() してやるとデータサイズを削減できる。その場合、SWF 側では ByteArray::uncompress() を呼んでから readObject() してあげる。</li></ul>
+<p>だいぶ Ruby に慣れてきた。簡単なソースコードなら読めるようになってきた！</p>
+<p>(追記) <a href="http://yoshimoto.blog.so-net.ne.jp/">Flex＆Java Blog</a> さんにて、Java で S2Flex を使って似たようなことをやる方法が紹介されているのを発見しました。<a href="http://yoshimoto.blog.so-net.ne.jp/2007-12-16">S2Flex2　Javaで圧縮しFlex2で展開する：Flex＆Java Blog：So-net blog</a></p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080430/rubyamf_serialize" class="hatena-bookmark-button" data-hatena-bookmark-title="RubyAmf のシリアライザだけを使う - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-lang="ja" data-size="horizontal" data-text="RubyAmf のシリアライザだけを使う - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/04/28/kanmenkan-party/" rel="previous">百万ベンチャー(?)交流会に行ってきた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/05/01/gihyo-8/" rel="next">gihyo.jp 連載８回目: Flex概要&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

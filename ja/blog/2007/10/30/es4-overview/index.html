@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ECMAScript 4 の Draft をざっくり読んでみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/30/es4-overview/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="この記事では ECMAScript 4 の Draft を解説していますが、2010年現在 ECMAScript 4 の標準化はストップしており、ECMAScript 5 の標準化が進められています。詳しくは 2010年のJavaScript：「これまで」と「これから」｜gihyo.jp をご覧ください。ECMAScript 第4版の最終ドラフトが公開された、というので、ざっくり読んでみた。PDF はこれ：http://www.ecmascript.org/es4/spec/overview.pdfこのドキュメントは Overview の最終ドラフト。このあと、Overview が固まっ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月30日</h2>
+<h1>ECMAScript 4 の Draft をざっくり読んでみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071030/es4_overview" class="hatena-bookmark-button" data-hatena-bookmark-title="ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/30/es4-overview/" data-lang="ja" data-size="horizontal" data-text="ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<div style="background: yellow; border: 1px solid red; padding: 5px; color: red">この記事では ECMAScript 4 の Draft を解説していますが、2010年現在 ECMAScript 4 の標準化はストップしており、ECMAScript 5 の標準化が進められています。詳しくは <a href="http://gihyo.jp/dev/column/newyear/2010/javascript-prospect?page=2">2010年のJavaScript：「これまで」と「これから」｜gihyo.jp</a> をご覧ください。</div>
+<p><a href="http://journal.mycom.co.jp/news/2007/10/23/032/index.html">ECMAScript 第4版の最終ドラフトが公開</a>された、というので、ざっくり読んでみた。</p>
+<p>PDF はこれ：<a href="http://www.ecmascript.org/es4/spec/overview.pdf">http://www.ecmascript.org/es4/spec/overview.pdf</a></p>
+<p>このドキュメントは Overview の最終ドラフト。このあと、Overview が固まって、そこから Specification が作られていくものと思われる。</p>
+<p>(追記) コメント欄で mal_blue さんから間違いを指摘や補足をしていただいてます。コメント欄もあわせてご覧ください。</p>
+<h1>概要</h1>
+<p>大まかな特徴はこんなところ。</p>
+<dl><dt>オブジェクト指向</dt><dd>クラスとインターフェースがサポートされて、OOP なコーディングができるようになるよ。OOP なコーディング方法は ActionScript 3.0 と同じ（のはず）。<br>もちろん、ECMAScript 3 時代の手続き型な書き方も使える模様。</dd><dt>厳密にも書ける</dt><dd>namespace とか package 空間ができたので、ライブラリによるグローバル汚染の心配がなくなる。<br>型を厳密に宣言すれば、実行時じゃなく実行前型チェックができるので処理が高速になる。他にも、int, uint, double といった値は高速演算できる、Vector（後述）を使えば Array のオーバーヘッドを削減できる、といったメリットも。<br>もちろん、型なしのいい加減コーディングもできる。ライブラリでは厳密にコーディングして高速化を図り、ちょっとしたコードはいい加減に書いてコーディング時間の削減を狙う、といった使い分けもできるようだ。</dd><dt>少しのコードで</dt><dd>ちょっとした新機能がいくつも追加されていて、書くコードの量が大幅に削減できる。型が違って例外がでたり、他にもいろいろ。詳しくはこのあとのサーベイ。</dd></dl>
+<p>ECMAScript4（以下、ES4）の新機能をざっくり分類すると</p>
+<ul><li>ActionScript3.0 から引き継いだ仕様</li><li>JavaScript1.7 から引き継いだ仕様</li><li>新しい仕様</li></ul>
+<p>の３つから成り立っている。</p>
+<p>３つのそれぞれを見ていってみよう。</p>
+<a name="seemore"></a>
+<h1>ActionScript 3.0 から引き継いだ仕様</h1>
+<p>OOPや型に関する仕様は ActionScript 3.0 とほとんど同じになっている。</p>
+<ul><li>class、interface</li><li>プロパティ、const</li><li>継承</li><li>名前空間、package</li><li>int, double などの型 (var i:int;)</li><li>arguments → ...args</li><li>is 演算子とか as 演算子</li></ul>
+<p>補足：</p>
+<ul><li>ActionScript 3.0 の文法は amachang の <a href="http://usrb.in/amachang/static/shibuyaes/">ActionScript for JavaScript(er).</a> が分かりよい。細かいところまで知りたいなら、<a href="http://download.macromedia.com/pub/documentation/jp/flex/2/prog_actionscript30.pdf">ActionScript 3.0 のプログラミング (PDF)</a> がお薦め。</li><li>JScript.NET も ECMAScript 4 を先取りする形で実装されていて、クラス定義や型宣言などがある。</li><li>ActionScript 3 の実行環境「Tamarin」を元にして、Firefox 3 には ECMAScript 4 準拠の JavaScript 2.0 が実装される予定になっている。</li></ul>
+<h1>JavaScript 1.7 から引き継いだ仕様</h1>
+<p>Firefox 2 に実装されている JavaScript が JavaScript 1.7。</p>
+<p>JavaScript 1.7 にはあまり詳しくないので、<a href="http://nanto.asablo.jp/blog/2006/08/12/481381#js17-block-scope">JavaScript 1.7 の新機能: Days on the Moon</a> を参考にさせてもらった。</p>
+<ul><li>ブロックスコープ (let)</li><li>分割代入 ([a, b] = [1, 2])</li><li>イテレータ</li><li>ジェネレータ (yield)</li><li>配列内包 (a = [[i, i * i] for each(i in [1,2,3])])</li></ul>
+<p>これらの仕様が、ES4 Overview に入っているのを確認した。</p>
+<h1>新しい仕様</h1>
+<p>個人的に大きいと判断した４つの機能をピックアップしてみる。</p>
+<h2>(1) 総称関数 (generic functions)</h2>
+<p>オーバーロード、と言い換えたほうが分かりやすい人も多いかもしれない。</p>
+<p>引数の型によって、呼び出される関数を変えるもの。いままでは１箇所でしか関数を定義できなかった。</p>
+<p>こうやって書くらしい。</p>
+<div class="highlight"><pre><span class="nx">generic</span> <span class="kd">function</span> <span class="nx">intersect</span><span class="p">(</span><span class="nx">s1</span><span class="p">,</span> <span class="nx">s2</span><span class="p">);</span> <span class="c1">// No body here</span>
+
+<span class="nx">generic</span> <span class="kd">function</span> <span class="nx">intersect</span><span class="p">(</span><span class="nx">s1</span><span class="o">:</span> <span class="nx">Shape</span><span class="p">,</span> <span class="nx">s2</span><span class="o">:</span> <span class="nx">Shape</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// general intersection method</span>
+<span class="p">}</span>
+<span class="nx">generic</span> <span class="kd">function</span> <span class="nx">intersect</span><span class="p">(</span><span class="nx">s1</span><span class="o">:</span> <span class="nx">Rect</span><span class="p">,</span> <span class="nx">s2</span><span class="o">:</span> <span class="nx">Rect</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// fast intersection for rectangles</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<h2>(2) テンプレート (parameterized class)</h2>
+<p>データ型にこだわらずにいろいろ実装できるアレ。C# では Generics とも呼ばれている。</p>
+<p>実行時の型チェックが入らないので、高速に動くことが期待できる。</p>
+<div class="highlight"><pre><span class="c1">// クラスで使う</span>
+<span class="kr">class</span> <span class="nx">Pair</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">first</span><span class="o">:</span> <span class="nx">T</span><span class="p">,</span> <span class="nx">second</span><span class="o">:</span> <span class="nx">T</span>
+<span class="p">}</span>
+<span class="k">new</span> <span class="nx">Pair</span><span class="p">.</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+<span class="c1">// type で定義して使う</span>
+<span class="nx">type</span> <span class="nx">Box</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">T</span> <span class="p">}</span>
+<span class="kd">var</span> <span class="nx">v</span><span class="o">:</span> <span class="nx">Box</span><span class="p">.</span><span class="o">&lt;</span><span class="kr">boolean</span><span class="o">&gt;</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Box</span><span class="p">.</span><span class="o">&lt;</span><span class="kr">boolean</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+
+<span class="c1">// 関数で使う</span>
+<span class="kd">function</span> <span class="nx">f</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span><span class="p">(</span> <span class="nx">x</span><span class="o">:</span><span class="nx">T</span> <span class="p">)</span><span class="o">:</span> <span class="nx">T</span> <span class="p">...</span>
+<span class="nx">f</span><span class="p">.</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>parameterized class に便乗して、プリミティブクラスとして Vector と Map が追加されている。まんま、STL。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">xs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="kr">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">map</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Map</span><span class="p">.</span><span class="o">&lt;*</span><span class="p">,</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">;</span>
+</pre>
+</div>
+
+<p>Vector は Array の厳密版、Map は Object を利用したハッシュの厳密版として使える。こっちのほうが速いし、コンパイル時のチェックも入るし、Map にはキー一覧を取得するメソッドが定義されていたりするので、メリットは多い。</p>
+<p>イテレータと parameterized class を組み合わせるのもよさげ。</p>
+<h2>(3) レコード型と配列型（Record and array types）</h2>
+<p>レコード型ってのは、{ x:int, y:string } を型として扱えるようにした感じ。</p>
+<div class="highlight"><pre><span class="c1">// new と共に</span>
+<span class="kd">var</span> <span class="nx">samplevar</span> <span class="o">=</span> <span class="k">new</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nx">string</span> <span class="p">}(</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;foo&quot;</span> <span class="p">);</span>
+
+<span class="c1">// {} と共に</span>
+<span class="kd">var</span> <span class="nx">samplevar</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="s2">&quot;foo&quot;</span> <span class="p">}</span> <span class="o">:</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nx">string</span> <span class="p">};</span>
+</pre>
+</div>
+
+<p>レコード型（Record type）でググってみたら、Scheme あたりドキュメントが引っかかった。その辺に影響受けているっぽい。</p>
+<p>ただ、あとからプロパティの追加・削除は可能なので、厳密に型を定めているわけではない。厳密にやりたかったら、クラスとして定義すべし。</p>
+<p>配列型ば [ int ] のようにして配列の型を規定できるもの。</p>
+<div class="highlight"><pre><span class="c1">// new と共に</span>
+<span class="kd">var</span> <span class="nx">intarray</span>  <span class="o">=</span> <span class="k">new</span> <span class="p">[</span> <span class="kr">int</span> <span class="p">](</span><span class="mi">7</span><span class="p">);</span>
+
+<span class="c1">// [] と共に</span>
+<span class="kd">var</span> <span class="nx">intarray</span>  <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span> <span class="p">]</span> <span class="o">:</span> <span class="p">[</span> <span class="kr">int</span> <span class="p">];</span>
+</pre>
+</div>
+
+<p>さらに、新たに導入されたキーワード like と wrap を組み合わせると楽にコーディングできる。</p>
+<div class="highlight"><pre><span class="c1">// 不一致時に例外がでる</span>
+<span class="kd">function</span> <span class="nx">func1</span><span class="p">(</span> <span class="nx">pt</span><span class="o">:</span> <span class="nx">like</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="kr">int</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="kr">int</span> <span class="p">}</span> <span class="p">)</span> <span class="p">{...}</span>
+
+<span class="c1">// if 文で型チェックしている</span>
+<span class="kd">function</span> <span class="nx">func2</span><span class="p">(</span> <span class="nx">pt</span><span class="o">:</span> <span class="o">*</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nx">pt</span> <span class="nx">is</span> <span class="nx">like</span> <span class="p">{</span><span class="nx">x</span> <span class="o">:</span> <span class="kr">int</span><span class="p">,</span> <span class="nx">y</span> <span class="o">:</span> <span class="kr">int</span><span class="p">}</span> <span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// x と y が定義されたラッパーオブジェクトを作る</span>
+<span class="kd">function</span> <span class="nx">func3</span><span class="p">(</span> <span class="nx">pt</span><span class="o">:</span> <span class="nx">wrap</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="kr">int</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="kr">int</span> <span class="p">}</span> <span class="p">)</span> <span class="p">{...}</span>
+</pre>
+</div>
+
+<p>面白いのは、like を使うことで、Object もクラスも同等に扱えるところ。AS3 でいうと、Point と Sprite は基底クラスが違うんだけど両方に x と y がある。Record type を活用すれば、どちらにも適用できる関数になる。厳密な OOP ではインターフェースが同じでないと同じものとしては扱いにくかったけど、ES4 ではこのようなスクリプトっぽい書き方ができるわけだ。</p>
+<p>いちいち、{ x : int, y : int } のように書くのは大変なので、何度も使う場合は type で型を定義しておくとよいだろう。</p>
+<div class="highlight"><pre><span class="nx">type</span> <span class="nx">Position</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span> <span class="p">};</span>
+</pre>
+</div>
+
+<p>他にも、配列型とデフォルト引数を組み合わせて、デフォルト引数に縛りをつけられる。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="p">(</span><span class="kr">int</span><span class="p">,</span> <span class="p">...[</span><span class="nx">string</span><span class="p">])</span><span class="o">:</span> <span class="k">void</span>
+</pre>
+</div>
+
+<h2>(4) 演算子オーバーロード（Operator overloading）</h2>
+<p>型ごと演算子の挙動を変更できる。ドキュメントには +、*、== などが例に挙がっていたが、たぶんなんでもいけるんだろう。</p>
+<p>グローバル関数として intrinsic 名前空間に定義して使う。</p>
+<div class="highlight"><pre><span class="c1">// 複素数クラス</span>
+<span class="kr">class</span> <span class="nx">Complex</span> <span class="p">{...}</span>
+
+<span class="c1">// 複素数の足し算</span>
+<span class="nx">generic</span> <span class="nx">intrinsic</span> <span class="kd">function</span> <span class="o">+</span><span class="p">(</span> <span class="nx">a</span><span class="o">:</span> <span class="nx">Complex</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="nx">Complex</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">new</span> <span class="nx">Complex</span><span class="p">(</span> <span class="nx">a</span><span class="p">.</span><span class="nx">real</span> <span class="o">+</span> <span class="nx">b</span><span class="p">.</span><span class="nx">real</span><span class="p">,</span> <span class="nx">a</span><span class="p">.</span><span class="nx">imag</span> <span class="o">+</span> <span class="nx">b</span><span class="p">.</span><span class="nx">imag</span> <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// 複素数と実数の足し算</span>
+<span class="nx">generic</span> <span class="nx">intrinsic</span> <span class="kd">function</span> <span class="o">+</span><span class="p">(</span> <span class="nx">a</span><span class="o">:</span> <span class="nx">Complex</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="nx">AnyNumber</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="nx">a</span> <span class="o">+</span> <span class="nx">Complex</span><span class="p">(</span><span class="nx">b</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// 実数と複素数の足し算</span>
+<span class="nx">generic</span> <span class="nx">intrinsic</span> <span class="kd">function</span> <span class="o">+</span><span class="p">(</span> <span class="nx">a</span><span class="o">:</span> <span class="nx">AnyNumber</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="nx">Complex</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="nx">Complex</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>より直感的にライブラリを使えるようになりそう。</p>
+<p>算術ライブラリで Matrix クラスの掛け算が * でできたりする。C# のように addEventListener するのに window.onload += callback; といった書き方ができるようにもなったら嬉しい。</p>
+<h1>(5) その他の細々</h1>
+<p>気になったものをピックアップ。かゆいところに手が届く仕様がいっぱい。</p>
+<dl><dt>Nullability</dt><dd>型の後ろに ! をつけて var v : C! = ... と定義する。null になったら例外がでるようになる。Null pointer（いわゆる、ぬるぽ）を未然に防げるので、デバッグが楽になりそう。関数定義で function(val:Object!) としておくと、関数の中で null のチェックをしなくていいので、コード量も減って幸せに。</dd><dt>Tail call</dt><dd>末尾呼び出し。関数の末尾で関数を呼び出した場合、スタックにつむのではなく、単純に goto としてコンパイルされるようになる。OCaml や Scheme で実装されているものらしい。末尾で再帰的に呼び出すことで、実行効率が上がったり、ループを再帰でかけるようになったり、いいことがあるようだ。</dd><dt>Meta-level hook</dt><dd>関数呼び出しやプロパティの代入を担当する関数をかける。meta::invoke、meta::get、meta::set、meta::has、meta::delete といったものを使う。AS3 でいう Proxy のようなもの。dynamic class でしか使えない。<br>Array や Vector なども、Meta-level hook と同じ仕組みで実装されている。今までは、Array のオリジナル版を作ることはできなかったが、Meta-level hook を使うことで、同等の機能を自分で実装することも可能になるわけだ。</dd><dt>Union type</dt><dd>(int,string) のように書くことで、int でも string も許可する型になる。Union を利用したプリミティブな型として、type AnyNumber = (byte,int,uint,double,decimal,Number) などが定義されている。</dd><dt>switch type</dt><dd>型によって挙動を変える switch type。if(a is String){...}else if... という if 文の列挙を防ぎ、switch type (v) {case (s: string) {...} } と書けるようになる。</dd><dt>try-catch に型</dt><dd>型が導入されたことで、catch を複数書けるようになる。Error の型によって、どの catch に落ちるかが変わる。</dd><dt>Slicing</dt><dd>"ecmascript"[5:2:-1] == "sam" らしい。String、Array、Vector で使える。</dd><dt>正規表現の複数行、コメント</dt><dd>複数行が OK に、行頭の # がコメントに。複雑な正規表現のメンテナンスがしやすくなる。</dd><dt>Trailing commas</dt><dd>{a : 10,} が文法として認められる。Firefox では動いてたけど、IE でエラーになってて悲しい思いをした人も多いはず。</dd><dt>JSON サポート</dt><dd>toJSONString と string.parseJSON。サーバーに JSON で投げたり、デバッグ用に JSON で吐き出す、といった使い方が考えられる。</dd></dl>
+<h1>感想</h1>
+<p>あーー、盛りだくさん。厳密にも適当にも書ける、というのは魅力的なのだけど、果てしてここまで複雑になった仕様は実装できるんだろうか。</p>
+<p>このドラフトに書いてあることがどれぐらい最終的に実装されるのかな。<a href="http://wiki.ecmascript.org/doku.php">ES4 Wiki</a> を見ていると、Overview にも書いてないことが提案されていたりするのだけど、今から入ることはないのかな。最終ドラフトってことは、よほどのことがない限り、このままいくのかな。</p>
+<h1>参考リンク</h1>
+<ul><li><a href="http://www.ecmascript.org/">ECMAScript.org</a>: 公式サイト</li><li><a href="http://malblue.tumblr.com/">mal_blue@tumblr</a>: mal_blue さんの tumblr。ES4 情報多数。</li><li><a href="http://d.hatena.ne.jp/ufcpp/20071024/1193215519">ECMAScript 4 の概要 - ++C++; // 管理人の日記</a></li><li><a href="http://www.slideshare.net/yukoba/ecmascript-4">ECMAScript4 リファレンス実装</a>: Shibuya.js での ES4 発表</li><li><a href="http://blogs.msdn.com/ie/archive/2007/10/30/ecmascript-3-and-beyond.aspx">IEBlog : ECMAScript 3 and Beyond</a>: IEBlog（MS公式）に登場した ES4 に対するコメント。仕様に沿うのは重要だと考えている、後方互換に対応する、ES4 の IE 搭載予定は明言せず。</li><li><a href="http://www.zeuslabs.us/2007/10/28/discover-ecmascript-4-the-future-of-actionscript/">Discover ECMAScript 4: The Future of ActionScript - Zeus Labs</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071030/es4_overview" class="hatena-bookmark-button" data-hatena-bookmark-title="ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/30/es4-overview/" data-lang="ja" data-size="horizontal" data-text="ECMAScript 4 の Draft をざっくり読んでみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/29/fxug-kyoto/" rel="previous">Flex勉強会＠京都が開催されますよ！！</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/31/adobe-max-eve/" rel="next">Adobe MAX 参戦前夜&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

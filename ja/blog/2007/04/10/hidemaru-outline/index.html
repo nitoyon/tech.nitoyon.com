@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>秀丸でJavaScriptのアウトライン解析する定義ファイル - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="秀丸でJavaScriptのアウトライン解析する定義ファイル"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/04/10/hidemaru-outline/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="私はエディタとして秀丸を愛用しています。秀丸 Version 6.0 からはアウトラインのツリー表示機能がついていて、かなり便利です。prototype.js を利用した JavaScript がきれいに解析される定義ファイルを作ったので公開します。Class.create とか Object.extend を使ったクラス定義を正しく解析してくれます。ためしに prototype.js 自身を解析するとこんな具合。左側にツリーでアウトラインが出てますね。私はキー割り当てで [アウトライン解析の枠切り替え] に Alt-X キーを割り当てています。Alt-X を押してアウトラインにフォーカ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年04月10日</h2>
+<h1>秀丸でJavaScriptのアウトライン解析する定義ファイル</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070410/hidemaru_outline" class="hatena-bookmark-button" data-hatena-bookmark-title="秀丸でJavaScriptのアウトライン解析する定義ファイル - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/04/10/hidemaru-outline/" data-lang="ja" data-size="horizontal" data-text="秀丸でJavaScriptのアウトライン解析する定義ファイル - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>私はエディタとして秀丸を愛用しています。秀丸 Version 6.0 からはアウトラインのツリー表示機能がついていて、かなり便利です。</p>
+<p>prototype.js を利用した JavaScript がきれいに解析される定義ファイルを作ったので公開します。Class.create とか Object.extend を使ったクラス定義を正しく解析してくれます。ためしに prototype.js 自身を解析するとこんな具合。</p>
+<img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070410/20070410091422.jpg" width="445" height="310">
+<p>左側にツリーでアウトラインが出てますね。</p>
+<p>私はキー割り当てで [アウトライン解析の枠切り替え] に Alt-X キーを割り当てています。Alt-X を押してアウトラインにフォーカスして、カーソルキーや PageUp/Down で関数を選んで、Enter を押す、という手順によって比較的大きなソースでも移動が楽々です。</p>
+<p>定義ファイル：</p>
+<pre>/<TreeWord>
+/0000,0002,0000,00000000,00010153,"^(var +)?[\\$\\.a-zA-Z0-9_]+ *= *Class\\.create","Class"
+/0000,0002,0000,00000000,00012513,"^(var +)?([\\$\\.a-z_0-9A-Z]+) *= *","Object"
+/0000,0002,0000,00000000,00012153,"[\\$a-zA-Z_0-9]+\\.prototype *= *","prototype"
+/0000,0002,0000,00000000,00012113,"^Object\\.extend","override"
+/0000,0002,0000,00000000,00012111,"^/\\*","comment"
+/0000,0002,0000,00000000,00012553,"function +[a-zA-Z0-9_]+ *\\([^\\)]*\\)","function"
+/0001,0002,0000,00000000,00010553,"^[ \\t]*[\\$a-zA-Z0-9_]+ *: *function *\\([^\\)]*\\)","Method"
+/0001,0002,0000,00000000,00012513,"^[ \\t]*[\\$a-zA-Z0-9_]+ *:","Field"</pre>
+<p>設定方法：</p>
+<ol><li>ファイルタイプ別の設定で、JavaScript に関連付けた設定を開く</li><li>[アウトライン]->[解析] を選択</li><li>[アウトライン解析の方法] として [ツリー表示 - 通常]を選択</li><li>[読み込み] ボタンを押して、上のデータをファイルから読み取る</li><li>[レベルの見せ方] を [相対的] にする</li></ol>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070410/hidemaru_outline" class="hatena-bookmark-button" data-hatena-bookmark-title="秀丸でJavaScriptのアウトライン解析する定義ファイル - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/04/10/hidemaru-outline/" data-lang="ja" data-size="horizontal" data-text="秀丸でJavaScriptのアウトライン解析する定義ファイル - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/04/08/twitter2/" rel="previous">Twitter が面白い</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/04/14/p1/" rel="next">Trace Rabbit がおかしい？&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

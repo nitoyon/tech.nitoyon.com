@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ラスタ→ベクタ変換する AS ライブラリ &quot;PotrAs&quot; - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ラスタ→ベクタ変換する AS ライブラリ &quot;PotrAs&quot;"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/02/potrace/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="超絶のまとめ記事が反応ありすぎて意外すぎます。それはそうと、超絶で発表した PotrAs を公開します。詳しくはプレゼン資料をごらんあれ。プレゼンの閲覧方法：プレゼン資料をクリックしてフォーカス与える→で次のページ、←で前のページHome で先頭、End で最後のページ0～9＋Enter で入力したページにジャンプ２色のラスタ画像をベクタに変換するライブラリです。プレゼン資料はリアルタイムで変換しながら表示しているので、CPU 消費量が少し高めです。あと、Mac でどう表示されるかが分からないのがちょっと不安です（アンチエイリアスがらみ）。(2007.10.3 追記) Mac 対策しまし..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月02日</h2>
+<h1>ラスタ→ベクタ変換する AS ライブラリ "PotrAs"</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071002/potrace" class="hatena-bookmark-button" data-hatena-bookmark-title="ラスタ→ベクタ変換する AS ライブラリ &quot;PotrAs&quot; - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/02/potrace/" data-lang="ja" data-size="horizontal" data-text="ラスタ→ベクタ変換する AS ライブラリ "PotrAs" - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>超絶のまとめ記事が反応ありすぎて意外すぎます。</p>
+<p>それはそうと、超絶で発表した PotrAs を公開します。詳しくはプレゼン資料をごらんあれ。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Fsnippets.libspark.org%2Fsvn%2Fas3%2FPotrAs%2Fsamples%2Fpotras%2Fdemo20070929%2Fbin%2FSlide.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=360&amp;title=PotrAs+presentation&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>プレゼンの閲覧方法：</p>
+<ul><li>プレゼン資料をクリックしてフォーカス与える</li><li>→で次のページ、←で前のページ</li><li>Home で先頭、End で最後のページ</li><li>0～9＋Enter で入力したページにジャンプ</li></ul>
+<p>２色のラスタ画像をベクタに変換するライブラリです。プレゼン資料はリアルタイムで変換しながら表示しているので、CPU 消費量が少し高めです。あと、Mac でどう表示されるかが分からないのがちょっと不安です（アンチエイリアスがらみ）。</p>
+<p>(2007.10.3 追記) Mac 対策しました。Mac では BitmapData.draw したときにデフォルトでアンチエイリアスがかかってしまうため、細い線になるのが原因でした。threshold メソッドで２値化することにより対処しました。（<a href="http://snippets.libspark.org/trac/changeset?old_path=nitoyon%2Fas3%2Fsrc%2Fcom%2Fnitoyon%2Fpotras%2FPotrAs.as&old=89&new_path=nitoyon%2Fas3%2Fsrc%2Fcom%2Fnitoyon%2Fpotras%2FPotrAs.as&new=89">diff</a>）</p>
+<p>ソースは Spark Project に置いておきました。<a href="http://snippets.libspark.org/trac/wiki/nitoyon/PotrAs">こちらからどうぞ</a>。プレゼンのソースも <a href="http://snippets.libspark.org/trac/browser/as3/PotrAs/samples/potras/demo20070929/Slide.as">公開してますよ</a>。</p>
+<h1>新たなモーションタイポの可能性</h1>
+<p>Flash でモーションタイポするには、問題点がいろいろありました。デバイスフォントは回転・透過ができなくて表現力が低すぎるし、BitmapData に転写すると処理が煩雑になってしまいます。フォントを埋め込めば自由にできるのですが、日本語フォントは権利関係が難しいし、ファイルサイズも大きくなってしまいます。</p>
+<p>それに対する解が、この PotrAs です。デバイスフォントを BitmapData に描画し、それをトレースしてベクタ変換します。アクロバティックですが、ローカルのフォントを使っているので権利関係も（たぶん）問題ありません。回転縮小アルファも自由自在。塗りや線のスタイルを少し変えるだけで文字の表情も変わります。また、あえて低い解像度でトレースすると、味のある見た目になります。上のスライドの１枚目がそれです。</p>
+<p>新たなモーションタイポの表現が可能になる気がしています。みんな遊んでね。</p>
+<h1>ロードマップ</h1>
+<p>今後発展させていくとすれば…</p>
+<ul><li>AS2 への移植（他力本願）</li><li>パフォーマンスチューニング（ちょっと使う分にはいいけど、高速化したい）</li><li>ドキュメントの充実</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071002/potrace" class="hatena-bookmark-button" data-hatena-bookmark-title="ラスタ→ベクタ変換する AS ライブラリ &quot;PotrAs&quot; - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/02/potrace/" data-lang="ja" data-size="horizontal" data-text="ラスタ→ベクタ変換する AS ライブラリ "PotrAs" - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/01/tyouzetsu-as/" rel="previous">ActionScript 的超絶技巧発表会に参加してきました</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/03/as3-labeling/" rel="next">ActionScript 3.0 でラベリング (改)&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

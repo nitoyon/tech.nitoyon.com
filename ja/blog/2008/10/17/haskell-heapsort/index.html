@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Haskell でヒープソートを書いてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Haskell でヒープソートを書いてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="関数型言語に苦手意識があったので、ここのところ Haskell を勉強していた。せっかくなので、Smalltalk でヒープソート に続き、今度は Haskell でヒープソートを書いてみる。アルゴリズムイントロダクション 第1巻の疑似コードが手続き型なので、それをどのように関数型に変換していくかが難しかった。アルゴリズムイントロダクションが手元にない人は、Ruby 版 を見ると分かりやすいだろう。下準備まずは、配列のインデックスを 1 ベースにする。ライブラリの Array 型は好きな値からインデックスを始められるようだが、Haskell の基本的な使い方を覚えたいのでパス。あえてリス..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年10月17日</h2>
+<h1>Haskell でヒープソートを書いてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081017/haskell_heapsort" class="hatena-bookmark-button" data-hatena-bookmark-title="Haskell でヒープソートを書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-lang="ja" data-size="horizontal" data-text="Haskell でヒープソートを書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>関数型言語に苦手意識があったので、ここのところ Haskell を勉強していた。せっかくなので、<a href="http://d.hatena.ne.jp/nitoyon/20081014/smalltalk_heap_sort">Smalltalk でヒープソート</a> に続き、今度は Haskell でヒープソートを書いてみる。</p>
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4764903342/nitoyoncom-22/ref=nosim">アルゴリズムイントロダクション 第1巻</a>の疑似コードが手続き型なので、それをどのように関数型に変換していくかが難しかった。アルゴリズムイントロダクションが手元にない人は、<a href="http://introductiontoalgorithms.g.hatena.ne.jp/keyword/0801006%e3%83%92%e3%83%bc%e3%83%97%e3%82%bd%e3%83%bc%e3%83%88%e3%82%b5%e3%83%b3%e3%83%97%e3%83%ab%e3%82%b3%e3%83%bc%e3%83%89">Ruby 版</a> を見ると分かりやすいだろう。</p>
+<h1>下準備</h1>
+<p>まずは、配列のインデックスを 1 ベースにする。ライブラリの Array 型は好きな値からインデックスを始められるようだが、Haskell の基本的な使い方を覚えたいのでパス。あえてリストで書いてみる。リストの要素にアクセスする関数は !! なので、これをラップした !!! を作ってみる。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="ow">::</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+<span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="n">xs</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">xs</span> <span class="o">!!</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>次は、教科書の PARENT, LEFT, RIGHT。</p>
+<div class="highlight"><pre><span class="nf">parent</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
+<span class="nf">parent</span> <span class="ow">=</span> <span class="p">(`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="nf">left</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
+<span class="nf">left</span> <span class="ow">=</span> <span class="p">(</span><span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="nf">right</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
+<span class="nf">right</span> <span class="ow">=</span> <span class="p">(</span><span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>単純な関数なので、部分適用や関数合成を使って書いてみた。</p>
+<p>次、swap。これも頑張って書き下してみる。もっとシンプルな書き方がありそうなんだが、ひとまずは泥臭く。</p>
+<div class="highlight"><pre><span class="nf">swap</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+<span class="nf">swap</span> <span class="n">m</span> <span class="n">n</span> <span class="n">list</span> <span class="ow">=</span> <span class="n">take</span> <span class="p">(</span><span class="n">i1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="n">list</span>
+             <span class="o">++</span> <span class="p">[</span><span class="n">list</span> <span class="o">!!!</span> <span class="n">i2</span><span class="p">]</span>
+             <span class="o">++</span> <span class="p">(</span><span class="n">drop</span> <span class="n">i1</span> <span class="o">$</span> <span class="n">take</span> <span class="p">(</span><span class="n">i2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="n">list</span><span class="p">)</span>
+             <span class="o">++</span> <span class="p">[</span><span class="n">list</span> <span class="o">!!!</span> <span class="n">i1</span><span class="p">]</span>
+             <span class="o">++</span> <span class="n">drop</span> <span class="n">i2</span> <span class="n">list</span>
+    <span class="kr">where</span> <span class="n">i1</span> <span class="ow">=</span> <span class="n">min</span> <span class="n">m</span> <span class="n">n</span>
+          <span class="n">i2</span> <span class="ow">=</span> <span class="n">max</span> <span class="n">m</span> <span class="n">n</span>
+</pre>
+</div>
+
+<h1>手続き型脳から脱却できぬ</h1>
+<p>いよいよ大物へ。MAX-HEAPIFY。if 文が並んでいた THE 手続き型な関数だったので、とても苦労した。</p>
+<div class="highlight"><pre><span class="nf">maxHeapify</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
+<span class="nf">maxHeapify</span> <span class="n">i</span> <span class="n">arr</span> <span class="ow">=</span> <span class="kr">if</span> <span class="n">largest</span> <span class="n">i</span> <span class="o">/=</span> <span class="n">i</span>
+    <span class="kr">then</span> <span class="n">maxHeapify</span> <span class="p">(</span><span class="n">largest</span> <span class="n">i</span><span class="p">)</span> <span class="o">$</span> <span class="n">swap</span> <span class="p">(</span><span class="n">largest</span> <span class="n">i</span><span class="p">)</span> <span class="n">i</span> <span class="n">arr</span>
+    <span class="kr">else</span> <span class="n">arr</span>
+    <span class="kr">where</span>
+        <span class="n">largeLeft</span> <span class="n">i</span> <span class="n">j</span> <span class="ow">=</span> 
+            <span class="kr">if</span> <span class="n">left</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">length</span> <span class="n">arr</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">left</span> <span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">j</span><span class="p">)</span>
+                <span class="kr">then</span> <span class="n">left</span> <span class="n">i</span>
+                <span class="kr">else</span> <span class="n">j</span>
+        <span class="n">largeRight</span> <span class="n">i</span> <span class="n">j</span> <span class="ow">=</span> 
+            <span class="kr">if</span> <span class="n">right</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">length</span> <span class="n">arr</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">right</span> <span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">j</span><span class="p">)</span>
+                <span class="kr">then</span> <span class="n">right</span> <span class="n">i</span>
+                <span class="kr">else</span> <span class="n">j</span>
+        <span class="n">largest</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">largeRight</span> <span class="n">i</span> <span class="o">$</span> <span class="n">largeLeft</span> <span class="n">i</span> <span class="n">i</span>
+</pre>
+</div>
+
+<p>ひとまずは教科書をそのまま書き下してみた。もっとシンプルに関数型っぽく書き直してみたいんだけど、方針が思いつかない。</p>
+<h1>ループの書き直し</h1>
+<p>BUILD-MAX-HEAP には for 文が登場。Haskell に for 文はないので、再帰か畳み込みで書き直す必要がある。ここでは畳み込み(foldr)を使ってみた。</p>
+<div class="highlight"><pre><span class="nf">buildMaxHeap</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
+<span class="nf">buildMaxHeap</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">foldr</span> <span class="n">maxHeapify</span> <span class="n">arr</span> <span class="o">$</span> <span class="p">[</span><span class="mi">1</span> <span class="o">..</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="p">`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">]</span>
+</pre>
+</div>
+
+<p>畳み込みにも苦手意識があったけど、<a href="http://d.hatena.ne.jp/blanketsky/20071129/1196329379" title="畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-logへ">畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-log</a> がすごく分かりやすかった。ありがたい。</p>
+<p>最後は HEAP-SORT。ここでも for 文が登場するので、今度は再帰を使ってみた。</p>
+<div class="highlight"><pre><span class="nf">heapSort</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
+<span class="nf">heapSort</span> <span class="kt">[]</span> <span class="ow">=</span> <span class="kt">[]</span>
+<span class="nf">heapSort</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">heapSort</span> <span class="p">(</span><span class="n">take</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">$</span> <span class="n">swapped</span> <span class="n">arr</span><span class="p">)</span>
+            <span class="o">++</span> <span class="p">[</span><span class="n">head</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span><span class="p">]</span>
+    <span class="kr">where</span> <span class="n">swapped</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">swap</span> <span class="mi">1</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span>
+</pre>
+</div>
+
+<h1>動け！</h1>
+<p>最後に main。</p>
+<div class="highlight"><pre><span class="nf">main</span> <span class="ow">=</span> <span class="n">print</span> <span class="o">$</span> <span class="n">heapSort</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span>
+<span class="c1">-- [1,2,3,4,7,8,9,10,14,16]</span>
+</pre>
+</div>
+
+<p>動いた！</p>
+<h1>感想</h1>
+<p>なんとか動いたが、Haskell っぽいソースに見えない。誰かに添削してほしい。ujihisa とか。</p>
+<p>Haskell は次の２つの本を読んで勉強した。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E3%81%B5%E3%81%A4%E3%81%86%E3%81%AEHaskell%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E3%81%B5%E3%81%A4%E3%81%86%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E9%96%A2%E6%95%B0%E5%9E%8B%E8%A8%80%E8%AA%9E%E5%85%A5%E9%96%80-%E9%9D%92%E6%9C%A8-%E5%B3%B0%E9%83%8E/dp/4797336021%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797336021"><img src="http://ecx.images-amazon.com/images/I/41mJTrvw2pL._SL160_.jpg" class="hatena-asin-detail-image" alt="ふつうのHaskellプログラミング ふつうのプログラマのための関数型言語入門" title="ふつうのHaskellプログラミング ふつうのプログラマのための関数型言語入門"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E3%81%B5%E3%81%A4%E3%81%86%E3%81%AEHaskell%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E3%81%B5%E3%81%A4%E3%81%86%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E9%96%A2%E6%95%B0%E5%9E%8B%E8%A8%80%E8%AA%9E%E5%85%A5%E9%96%80-%E9%9D%92%E6%9C%A8-%E5%B3%B0%E9%83%8E/dp/4797336021%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797336021">ふつうのHaskellプログラミング ふつうのプログラマのための関数型言語入門</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 青木 峰郎</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> ソフトバンククリエイティブ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2006-06-01</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4797336021%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4797336021">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<p>「ふつうのHaskell」はとても丁寧で分かりやすかった。全体の構成が練りに練られていて、初心者でもすいすい理解できる！</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Haskell%E2%80%95%E3%81%AF%E3%81%98%E3%82%81%E3%81%A6%E5%AD%A6%E3%81%B6%E9%96%A2%E6%95%B0%E5%9E%8B%E8%A8%80%E8%AA%9E-%E5%90%91%E4%BA%95-%E6%B7%B3/dp/4839919623%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839919623"><img src="http://ecx.images-amazon.com/images/I/41V0PH2XZGL._SL160_.jpg" class="hatena-asin-detail-image" alt="入門Haskell―はじめて学ぶ関数型言語" title="入門Haskell―はじめて学ぶ関数型言語"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Haskell%E2%80%95%E3%81%AF%E3%81%98%E3%82%81%E3%81%A6%E5%AD%A6%E3%81%B6%E9%96%A2%E6%95%B0%E5%9E%8B%E8%A8%80%E8%AA%9E-%E5%90%91%E4%BA%95-%E6%B7%B3/dp/4839919623%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839919623">入門Haskell―はじめて学ぶ関数型言語</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 向井 淳</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 毎日コミュニケーションズ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2006-03</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4839919623%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4839919623">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<p>「入門 Haskell」は文章が多少こなれていない感じなんだけど、「ふつうのHaskell」のあとに読むと復習になってよかった。「ふつうのHaskell」では扱っていない内容にも踏み込んでいて理解が深まった。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081017/haskell_heapsort" class="hatena-bookmark-button" data-hatena-bookmark-title="Haskell でヒープソートを書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-lang="ja" data-size="horizontal" data-text="Haskell でヒープソートを書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/10/16/as3-debug-library/" rel="previous">ActionScript 3.0 用デバッグ支援ライブラリいろいろ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/10/20/topcoder/" rel="next">TopCoder 参加中&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

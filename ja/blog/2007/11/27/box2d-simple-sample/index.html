@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Box2DFlashAS3 の単純なサンプルと使い方 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Box2DFlashAS3 の単純なサンプルと使い方"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/11/27/box2d-simple-sample/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="このチュートリアルは、Box2DFlashAS3 バージョン 1.4.2 について説明しています。最新の 2.0.2 では多くの API が変更になっています。2.0.2 の使い方については、Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版) をご覧くださいBox2DFlashAS3 のデモは見る分には魅力的なのだけど、勉強し始めるときにはソースが複雑すぎる。ということで、分かりやすく、かつ、見てて楽しいものを作ってみた。（表示されない場合はリロードしてください。）簡単なチュートリアルを作成してみました。参考にどうぞ。世界の作成床の作成積み木の作成シミュレーションの開..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年11月27日</h2>
+<h1>Box2DFlashAS3 の単純なサンプルと使い方</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071127/box2d_simple_sample" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の単純なサンプルと使い方 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/27/box2d-simple-sample/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の単純なサンプルと使い方 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<div style="background:#ffff99; color:#990000; border:2px solid red; padding: .5em; font-weight: bold;">このチュートリアルは、Box2DFlashAS3 バージョン 1.4.2 について説明しています。最新の 2.0.2 では多くの API が変更になっています。2.0.2 の使い方については、<a href="/ja/blog/2009/04/28/box2dflashas3-2-0-2/">Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</a> をご覧ください</div>
+<p><a href="http://box2dflash.sourceforge.net/">Box2DFlashAS3</a> のデモは見る分には魅力的なのだけど、勉強し始めるときにはソースが複雑すぎる。</p>
+<p>ということで、分かりやすく、かつ、見てて楽しいものを作ってみた。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBox2dSimpleSample.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=480&amp;title=Box2dFlashAS3+simple+sample&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>（表示されない場合はリロードしてください。）</p>
+<p>簡単なチュートリアルを作成してみました。参考にどうぞ。</p>
+<ol><li>世界の作成</li><li>床の作成</li><li>積み木の作成</li><li>シミュレーションの開始</li><li>描画</li></ol>
+<h1>1. 世界の作成</h1>
+<p>シミュレーションを行うための世界を作成する。</p>
+<p>worldAABB というのは衝突判定のパラメータの模様。<a href="http://www.box2d.org/manual.html">Box2D User Manual</a> によるとあまり重要ではないパラメータらしい。お約束というところか。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
+<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
+<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>で、生成。第3パラメータは doSleep。詳細未調査。</p>
+<div class="highlight"><pre><span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</pre>
+</div>
+
+<h1>2. 床の作成</h1>
+<p>まずは、床をあらわす Shape の定義を作る。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+<span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+<span class="nx">wallSd</span><span class="p">.</span><span class="nx">localRotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+</pre>
+</div>
+
+<p>300×10 の四角形で、傾きはランダムに定める。</p>
+<p>この Shape を Body に入れる。Body は複数の Shape を格納できるグループのようなもの。たとえ１つの Shape であっても、Body に追加しなければ、Box2d の world には配置できない。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+<span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+<span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>これで、Body の定義ができた。定義を作っただけでは何も配置されない。CreateBody を使って実体を生成する。</p>
+<div class="highlight"><pre><span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>定義はクラスのようなものと考えると分かりやすいかもしれない。CreateBody でインスタンスを作成するわけだ。</p>
+<h1>3. 積み木の作成</h1>
+<p>同じようにして積み木を作成していく。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+<span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+<span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+    <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">160</span> <span class="o">-</span> <span class="mi">40</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+    <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<dl><dt>density</dt><dd>0 以外に設定すると、固定されない（自由落下する）ようになる。</dd><dt>friction</dt><dd>摩擦ぐあいを表すパラメータ。0だとよく滑る。</dd><dt>restitution</dt><dd>はね返り具合。</dd></dl>
+<h1>4. シミュレーションの開始</h1>
+<p>enterFrame の中で次の関数を実行する。</p>
+<div class="highlight"><pre><span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</pre>
+</div>
+
+<ul><li>第一引数（timeStep）は１回のステップで進める秒数。</li><li>第二引数（iterations）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）</li></ul>
+<h1>5. 描画</h1>
+<p>Box2dFlashAS3 は、もともとが C++ のコードなだけに、描画処理が含まれていない。</p>
+<p>自分で描画しなきゃならないのがめんどくさいといえばめんどくさいが、物理エンジンといえば地味な見た目になりがちなので、自分で装飾できるのは魅力的にも思える。</p>
+<p>例えば、BitmapData のテクスチャを張ったり、もしくは、BitmapData 上に描画したりしてもよい。PV3D で 3D 空間に表示したりしても面白いかもしれない。</p>
+<p>ここでは、デモのソースコードから四角形を描画するコードだけを借用した。実際には、ヒモを描画するコードが必要だったりするので、それらは TestBed/Test.as をご覧いただきたい。</p>
+<h1>ソース</h1>
+<p>106行ありますよ。ダウンロードは<a href="http://tech.nitoyon.com/misc/swf/Box2dSimpleSample.as">こちらから</a>。</p>
+<p>(追記)1.4.3 では、import Engine を import Box2d に変更すれば動きます。</p>
+<a name="seemore"></a>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Dynamics</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="nx">Shapes</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Common</span><span class="p">.</span><span class="nb">Math</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;350&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Box2dSimpleSample</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_world</span><span class="o">:</span><span class="nx">b2World</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_physScale</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// loop counter</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Box2dSimpleSample</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;CLICK TO START!!!&quot;</span><span class="p">;</span>
+            <span class="nx">text</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="nx">text</span><span class="p">.</span><span class="nx">visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+                <span class="nx">init</span><span class="p">();</span>
+            <span class="p">});</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="nx">Update</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+            <span class="c1">// Construct a world object</span>
+            <span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
+            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
+            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
+            <span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+            <span class="c1">// Create floor</span>
+            <span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">localRotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
+            <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
+
+            <span class="c1">// Add bodies</span>
+            <span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+            <span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+            <span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">160</span> <span class="o">-</span> <span class="mi">40</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Update</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">m_world</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="c1">// Update physics</span>
+            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">init</span><span class="p">();</span>
+            <span class="p">}</span>
+            <span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+
+            <span class="c1">// Render</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">bb</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">m_world</span><span class="p">.</span><span class="nx">m_bodyList</span><span class="p">;</span> <span class="nx">bb</span><span class="p">;</span> <span class="nx">bb</span> <span class="o">=</span> <span class="nx">bb</span><span class="p">.</span><span class="nx">m_next</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">b2Shape</span> <span class="o">=</span> <span class="nx">bb</span><span class="p">.</span><span class="nx">GetShapeList</span><span class="p">();</span> <span class="nx">s</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">;</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">GetNext</span><span class="p">())</span> <span class="p">{</span>
+                    <span class="nx">DrawShape</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">DrawShape</span><span class="p">(</span><span class="nx">shape</span><span class="o">:</span><span class="nx">b2Shape</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">shape</span><span class="p">.</span><span class="nx">m_type</span> <span class="o">==</span> <span class="nx">b2Shape</span><span class="p">.</span><span class="nx">e_polyShape</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">poly</span><span class="o">:</span><span class="nx">b2PolyShape</span> <span class="o">=</span> <span class="nx">shape</span> <span class="nx">as</span> <span class="nx">b2PolyShape</span><span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">tV</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">AddVV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_position</span><span class="p">,</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">b2MulMV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_R</span><span class="p">,</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
+
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x999999</span><span class="p">,</span> <span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">290</span> <span class="o">?</span> <span class="p">(</span><span class="mi">300</span> <span class="o">-</span> <span class="nx">count</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10.0</span> <span class="o">:</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mh">0xffffff</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">tV</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">tV</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
+
+                <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertexCount</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">v</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">AddVV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_position</span><span class="p">,</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">b2MulMV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_R</span><span class="p">,</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
+                    <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">tV</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">tV</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
+
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071127/box2d_simple_sample" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の単純なサンプルと使い方 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/27/box2d-simple-sample/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の単純なサンプルと使い方 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/11/26/flex2-box2dflashas3/" rel="previous">mxmlcでBox2DFlashAS3のサンプルをビルドする方法</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/11/29/box2dflashas3-bitmap/" rel="next">Box2DFlashAS3 の見た目を豪華にしてみる&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

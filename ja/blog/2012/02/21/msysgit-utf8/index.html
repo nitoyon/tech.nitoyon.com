@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/02/21/msysgit-utf8/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="最近、Git について勉強しています。Windows で Git をやるなら Cygwin と msysGit（Git for Windows） がメジャーなようです。Cygwin Git のいいとこ悪いとこCygwin は UTF-8 な日本語ファイル名にも対応しており、Cygwin の中で閉じて Git を使っている分には何不自由なく使えるのでお勧めです。ただし、次のような悲しいポイントがあります。Cygwin 版 Git は、Windows 向けの GUI な Git ソフト(TortoiseGit や Git Extensions)との相性が悪いWindows のエディタやマージ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2012年02月21日</h2>
+<h1>msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120221/msysgit_utf8" class="hatena-bookmark-button" data-hatena-bookmark-title="msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/02/21/msysgit-utf8/" data-lang="ja" data-size="horizontal" data-text="msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>最近、Git について勉強しています。Windows で Git をやるなら Cygwin と msysGit（Git for Windows） がメジャーなようです。</p>
+<h1>Cygwin Git のいいとこ悪いとこ</h1>
+<p>Cygwin は UTF-8 な日本語ファイル名にも対応しており、Cygwin の中で閉じて Git を使っている分には何不自由なく使えるのでお勧めです。</p>
+<p>ただし、次のような悲しいポイントがあります。</p>
+<ul><li>Cygwin 版 Git は、Windows 向けの GUI な Git ソフト(TortoiseGit や Git Extensions)との相性が悪い</li><li>Windows のエディタやマージツールと連携しようとするとパスのポリシーが違うのでうまくいかない</li><li>nkf を噛ませようとしても、Cygwin 用の nkf バイナリは公式配布されておらず、わざわざ Cygwin 上で make する必要がある</li><li>チェックアウトしたフォルダーをエクスプローラーから丸ごと削除すると、「このフォルダーはほかの人と共有されています」という警告が表示されまくる。Cygwin bash で <code>rm -rf</code> しないと消せない(回避方法を探したが見つからず)。</li></ul>
+<h1>それに比べて msysGit は...</h1>
+<p>msysGit は Cygwin ほど硬派ではないので、Windows の他のツールと相性もいいです。</p>
+<p>しかし、UTF-8 対応していないので<strong>日本語ファイル名を扱えません</strong>でした。日本語ファイル名を含むレポジトリをチェックアウトすると、豪快に文字化けしていました。</p>
+<p>UTF-8 に対応していない問題は msysGit の <a href="http://code.google.com/p/msysgit/issues/detail?id=80">Issue 80</a> に 2008 年ごろから挙がってはいましたが、長らく放置されてきました。<a href="http://tmurakam.org/git/">UTF-8ファイル名対応版 Git for Windows</a> という派生物を作っている方もいるのですが、全部 ANSI で扱ってる TortoiseGit のダメ挙動に合わせているため、正しい解法ではありません。何よりも公式ではないのが悲しいところです。</p>
+<h1>そんな msysGit がついに UTF-8 サポート!!!</h1>
+<p>Windows で Git するなら Cygwin 一択だった悲しい状況でしたが、昨年末あたりから <a href="http://code.google.com/p/msysgit/issues/detail?id=80">Issue 80</a> に新たな動きがあり、Karsten さんという方が積極的に UTF-8 対応に向けて動いてくれていました。</p>
+<a name="seemore"></a>
+<p>そして、2月に入って msysGit の devel ブランチに <strong>UTF-8 対応のコードがコミットされました</strong>(msysGit に同梱される <code>less</code> や <code>vim</code> も同時に UTF-8 対応しているようです)。</p>
+<p>現在の最新版 1.7.9 は UTF-8 対応する前のものです。そのため、UTF-8 対応したリリースは次のバージョン（たぶん 1.7.10）を待たねばなりません。</p>
+<p><strong>(追記 2012/4/12) msysGit 1.7.10 がリリースされました。試してみた記事も書いたのでよければご覧ください（<a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a>）。以下は、1.7.10 がリリースされる前の情報です。</strong></p>
+<p>次のバージョンを待ちきれない人は、Karsten さんが msysGit 1.7.8 をベースにパッチを適用して作成した <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> が公開されているので、こちらを試してみるとよいでしょう。</p>
+<h1>Git-1.7.8-preview20111229-unicode を試してみた</h1>
+<p>ということで、早速 <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> を導入してみました。</p>
+<p>日本語ファイル名を含むレポジトリをチェックアウトしたところ、ファイル名は化けませんでした。チェックアウトしたレポジトリを <a href="http://code.google.com/p/gitextensions/">Git Extensnions</a> で表示してみたところ、ご覧のようにコミットログもファイル名も完璧に日本語を表示できています!!!!</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120221/20120221024334.png"></center>
+<p>(Github の <a href="https://github.com/toooooooby/japanese_test">toooooooby / japanese_test</a> を検証に利用)</p>
+<p>diff のファイル名が化けていたのですが、これは FAQ。次の設定を実施して解決しました。</p>
+<div class="highlight"><pre>git config <span class="o">[</span>--global<span class="o">]</span> core.quotepath off
+</pre>
+</div>
+
+<p>日本語ファイル名の add やコミットログの日本語を自分でも試してみたが、全く問題なく使えています。</p>
+<p>また、msysGit に付属する bash 上で、<code>git log</code> してみましたが、同じようにファイル名やコミットログの日本語が正常に表示できていました。</p>
+<p>...</p>
+<p>一方、TortoiseGit は、日本語ファイル名のファイルに対してコミットしようとするとエラーを吐きます。日本語ファイル名のオーバーレイ アイコンも表示されていません。悲しいですね。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120221/20120221024335.png"></center>
+<p>ただし、TortoiseGit 派の人に朗報です。Karsten さんが TortoiseGit V1.7.5.0 をベースに <code>CP_ACP</code> を <code>CP_UTF8</code> にしてビルドしたパッケージが msysGit のメーリングリストに流れています(<a href="http://groups.google.com/group/msysgit/browse_thread/thread/408f7613d096f2c0/b5ebf2a57c8676d2?lnk=gst&q=v15#b5ebf2a57c8676d2">Issue 80: Unicode support on Windows</a> 参照)。</p>
+<p>わたしは試していませんが、こちらを使うと快適に使えるという情報はあります。</p>
+<blockquote class="twitter-tweet" lang="ja"><p>だめだ、UNICODE対応msysGitとTortoiseGitがかいてきすぎてもとにもでれないひ。</p>&mdash; Tadahiro Ishisakaさん (@ishisaka) <a href="https://twitter.com/ishisaka/status/167601042610061312" data-datetime="2012-02-09T13:29:37+00:00">2月 9, 2012</a></blockquote>
+<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<h1>TortoiseGit vs Git Extensions</h1>
+<p>Windows の GUI な Git クライアントは TortoiseGit と Git Extensions のどちらがよいでしょうか。</p>
+<p>最近、TortoiseGit と Git Extensions の開発状況をウォッチしてるのですが、</p>
+<ul><li>TortoiseGit<ul><li>UI は小奇麗 (TortoiseSVN から派生しているだけに)</li><li>中身は悲惨 (<a href="http://groups.google.com/group/tortoisegit-dev/browse_thread/thread/e8d1effa21a66a27">Issue 867 in tortoisegit: Add should not run a new Git process for each file</a> ってどうなのよ…。(和訳) add すると 1 ファイルにつき 1 プロセス実行されちゃって重いよー)</li><li>Tortoise 系の知名度ゆえに利用者は多いが開発者は少ない</li></ul></li><li>Git Extensions<ul><li>UI はひどい</li><li>中身はそこそこまとも (UTF-8 対応してるし！)</li><li>知名度は低いが、Github 上で pull リクエストが結構飛び交っている (自分も pull リクエスト出してみたら取り込まれた。後日書きます！)</li></ul></li></ul>
+<p>という印象です。</p>
+<p>また、日本語化事情に関しても、TortoiseGit は過去には日本語化プロジェクトがあったものの更新は止まっており<span class="footnote"><a href="#f1" title="（追記 2012/4/15）新たな日本語化プロジェクト「TortoiseGit Japan」が開始したようです。日本語化パッチが配布されています。インストール手順も日本語で解説してあります。" name="fn1">*1</a></span>、それに対して Git Extensions はそこそこの UI が日本語化されています。</p>
+<p>そういった事情からも、Git Extensions を押していきたいところです。</p>
+<p>ただ、GUI があったとしても、Git のコマンドライン版の知識は必要なのが Git のつらいところでしょうか…。</p>
+<p>わたしの場合は <a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Git-%E6%BF%B1%E9%87%8E-%E7%B4%94-Junio-Hamano/dp/4798023809%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4798023809">入門Git</a>で概要を押さえておいて、細かいところは <a href="http://www.amazon.co.jp/%E5%AE%9F%E7%94%A8Git-Jon-Loeliger/dp/4873114403%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873114403">実用Git</a> を読んで理解していっています。<a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Git-%E6%BF%B1%E9%87%8E-%E7%B4%94-Junio-Hamano/dp/4798023809%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4798023809">入門Git</a> は読み物のようにさっと読め、Git のメンテナさんの著書なので Git の思想も分かって面白かったです。一方、<a href="http://www.amazon.co.jp/%E5%AE%9F%E7%94%A8Git-Jon-Loeliger/dp/4873114403%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873114403">実用Git</a> はかなり詳しいので一気に読むのはしんどいですが、気になるところをじっくり読んで、理解を深めることができました。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Git-%E6%BF%B1%E9%87%8E-%E7%B4%94-Junio-Hamano/dp/4798023809%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4798023809"><img src="http://ecx.images-amazon.com/images/I/41R5gj5VRFL._SL160_.jpg" class="hatena-asin-detail-image" alt="入門Git" title="入門Git"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E5%85%A5%E9%96%80Git-%E6%BF%B1%E9%87%8E-%E7%B4%94-Junio-Hamano/dp/4798023809%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4798023809">入門Git</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 濱野 純(Junio C Hamano)</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 秀和システム</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2009-09-19</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4798023809%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4798023809">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E5%AE%9F%E7%94%A8Git-Jon-Loeliger/dp/4873114403%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873114403"><img src="http://ecx.images-amazon.com/images/I/51B2dc%2BsJGL._SL160_.jpg" class="hatena-asin-detail-image" alt="実用Git" title="実用Git"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E5%AE%9F%E7%94%A8Git-Jon-Loeliger/dp/4873114403%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873114403">実用Git</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> Jon Loeliger</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> オライリージャパン</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2010-02-19</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 大型本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4873114403%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4873114403">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<h1>まとめ</h1>
+<ul><li>msysGit 1.7.10 からは UTF-8 対応が入り、日本語ファイルを扱えるようになる (Cygwin 以外の選択肢が増える!!)</li><li>msysGit 1.7.10 を待てない人は <a href="http://code.google.com/p/msysgit/downloads/detail?name=Git-1.7.8-preview20111229-unicode.exe">Git-1.7.8-preview20111229-unicode.exe</a> を試してみるとよい</li><li>TortoiseGit より <a href="http://code.google.com/p/gitextensions/">Git Extensions</a> がオススメ</li></ul>
+<div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: （追記 2012/4/15）新たな日本語化プロジェクト「<a href="http://tortoisegitjapan.com/">TortoiseGit Japan</a>」が開始したようです。日本語化パッチが配布されています。インストール手順も日本語で解説してあります。</p></div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120221/msysgit_utf8" class="hatena-bookmark-button" data-hatena-bookmark-title="msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/02/21/msysgit-utf8/" data-lang="ja" data-size="horizontal" data-text="msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2012/02/14/original-shachihata/" rel="previous">シヤチハタ印鑑をカスタマイズ注文してみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2012/02/23/regex-encoding/" rel="next">文字コードによっては正規表現がエラーになる話&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

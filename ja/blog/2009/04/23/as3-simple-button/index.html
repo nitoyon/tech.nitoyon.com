@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3.0 だけでちょっと素敵なボタンを描くよ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3.0 だけでちょっと素敵なボタンを描くよ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/04/23/as3-simple-button/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="生の ActionScript には標準のボタンコントロールがなくて、手軽に UI を作りこむのが面倒なんだけど、その分、ちょっとがんばればかっこいいボタンを作れちゃうのも魅力的。ここでは70行ほどで作った簡単なボタンを紹介する。北海道を落とすとどう跳ねるか？ で使ったやつ。うれしいこと画像でデータを持つよりもサイズが小さい。拡大しても劣化しない。使い回しがきく。使いまわすと、Flash 全体で見た目を統一できる。実物上下のボタンはクリックすると移動するよ。TEST ボタンは押しても何も起こらないよ。(Flash Player 9.0 以上がインストールされていると、ここに Flash ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年04月23日</h2>
+<h1>AS3.0 だけでちょっと素敵なボタンを描くよ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090423/as3_simple_button" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 だけでちょっと素敵なボタンを描くよ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/23/as3-simple-button/" data-lang="ja" data-size="horizontal" data-text="AS3.0 だけでちょっと素敵なボタンを描くよ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090423/20090423003149.png" width="450" height="90" border="1"></center>
+<p>生の ActionScript には標準のボタンコントロールがなくて、手軽に UI を作りこむのが面倒なんだけど、その分、ちょっとがんばればかっこいいボタンを作れちゃうのも魅力的。</p>
+<p>ここでは70行ほどで作った簡単なボタンを紹介する。<a href="http://d.hatena.ne.jp/nitoyon/20090415/hokkaido">北海道を落とすとどう跳ねるか？</a> で使ったやつ。</p>
+<h1>うれしいこと</h1>
+<ul><li>画像でデータを持つよりもサイズが小さい。</li><li>拡大しても劣化しない。</li><li>使い回しがきく。使いまわすと、Flash 全体で見た目を統一できる。</li></ul>
+<h1>実物</h1>
+<p>上下のボタンはクリックすると移動するよ。TEST ボタンは押しても何も起こらないよ。</p>
+<center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FButtonTest.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=200&amp;title=Button+Test&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9.0 以上がインストールされていると、ここに Flash が表示されますよーっと)</noscript></center>
+<h1>やってること：</h1>
+<ol><li>グラデーションを定義</li><li><code>drawRoundRect()</code> で角丸四角を描く</li><li>内側に向けて <code>GlowFilter</code> で光らせる</li><li>太めに境界線を描く</li><li>マウスが乗っていないときには白黒にする</li></ol>
+<h1>みどころ</h1>
+<p>テキストの中身の HTML を作るときに、E4X を使ってテンプレート風の書き方をしてる。</p>
+<div class="highlight"><pre><span class="nx">textField</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="p">{</span><span class="nx">size</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="nx">label</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
+</pre>
+</div>
+
+<p>たとえば、size 変数が 11 で label 変数が foo だったときには、</p>
+<div class="highlight"><pre><span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;11&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span>
+  <span class="nx">foo</span>
+<span class="o">&lt;</span><span class="err">/font&gt;</span>
+</pre>
+</div>
+
+<p>が入るわけですな。</p>
+<p>コレはお手軽！</p>
+<p>(関連) <a href="/ja/blog/2008/06/12/e4x-expression/">E4X の変数展開 深追い (1)</a></p>
+<h1>ソース</h1>
+<p>ソースは以下に（99行）</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#f0f3f9&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;180&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;120&quot;</span><span class="p">)]</span>
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">ButtonTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ButtonTest</span><span class="p">(){</span>
+        <span class="kd">var</span> <span class="nx">up</span><span class="o">:</span><span class="nx">Button</span>   <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;▲&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span> <span class="nx">as</span> <span class="nx">Button</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">down</span><span class="o">:</span><span class="nx">Button</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;▼&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span> <span class="nx">as</span> <span class="nx">Button</span><span class="p">;</span>
+        <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+
+        <span class="nx">up</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">up</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="p">});</span>
+        <span class="nx">down</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">up</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="s2">&quot;TEST&quot;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">ColorMatrixFilter</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">mono</span><span class="o">:</span><span class="nx">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorMatrixFilter</span><span class="p">([</span>
+        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>     <span class="mi">0</span><span class="p">,</span>     <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="p">]);</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_hover</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">hover</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_hover</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">hover</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">_hover</span> <span class="o">!=</span> <span class="nx">value</span><span class="p">){</span>
+            <span class="nx">_hover</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+            <span class="nx">filters</span> <span class="o">=</span> <span class="p">(</span><span class="nx">_hover</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="p">[</span><span class="nx">mono</span><span class="p">]);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">W</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">H</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">R</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">label</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">size</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
+        <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">bg</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+
+        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xDDE9F4</span><span class="p">,</span> <span class="mh">0xD5E4F1</span><span class="p">,</span> <span class="mh">0xBAD2E8</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">136</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
+        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nx">R</span><span class="p">,</span> <span class="nx">R</span><span class="p">);</span>
+        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+        <span class="nx">bg</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xFFFFBE</span><span class="p">,</span> <span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">true</span><span class="p">)];</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bg</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">line</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+        <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xBAD2E8</span><span class="p">);</span>
+        <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nx">R</span><span class="p">,</span> <span class="nx">R</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">line</span><span class="p">);</span>
+
+        <span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="nx">mono</span><span class="p">];</span>
+        <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">mouseChildren</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">label</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">textField</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+            <span class="nx">textField</span><span class="p">.</span><span class="nx">selectable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="nx">textField</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
+            <span class="nx">textField</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="p">{</span><span class="nx">size</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">label</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
+            <span class="nx">textField</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">W</span> <span class="o">-</span> <span class="nx">textField</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="nx">textField</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="p">(</span><span class="nx">H</span> <span class="o">-</span> <span class="nx">textField</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;rollOver&quot;</span><span class="p">,</span> <span class="nx">buttonRollOver</span><span class="p">);</span>
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;rollOut&quot;</span><span class="p">,</span> <span class="nx">buttonRollOut</span><span class="p">);</span>
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;removed&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;rollOver&quot;</span><span class="p">,</span> <span class="nx">buttonRollOver</span><span class="p">);</span>
+            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;rollOut&quot;</span><span class="p">,</span> <span class="nx">buttonRollOut</span><span class="p">);</span>
+            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;removed&quot;</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="kr">protected</span> <span class="kd">function</span> <span class="nx">buttonRollOver</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">hover</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kr">protected</span> <span class="kd">function</span> <span class="nx">buttonRollOut</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">hover</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<div class="seealso">
+<h1>あわせてどうぞ</h1>
+<ul><li><a href="/ja/blog/2007/08/30/rss-icon-as3/">AS3 で RSS アイコンを描画</a></li><li><a href="/ja/blog/2007/08/01/as3-iphone-button/">AS3 で iPhone 風ボタンを描画</a></li><li><a href="/ja/blog/2008/06/12/e4x-expression/">E4X の変数展開 深追い (1)</a></li><li><a href="/ja/blog/2008/06/13/p1/">E4X の変数展開 深追い (2)</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090423/as3_simple_button" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 だけでちょっと素敵なボタンを描くよ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/23/as3-simple-button/" data-lang="ja" data-size="horizontal" data-text="AS3.0 だけでちょっと素敵なボタンを描くよ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/04/22/hokkaido-uragawa/" rel="previous">北海道を落とすとどう跳ねるのか？の裏側</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/04/27/mixi-hokkaido/" rel="next">mixi で自分の都道府県を落とすアプリを作ってみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Tamarin でマルチスレッド(挫折) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Tamarin でマルチスレッド(挫折)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/03/13/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Tamarin が Windows でも Mac でもビルドできるようになってるようですね。IT戦記 - Linux で tamarin のビルドできたsubtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - Tamarin Mac OSということで、久々の Tamarin ネタ。先日の Tamarin の avmplus.exe に独自関数を実装 のノリで、Tamarin でマルチスレッドを実装してみました。このコードを動かすのが目標でした。import avmplus.*;function proc():void{ for(var i:int = 0; i &amp;..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年03月13日</h2>
+<h1>Tamarin でマルチスレッド(挫折)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070313/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Tamarin でマルチスレッド(挫折) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/13/p1/" data-lang="ja" data-size="horizontal" data-text="Tamarin でマルチスレッド(挫折) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>Tamarin が Windows でも Mac でもビルドできるようになってるようですね。</p>
+<ul><li><a href="http://d.hatena.ne.jp/amachang/20070312/1173696872">IT戦記 - Linux で tamarin のビルドできた</a></li><li><a href="http://subtech.g.hatena.ne.jp/cho45/20070312/1173713224">subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - Tamarin Mac OS</a></li></ul>
+<p>ということで、久々の Tamarin ネタ。</p>
+<p>先日の <a href="http://d.hatena.ne.jp/nitoyon/20070213/p1">Tamarin の avmplus.exe に独自関数を実装</a> のノリで、Tamarin でマルチスレッドを実装してみました。</p>
+<p>このコードを動かすのが目標でした。</p>
+<div class="highlight"><pre><span class="kr">import</span> <span class="nx">avmplus</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">proc</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+<span class="p">{</span>
+	<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="nx">System</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">System</span><span class="p">.</span><span class="nx">threadCreate</span><span class="p">(</span><span class="nx">proc</span><span class="p">);</span>
+<span class="nx">System</span><span class="p">.</span><span class="nx">threadCreate</span><span class="p">(</span><span class="nx">proc</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>avmplus に System.threadCreate 関数を実装して、意気揚々と動かしてみたところ、こんな警告が出力されてしまいました。</p>
+<pre>Unsafe access to GC from wrong thread!</pre>
+<p>Tamarin のソースを grep してみると、MMgc\GC.cpp に該当部分発見。</p>
+<pre>    void GC::CheckThread()
+    {
+#ifdef _DEBUG
+#ifdef WIN32
+        GCAssertMsg(disableThreadCheck || m_gcThread == GetCurrentThreadId(), "Unsafe access to GC from wrong thread!");
+#endif
+#endif
+    }</pre>
+<p>つまり、<strong>Tamarin のガベコレはマルチスレッドをサポートしていない</strong>、ということらしい。ActionScript の仕様上、マルチスレッド対応で作る必要はないから考えてみれば当たり前ですね。</p>
+<p>ちなみに、Tamarin のソースには ECMAScript の仕様で出てくる Internal Method の Function.[[Call]] が native に定義されていて、実際に呼び出すこともできます。いや、内部的にあるのは知ってましたが、実際に呼べるという事実にワクワクしてしまいますね。</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070313/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Tamarin でマルチスレッド(挫折) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/03/13/p1/" data-lang="ja" data-size="horizontal" data-text="Tamarin でマルチスレッド(挫折) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/03/05/hateda-new-css/" rel="previous">新デザイン移行完了</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/03/17/gmail-atom/" rel="next">GMail の未読メールを自作スクリプトから読むための方法まとめ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Google Gears の使い道 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Google Gears の使い道"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/06/03/how-to-use-google-gears/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Google Gears (BETA) が発表されました。Google Gears はウェブサービスにオフライン機能を付け加えやすくするためのフレームワークです。フレームワークが提供するのは次の３つの機能です。LocalServerオフラインになったときにも HTML や JavaScript、CSS にアクセスできるようにする。ブラウザのキャッシュ（一時ファイル）を強化したイメージ。Databaseオフライン時に行った動作を記録しておく。SQLite ベース。ブラウザの Cookie を大容量化したイメージ。WorkerPoolCPU を消費する機能をバックグラウンドで実施する機能。s..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年06月03日</h2>
+<h1>Google Gears の使い道</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070603/how_to_use_google_gears" class="hatena-bookmark-button" data-hatena-bookmark-title="Google Gears の使い道 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/03/how-to-use-google-gears/" data-lang="ja" data-size="horizontal" data-text="Google Gears の使い道 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://gears.google.com/">Google Gears (BETA)</a> が発表されました。</p>
+<p>Google Gears はウェブサービスにオフライン機能を付け加えやすくするためのフレームワークです。</p>
+<p>フレームワークが提供するのは次の３つの機能です。</p>
+<dl><dt>LocalServer</dt><dd>オフラインになったときにも HTML や JavaScript、CSS にアクセスできるようにする。ブラウザのキャッシュ（一時ファイル）を強化したイメージ。</dd><dt>Database</dt><dd>オフライン時に行った動作を記録しておく。SQLite ベース。ブラウザの Cookie を大容量化したイメージ。</dd><dt>WorkerPool</dt><dd>CPU を消費する機能をバックグラウンドで実施する機能。setTimeout で無理やり細切れに実行していた部分を任せることができる。スレッド機能とも考えられる。</dd></dl>
+<p>開発者は、これら３つの機能を駆使して、オフライン機能を実装することになります。</p>
+<p>ありがちな実装パターンはこうなるでしょうか。</p>
+<ul><li>LocalServer を使ってオフライン時にも必要なファイルが手に入るようにする</li><li>オフライン時に行われた変更はサーバーには投げずに、Database に保存</li><li>オンラインになったときに、WorkerPool を使って Database に蓄えたオフライン中の処理データをサーバーに送信</li></ul>
+<h1>素朴な疑問：オフライン機能って必要？</h1>
+<p>利用者の立場から考えて見ます。</p>
+<p>オフラインのときにも使いたくなるサービスって何があるでしょうか。RSS リーダーや GMail、Google Docs & Spreadsheets…。ここまで挙げたあと、続きが思いつきません。</p>
+<p>日曜プログラマが開発するようなちょっとしたアプリケーションでは、オフライン機能を使いたくなるところまでいかないと思います。</p>
+<p>また、オフライン中の操作を Database に保存したり、オンラインになったときに送信したりする部分の実装はかなり煩雑です。</p>
+<p>ばっさり言ってしまえば、<strong>ユーザーからの需要は少ない上に、実装コストが高い</strong>のです。</p>
+<br />
+<p>では、Google Gears は不要な技術なのでしょうか。</p>
+<p>いいえ、実は超絶に魅力的です。</p>
+<p><strong>３つの機能を単体利用</strong>するだけでも、実装効率は格段によくなりそうです。</p>
+<p>１つ１つ説明していきます。</p>
+<h1>LocalServer はブラウザキャッシュをコントロールするための技術</h1>
+<p>ブラウザのキャッシュ（一時ファイル）は、キャッシュする条件がブラウザによってことなるなど、アプリケーション側から完全にコントロールするのは不可能でした。</p>
+<p>それを Google Gears の LocalServer 機能で解決します。</p>
+<p>例えば、こんな使い方はどうでしょう。</p>
+<ul><li>初回ロード時に読み込んだファイルを LocalServer にキャッシュする</li><li>次回ロードからは、LocalServer のファイルを利用してロードする → 表示の高速化</li><li>ロードが完了して落ち着いたころを見計らって、サーバーにアップデート確認<ul><li>更新があった場合には、その場でページを書き換えてもいいが、何もしなくてもいい。既存のブラウザも、キャッシュがある場合には手動でリロードして初めてサーバーにとりに行く実装になっている。</li></ul></li><li>次に読まれそうなデータを先読み（ページ遷移があっても大丈夫!!!）</li></ul>
+<p>重要なのは、<strong>アプリケーション側からブラウザのキャッシュを完全にコントロールできる</strong>ことです。</p>
+<h1>Database は SQL ベースの大容量 Cookie</h1>
+<p>現状のブラウザベースのアプリケーションでは、ちょっとした設定データやセッションデータを Cookie に保存します。</p>
+<p>しかし、Cookie には 4KB 容量制限が重くのしかかります。</p>
+<p>この制限を克服するために、<a href="http://www.niallkennedy.com/blog/archives/2007/01/ajax-performance-local-storage.html">Flash の SharedObject や、DOM Storage（Firefox only）、userData（IE only）を利用する</a> といったバッドノウハウがあるのですが、インターフェースもばらばらな上に、環境依存の問題も併発してしまいそうで、なるべくなら使いたくないのが現状でした。</p>
+<p>そこで、Google Gears の Database です。</p>
+<p><strong>大容量な上に、検索も SQL ベースで高速</strong>なのです。</p>
+<p>また、Apollo β版にも Gears の Database と同様に SQLite ベースのデータベースが付属することが決まっています。</p>
+<p>Adobe の中の人のブログによると、Google Gears と Apollo はこの部分で連携していくようです。</p>
+<blockquote><p>Apollo アプリでもウェブアプリでも、同じようにローカル DB を使えるようなインターフェースがあったら便利だよね。Adobe と Google は、そのインターフェースを連携しながら考えていくよ。</p><blockquote><p>I meant to add that we are working on aligning the Apollo DB and Gears DB apis, with the goal of making it easier to build applications and code that can leverage both API implementations (on the desktop and in the browser).</p><cite><a href="http://www.mikechambers.com/blog/2007/05/30/apollo-beta-will-include-sqlite-embedded-database/">Apollo Beta will include SQLite Embedded Database at Mike Chambers</a></cite></blockquote></blockquote>
+<p>Google と Adobe の連携話からも SQL ベースのローカルストレージが流行っていくような予感がします。</p>
+<h1>WorkerPool で setTimeout 地獄からの開放</h1>
+<p>JavaScript の実装をしていると、ちょっと複雑な処理が入ると、ブラウザが応答しなくなり、CPU 使用率が 100% になってしまいます。</p>
+<p>これを解決するためには、実装すべき機能を細切れにして、setTimeout で呼び出さなければなりませんでした。</p>
+<p>しかし、ソースの可読性が下がってしまうため、あまりやりたくない手段です。</p>
+<p>そこで、Google Gears の WorkerPool です。</p>
+<p>思い処理を WorkerPool に任してしまって、バックグラウンドで処理してもらいます。ついに、<strong>JavaScript でスレッド</strong>を手に入れられるのです。</p>
+<h1>まとめ</h1>
+<ul><li>Google Gears をオフライン機能のために利用するのではなく、それぞれの機能を個別に活用する。</li><li>いままで制御できなかった部分や、泥臭かった部分をすっきり実装できるようになる。</li><li>それだけでも、かなり魅力的。</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070603/how_to_use_google_gears" class="hatena-bookmark-button" data-hatena-bookmark-title="Google Gears の使い道 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/06/03/how-to-use-google-gears/" data-lang="ja" data-size="horizontal" data-text="Google Gears の使い道 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/05/26/apollo-fcsh/" rel="previous">fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き）</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/06/06/offline/" rel="next">Google Gears 発表前と発表後のオフライン事情&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

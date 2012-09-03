@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>C#の JScriptCodeProvider で JScript.NET と仲良くする - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="C#の JScriptCodeProvider で JScript.NET と仲良くする"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/06/05/csharp-jscriptcodeprovider/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="C# からJScriptを呼び出すのは楽しい。何ができるかというと、JScript のソースコードを C# 側で実行時にコンパイルできる。コンパイル後のメソッドを C# から呼び出せたりする。逆に、JScript 側から C# 側のメソッドをコールバックすることもできる。コンパイル結果は DLL として保存もできる。ってことで、C# や VB.NET のアプリを作ってる人は、JScriptCodeProvider を使って JScript を組み込めば、「スクリプト処理系」を手に入れられるわけだ。プラグインにするもよし、設定ファイルに使うもよし。あ、あと、ちょっと努力すれば、VBScri..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年06月05日</h2>
+<h1>C#の JScriptCodeProvider で JScript.NET と仲良くする</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080605/csharp_jscriptcodeprovider" class="hatena-bookmark-button" data-hatena-bookmark-title="C#の JScriptCodeProvider で JScript.NET と仲良くする - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/05/csharp-jscriptcodeprovider/" data-lang="ja" data-size="horizontal" data-text="C#の JScriptCodeProvider で JScript.NET と仲良くする - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>C# からJScriptを呼び出すのは楽しい。</p>
+<p>何ができるかというと、JScript のソースコードを C# 側で実行時にコンパイルできる。コンパイル後のメソッドを C# から呼び出せたりする。逆に、JScript 側から C# 側のメソッドをコールバックすることもできる。コンパイル結果は DLL として保存もできる。</p>
+<p>ってことで、C# や VB.NET のアプリを作ってる人は、JScriptCodeProvider を使って JScript を組み込めば、「スクリプト処理系」を手に入れられるわけだ。プラグインにするもよし、設定ファイルに使うもよし。あ、あと、ちょっと努力すれば、VBScript も組み込めるので、スーツな人も大喜び。</p>
+<p>詳しくは <a href="http://dobon.net/vb/dotnet/programing/eval.html">文字列の計算式の計算結果を取得する: DOBON.NET</a> の JScriptCodeProvider を使う方法が参考になる。このページでは CompileAssemblyFromSource() メソッドを使って文字列からコンパイルする方法を紹介しているが、JSDokan では CompileAssemblyFromFile() を使ってファイルからコンパイルしている。この方法が気になる人は、<a href="http://coderepos.org/share/browser/lang/csharp/JSDokan?rev=13056">JSDokan</a> の <a href="http://coderepos.org/share/browser/lang/csharp/JSDokan/Program.cs?rev=13056">Program.cs</a> を見て欲しい。</p>
+<p>ここからは、DOBON.NET のページに書いていない外堀をざっくりメモしておく。</p>
+<h1>JScript.NET</h1>
+<p>JScript.NET は ECMAScript 4 を先取りしまくっていて、型付けやクラスをサポートしている。書き方は ActionScript 3 と全く同じ。</p>
+<div class="highlight"><pre><span class="kr">import</span> <span class="nx">System</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Hoge</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">doHoge</span><span class="p">(</span><span class="nx">filename</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>型は JavaScript でよく見る型以外でも、import さえしてやれば .NET のクラスは何でも利用できる。アプリで定義したクラスも ReferencedAssemblies として渡してやれば利用できる。ボーダレス！</p>
+<p>調べてみたら、<a href="http://www.microsoft.com/japan/msdn/columns/scripting/scripting07142000.aspx">2000年に書かれた JScript.NET のドキュメント</a>があって、そのころから ECMAScript 4 の仕様は固まってないのかよ、と思うとしみじみしてくる。</p>
+<h1>配列を渡すには</h1>
+<p>C# から配列を渡す方法が分からなくてちょっと苦労した。</p>
+<p>C# で Array を作るには ArrayPrototype.constructor.CreateInstance() とやって ArrayObject を作ってあげればできたんだけど、それだと C# と JScript の間での処理コストが大きい。</p>
+<p>そこで、JScript.NET には「型指定された配列」として、String[] のような型が用意されている。今の ECMAScript4 でいうと、Vector<String> に該当するんだろけど、2000年当時にはそんな仕様なんてなかったのかもしれない。</p>
+<p>ってことで、受け取る側のコードは次のようにする。</p>
+<div class="highlight"><pre><span class="kr">class</span> <span class="nx">Hoge</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">doHoge</span><span class="p">(</span><span class="nx">hoge</span><span class="o">:</span><span class="nb">String</span><span class="p">[])</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span>
+        <span class="c1">// hoge を ふがほげ する</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<h1>リファレンスを渡すには</h1>
+<p>JScript にはプリミティブな値を参照渡しする方法がない。一旦、配列に格納してあげて渡すようにした。かっこ悪いけど仕方ない（のかなぁ…）。</p>
+<h1>感想</h1>
+<p>2008年になって Tamarin だとか SquirrelFish だとか、JavaScript をバイトコード化する技術が脚光を浴びだしてきたけど、2000年に同じようなものを MS が開発していたというのが興味深い。</p>
+<p>今回、久々に JScript.NET と戯れたのだけど、相変わらず MSDN のドキュメントがあっさりしていて困る。それでも、C# 1.1 のときの IVsaEngine に比べて、C# 2.0 ではだいぶだいぶ直感的になっていた。少なくとも C#1.1 時代よりかは…。</p>
+<p>さぁ、みんな JScript.NET で遊ぼうZE!</p>
+<p>　</p>
+<p>関連エントリ：</p>
+<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20041008/p1">JScriptやVBScriptを利用する - てっく煮ブログ</a>：C や C#1.1 で利用する方法</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080605/csharp_jscriptcodeprovider" class="hatena-bookmark-button" data-hatena-bookmark-title="C#の JScriptCodeProvider で JScript.NET と仲良くする - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/05/csharp-jscriptcodeprovider/" data-lang="ja" data-size="horizontal" data-text="C#の JScriptCodeProvider で JScript.NET と仲良くする - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/06/03/perl-open/" rel="previous">Perl 2008年のファイルオープン</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/06/10/mac-firefox3/" rel="next">Mac 版 Firefox3 正式版の Flash Player は日本語入力できないらしい&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

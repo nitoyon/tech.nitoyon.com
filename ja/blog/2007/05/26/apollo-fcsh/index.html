@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き） - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き）"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/05/26/apollo-fcsh/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Apollo mini Camp@Tokyo の効果なのか、再び Apollo 熱が高まってきていますね。週末に Apollo を触ってみよう、という人も多いのでは。ActionScript や MXML を使って Flash で Apollo アプリを作る場合、Flex Builder を使うか、コマンドラインで amxmlc を使うことになります。この amxmlc はビルドに時間がかかってしまうので、fcsh を使って高速化しちゃいましょう。fcsh は 川o・-・）＜2nd life - ActionScript3 (mxmlc) でのコンパイルを100倍速にする方法 が参考にな..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年05月26日</h2>
+<h1>fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き）</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070526/apollo_fcsh" class="hatena-bookmark-button" data-hatena-bookmark-title="fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き） - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/05/26/apollo-fcsh/" data-lang="ja" data-size="horizontal" data-text="fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き） - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://journal.mycom.co.jp/articles/2007/05/24/apollo/index.html">Apollo mini Camp@Tokyo</a> の効果なのか、再び Apollo 熱が高まってきていますね。週末に Apollo を触ってみよう、という人も多いのでは。</p>
+<p>ActionScript や MXML を使って Flash で Apollo アプリを作る場合、Flex Builder を使うか、コマンドラインで amxmlc を使うことになります。</p>
+<p>この amxmlc はビルドに時間がかかってしまうので、fcsh を使って高速化しちゃいましょう。fcsh は <a href="http://d.hatena.ne.jp/secondlife/20070211/1171173690">川o・-・）＜2nd life - ActionScript3 (mxmlc) でのコンパイルを100倍速にする方法</a> が参考になりますが、これが Apollo 用のビルドにも使えちゃいます。</p>
+<p>やり方は簡単。</p>
+<h1>1. fcsh を導入</h1>
+<p><a href="http://labs.adobe.com/wiki/index.php/Flex_Compiler_Shell">Flex Compiler Shell - Adobe Labs</a> からダウンロードして、Flex SDK のディレクトリに置きます。</p>
+<h1>2. 起動</h1>
+<p>コマンドプロンプトやシェルから fcsh を起動します。</p>
+<pre class="">$ fcsh
+Adobe Flex Compiler SHell (fcsh)
+Version 2.0.1 build 162628
+Copyright (c) 2004-2006 Adobe Systems, Inc. All rights reserved.
+
+(fcsh)</pre>
+<h1>3. まずは１回ビルド</h1>
+<p>ビルド対象のファイルをビルドします。amxmlc を mxmlc +configname=apollo に置き換えてビルドするのがポイントです。</p>
+<p>例えば、amxmlc main.mxml でビルドしていた場合は...</p>
+<pre class="">(fcsh) mxmlc +configname=apollo main.mxml
+fcsh: Assigned 1 as the compile target id
+Loading configuration file C:\flex\frameworks\apollo-config.xml
+c:\main.swf (216056 bytes)</pre>
+<p>とします。</p>
+<p>(追記) AIR β版では mxmlc +configname=<strong>air</strong> main.mxml となります。</p>
+<h1>4. そして２回目以降は100倍速</h1>
+<p>Assigned X as the compile target id、と出力されるので、この id を指定して compile を実行します。</p>
+<pre class="">(fcsh) compile 1
+Loading configuration file C:\flex\frameworks\apollo-config.xml
+Nothing has changed since the last compile. Skip...
+c:\main.swf (216056 bytes)</pre>
+<p>以上です。</p>
+<p>ポイントは amxmlc は mxmlc +configname=apollo と同じ、というところです。</p>
+<h1>おまけ：Apollo 参考リンク集！</h1>
+<p>Apollo SDK の導入方法についてはこの辺がおすすめ。</p>
+<ul><li><a href="http://zapanet.info/blog/item/953">はじめてのApolloプログラミング</a> ([Z]ZAPAブロ～グ2.0)</li><li><a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe Apolloメモ</a></li><li><a href="http://gihyo.jp/dev/serial/01/adobe-apollo/0002">第2回　Apollo SDKを使ってみよう｜gihyo.jp</a></li></ul>
+<p>Flex Builder で開発するための設定はこの辺がおすすめ。</p>
+<ul><li><a href="http://gihyo.jp/dev/serial/01/adobe-apollo/0003">第3回　Flex Builderによる開発｜gihyo.jp</a></li></ul>
+<p>チュートリアルは手前味噌ながらこの辺がおすすめ。</p>
+<ul><li><a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる [てっく煮]</a></li><li><a href="http://tech.nitoyon.com/apollo/tutorial/as_apollo.html">ActionScript版 Apollo アプリを作ってみる [てっく煮]</a></li></ul>
+<p>第３回、早く書けよ、と自らの首を絞めつつ終わり。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070526/apollo_fcsh" class="hatena-bookmark-button" data-hatena-bookmark-title="fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き） - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/05/26/apollo-fcsh/" data-lang="ja" data-size="horizontal" data-text="fcsh で Apollo を高速コンパイル（参考リンク集のおまけ付き） - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/05/25/disable-google-history/" rel="previous">Google に検索履歴を取られたくない人向けの設定</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/06/03/how-to-use-google-gears/" rel="next">Google Gears の使い道&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

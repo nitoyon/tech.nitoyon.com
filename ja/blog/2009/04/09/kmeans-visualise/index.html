@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/04/09/kmeans-visualise/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="集合知プログラミング を読んでいたら、K-means 法（K平均法）の説明が出てきました。K-means 法はクラスタリングを行うための定番のアルゴリズムらしいです。存在は知っていたんだけどいまいちピンときていなかったので、動作を理解するためにサンプルを作ってみました。(Flash Player 9 以上が有効だと、ここ分かりやすい Flash が表示されますよ)クリックすると１ステップずつ動かすことができます。クラスタの数や点の数を変更して、Restart を押すと好きなパラメータで試すことができます。こうやって１ステップずつ確認しながら動かしてみると、意外に単純な仕組みなのが実感でき..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年04月09日</h2>
+<h1>クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090409/kmeans_visualise" class="hatena-bookmark-button" data-hatena-bookmark-title="クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/09/kmeans-visualise/" data-lang="ja" data-size="horizontal" data-text="クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873113644/nitoyoncom-22/ref=nosim">集合知プログラミング</a> を読んでいたら、K-means 法（K平均法）の説明が出てきました。</p>
+<p>K-means 法はクラスタリングを行うための定番のアルゴリズムらしいです。存在は知っていたんだけどいまいちピンときていなかったので、動作を理解するためにサンプルを作ってみました。</p>
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FKMeans.swf&amp;up_background=%23223344&amp;synd=open&amp;w=430&amp;h=410&amp;title=K-means+algorithm&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が有効だと、ここ分かりやすい Flash が表示されますよ)</noscript></center>
+<p>クリックすると１ステップずつ動かすことができます。クラスタの数や点の数を変更して、Restart を押すと好きなパラメータで試すことができます。</p>
+<p>こうやって１ステップずつ確認しながら動かしてみると、意外に単純な仕組みなのが実感できました。</p>
+<h1>K-means 法とは</h1>
+<p><a href="http://ja.wikipedia.org/wiki/K%E5%B9%B3%E5%9D%87%E6%B3%95">K平均法 - Wikipedia</a> に詳しく書いてあるけど、もうすこしザックリと書くとこんなイメージになります。</p>
+<ol><li>各点にランダムにクラスタを割り当てる</li><li>クラスタの重心を計算する。</li><li>点のクラスタを、一番近い重心のクラスタに変更する</li><li>変化がなければ終了。変化がある限りは 2. に戻る。</li></ol>
+<p>これでも分かりにくいですね。例題を紹介しましょう。</p>
+<h1>図で解説！</h1>
+<h2>(ステップ1) 1. 初期状態</h2>
+<p>これが初期状態です。色がクラスタを表していています。５色あるので、クラスタは５つですね。</p>
+<p>各点にランダムな色を割り振っています。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022450.png" width="350" height="264"></center>
+<h2>(ステップ2) 2. 重心を計算する</h2>
+<p>クラスタごとに重心（座標の平均値）を求めます。×印が重心です。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022519.png" width="350" height="264"></center>
+<a name="seemore"></a>
+<h2>(ステップ3) 3. 一番近い重心の色に変わる</h2>
+<p>それぞれの点の色を塗り替えます。自分から一番近い重心の色に変わります。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409023131.png" width="350" height="264"></center>
+<p>青の重心は近くに点が少ないので、寂しいクラスタになっちゃってますね。</p>
+<h2>(ステップ4) 2. 再度、重心を計算する</h2>
+<p>重心の位置やクラスタに変化があったので、2. に戻ります。</p>
+<p>新しいクラスタでの重心の位置を求めます。×印がクラスタの中心に移動してますね。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022541.png" width="350" height="264"></center>
+<h2>(ステップ5) 3. 再度、色を置き換える</h2>
+<p>新しい重心の位置に応じて、もう一度色を置き換えます。青と黄が勢力を拡大しました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022619.png" width="350" height="264"></center>
+<h2>(ステップ6) 2. また重心を計算する</h2>
+<p>相変わらず変化があったので、重心の位置をもう１度計算します。</p>
+<p>黄緑の重心が少し右方向に移動しました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022633.png" width="350" height="264"></center>
+<br />
+<h2>(ステップ7) 3. また色を置き換える</h2>
+<p>再クラスタリングします。</p>
+<p>黄緑が赤を少し奪い、黄色が黄緑を少し奪いました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022700.png" width="350" height="264"></center>
+<h2>(ステップ7) 2. またまた重心を計算する</h2>
+<p>黄緑の重心が、さらに右に移動しました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022726.png" width="350" height="264"></center>
+<h2>(ステップ8) 3. またまた色を置き換える</h2>
+<p>黄緑がさらに右方向に勢力を拡大しています。それに伴い、左の方の陣地は、黄色や青色に奪われています。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409022852.png" width="350" height="264"></center>
+<br />
+<h2>(最後) 9. 変化がなくなった</h2>
+<p>さらに何ステップか経過させた結果、ここで終了しました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090409/20090409023141.png" width="350" height="264"></center>
+<p>最終的に黄緑は右上の点を占領したようです。</p>
+<p>全ての点が一番近い重心に属していて、重心の位置も変化しない状態です。それらしく色分けできているのが分かります。</p>
+<br />
+<h1>まとめ</h1>
+<p>K-means 法は単純な仕組みで動いていることが分かりました。単純だからこそ、色んな改良をしやすいんでしょうね。</p>
+<p>ソースコードは少し長いので <a href="http://tech.nitoyon.com/misc/swf/KMeans.as">http://tech.nitoyon.com/misc/swf/KMeans.as</a> に置いています。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E9%9B%86%E5%90%88%E7%9F%A5%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-Toby-Segaran/dp/4873113644%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873113644"><img src="http://ecx.images-amazon.com/images/I/51FgSThMzVL._SL160_.jpg" class="hatena-asin-detail-image" alt="集合知プログラミング" title="集合知プログラミング"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E9%9B%86%E5%90%88%E7%9F%A5%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-Toby-Segaran/dp/4873113644%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4873113644">集合知プログラミング</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> Toby Segaran</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> オライリージャパン</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2008-07-25</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 大型本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4873113644%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4873113644">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="seealso">
+<h1>あわせてどうぞ</h1>
+<ul><li><a href="/ja/blog/2009/04/13/kmeans-visualize-3d/">３Ｄ版！「K-Means法」ビジュアライズしてみた</a></li><li><a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた</a></li><li><a href="/ja/blog/2009/03/16/postal-map/">郵便番号マップを作ってみた</a></li><li><a href="/ja/blog/2009/03/03/dp/">アルゴリズムイントロダクション輪講 動的計画法の発表資料</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090409/kmeans_visualise" class="hatena-bookmark-button" data-hatena-bookmark-title="クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/09/kmeans-visualise/" data-lang="ja" data-size="horizontal" data-text="クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/04/07/ipyweb-released/" rel="previous">ブラウザ上で Python を試せる「IPYWEB」を作ってみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/04/13/kmeans-visualize-3d/" rel="next">３Ｄ版！「K-Means法」ビジュアライズしてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

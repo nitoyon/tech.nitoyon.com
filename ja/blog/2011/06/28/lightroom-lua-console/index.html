@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Lightroom で Lua を eval するプラグインを作った - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Lightroom で Lua を eval するプラグインを作った"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2011/06/28/lightroom-lua-console/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="せっかく Lightroom を買った ので、Lightroom に詳しくなろう、と思って Lightroom SDK を触ってみました。Lightroom では Lua でプラグインを書くことができます。Lua は C 言語に組み込んで使うのが簡単なようで、Wireshark やいくつかのオンラインゲームなどに組み込まれているようです。また、Lightroom はプラグインだけでなく、本体の開発も Lua で行われているようです。興味深いですね。例えばAdobeの画像処理ソフトウェア「Lightroom」では、40%に相当する部分がLuaで記述されているという。[Think ITさっそ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2011年06月28日</h2>
+<h1>Lightroom で Lua を eval するプラグインを作った</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110628/lightroom_lua_console" class="hatena-bookmark-button" data-hatena-bookmark-title="Lightroom で Lua を eval するプラグインを作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/06/28/lightroom-lua-console/" data-lang="ja" data-size="horizontal" data-text="Lightroom で Lua を eval するプラグインを作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>せっかく <a href="http://d.hatena.ne.jp/nitoyon/20110617/lightroom_license">Lightroom を買った</a> ので、Lightroom に詳しくなろう、と思って Lightroom SDK を触ってみました。</p>
+<p>Lightroom では Lua でプラグインを書くことができます。Lua は C 言語に組み込んで使うのが簡単なようで、Wireshark やいくつかのオンラインゲームなどに組み込まれているようです。また、Lightroom はプラグインだけでなく、本体の開発も Lua で行われているようです。興味深いですね。</p>
+<blockquote><p>例えばAdobeの画像処理ソフトウェア「Lightroom」では、40%に相当する部分がLuaで記述されているという。</p><cite><a href="http://thinkit.co.jp/free/article/0711/4/2/">[Think IT</a></cite></blockquote>
+<h1>さっそくプラグインを作ってみた</h1>
+<p>さて、その Lua を使ったらどんなことができるのか調べるために、簡単にコードを eval できるプラグインを作ってみました。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110628/20110628012707.jpg" width="450" height="340"></center>
+<a name="seemore"></a>
+<p>例えば初期状態では、次のようなコードが入っています。</p>
+<div class="highlight"><pre><span class="kd">local</span> <span class="n">LrApplication</span> <span class="o">=</span> <span class="n">import</span> <span class="s1">&#39;</span><span class="s">LrApplication&#39;</span>
+<span class="kd">local</span> <span class="n">catalog</span> <span class="o">=</span> <span class="n">LrApplication</span><span class="p">.</span><span class="n">activeCatalog</span><span class="p">()</span>
+
+<span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">&quot;</span>
+<span class="k">for</span> <span class="n">i</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span> <span class="k">do</span>
+    <span class="kd">local</span> <span class="n">photos</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">:</span><span class="n">findPhotos</span> <span class="p">{</span>
+        <span class="n">searchDesc</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="n">criteria</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">rating&quot;</span><span class="p">,</span>
+             <span class="n">operation</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">==&quot;</span><span class="p">,</span>
+             <span class="n">value</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">..</span> <span class="nb">string.format</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">Rate %d: %05d photo(s)</span><span class="se">\\</span><span class="s">n&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">#</span><span class="n">photos</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="k">return</span> <span class="n">s</span>
+</pre>
+</div>
+
+<p>これを実行すると、カタログ中のレーティング別の写真の数を表示できます。</p>
+<pre>Rate 0: 17920 photo(s)
+Rate 1: 00033 photo(s)
+Rate 2: 00023 photo(s)
+Rate 3: 00013 photo(s)
+Rate 4: 00004 photo(s)
+Rate 5: 00010 photo(s)</pre>
+<p>ただ、標準の <code>edit_field</code> でソースを編集するのはあまりに大変なので、外部エディタで編集して、自動的に更新するような仕組みを導入するよう改善したいと思っています。</p>
+<h1>github で入手してね！</h1>
+<p>github で公開してます。</p>
+<ul><li><a href="https://github.com/nitoyon/lua-console-lightroom-plugin">nitoyon/lua-console-lightroom-plugin · GitHub</a></li></ul>
+<h1>binding がおもしろい</h1>
+<p>Lightroom SDK はだいたい想像通りの構造になってるのですが、GUI を公開するポリシーが割り切っていて興味深いです。</p>
+<p>よくあるフレームワーク設計では、UI のパーツを表現するクラスが公開されていて、そのクラスを組み合わせて <code>addChild</code> なり <code>setText</code> なりするのが普通だと思います。</p>
+<p>けど、Lightroom は違います。UI 作成後、Lua から UI を直接触ることはできません。</p>
+<p>そのかわり、あとから変更・参照したいプロパティには UI 作成時に、binding を渡しておきます。UI 作成後は、binding 経由で UI のプロパティを設定・取得します。</p>
+<p>たとえば、ボタンが押されたときのコールバックでは、ユーザーの入力した値を binding を利用して知ることができます。visible や enable の変更も binding 経由で行います。さらに、binding には変更時のコールバックを登録できるので、例えば、テキストボックスの値を利用者が変更したら通知を受け取る、といったことも可能です。</p>
+<p>このような割り切った設計は、UI のツリー構造を動的に組み替える必要がなく、また、UI 側のフレームワークを自前で提供するならありなのかもしれません。また、Lua では<code>__index</code> でテーブルが変更されることを検知できる言語だ、というのも重要な要素だといえます。</p>
+<h1>Debugging Toolkit for Lightroom 3 SDK が便利</h1>
+<p>Lightroom プラグインの作り方を探してるときに <a href="http://www.johnrellis.com/lightroom/debugging-toolkit.htm">Debugging Toolkit for Lightroom 3 SDK</a> というものを見つけたんだけど、これがなかなか便利。Lua ファイルを再読み込みせずに実行できる。って、あれ？　これがあるなら今回つくったプラグインも不要だったのでは…。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/Adobe-Photoshop-Lightroom-Windows-Macintosh%E7%89%88/dp/B003PPAB9W%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB003PPAB9W"><img src="http://ecx.images-amazon.com/images/I/41aIl%2Bb8d6L._SL160_.jpg" class="hatena-asin-detail-image" alt="Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 (旧価格品)" title="Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 (旧価格品)"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Adobe-Photoshop-Lightroom-Windows-Macintosh%E7%89%88/dp/B003PPAB9W%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB003PPAB9W">Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 (旧価格品)</a></p>
+    <ul>
+
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> アドビシステムズ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2010-06-25</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> CD-ROM</li>
+      <li><a href="http://www.amazon.co.jp/review/product/B003PPAB9W%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3DB003PPAB9W">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/Photoshop-Lightroom-Windows-Macintosh%E7%89%88-%E3%80%90%E7%89%B9%E5%88%A5%E6%8F%90%E4%BE%9B%E7%89%88%E3%80%91/dp/B004WA7E94%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB004WA7E94"><img src="http://ecx.images-amazon.com/images/I/41WP2WVoggL._SL160_.jpg" class="hatena-asin-detail-image" alt="Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 【特別提供版】" title="Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 【特別提供版】"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Photoshop-Lightroom-Windows-Macintosh%E7%89%88-%E3%80%90%E7%89%B9%E5%88%A5%E6%8F%90%E4%BE%9B%E7%89%88%E3%80%91/dp/B004WA7E94%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB004WA7E94">Adobe Photoshop Lightroom 3.0 Windows/Macintosh版 【特別提供版】</a></p>
+    <ul>
+
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> アドビシステムズ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2011-05-13</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> CD-ROM</li>
+      <li><a href="http://www.amazon.co.jp/review/product/B004WA7E94%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3DB004WA7E94">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110628/lightroom_lua_console" class="hatena-bookmark-button" data-hatena-bookmark-title="Lightroom で Lua を eval するプラグインを作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/06/28/lightroom-lua-console/" data-lang="ja" data-size="horizontal" data-text="Lightroom で Lua を eval するプラグインを作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2011/06/17/lightroom-license/" rel="previous">2万6千円でシールを買った話</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2011/08/31/programmable-launcher-clnch3/" rel="next">プログラマブルなコマンドライン ランチャー CraftLaunch 3 が楽しい&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

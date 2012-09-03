@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Tamarin の avmplus.exe に独自関数を実装 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Tamarin の avmplus.exe に独自関数を実装"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/02/13/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="「Tamarin と遊んでみた」の続きです。今回は、avmplus.exe にビルトイン関数を追加してみます。// hoge.asimport avmplus.*;System.alert(&amp;quot;hoge&amp;quot;);avmplus.System パッケージには exit などの関数がありますが、alert 関数は実装ありません。そのため、この hoge.as を実行すると$ avmplus.exe hoge.abcReferenceError: Error #1065参照エラーになってしまいます。これを動かすのが今回の目標です。toplevel.as の実装toplevel.a..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年02月13日</h2>
+<h1>Tamarin の avmplus.exe に独自関数を実装</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070213/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Tamarin の avmplus.exe に独自関数を実装 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/02/13/p1/" data-lang="ja" data-size="horizontal" data-text="Tamarin の avmplus.exe に独自関数を実装 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>「<a href="http://d.hatena.ne.jp/nitoyon/20070201/tamarin_trial">Tamarin と遊んでみた</a>」の続きです。</p>
+<p>今回は、avmplus.exe にビルトイン関数を追加してみます。</p>
+<div class="highlight"><pre><span class="c1">// hoge.as</span>
+<span class="kr">import</span> <span class="nx">avmplus</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="nx">System</span><span class="p">.</span><span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;hoge&quot;</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>avmplus.System パッケージには exit などの関数がありますが、alert 関数は実装ありません。そのため、この hoge.as を実行すると</p>
+<pre>$ avmplus.exe hoge.abc
+ReferenceError: Error #1065</pre>
+<p>参照エラーになってしまいます。</p>
+<p>これを動かすのが今回の目標です。</p>
+<a name="seemore"></a>
+<h1>toplevel.as の実装</h1>
+<p>toplevel.as を覗いてみましょう。</p>
+<pre><span class="synComment">// toplevel.as</span>
+package avmplus 
+{
+    public class System
+    {
+        public native static function exit(status:int):void
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+        public native static function trace(a:Array):void
+        public native static function write(s:String):void
+        public native static function debugger():void
+        public native static function isDebugger():Boolean
+        public native static function getTimer():uint
+        private native static function getArgv():Array
+        public static const argv:Array = getArgv();
+        public native static function readLine():String
+    }
+<span class="synComment">// ...</span></pre>
+<p>avmplus.System パッケージの関数が宣言されていますね。</p>
+<p>native キーワードがついていますが、これらの関数が C++ で関数が実装されていることをあらわします。</p>
+<p>alert 関数も native で実装してみたいところですが、まずは ActionScript で実装してみましょう。</p>
+<br />
+<p>ということで、toplevel.as を書き換えます。System.write 関数をそのまんま使っちゃいます。</p>
+<pre><span class="synComment">// toplevel.as</span>
+package avmplus 
+{
+    public class System
+    {
+        <strong>public static function alert(text:String):void</strong>
+        <strong>{</strong>
+            <strong>System.write(text);</strong>
+        <strong>}</strong>
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+<span class="synComment">// ...</span></pre>
+<h1>toplevel.as のコンパイル</h1>
+<p>さて、avmplus 側は、どう修正すればよいのでしょうか。</p>
+<p>答えは、簡単。shell/toplevel.cpp の中にあります。</p>
+<div class="highlight"><pre><span class="cm">/* shell/toplevel.cpp */</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_length</span> <span class="o">=</span> <span class="mi">4403</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_method_count</span> <span class="o">=</span> <span class="mi">137</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_class_count</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_script_count</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">toplevel_abc_data</span><span class="p">[</span><span class="mi">4403</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="mh">0x10</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xe0</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xef</span><span class="p">,</span> <span class="mh">0x41</span><span class="p">,</span>
+<span class="mh">0x86</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span> <span class="mh">0x72</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x64</span><span class="p">,</span> <span class="mh">0x4c</span><span class="p">,</span> <span class="mh">0x69</span><span class="p">,</span> <span class="mh">0x6e</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x0d</span><span class="p">,</span> <span class="mh">0x74</span><span class="p">,</span> <span class="mh">0x6f</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span>
+<span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x73</span><span class="p">,</span> <span class="mh">0x24</span><span class="p">,</span> <span class="mh">0x31</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x6d</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span>
+<span class="c1">// ...</span>
+</pre>
+</div>
+
+<p>この16進数の羅列が toplevel.as のバイトコードなんです。toplevel.as をバイトコードに変換して、toplevel.cpp を作れば動きそうです。</p>
+<p>ということで、toplevel.as をコンパイルしてみます。-in を指定して、他の AS もまとめてコンパイルするのを忘れずに。</p>
+<pre>java -jar asc_authoring.jar ^
+    -import global.abc ^
+    -in shell\ByteArray.as ^
+    -in shell\Domain.as ^
+    -in shell\DoubleArray.as ^
+    -in shell\Endian.as ^
+    -in shell\FloatArray.as ^
+    -in shell\IntArray.as ^
+    -in shell\Java.as ^
+    -in shell\ShortArray.as ^
+    -in shell\StringBuilder.as ^
+    -in shell\UIntArray.as ^
+    -in shell\UShortArray.as ^
+    -in extensions\Dictionary.as ^
+    shell\toplevel.as
+
+toplevel.abc, 3850 bytes written</pre>
+<p>toplevel.abc が生成されました。</p>
+<p>さらに、なんと toplevel.cpp と toplevel.h も自動的に更新されました。</p>
+<pre><span class="synType">const</span> <span class="synType">int</span> toplevel_abc_length = <span class="synConstant"><strong>3908</strong></span>;
+<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_method_count = <span class="synConstant"><strong>122</strong></span>;
+<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_class_count = <span class="synConstant"><strong>15</strong></span>;
+<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_script_count = <span class="synConstant"><strong>1</strong></span>;
+<span class="synType">static</span> <span class="synType">unsigned</span> <span class="synType">char</span> toplevel_abc_data[<span class="synConstant"><strong>3908</strong></span>] = {
+<span class="synConstant">0x10</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x2e</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x02</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x02</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0xe0</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xef</span>, <span class="synConstant">0x41</span>,
+<span class="synConstant">0x79</span>, <span class="synConstant">0x08</span>, <span class="synConstant">0x72</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x64</span>, <span class="synConstant">0x4c</span>, <span class="synConstant">0x69</span>, <span class="synConstant">0x6e</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x0d</span>, <span class="synConstant">0x74</span>, <span class="synConstant">0x6f</span>, <span class="synConstant">0x70</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x65</span>,
+<span class="synConstant">0x76</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x2e</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x73</span>, <span class="synConstant">0x24</span>, <span class="synConstant">0x31</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x07</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x76</span>, <span class="synConstant">0x6d</span>, <span class="synConstant">0x70</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x75</span>,
+<span class="synComment">// ...</span></pre>
+<p>どうも、ActionScript 内に native 宣言された関数があると、cpp と h が書き出されるようです。</p>
+<p>toplevel_abc_class_count と toplevel_abc_script_count の値が減ってしまっていますが、ひとまずは気にせずに先に進むことにします。</p>
+<h1>いざ、実行</h1>
+<p>toplevel.cpp と toplevel.h が更新されたところで、avmplus.exe をビルドします。</p>
+<p>いざ、実行！</p>
+<pre>$ avmplus.exe hoge.abc
+hoge</pre>
+<p>やったー！</p>
+<p>地味ですが、System.alert() が実行できたことが分かります。</p>
+<h1>alert 関数を native 実装</h1>
+<p>さて、ActionScript で実装していた alert 関数を C++ での実装に切り替えてみましょう。</p>
+<p>まずは、toplevel.as の編集です。alert 関数を native 宣言にします。</p>
+<pre><span class="synComment">// toplevel.as</span>
+package avmplus 
+{
+    public class System
+    {
+        <strong>public native static function alert(text:String):void</strong>
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+<span class="synComment">// ...</span></pre>
+<p>toplevel.as をバイトコードに変換すると、toplevel.cpp と toplevel.h が更新されます。</p>
+<p>native 部分の実装は System.exit 関数を参考に、shell/SystemClass.cpp と shell/SystemClass.h を修正してみます。</p>
+<pre><span class="synComment">/* shell/SystemClass.h */</span>
+<span class="synComment">// ...</span>
+<span class="synType">namespace</span> avmshell
+{
+    <span class="synType">class</span> SystemClass : <span class="synStatement">public</span> ClassClosure
+    {
+        
+        <span class="synComment">//#define PERFORMANCE_GETTIMER</span>
+<span class="synPreProc">        #ifdef PERFORMANCE_GETTIMER</span>
+        uint64 initialTime;
+<span class="synPreProc">        #else</span>
+        <span class="synType">double</span> initialTime;
+<span class="synPreProc">        #endif</span>
+
+    <span class="synStatement">public</span>:
+        SystemClass(VTable* cvtable);
+        ~SystemClass();
+
+        <span class="synComment">// set by shell</span>
+        <span class="synType">static</span> <span class="synType">int</span> user_argc;
+        <span class="synType">static</span> <span class="synType">char</span> **user_argv;
+
+        <strong><span class="synType">void</span> alert(Stringp text);</strong>
+
+        <span class="synComment">/**</span>
+<span class="synComment">         * Implementation of System.exit</span>
+<span class="synComment">         * AS usage: System.exit(status);</span>
+<span class="synComment">         * Exits the VM with OS exit code specified by  status.</span>
+<span class="synComment">         */</span>
+        <span class="synType">void</span> exit(<span class="synType">int</span> status);
+<span class="synComment">// ...</span></pre>
+<pre><span class="synComment">/* shell/SystemClass.cpp */</span>
+<span class="synPreProc">#include </span><span class="synConstant">"avmshell.h"</span>
+
+<span class="synPreProc">#include </span><span class="synConstant"><stdlib.h></span>
+
+<span class="synType">namespace</span> avmshell
+{
+    BEGIN_NATIVE_MAP(SystemClass)
+        <strong>NATIVE_METHOD(avmplus_System_alert, SystemClass::alert)</strong>
+        NATIVE_METHOD(avmplus_System_exit, SystemClass::exit)
+        <span class="synComment">// ...</span>
+    END_NATIVE_MAP()
+
+    <strong><span class="synType">void</span> SystemClass::alert(Stringp text)</strong>
+    <strong>{</strong>
+        <strong>MessageBoxW(<span class="synConstant">NULL</span>, text->c_str(), <span class="synConstant">L"avmplus"</span>, MB_ICONEXCLAMATION);</strong>
+    <strong>}</strong>
+
+    <span class="synType">void</span> SystemClass::exit(<span class="synType">int</span> status)
+    {
+        ::exit(status);
+    }
+<span class="synComment">// ...</span></pre>
+<p>avmplus_System_alert は、先ほどの toplevel.as のコンパイル時に toplevel.h に生成されています。バイトコード中の native 宣言と C++ の中継ぎをするのが、この BEGIN_NATIVE_MAP であり、avmplus_System_alert であるわけです。</p>
+<p>SystemClass::alert では、C++ らしく MessageBoxW 関数を呼び出しています。Win32 プログラミングではおなじみのメッセージ表示用の関数です。W は Unicode 版をあらわします。</p>
+<h1>いざ、実行 (2)</h1>
+<p>avmplus.exe をビルドして、hoge.abc を実行してみます。</p>
+<pre>$ avmplus.exe hoge.abc</pre>
+<p>メッセージが表示されました。</p>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070213/20070213090152.gif"></p>
+<p>hoge.abc の再コンパイルしなくても、avmplus.exe の実装を変えるだけで挙動が変わるのがおもしろいですね！</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070213/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Tamarin の avmplus.exe に独自関数を実装 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/02/13/p1/" data-lang="ja" data-size="horizontal" data-text="Tamarin の avmplus.exe に独自関数を実装 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/02/11/p1/" rel="previous">新デザイン移行計画</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/02/14/p1/" rel="next">ExternalInterface.addCallback で定義された関数は apply できない&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

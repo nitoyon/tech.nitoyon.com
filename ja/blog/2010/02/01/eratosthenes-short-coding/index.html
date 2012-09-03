@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ActionScript3 で素数列挙を short coding - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ActionScript3 で素数列挙を short coding"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/02/01/eratosthenes-short-coding/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ActionScript3 で素数列挙の short coding にチャレンジしてみる。ネタ元はこれ。for(a=[],b=[],c=1;c++&amp;lt;1E3;)if(!a[c])for(b.push(d=c);d&amp;lt;1E3;a[d+=c]=1);alert(&quot;素数&quot; + b);&amp;mdash; javascripterさん (@javascripter) 1月 29, 2010元々のコードは JavaScript で「エラトステネスのふるい」を短く書いたもの。JavaScript のコードがあるんだから、ActionScript でも同じぐらいで書けるはずと信じてやってみた。str..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年02月01日</h2>
+<h1>ActionScript3 で素数列挙を short coding</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100201/eratosthenes_short_coding" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 で素数列挙を short coding - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/01/eratosthenes-short-coding/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 で素数列挙を short coding - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>ActionScript3 で素数列挙の short coding にチャレンジしてみる。ネタ元はこれ。</p>
+<blockquote class="twitter-tweet" lang="ja"><p>for(a=[],b=[],c=1;c++&lt;1E3;)if(!a[c])for(b.push(d=c);d&lt;1E3;a[d+=c]=1);alert("素数" + b);</p>&mdash; javascripterさん (@javascripter) <a href="https://twitter.com/javascripter/status/8367943818" data-datetime="2010-01-29T13:45:14+00:00">1月 29, 2010</a></blockquote>
+<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>元々のコードは JavaScript で「<a href="http://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%A9%E3%83%88%E3%82%B9%E3%83%86%E3%83%8D%E3%82%B9%E3%81%AE%E7%AF%A9">エラトステネスのふるい</a>」を短く書いたもの。JavaScript のコードがあるんだから、ActionScript でも同じぐらいで書けるはずと信じてやってみた。</p>
+<h1>strict 版</h1>
+<p>まずは、warning が出ないもの。227文字。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span><span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span><span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span><span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)}}}}</span>
+</pre>
+</div>
+
+<p>出力はこんな感じ。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100201/20100201021757.png" border="1"></center>
+<p>10個ごとに素数の数字を黒い点で表している。左上が 0 で、右にいくと 2, 3 が連続して素数として現れて、そのあと、5,7 と続く。2段目からは 11, 13, 17, 19 が現れる。</p>
+<p>少し考えたら当たり前だと分かるのだけど下一桁が 0,4,6,9の列は素数が１つも現れないし、2,5の列は一番上にしか素数が登場しない。10以上の素数の下一桁は 1,3,7,9 のいずれかなのだ。こうやって図にしてみると、改めて気づかされて面白い。</p>
+<p>で、肝心のソースコードのインデントを復元するとこんな感じ。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+        <span class="c1">// 1から1E3(=1000)までループを回す</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+            <span class="c1">// 素数かどうか判定</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span>
+                <span class="c1">// 素数のとき：</span>
+                <span class="c1">// c*2,c*3,c*4... で a のフラグを立てる</span>
+                <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+                    <span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span>
+
+                <span class="c1">// 該当する位置に四角を描画する</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)</span>
+            <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>短くするための工夫は色々してある。思いつく範囲で列挙するだけでも</p>
+<ul><li>コンストラクタでは戻り値 <code>:void</code> を書かなくても warning は出ない</li><li>graphics.endFill() がなくても動くのでやらない</li><li>Math.floor() は int() で代用</li><li>変数宣言は１箇所にまとめる。しかも for の中でやっちゃうことで、var 文の ; を節約できる</li><li>; を省略できるところは省略しちゃう</li></ul>
+<p>といったあたり。</p>
+<p>これより短くできるのか気になる。ルールは</p>
+<ul><li>ライブラリは使用せず、Flash がネイティブに提供する API を利用すること</li><li>素数の表示方法は問わない</li></ul>
+<p>といったあたりか。ただ、TextField 使ったら <code>import flash.text.*;</code> だけでかなりの文字数になるし、BitmapData は初期化と表示に文字数食われるし、Graphicsを使うのが最短な気がしている。</p>
+<h1>strict じゃない版</h1>
+<p>warning が出てもいいならもう少し短くできる。210文字。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span><span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span><span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span><span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">g</span><span class="o">=</span><span class="nx">graphics</span><span class="o">,</span><span class="nx">a</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span><span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span><span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="nx">g</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)}}}}</span>
+</pre>
+</div>
+
+<p>いちおう、整形したソースコードを掲載しておく。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">g</span><span class="o">=</span><span class="nx">graphics</span><span class="o">,</span><span class="nx">a</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span>
+                <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+                    <span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span>
+                <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+                <span class="nx">g</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)</span>
+            <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>型宣言しなくてもいい分だけ短くなった。</p>
+<p>また、今までは <code>graphics</code> と２回入力していたが、<code>g=graphics,</code> の11文字を追加することで、<code>graphics</code>(8文字) が g の1文字で済むようになった。graphics は2回登場していたので、16文字が13文字に減ったので3文字の節約だ。ただ、そのせいで beginFill() する位置が変化したが、これでも動いてるので問題はないこととする。</p>
+<br />
+<h1>まとめ</h1>
+<p>これ以上短くできるのかな。挑戦者求む。ソースは wonderfl に投稿してある。</p>
+<ul><li><a href="http://wonderfl.net/code/06d5fe4b3f3b9813205a5e1840bb73af656ee47c">strict版 (227文字)</a></li><li><a href="http://wonderfl.net/code/73bee2d0ed3291b6b7e18c1a7bd4f1f0e8b76ed6">strictじゃない版 (210文字)</a></li></ul>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/Short-Coding-%7E%E8%81%B7%E4%BA%BA%E9%81%94%E3%81%AE%E6%8A%80%E6%B3%95%7E-Ozy/dp/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839925232"><img src="http://ecx.images-amazon.com/images/I/41r3XRAEcKL._SL160_.jpg" class="hatena-asin-detail-image" alt="Short Coding ~職人達の技法~" title="Short Coding ~職人達の技法~"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Short-Coding-%7E%E8%81%B7%E4%BA%BA%E9%81%94%E3%81%AE%E6%8A%80%E6%B3%95%7E-Ozy/dp/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839925232">Short Coding ~職人達の技法~</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> Ozy</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 毎日コミュニケーションズ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2007-08-09</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本（ソフトカバー）</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4839925232">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100201/eratosthenes_short_coding" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 で素数列挙を short coding - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/01/eratosthenes-short-coding/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 で素数列挙を short coding - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/" rel="previous">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/02/02/eratosthenes-short-coding2/" rel="next">ActionScript3 で素数列挙を short coding (2)&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

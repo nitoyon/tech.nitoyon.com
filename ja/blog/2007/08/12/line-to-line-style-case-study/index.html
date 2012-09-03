@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>lineTo と moveTo あたりのケーススタディ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="lineTo と moveTo あたりのケーススタディ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/08/12/line-to-line-style-case-study/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回に引き続き、今度は Graphics クラスの lineTo と lineStyle あたりの挙動と、beginFill のからみを調べてみた。今回も環境は AS3 だけど、最後に AS2 で試した場合の補足をつけておいた。Case 1： 普通に線を描画package{ import flash.display.*; public class Test extends Sprite { public function erase() { graphics.lineStyle(3, 0xff0000); graphics.moveTo(100, 0); graphics.lineTo(..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年08月12日</h2>
+<h1>lineTo と moveTo あたりのケーススタディ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070812/line_to_line_style_case_study" class="hatena-bookmark-button" data-hatena-bookmark-title="lineTo と moveTo あたりのケーススタディ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/08/12/line-to-line-style-case-study/" data-lang="ja" data-size="horizontal" data-text="lineTo と moveTo あたりのケーススタディ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20070810/begin_fill_end_fill_case_study">前回</a>に引き続き、今度は Graphics クラスの lineTo と lineStyle あたりの挙動と、beginFill のからみを調べてみた。</p>
+<p>今回も環境は AS3 だけど、最後に AS2 で試した場合の補足をつけておいた。</p>
+<h1>Case 1： 普通に線を描画</h1>
+<div class="highlight"><pre><span class="kr">package</span>
+<span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
+    <span class="p">{</span>
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">erase</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>lineStyle で線の色と太さを設定して、moveTo で現在の位置を移動、lineTo および curveTo で描画してる。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031414.gif" width="209" height="118"></center>
+<h1>Case 2： beginFill と endFill の効果</h1>
+<p>左側の図形描画を beginFill と endFill を挟んでみた。</p>
+<pre><strong>graphics.beginFill(0xffffcc);</strong>
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+<strong>graphics.endFill();</strong>
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
+<p>始点と終点が結ばれて、内側が beginFill で指定した色で塗られた。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031413.gif" width="209" height="118"></center>
+<p>endFill のあとも、線のスタイルは変化していない点に注意したい。塗りの情報と線の情報は独立のようだ。</p>
+<p>塗りの情報は endFill を呼び出せば初期化される。では、線のスタイルを初期化するにはどうするかというと、lineStyle メソッドを引数なしで呼び出せばよい。</p>
+<p>例えば、次のように endFill の前に線のスタイルを初期化してみると…。</p>
+<pre>graphics.beginFill(0xffffcc);
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+<strong>graphics.lineStyle();</strong>
+graphics.endFill();</pre>
+<p>こうなった。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031412.gif" width="209" height="118"></center>
+<p>パスを閉じる線が太さ0で初期化されているのが分かる。</p>
+<h1>Case 3： beginFill しっぱなしで、endFill しない</h1>
+<p>最初に beginFill して、endFill しない。</p>
+<pre><strong>graphics.beginFill(0xffffcc);</strong>
+graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
+<p>両方塗られる。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031411.gif" width="209" height="118"></center>
+<p>moveTo すると、その時点でパスが閉じられて、塗られるようだ。</p>
+<p>注目すべきは、右の図形も同じ色で塗られているところ。moveTo は、塗りを発生させるが、塗りの情報は維持されたまま、次の図形にも適用されるようだ。</p>
+<p>Case 2 では、右の図形が塗られていないところと比較すると面白い。</p>
+<h1>Case 4： ２つ目のみ beginFill</h1>
+<p>moveTo のあとに beginFill で塗りを設定。</p>
+<pre>graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+graphics.moveTo(150, 100);
+<strong>graphics.beginFill(0xffffcc);</strong>
+graphics.curveTo(240, 50, 150, 0);</pre>
+<p>想像通り。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031608.gif" width="209" height="118"></center>
+<p>でも、moveTo の前に beginFill を持ってくると…</p>
+<pre>graphics.lineStyle(3, 0xff0000);
+
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+
+<strong>graphics.beginFill(0xffffcc);</strong>
+
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
+<p>ナニコレ。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031607.gif" width="209" height="118"></center>
+<p>謎だ。</p>
+<p>どうも beginFill せずに描画したパスに対して、途中で beginFill を呼び出すとこうなるようだ。beginFill の手前で moveTo を挟んで、パスをいったん閉じるとバグらなくなった。endFill を挟んでも解決しなかったので、endFill は beginFill したときにしか機能しないんだろうと想像できる。</p>
+<h1>補足： AS2 で試してみた</h1>
+<p>AS2（Flash MX 2004）で試してみたら、Case 3 と Case 4 の１つ目で、右側が黒くなるバグが発生した。コードの最後に、ちゃんと endFill してやれば、AS3 と全く同じ見た目になった。</p>
+<p>描画部分は、AS1 の時代からほとんど変わってないんだろうな。</p>
+<h1>まとめ</h1>
+<ul><li>lineStyle は塗りの情報とは独立。好きなときに呼び出してよい。</li><li>endFill はパスを閉じて、領域を塗る。塗りの情報は初期化される。</li><li>moveTo はパスを閉じて、領域を塗る。塗りの情報は維持される（初期化されない）。</li><li>beginFill してないパスは、moveTo で閉じてから、beginFill を呼べ</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070812/line_to_line_style_case_study" class="hatena-bookmark-button" data-hatena-bookmark-title="lineTo と moveTo あたりのケーススタディ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/08/12/line-to-line-style-case-study/" data-lang="ja" data-size="horizontal" data-text="lineTo と moveTo あたりのケーススタディ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/08/10/begin-fill-end-fill-case-study/" rel="previous">beginFill と endFill のケーススタディ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/08/16/flex-in-suit-land/" rel="next">スーツの国の Flex&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

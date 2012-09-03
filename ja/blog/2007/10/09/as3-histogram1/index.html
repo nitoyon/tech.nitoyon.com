@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3 でヒストグラムを作る (1) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3 でヒストグラムを作る (1)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/09/as3-histogram1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="今週は ActionScript でヒストグラムを作っていきます。画像の色分布をグラフ表示したやつです。手順：1. グレースケール化最初に各チャンネルの平均をとるために白黒画像にします。ColorMatrixFilter を使えば一発ですね。2. threshold でカウント各階調のピクセル数を調べるために threshold を使います。threshold は戻り値でマッチしたピクセル数が返ってくるので、これを利用します。3. 描画lineTo で描画します。高速化の余地はありそうだけど、複雑になりそうなのでこのへんで。次回からはヒストグラムを操作できるようにしていきます。ソースコー..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月09日</h2>
+<h1>AS3 でヒストグラムを作る (1)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071009/as3_histogram1" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でヒストグラムを作る (1) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/09/as3-histogram1/" data-lang="ja" data-size="horizontal" data-text="AS3 でヒストグラムを作る (1) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>今週は ActionScript でヒストグラムを作っていきます。画像の色分布をグラフ表示したやつです。</p>
+<p><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071009/20071009090130.jpg" width="261" height="281" alt="ヒストグラム (吉島家)"></center></p>
+<p>手順：</p>
+<dl><dt>1. グレースケール化</dt><dd>最初に各チャンネルの平均をとるために白黒画像にします。ColorMatrixFilter を使えば一発ですね。</dd><dt>2. threshold でカウント</dt><dd>各階調のピクセル数を調べるために threshold を使います。threshold は戻り値でマッチしたピクセル数が返ってくるので、これを利用します。</dd><dt>3. 描画</dt><dd>lineTo で描画します。</dd></dl>
+<p>高速化の余地はありそうだけど、複雑になりそうなのでこのへんで。</p>
+<p>次回からはヒストグラムを操作できるようにしていきます。</p>
+<p>ソースコードは以下に(45行)。</p>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">ColorMatrixFilter</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;256&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;276&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Histogram1</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;yoshijima.jpg&quot;</span><span class="p">)]</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SampleImage</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Histogram1</span><span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">SampleImage</span><span class="p">())).</span><span class="nx">bitmapData</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span><span class="nx">s</span><span class="p">);</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// ヒストグラムを作成する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="c1">// グレースケール化</span>
+            <span class="kd">var</span> <span class="nx">cmf</span><span class="o">:</span><span class="nx">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorMatrixFilter</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
+                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
+                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">cmf</span><span class="p">);</span>
+
+            <span class="c1">// threshold でカウント</span>
+            <span class="kd">var</span> <span class="nx">values</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
+
+            <span class="c1">// 描画</span>
+            <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">50</span><span class="p">;</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">/</span> <span class="nx">max</span> <span class="o">*</span> <span class="mi">100</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071009/as3_histogram1" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でヒストグラムを作る (1) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/09/as3-histogram1/" data-lang="ja" data-size="horizontal" data-text="AS3 でヒストグラムを作る (1) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/05/potras-pop/" rel="previous">PotrAs でチラシ文字</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/10/as3-histogram2/" rel="next">AS3 でヒストグラムを作る (2) - スライダー篇&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

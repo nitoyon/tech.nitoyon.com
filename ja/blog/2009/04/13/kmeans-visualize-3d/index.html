@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>３Ｄ版！「K-Means法」ビジュアライズしてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="３Ｄ版！「K-Means法」ビジュアライズしてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/04/13/kmeans-visualize-3d/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回の クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた が好評だったので、３Ｄ空間でも K平均法をビジュアライズしてみました。(Flash Player 10 以上が有効だと、ここに Flash が表示されますよ)ちょっと重めなのでクリックすると始まります。さらにクリックして、１ステップずつ動かしてみてください。3次元にしてみると、宇宙空間のように見えてきて美しいです。前回からは数式の上ではほとんど変わってなくて、２次元空間上での距離だったのが３次元での距離になったぐらいです。K平均法については、前回のエントリ クラスタリングの定番アルゴリズム「K-mean..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年04月13日</h2>
+<h1>３Ｄ版！「K-Means法」ビジュアライズしてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090413/kmeans_visualize_3d" class="hatena-bookmark-button" data-hatena-bookmark-title="３Ｄ版！「K-Means法」ビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/13/kmeans-visualize-3d/" data-lang="ja" data-size="horizontal" data-text="３Ｄ版！「K-Means法」ビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>前回の <a href="http://d.hatena.ne.jp/nitoyon/20090409/kmeans_visualise">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a> が好評だったので、３Ｄ空間でも K平均法をビジュアライズしてみました。</p>
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FKMeans3D.swf&amp;up_background=%23223344&amp;synd=open&amp;w=430&amp;h=410&amp;title=K-means+algorithm+3D&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 10 以上が有効だと、ここに Flash が表示されますよ)</noscript></center>
+<p>ちょっと重めなのでクリックすると始まります。さらにクリックして、１ステップずつ動かしてみてください。3次元にしてみると、宇宙空間のように見えてきて美しいです。</p>
+<p>前回からは数式の上ではほとんど変わってなくて、２次元空間上での距離だったのが３次元での距離になったぐらいです。K平均法については、前回のエントリ <a href="http://d.hatena.ne.jp/nitoyon/20090409/kmeans_visualise">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a> をご覧ください。</p>
+<p>ちなみに、3次元座標の計算は、Flash 10 から導入された Matrix3D を使っています。ソースは <a href="http://nutsu.com/blog/2008/102321_matrix3d_test.html">[as]FP10をそろそろ。Matrix3Dとか [NUTSU]</a> を参考にさせてもらいました。Zソートしてないので、たまに奥のものが手前に表示されたりするのですが、あまり気にならないのでそのままにしてます。</p>
+<p>以下、ソースコードです(364行)。</p>
+<a name="seemore"></a>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1">// K-Means algorithm visualization</span>
+<span class="c1">//  - requires sketchbook</span>
+<span class="c1">//    http://sketchbook.libspark.org/</span>
+<span class="c1">//  - requires tweener</span>
+<span class="c1">//    http://code.google.com/p/tweener/</span>
+<span class="kr">package</span><span class="p">{</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">sketchbook</span><span class="p">.</span><span class="nx">colors</span><span class="p">.</span><span class="nx">ColorSB</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">caurina</span><span class="p">.</span><span class="nx">transitions</span><span class="p">.</span><span class="nx">Tweener</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">system</span><span class="p">.</span><span class="nx">Capabilities</span><span class="p">;</span>
+
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#223344&quot;</span><span class="p">,</span> <span class="nx">frameRate</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="mi">400</span><span class="p">)]</span>
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">KMeans3D</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">k</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">colors</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dots</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">Dot</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dotsPos</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dotsView</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">groups</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">centers</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">Center</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">changed</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">lineCanvas</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">started</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">rotateAxis</span><span class="o">:</span><span class="nx">Vector3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector3D</span><span class="p">(</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span> <span class="p">);</span>
+
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">ANIMATE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">.</span><span class="mi">4</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">KMeans3D</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+
+        <span class="kd">var</span> <span class="nx">version</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">Capabilities</span><span class="p">.</span><span class="nx">version</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">version</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+            <span class="nx">tf</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
+            <span class="nx">tf</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
+            <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span><span class="s2">&quot;Flash Player 10 or later required.&quot;</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// init canvas</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">mouseChildren</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">lineCanvas</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">state</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">started</span><span class="p">){</span>
+                <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">render</span><span class="p">);</span>
+                <span class="nx">started</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+                <span class="nx">moveCenter</span><span class="p">();</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="nx">updateGroups</span><span class="p">();</span>
+            <span class="p">}</span>
+            <span class="nx">state</span> <span class="o">=</span> <span class="p">(</span><span class="nx">state</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="c1">// init inputs</span>
+        <span class="kd">var</span> <span class="nx">nInput</span><span class="o">:</span><span class="nx">Input</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Input</span><span class="p">(</span><span class="s2">&quot;N (the number of node):&quot;</span><span class="p">,</span> <span class="s2">&quot;100&quot;</span><span class="p">);</span>
+        <span class="nx">nInput</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">nInput</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">kInput</span><span class="o">:</span><span class="nx">Input</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Input</span><span class="p">(</span><span class="s2">&quot;K (the number of cluster):&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">);</span>
+        <span class="nx">kInput</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">nInput</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">nInput</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">kInput</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">nextButton</span><span class="o">:</span><span class="nx">Button</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="s2">&quot;Step&quot;</span><span class="p">);</span>
+        <span class="nx">nextButton</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">kInput</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">kInput</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">nextButton</span><span class="p">);</span>
+        <span class="nx">nextButton</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">resetButton</span><span class="o">:</span><span class="nx">Button</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="s2">&quot;Restart&quot;</span><span class="p">);</span>
+        <span class="nx">resetButton</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">nextButton</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="nx">resetButton</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">nextButton</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">resetButton</span><span class="p">);</span>
+        <span class="nx">resetButton</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">changed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="nx">state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+            <span class="nx">k</span> <span class="o">=</span> <span class="nx">kInput</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+            <span class="nx">n</span> <span class="o">=</span> <span class="nx">nInput</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+            <span class="nx">init</span><span class="p">();</span>
+        <span class="p">});</span>
+        <span class="nx">resetButton</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">));</span>
+        <span class="nx">render</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="c1">// remove previous sprites</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">dot</span><span class="o">:</span><span class="nx">Dot</span> <span class="k">in</span> <span class="nx">dots</span><span class="p">){</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">dot</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Center</span> <span class="k">in</span> <span class="nx">centers</span><span class="p">){</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">center</span><span class="p">)</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">center</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// init colors</span>
+        <span class="nx">colors</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">k</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">colors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">ColorSB</span><span class="p">.</span><span class="nx">createHSB</span><span class="p">(</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">360</span> <span class="o">/</span> <span class="nx">k</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">100</span><span class="p">).</span><span class="nx">value</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// init dot</span>
+        <span class="nx">dots</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">Dot</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">n</span><span class="p">);</span>
+        <span class="nx">dotsPos</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">((</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">k</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
+        <span class="nx">dotsView</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">((</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">k</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
+        <span class="nx">groups</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="nx">centers</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">Center</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">k</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">group</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">k</span><span class="p">);</span>
+            <span class="nx">dots</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dot</span><span class="p">(</span><span class="nx">colors</span><span class="p">[</span><span class="nx">group</span><span class="p">]);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">dots</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">])</span> <span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">render</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">_matrix</span><span class="p">.</span><span class="nx">appendRotation</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">rotateAxis</span> <span class="p">);</span>
+        <span class="nx">_matrix</span><span class="p">.</span><span class="nx">transformVectors</span><span class="p">(</span><span class="nx">dotsPos</span><span class="p">,</span> <span class="nx">dotsView</span><span class="p">);</span>
+
+        <span class="c1">//描画</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">dots</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">update</span><span class="p">(</span><span class="nx">dotsView</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span><span class="p">],</span> 
+                           <span class="nx">dotsView</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="nx">dotsView</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">k</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="k">continue</span><span class="p">;</span>
+            <span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">update</span><span class="p">(</span><span class="nx">dotsView</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">],</span> 
+                              <span class="nx">dotsView</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                              <span class="nx">dotsView</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]);</span>
+            <span class="kd">var</span> <span class="nx">col</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="kd">var</span> <span class="nx">cx</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">cy</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span><span class="p">;</span>
+
+            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">index</span><span class="o">:</span><span class="kr">int</span> <span class="k">in</span> <span class="nx">groups</span><span class="p">[</span><span class="nx">i</span><span class="p">]){</span>
+                <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="p">.</span><span class="mi">5</span><span class="p">);</span>
+                <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">dots</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">x</span><span class="p">,</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">y</span><span class="p">);</span>
+                <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">cx</span><span class="p">,</span> <span class="nx">cy</span><span class="p">);</span>
+                <span class="nx">lineCanvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">moveCenter</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">dot</span><span class="o">:</span><span class="nx">Dot</span> <span class="k">in</span> <span class="nx">dots</span><span class="p">)</span> <span class="nx">dot</span><span class="p">.</span><span class="nx">glow</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">changed</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">animated</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">groups</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">groups</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">||</span> <span class="o">!</span><span class="nx">groups</span><span class="p">.</span><span class="nx">length</span><span class="p">){</span>
+                <span class="k">continue</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="c1">// get center of gravity</span>
+            <span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">index</span><span class="o">:</span><span class="kr">int</span> <span class="k">in</span> <span class="nx">groups</span><span class="p">[</span><span class="nx">i</span><span class="p">]){</span>
+                <span class="nx">x</span> <span class="o">+=</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">index</span> <span class="o">*</span> <span class="mi">3</span><span class="p">];</span>
+                <span class="nx">y</span> <span class="o">+=</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">index</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+                <span class="nx">z</span> <span class="o">+=</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">index</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">];</span>
+            <span class="p">}</span>
+            <span class="kd">var</span> <span class="nx">gc</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">groups</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span>
+            <span class="nx">x</span> <span class="o">/=</span> <span class="nx">gc</span><span class="p">;</span>
+            <span class="nx">y</span> <span class="o">/=</span> <span class="nx">gc</span><span class="p">;</span>
+            <span class="nx">z</span> <span class="o">/=</span> <span class="nx">gc</span><span class="p">;</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">]){</span>
+                <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="nx">ax</span><span class="o">:</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">ay</span><span class="o">:</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">az</span><span class="o">:</span> <span class="nx">z</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="nx">ANIMATE</span>
+                <span class="p">});</span>
+                <span class="nx">animated</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Center</span><span class="p">(</span><span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">dotsPos</span><span class="p">,</span> <span class="p">(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
+                <span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
+                <span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+                <span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nx">z</span><span class="p">;</span>
+                <span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">update</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">);</span>
+                <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">centers</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateGroups</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">changed</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="nx">groups</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="c1">// find the nearest group</span>
+            <span class="kd">var</span> <span class="nx">min</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="kc">Infinity</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">group</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">k</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">){</span>
+                <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Center</span> <span class="o">=</span> <span class="nx">centers</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+                <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">center</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+
+                <span class="kd">var</span> <span class="nx">d</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span>
+                      <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">j</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">j</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="nx">dotsPos</span><span class="p">[(</span><span class="nx">n</span> <span class="o">+</span> <span class="nx">j</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dotsPos</span><span class="p">[</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">));</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">d</span> <span class="o">&lt;</span> <span class="nx">min</span><span class="p">){</span>
+                    <span class="nx">min</span> <span class="o">=</span> <span class="nx">d</span><span class="p">;</span>
+                    <span class="nx">group</span> <span class="o">=</span> <span class="nx">j</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+
+            <span class="c1">// update group</span>
+            <span class="kd">var</span> <span class="nx">dot</span><span class="o">:</span><span class="nx">Dot</span> <span class="o">=</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">])</span> <span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">groups</span><span class="p">[</span><span class="nx">group</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">dot</span><span class="p">.</span><span class="nx">color</span> <span class="o">!=</span> <span class="nx">colors</span><span class="p">[</span><span class="nx">group</span><span class="p">]){</span>
+                <span class="nx">dot</span><span class="p">.</span><span class="nx">color</span> <span class="o">=</span> <span class="nx">colors</span><span class="p">[</span><span class="nx">group</span><span class="p">];</span>
+                <span class="nx">dot</span><span class="p">.</span><span class="nx">glow</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="nx">changed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span>
+
+<span class="kr">const</span> <span class="nx">F</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Sprite3D</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">update</span><span class="p">(</span><span class="nx">_x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">_y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">_z</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">vz</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">F</span> <span class="o">/</span> <span class="p">(</span><span class="nx">_z</span> <span class="o">+</span> <span class="nx">F</span><span class="p">);</span>
+        <span class="nx">x</span> <span class="o">=</span> <span class="nx">_x</span> <span class="o">*</span> <span class="nx">vz</span><span class="p">;</span>
+        <span class="nx">y</span> <span class="o">=</span> <span class="nx">_y</span> <span class="o">*</span> <span class="nx">vz</span><span class="p">;</span>
+        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="nx">vz</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Dot</span> <span class="kr">extends</span> <span class="nx">Sprite3D</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_color</span><span class="o">:</span><span class="nx">uint</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">color</span><span class="p">()</span><span class="o">:</span><span class="nx">uint</span><span class="p">{</span><span class="k">return</span> <span class="nx">_color</span><span class="p">;}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">color</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nx">uint</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">_color</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span>
+        <span class="nx">draw</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">glow</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span> <span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)];</span>
+        <span class="k">else</span> <span class="nx">filters</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Dot</span><span class="p">(</span><span class="nx">col</span><span class="o">:</span><span class="nx">uint</span><span class="p">){</span>
+        <span class="nx">color</span> <span class="o">=</span> <span class="nx">col</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">_color</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Center</span> <span class="kr">extends</span> <span class="nx">Sprite3D</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dots</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">index</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">ax</span><span class="p">()</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span> <span class="k">return</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span> <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">ay</span><span class="p">()</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span> <span class="k">return</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span> <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">az</span><span class="p">()</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span> <span class="k">return</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">2</span><span class="p">];</span> <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">ax</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">ay</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">az</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> <span class="nx">dots</span><span class="p">[</span><span class="nx">index</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Center</span><span class="p">(</span><span class="nx">col</span><span class="o">:</span><span class="nx">uint</span><span class="p">,</span> <span class="nx">dots</span><span class="o">:</span><span class="nx">Vector</span><span class="p">.</span><span class="o">&lt;</span><span class="nb">Number</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">index</span><span class="o">:</span><span class="kr">int</span><span class="p">){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">dots</span> <span class="o">=</span> <span class="nx">dots</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">index</span><span class="p">;</span>
+
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">draw</span><span class="p">();</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">col</span><span class="p">);</span>
+        <span class="nx">draw</span><span class="p">();</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">label</span><span class="o">:</span><span class="nb">String</span><span class="p">){</span>
+        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">mouseChildren</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+        <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">label</span><span class="p">;</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">selectable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span>
+
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xcccccc</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Input</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">TextField</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">value</span><span class="p">()</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span>
+        <span class="k">return</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Input</span><span class="p">(</span><span class="nx">labelStr</span><span class="o">:</span><span class="nb">String</span><span class="p">,</span> <span class="nx">valueStr</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextFormat</span><span class="p">();</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+        <span class="kd">var</span> <span class="nx">label</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+        <span class="nx">input</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="nx">label</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">defaultTextFormat</span> <span class="o">=</span> <span class="nx">label</span><span class="p">.</span><span class="nx">defaultTextFormat</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">;</span>
+
+        <span class="nx">label</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">labelStr</span><span class="p">;</span>
+        <span class="nx">label</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">label</span><span class="p">);</span>
+
+        <span class="nx">input</span><span class="p">.</span><span class="nx">border</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">borderColor</span> <span class="o">=</span> <span class="mh">0x999999</span><span class="p">;</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">valueStr</span><span class="p">;</span>
+        <span class="nx">input</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">input</span><span class="p">).</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">220</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<div class="seealso">
+<h1>関連エントリ</h1>
+<ul><li><a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a></li><li><a href="/ja/blog/2008/06/16/as-3d-lessen1/">AS3.0 で 3D プログラミングを１から勉強する (1)</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090413/kmeans_visualize_3d" class="hatena-bookmark-button" data-hatena-bookmark-title="３Ｄ版！「K-Means法」ビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/13/kmeans-visualize-3d/" data-lang="ja" data-size="horizontal" data-text="３Ｄ版！「K-Means法」ビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/04/09/kmeans-visualise/" rel="previous">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/04/15/hokkaido/" rel="next">北海道を落とすとどう跳ねるのか？&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

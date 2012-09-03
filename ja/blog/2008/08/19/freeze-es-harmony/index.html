@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Object.freeze() と ECMAScript Harmony - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Object.freeze() と ECMAScript Harmony"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/08/19/freeze-es-harmony/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ES4 のドラフトが一旦白紙になって、ES3.1 の策定を先に進めることになった。このあたりの情報が少なくて、どうなっていくのかがいまいちピンと来ないので調べてみた。現状で頼りになるのが、 &quot;ECMAScript Harmony&quot; の日本語訳。この中の次の部分が気になった。名前空間とアーリーバインディングが仕様から外れてしまえば, クラスは lambda-coding + Object.freeze と ES3.1 のその関係機能というすっきりした(desugar)姿になりますObject.freeze というキーワードがよく分からなかったので、ES3.1 のドラフト (2008/8/1..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年08月19日</h2>
+<h1>Object.freeze() と ECMAScript Harmony</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080819/freeze_es_harmony" class="hatena-bookmark-button" data-hatena-bookmark-title="Object.freeze() と ECMAScript Harmony - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/19/freeze-es-harmony/" data-lang="ja" data-size="horizontal" data-text="Object.freeze() と ECMAScript Harmony - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>ES4 のドラフトが一旦白紙になって、ES3.1 の策定を先に進めることになった。このあたりの情報が少なくて、どうなっていくのかがいまいちピンと来ないので調べてみた。</p>
+<p>現状で頼りになるのが、 <a href="http://www.hyuki.com/yukiwiki/wiki.cgi?ECMAScriptHarmony">"ECMAScript Harmony" の日本語訳</a>。この中の次の部分が気になった。</p>
+<blockquote><p>名前空間とアーリーバインディングが仕様から外れてしまえば, クラスは lambda-coding + Object.freeze と ES3.1 のその関係機能というすっきりした(desugar)姿になります</p></blockquote>
+<p>Object.freeze というキーワードがよく分からなかったので、<a href="http://wiki.ecmascript.org/doku.php?id=es3.1:es3.1_proposal_working_draft">ES3.1 のドラフト (2008/8/11)</a> を見ながら理解を進めてみた。</p>
+<a name="seemore"></a>
+<h1>ES4 から外れることになった機能</h1>
+<p>と、その前に、外れた機能について簡単におさらいしておく。</p>
+<dl><dt>パッケージ</dt><dd>クラスや関数の名前空間と言ってもいいのがパッケージ。ライブラリごとに分かれてると幸せなんだけど…。</dd><dt>名前空間</dt><dd>ES4 の仕様ではでは private や public も名前空間として定義していた。</dd><dt>アーリーバインディング</dt><dd>事前バインディングとも言う。実行前に型が決定していること。C++ や Java のような静的型付けな言語が該当する。<br>対して、「レイトバインディング（実行時バインディング）」が逆の意味。ES3 の prototype を使った疑似クラス定義は実行時バインディングと言っていいだろう。一般に、事前バインディングはコンパイル時に型が決定するので、処理速度が高速になる。</dd></dl>
+<h1>Object.freeze()</h1>
+<p>話を元に戻して、Object.freeze() の正体を見ていく。Object.freeze() は、ES3.1 から新たに導入されたメソッド。</p>
+<p>どういう機能なのかを見るために、ES3 のプロパティ定義を思い出してみよう。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">myObj</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">val</span> <span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="nx">func</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>上の例だと、val や func の両方がプロパティである。<span class="footnote"><a href="#f1" title="言語によっては getter, setter を使ったものをプロパティということもあるけど、ES3 的には違うので注意" name="fn1">*1</a></span></p>
+<p>せっかく MyObj を定義したんだけど、ES3 ではプロパティを勝手にいじられる危険性があった。</p>
+<div class="highlight"><pre><span class="k">delete</span> <span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">;</span>
+<span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">();</span>      <span class="c1">// エラー: MyObj.func is not a function</span>
+</pre>
+</div>
+
+<p>そこで、ES3.1 ではオブジェクトを書き換えられないように、プロパティを凍結する機能が追加された。これが Object.freeze() だ。</p>
+<div class="highlight"><pre><span class="nb">Object</span><span class="p">.</span><span class="nx">freeze</span><span class="p">(</span><span class="nx">myObj</span><span class="p">);</span>
+<span class="k">delete</span> <span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">;</span>      <span class="c1">// func が削除できない</span>
+<span class="nx">myObj</span><span class="p">.</span><span class="nx">val</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>         <span class="c1">// 代入に失敗する</span>
+
+<span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">();</span>           <span class="c1">// alert(&#39;foo&#39;) が実行される</span>
+<span class="nx">myObj</span><span class="p">.</span><span class="nx">val</span><span class="p">;</span>              <span class="c1">// 3</span>
+</pre>
+</div>
+
+<h1>ES3 と属性</h1>
+<p>Object.freeze() が何をしているかというと、全てのプロパティの Writable 属性と Flexible 属性を false にして、オブジェクトの Extensible 属性も false にしている。</p>
+<p>属性の概念は ES3 時代にもあった。例えば、Object.prototype は DontDelete 属性、DontEnum 属性、ReadOnly 属性がついていた。</p>
+<p>つまり、</p>
+<div class="highlight"><pre><span class="k">delete</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span><span class="nx">foo</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){}};</span>
+</pre>
+</div>
+
+<p>が成功しないのは、これらの属性が書き換えを禁止してたから。ただし、ES3 では属性というのはあくまで内部的なもので、外部から属性を変更することも、知るこもできなかった。</p>
+<p>ES3.1 になって、属性を取得・設定するためのメソッドがいくつも追加されている予定になっている。Object.freeze() もそうだし、Object.defineProperty() を使って属性つきでプロパティを定義したり、Object.getOwnPropertyDescriptor() を使ってプロパティの情報を取得したりできる。</p>
+<p>Writable 属性、Flexible 属性、Extensible 属性について一応補足しておく。詳しくは ES3.1 のドラフトを参照あれ。</p>
+<dl><dt>プロパティの Writable 属性</dt><dd>プロパティの値を書き換えられるかどうか。ES3 の ReadOnly の逆。</dd><dt>プロパティの Flexible 属性</dt><dd>プロパティの delete および属性変更ができるかどうか。前者は、ES3 の DontDelete の逆。</dd><dt>オブジェクトの Extensible 属性</dt><dd>オブジェクトにプロパティを追加できるかどうか。</dd></dl>
+<p>つまり、Object.freeze() すると、プロパティの追加・変更・削除ができなくなる。属性の変更も許可されないので、一度 freeze すると元に戻せなくなるようだ。</p>
+<h1>ES Harmony のクラス定義</h1>
+<p>では、ES Harmony のクラス定義がどうなるか想像してみよう。ES Harmony というのは、ES3.1 をベースに書き直す新しい ES4 の仕様と解釈して間違いないだろう。</p>
+<p>先の<a href="http://www.hyuki.com/yukiwiki/wiki.cgi?ECMAScriptHarmony">日本語訳</a>の<a href="https://mail.mozilla.org/pipermail/es4-discuss/2008-August/003400.html">原文</a>を見ると、</p>
+<blockquote><p>クラスは lambda-coding と ES3.1 の Object.freeze() 関連の機能を使って、desugar できる</p><blockquote><p>classes can desugar to lambda-coding + Object.freeze and friends from ES3.1.</p><cite><a href="https://mail.mozilla.org/pipermail/es-discuss/2008-August/003400.html">ECMAScript Harmony</a></cite></blockquote></blockquote>
+<p>と書いてある。lambda-coding はたぶん無名関数のことだとしておいて、desugar という単語が耳慣れない。おそらく syntax-sugar の sugar のことだろう。de がついているので「syntax-sugar で導くことができる」といった意味合いだろうか。</p>
+<p>ということで、もっと言い直すと</p>
+<blockquote><p>クラス定義は無名関数と Object.freeze() 系のメソッドへの Syntax-sugar として実装すればよい</p></blockquote>
+<p>と言い切ってるように思える。</p>
+<p>具体的なコードで考えると、</p>
+<div class="highlight"><pre><span class="kr">class</span> <span class="nx">Foo</span><span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+    <span class="kd">function</span> <span class="nx">func</span><span class="p">(){</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Foo</span><span class="p">();</span>
+</pre>
+</div>
+
+<p>というクラスは、内部的に</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">val</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">func</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">freeze</span><span class="p">(</span><span class="nx">foo</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>のように置き換えられる、ということだろう。</p>
+<p>一度 freeze してしまえば、属性を変更できないし、メソッドの書き換えもできない。これはまさしくクラスから生成したインスタンスだ。実行時にメソッドが定義されるので、事前バインディングでもなくなったが、その代わりに、ES3.1 の機能を使って、クラスを書き下したことになる。</p>
+<p>ES4 の仕様はだいぶシンプルになりそうな香りがする。</p>
+<h1>継承は？　private は？</h1>
+<p>ただ、この方向性を見て、まず、継承がどうなるのか不安になった。</p>
+<p>ES Harmony のドキュメントは <a href="http://wiki.ecmascript.org/doku.php?id=harmony:harmony">harmony:harmony [ES4 Wiki]</a> にあるのだけど、現状、<a href="http://wiki.ecmascript.org/doku.php?id=harmony:types">harmony:types</a> しかない。ここからだけじゃ、情報も少なくて判断しきれないのだけど、型情報を管理するための領域が用意されて、継承関係も紐付けできるようなことが書いてある。</p>
+<p>ただ、名前空間亡き後、private はどのように実現されるかが気になるなぁ。クロージャ使って閉じ込めたりするんだろか。</p>
+<h1>雑感</h1>
+<p>ES3.1 Draft は、ES3 をベースにしているだけに、穏やかな変更になっている。文句をいう人も少なそうだ。ドラフトには ES3 からの変更点が赤字で書いてあって、新しいところを探すのが楽しい。</p>
+<p>それに比べて、ES4 Draft は、かなり静的型付けな言語のほうに寄っていたし、仕様も複雑だった。今回の ES Harmony は、一旦白紙に戻したことで、ES3 のよさを損なわない方向でオブジェクト指向が導入されるように感じられた。</p>
+<p>AS3 をベースに ES4 の標準化を進めていきたかった Adobe にとっては災難なんだろう。特に、事前バインディングが仕様から漏れたことで、Mozilla が Tamarin を使う意義がなくなるかもしれない。よく分かってないんだけど、仕様から事前バインディングが漏れるといっても、事前バインディングによって高速化する余地は残ってるのかもしれない。</p>
+<p>Tamarin が Firefox に搭載されれば、独自拡張として名前空間やパッケージが Firefox に盛り込まれる可能性はある。Firefox に盛り込まれれば、さらに他のブラウザに取り込まれてデファクトになる可能性は十分にあるだろう。</p>
+<div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: 言語によっては getter, setter を使ったものをプロパティということもあるけど、ES3 的には違うので注意</p></div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080819/freeze_es_harmony" class="hatena-bookmark-button" data-hatena-bookmark-title="Object.freeze() と ECMAScript Harmony - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/19/freeze-es-harmony/" data-lang="ja" data-size="horizontal" data-text="Object.freeze() と ECMAScript Harmony - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/08/11/copper-medal/" rel="previous">銅は英語で Copper だけど、銅メダルは「Copper medal」じゃない</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/08/20/hentai-blog/" rel="next">ブログ　変態&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

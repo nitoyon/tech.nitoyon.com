@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>完・パーフェクトシャッフルは何回で元に戻るか (AS3版) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="完・パーフェクトシャッフルは何回で元に戻るか (AS3版)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/01/22/perfect-shuffle-visualize3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回は直線の始点と終点だけを円上に配置して直線で結んでいたが、直線の中間点の点も円上になるように変換してみた。ついでに、表示サイズの最終調整も行って満足いく仕上がりになった。Perfect Shuffle Visualization 3 - wonderfl build flash online長々と3回に渡ってやってきたけど、「続: パーフェクトシャッフルは何回で元に戻るか - 西尾泰和のはてなダイアリー の直線が円になるところをアニメーションさせてみたい」という当初の欲望は果たせたので満足した。以下、ソース（104行）。package {import flash.display.*;..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年01月22日</h2>
+<h1>完・パーフェクトシャッフルは何回で元に戻るか (AS3版)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100122/perfect_shuffle_visualize3" class="hatena-bookmark-button" data-hatena-bookmark-title="完・パーフェクトシャッフルは何回で元に戻るか (AS3版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/01/22/perfect-shuffle-visualize3/" data-lang="ja" data-size="horizontal" data-text="完・パーフェクトシャッフルは何回で元に戻るか (AS3版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>前回は直線の始点と終点だけを円上に配置して直線で結んでいたが、直線の中間点の点も円上になるように変換してみた。</p>
+<p>ついでに、表示サイズの最終調整も行って満足いく仕上がりになった。</p>
+<div style="text-align:center;width:465px;"><script type="text/javascript" src="http://wonderfl.net/blogparts/sGG8/js"></script><a href="http://wonderfl.net/code/c90ff184a40f4e4c20df21031d145447c5fcd0d4" title="Perfect Shuffle Visualization 3 - wonderfl build flash online">Perfect Shuffle Visualization 3 - wonderfl build flash online</a></div>
+<p>長々と3回に渡ってやってきたけど、「<a href="http://d.hatena.ne.jp/nishiohirokazu/20100107/1262835414">続: パーフェクトシャッフルは何回で元に戻るか - 西尾泰和のはてなダイアリー</a> の直線が円になるところをアニメーションさせてみたい」という当初の欲望は果たせたので満足した。</p>
+<p>以下、ソース（104行）。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="kd">package</span> <span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nb">Event</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nb">Point</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nb">BlurFilter</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">BetweenAS3</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">tweens</span><span class="p">.</span><span class="nx">ITween</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">easing</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">frocessing</span><span class="p">.</span><span class="nx">color</span><span class="p">.</span><span class="nx">ColorHSV</span><span class="o">;</span>
+
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">PerfectShuffleVisualization3</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">6400</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">d</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">angle</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">NUM</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POINT_PER_LINE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">CANVAS_SIZE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">475</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">PerfectShuffleVisualization3</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
+
+        <span class="c1">// draw background</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="nx">CANVAS_SIZE</span><span class="o">,</span> <span class="nx">CANVAS_SIZE</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span> 
+
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">CANVAS_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">CANVAS_SIZE</span> <span class="sr">/ 2 + d /</span> <span class="mi">2</span><span class="o">;</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">BlurFilter</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">3</span><span class="p">)];</span>
+        <span class="nx">draw</span><span class="p">();</span>
+
+        <span class="k">var</span> <span class="nx">tween</span><span class="o">:</span><span class="nx">ITween</span> <span class="o">=</span> <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span>
+            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">r</span><span class="o">:</span> <span class="mi">30</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Quint</span><span class="p">.</span><span class="nx">easeOut</span><span class="p">)</span><span class="o">,</span>
+            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">d</span><span class="o">:</span> <span class="mi">160</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Cubic</span><span class="p">.</span><span class="nx">easeOut</span><span class="p">)</span><span class="o">,</span>
+            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">angle</span><span class="o">:</span> <span class="mi">360</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Sine</span><span class="p">.</span><span class="nx">easeIn</span><span class="p">)</span><span class="o">,</span>
+            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="nx">canvas</span><span class="o">,</span> <span class="p">{</span> <span class="nx">y</span><span class="o">:</span> <span class="nx">CANVAS_SIZE</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="p">);</span>
+        <span class="nx">tween</span><span class="p">.</span><span class="nx">onUpdate</span> <span class="o">=</span> <span class="nx">draw</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span> <span class="nx">tween</span><span class="p">.</span><span class="nx">gotoAndPlay</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="p">});</span>
+        <span class="nx">tween</span><span class="p">.</span><span class="nx">play</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+        <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">();</span>
+        <span class="k">var</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Graphics</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="o">;</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+        <span class="c1">// draw lines</span>
+        <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">yy</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">yy</span> <span class="o">&lt;</span> <span class="nx">SIZE</span><span class="o">;</span> <span class="nx">yy</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">var</span> <span class="nx">num</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">yy</span><span class="o">,</span> <span class="nx">prev_num</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">yy</span><span class="o">;</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="k">new</span> <span class="nx">ColorHSV</span><span class="p">(</span><span class="nx">yy</span> <span class="o">*</span> <span class="mi">270</span> <span class="o">/</span> <span class="nx">SIZE</span><span class="o">,</span> <span class="p">.</span><span class="mi">7</span><span class="p">).</span><span class="nx">value</span><span class="o">,</span> <span class="p">.</span><span class="mi">7</span><span class="p">);</span>
+            <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">num</span><span class="o">;</span> <span class="nx">getXY</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="o">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">xx</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">xx</span> <span class="o">&lt;</span> <span class="nx">NUM</span><span class="o">;</span> <span class="nx">xx</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">num</span> <span class="o">=</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+                <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINT_PER_LINE</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">var</span> <span class="nx">ratio</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="nx">POINT_PER_LINE</span><span class="o">;</span>
+                    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">xx</span> <span class="o">+</span> <span class="nx">ratio</span><span class="o">;</span>
+                    <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">prev_num</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">ratio</span><span class="p">)</span> <span class="o">+</span> <span class="nx">num</span> <span class="o">*</span> <span class="nx">ratio</span><span class="o">;</span>
+                    <span class="nx">getXY</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
+                    <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="o">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="nx">prev_num</span> <span class="o">=</span> <span class="nx">num</span><span class="o">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// get next position after perfect shuffle</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nb">int</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">num</span> <span class="o">&lt;</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">num</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nx">num</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="o">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getXY</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nb">Point</span><span class="p">)</span><span class="o">:</span><span class="nb">Point</span> <span class="p">{</span>
+        <span class="k">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="nx">angle</span> <span class="sr">/ 2.0 + angle * pt.x /</span> <span class="nx">NUM</span><span class="p">)</span> <span class="o">/</span> <span class="mf">180.0</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">;</span>
+        <span class="nx">pt</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">r</span> <span class="o">+</span> <span class="nx">d</span> <span class="o">/</span> <span class="p">(</span><span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
+        <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nx">r</span> <span class="o">+</span> <span class="nx">d</span> <span class="sr">/ (SIZE - 1) * pt.y) * Math.cos(rad) + r * Math.cos(angle /</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">pt</span><span class="o">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<div class="seealso">
+<h1>目次</h1>
+<ul><li><a href="/ja/blog/2010/01/13/perfect-shuffle-visualize/">パーフェクトシャッフルは何回で元に戻るか (AS3版)</a></li><li><a href="/ja/blog/2010/01/15/perfect-shuffle-visualize2/">続・パーフェクトシャッフルは何回で元に戻るか (AS3版)</a></li><li>完・パーフェクトシャッフルは何回で元に戻るか (AS3版)</li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100122/perfect_shuffle_visualize3" class="hatena-bookmark-button" data-hatena-bookmark-title="完・パーフェクトシャッフルは何回で元に戻るか (AS3版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/01/22/perfect-shuffle-visualize3/" data-lang="ja" data-size="horizontal" data-text="完・パーフェクトシャッフルは何回で元に戻るか (AS3版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/01/20/p1/" rel="previous">神の書 Making Things Move! の続編、詳解ActionScript3.0アニメーション</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/" rel="next">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

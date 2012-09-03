@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Silverlight2.0 ではまった話 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Silverlight2.0 ではまった話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/05/15/my-first-silverlight2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Silverlight 勉強会に備えて環境をそろえてみた。参考にしたのはこのへん。Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)MS公式のサンプルが動かないヘルプの CHM 版 の「Dynamic Languages in Silverlight 2」を参考にして触っていたんだけどエラーになる。こんなエラー。Silverlight error message ErrorCode: 4002ErrorType: ManagedRuntimeError Message: Microsoft.Scriptin..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年05月15日</h2>
+<h1>Silverlight2.0 ではまった話</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080515/my_first_silverlight2" class="hatena-bookmark-button" data-hatena-bookmark-title="Silverlight2.0 ではまった話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/05/15/my-first-silverlight2/" data-lang="ja" data-size="horizontal" data-text="Silverlight2.0 ではまった話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Silverlight 勉強会に備えて環境をそろえてみた。参考にしたのはこのへん。</p>
+<ul><li><a href="http://labs.cybozu.co.jp/blog/kaorun/2008/04/silverlight2sdk_with_javascript_1.html">Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)</a></li></ul>
+<h1>MS公式のサンプルが動かない</h1>
+<p><a href="http://go.microsoft.com/fwlink/?LinkId=111131">ヘルプの CHM 版</a> の「Dynamic Languages in Silverlight 2」を参考にして触っていたんだけどエラーになる。</p>
+<p>こんなエラー。</p>
+<pre>Silverlight error message     
+ErrorCode: 4002
+ErrorType: ManagedRuntimeError       
+Message: Microsoft.Scripting.ArgumentTypeException: LoadRootVisual() takes exactly 1 argument (1 given)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.ExecuteThrow(CodeContext context, ThrowStatement node)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.EvaluateExpression(CodeContext context, Expression node)
+
+   場所 Microsoft.Scripting.Ast.Interpreter.Execute(CodeContext context, Expression expression)</pre>
+<p>エラーメッセージ、分かりにくすぎるよ…。</p>
+<p>どうやらこのあたりが問題のようだ。</p>
+<div class="highlight"><pre><span class="nx">Import</span><span class="p">(</span><span class="s2">&quot;System.Windows.Application&quot;</span><span class="p">)</span>
+
+<span class="kd">function</span> <span class="nx">App</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">this</span><span class="p">.</span><span class="nx">scene</span> <span class="o">=</span> <span class="nx">Application</span><span class="p">.</span><span class="nx">Current</span><span class="p">.</span><span class="nx">LoadRootVisual</span><span class="p">(</span><span class="s2">&quot;app.xaml&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>他のサンプルと見比べると LoadRootVisual は引数２ついるようだ。</p>
+<h1>検索してみた</h1>
+<p>2ch に同じ問題ではまってる人がいた。</p>
+<pre>366 ：デフォルトの名無しさん：2008/03/07(金) 23:59:55 
+ヘルプの Dynamic Languages in Silverlight 2 
+に書いてある通りやったのに 
+LoadRootVisual の引数の使い方がおかしいって怒られるぞ・・・ 
+IronRuby, IronPython でもダメだ。ほんとに動くのか </pre>
+<p>動きません。</p>
+<p>で、<a href="http://d.hatena.ne.jp/coma2n/20080311/1205192784">Silverlight2 Beta1を入れてみた - Programmable Life</a> に解決方法を見つけた。JScript だと次のように修正する。</p>
+<pre>Import("System.Windows.Application")
+<strong>Import("System.Windows.Controls.Canvas") </strong>
+
+function App() {
+   this.scene = 
+      Application.Current.LoadRootVisual(<strong>new Canvas()</strong>, "app.xaml")
+}</pre>
+<p>やっと動いた…。</p>
+<p>自分は元々 Windows 開発者なので、MS のドキュメントは見慣れてるほうだと思うんだけど、それでも CHM ファイルのせいで２時間ぐらい苦しめられた。</p>
+<p>もしや、と思って Web のドキュメントを参照したら、ちゃんと修正されていた。</p>
+<ul><li><a href="http://msdn.microsoft.com/en-us/library/cc189024(vs.95).aspx">http://msdn.microsoft.com/en-us/library/cc189024(vs.95).aspx</a></li></ul>
+<p>CHM が間違ったまま放置されている…。最新版がどこかから手に入るのかなぁ。</p>
+<h1>まとめと雑感</h1>
+<ul><li>ドキュメントは最新のものを見よう</li><li>Silverlight は難しい。AS3/Flex の方がドキュメントは分かりやすい。</li><li>Silverlight のはてブ率の低さは異常。すごく優れたドキュメントの <a href="http://labs.cybozu.co.jp/blog/kaorun/2008/04/silverlight2sdk_with_javascript_1.html">Silverlight 2 SDK+JavaScriptで無償の開発環境を作る #1 [環境整備編] (Neutral Scent)</a> が2008年5月15日時点で 14users だなんて！</li><li>Twitter 検索の Flex と Silverlight の RSS を購読してウォッチしてるんだけど、あきらかに Flex やってる人のほうが多い。ネット上では Flex のほうが流行ってきてる印象。スーツな世界では Silverlight のほうが強そうだけど。</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080515/my_first_silverlight2" class="hatena-bookmark-button" data-hatena-bookmark-title="Silverlight2.0 ではまった話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/05/15/my-first-silverlight2/" data-lang="ja" data-size="horizontal" data-text="Silverlight2.0 ではまった話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/05/13/p1/" rel="previous">FIVe3D で Keynote 風 Cube トランジッション</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/05/16/flash-news/" rel="next">Flash がらみで動きが&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

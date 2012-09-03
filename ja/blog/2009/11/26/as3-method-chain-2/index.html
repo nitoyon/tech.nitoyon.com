@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3 でメソッドチェーンしたくなる話 (2) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3 でメソッドチェーンしたくなる話 (2)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/11/26/as3-method-chain-2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="AS3 でメソッドチェーンしたくなる話 にいくつか反応があって楽しかったので掘り下げてみた。自分で問題提起した以上は、何か作ってみなきゃいけない気になった。自分のモチベーション保つために記事にするのはいいことなんだと改めて実感した。本題に戻る。ActionScript でメソッドチェーンするライブラリを作ってみた。こんな風に書ける。 $(graphics) .beginFill(0xff0000) .drawCircle(80, 80, 60) .endFill(); $(graphics) .lineStyle(3, 0x0000ff) .moveTo(200, 100) .lineT..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年11月26日</h2>
+<h1>AS3 でメソッドチェーンしたくなる話 (2)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091126/as3_method_chain_2" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でメソッドチェーンしたくなる話 (2) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/26/as3-method-chain-2/" data-lang="ja" data-size="horizontal" data-text="AS3 でメソッドチェーンしたくなる話 (2) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p><a href="/ja/blog/2009/11/25/as3-method-chain/">AS3 でメソッドチェーンしたくなる話</a> にいくつか反応があって楽しかったので掘り下げてみた。自分で問題提起した以上は、何か作ってみなきゃいけない気になった。自分のモチベーション保つために記事にするのはいいことなんだと改めて実感した。</p>
+<p>本題に戻る。</p>
+<p>ActionScript でメソッドチェーンするライブラリを作ってみた。こんな風に書ける。</p>
+<div class="highlight"><pre>    <span class="nx">$</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">80</span><span class="o">,</span> <span class="mi">80</span><span class="o">,</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+    <span class="nx">$</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="mh">0x0000ff</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">200</span><span class="o">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">150</span><span class="o">,</span> <span class="mi">150</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">200</span><span class="o">,</span> <span class="mi">150</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">200</span><span class="o">,</span> <span class="mi">100</span><span class="p">);</span>
+</pre>
+</div>
+
+<a name="seemore"></a>
+<p><code>$()</code> にオブジェクトを渡すと、戻り値を返さないメソッドを this を返すようにしくれる。たとえば、<code>Graphics.lineTo(x:Number, y:Number):void</code> は <code>Graphics.lineTo(x:Number, y:Number):Graphics</code> になる。</p>
+<p>このライブラリの肝は、<code>Graphics</code> に限らず、どんなクラスでもメソッドチェーン化してくれるところ。</p>
+<p>実装は <a href="http://wonderfl.net/code/f8875289cdd6683fde9cc5bd38285d4de7bf9667/">Test impl of &quot;Method chain library&quot;with Proxy class. - wonderfl build flash online</a> にある。ライブラリ部分はわずか40行とかなりシンプルなので、興味のある人は見てみると面白いだろう。<code>Proxy</code> と <code>describeType()</code> の合わせ技で実装している。</p>
+<p>もちろん弱点もあって、思いつくまま列挙してみると</p>
+<ul><li>実行時エラー<ul><li>dynamic class を使ってるため、<code>lineTo</code> を <code>linT</code> のように typo してしまってもコンパイル時に警告してくれず、実行時エラーになっちゃう。</li><li>実務につっこむには嫌な制限だが、勢いで書くコードなら勢いで全てのコードパスを試すのであまり気にならないかもしれない。</li></ul></li><li>パフォーマンス<ul><li>与えられたオブジェクトを毎回 describeType するため、対象のクラスごとにラッパーを作るのに比べてパフォーマンスは落ちる。キャッシュ構造を入れると改善はするだろうが限界はある。</li><li>逆に、どんなオブジェクトでもメソッドチェーン化できてしまうので、汎用的なのは間違いない。</li></ul></li></ul>
+<p>といったところだろうか。</p>
+<p>続く(?)。</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091126/as3_method_chain_2" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でメソッドチェーンしたくなる話 (2) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/26/as3-method-chain-2/" data-lang="ja" data-size="horizontal" data-text="AS3 でメソッドチェーンしたくなる話 (2) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/11/25/as3-method-chain/" rel="previous">AS3 でメソッドチェーンしたくなる話</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/12/09/google-ime-lifehack/" rel="next">Web 上に本名を公開するたった１つのメリット&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

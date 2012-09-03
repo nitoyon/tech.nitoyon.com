@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Image::ExifTool で写真の EXIF 時刻をまとめてずらす - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Image::ExifTool で写真の EXIF 時刻をまとめてずらす"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/02/23/perl-exif/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="カメラの時刻を間違えて設定してしまったり、海外旅行に行ったのに時差を変更し忘れたり、アリバイを作りたくなったり、などなど、現代人にとって写真の時刻をまとめて変更したくなることはよくあるものだ。便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。EXIF の時間を書き換えるperl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。perl -MImage::ExifTool -e &amp;quot;for $f(glob(&amp;#39;*.jp..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年02月23日</h2>
+<h1>Image::ExifTool で写真の EXIF 時刻をまとめてずらす</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100223/perl_exif" class="hatena-bookmark-button" data-hatena-bookmark-title="Image::ExifTool で写真の EXIF 時刻をまとめてずらす - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/23/perl-exif/" data-lang="ja" data-size="horizontal" data-text="Image::ExifTool で写真の EXIF 時刻をまとめてずらす - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>カメラの時刻を間違えて設定してしまったり、海外旅行に行ったのに時差を変更し忘れたり、アリバイを作りたくなったり、などなど、現代人にとって写真の時刻をまとめて変更したくなることはよくあるものだ。</p>
+<p>便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。</p>
+<h1>EXIF の時間を書き換える</h1>
+<p>perl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。</p>
+<div class="highlight"><pre><span class="n">perl</span> <span class="o">-</span><span class="nn">MImage::</span><span class="n">ExifTool</span> <span class="o">-</span><span class="n">e</span> <span class="s">&quot;for $f(glob(&#39;*.jpg&#39;)){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); $e-&gt;SetNewValue($_=&gt;240, Shift=&gt;1) for(&#39;ModifyDate&#39;,&#39;DateTimeOriginal&#39;,&#39;CreateDate&#39;); $e-&gt;WriteInfo($f,&#39;out/&#39;.$f)}&quot;</span>
+</pre>
+</div>
+
+<p>MS-DOS 用。UNIX shell のときは、" と ' を入れ替えるべきだろう。１行を展開してみるとこうなる。</p>
+<div class="highlight"><pre><span class="c1"># カレントフォルダの *.jpg を列挙</span>
+<span class="k">for</span> <span class="nv">$f</span><span class="p">(</span><span class="nb">glob</span><span class="p">(</span><span class="s">&#39;*.jpg&#39;</span><span class="p">)){</span>
+    <span class="c1"># ファイルの Exif 情報を読み取る</span>
+    <span class="nv">$e</span> <span class="o">=</span> <span class="k">new</span> <span class="nn">Image::</span><span class="n">ExifTool</span><span class="p">;</span>
+    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">ImageInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">);</span>
+
+    <span class="c1"># 時刻をずらす</span>
+    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">SetNewValue</span><span class="p">(</span><span class="nv">$_</span><span class="o">=&gt;</span><span class="mi">9</span><span class="p">,</span> <span class="n">Shift</span><span class="o">=&gt;-</span><span class="mi">1</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="s">&#39;ModifyDate&#39;</span><span class="p">,</span><span class="s">&#39;DateTimeOriginal&#39;</span><span class="p">,</span><span class="s">&#39;CreateDate&#39;</span><span class="p">);</span>
+
+    <span class="c1"># out フォルダに出力する</span>
+    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">WriteInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">,</span><span class="s">&#39;out/&#39;</span><span class="o">.</span><span class="nv">$f</span><span class="p">)</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>ただ、こんな凝ったことしなくても Image::ExifTool と一緒に導入される exiftool を使えば、もっと手軽にできたようだ。</p>
+<div class="highlight"><pre>exiftool <span class="s2">&quot;-AllDates-=0:0:0 9:0:0&quot;</span> ./
+</pre>
+</div>
+
+<p>バックアップファイルまで作ってくれるので安心。</p>
+<h1>タイムスタンプを修正する</h1>
+<p>この方法で EXIF を書き換えることには成功したのだけど、ファイルのタイムスタンプが現在時刻になってしまう。</p>
+<a name="seemore"></a>
+<p>そこで、タイムスタンプを EXIF のものに置き換えるスクリプトを書いた。</p>
+<div class="highlight"><pre><span class="n">perl</span> <span class="o">-</span><span class="nn">MImage::</span><span class="n">ExifTool</span> <span class="o">-</span><span class="nn">MTime::</span><span class="n">Local</span> <span class="o">-</span><span class="n">e</span> <span class="s">&quot;for $f(glob(&#39;*.jpg&#39;)){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); @t=reverse split(/[: ]/,$e-&gt;GetValue(&#39;ModifyDate&#39;)); $t[4]--; $t=timelocal @t; utime $t,$t,$f }&quot;</span>
+</pre>
+</div>
+
+<p>インデントしてみた。</p>
+<div class="highlight"><pre><span class="c1"># カレントフォルダの *.jpg を列挙</span>
+<span class="k">for</span> <span class="nv">$f</span><span class="p">(</span><span class="nb">glob</span><span class="p">(</span><span class="s">&#39;*.jpg&#39;</span><span class="p">)){</span>
+    <span class="c1"># ファイルの Exif 情報を読み取る</span>
+    <span class="nv">$e</span> <span class="o">=</span> <span class="k">new</span> <span class="nn">Image::</span><span class="n">ExifTool</span><span class="p">;</span>
+    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">ImageInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">);</span>
+
+    <span class="c1"># 時間を取得する</span>
+    <span class="nv">@t</span><span class="o">=</span><span class="nb">reverse</span> <span class="nb">split</span><span class="p">(</span><span class="sr">/[: ]/</span><span class="p">,</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="n">GetValue</span><span class="p">(</span><span class="s">&#39;ModifyDate&#39;</span><span class="p">));</span>
+    <span class="nv">$t</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">--</span><span class="p">;</span> <span class="c1"># month を1減らす</span>
+
+    <span class="c1"># epoch に変換する</span>
+    <span class="nv">$t</span><span class="o">=</span><span class="n">timelocal</span> <span class="nv">@t</span><span class="p">;</span>
+
+    <span class="c1"># ファイルのタイムスタンプを変更する</span>
+    <span class="nb">utime</span> <span class="nv">$t</span><span class="p">,</span><span class="nv">$t</span><span class="p">,</span><span class="nv">$f</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>Image::ExifTool で時刻を DateTime で取得するような方法を探してみたんだけど見つからず。諦めて、このようなかっこ悪い方法で変換している（1月には動かない!!）。</p>
+<h1>参考URL</h1>
+<ul><li><a href="http://hippos-lab.com/blog/node/251">exiftoolはとっても楽ちん | hippos-lab::blog</a></li><li><a href="http://www.perlmonks.org/?node_id=767176">Change Image File Timestamp to Match EXIF Data</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100223/perl_exif" class="hatena-bookmark-button" data-hatena-bookmark-title="Image::ExifTool で写真の EXIF 時刻をまとめてずらす - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/23/perl-exif/" data-lang="ja" data-size="horizontal" data-text="Image::ExifTool で写真の EXIF 時刻をまとめてずらす - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/02/16/teraco29-hige5/" rel="previous">大阪てら子29 HIGE5 に参加したよ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/03/01/tsunami-tbs/" rel="next">津波テロップでTBSが１人勝ちしていた件&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

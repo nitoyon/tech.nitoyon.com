@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/09/19/bezier-2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回の種明かしをする前に、ベジエ曲線の定義を見てみてみましょう。ベジエ曲線の定義２次ベジエ曲線は３つの制御点から成り立っています。制御点から曲線を求めるには次のようにします。図1制御点を t : 1 - t (0≦t≦1) に内分する点を結んで直線を引く。（上の図で常時動いている直線になる）この直線を t : 1 - t に結んだ点を求める（上の図の黒い点）。上の図で青い残像になっている部分が２次ベジエ曲線になります。前回の図と比較では、前回の図と比較してみましょう。図2直感的に「ベジエ曲線だ！」と言いたくなってしまいますが、そう早まってはいけません。この曲線がベジエ曲線から少しでもずれ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年09月19日</h2>
+<h1>ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070919/bezier_2" class="hatena-bookmark-button" data-hatena-bookmark-title="ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/09/19/bezier-2/" data-lang="ja" data-size="horizontal" data-text="ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20070918/bezier_1">前回</a>の種明かしをする前に、ベジエ曲線の定義を見てみてみましょう。</p>
+<h1>ベジエ曲線の定義</h1>
+<p>２次ベジエ曲線は３つの制御点から成り立っています。制御点から曲線を求めるには次のようにします。</p>
+<p><center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBezierTest2.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=300&amp;h=300&amp;title=bezier+anime&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><br>図1</center></p>
+<ol><li>制御点を t : 1 - t (0≦t≦1) に内分する点を結んで直線を引く。（上の図で常時動いている直線になる）</li><li>この直線を t : 1 - t に結んだ点を求める（上の図の黒い点）。</li></ol>
+<p>上の図で青い残像になっている部分が２次ベジエ曲線になります。</p>
+<h1>前回の図と比較</h1>
+<p>では、前回の図と比較してみましょう。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070918/20070918025712.gif" width="223" height="220" alt="直線の図"><br>図2</center>
+<p>直感的に「ベジエ曲線だ！」と言いたくなってしまいますが、そう早まってはいけません。この曲線がベジエ曲線から少しでもずれていれば、ベジエ曲線とはいえません。</p>
+<p>「ベジエ曲線だよ！」と言い切るためには<strong>数学の力</strong>を借りる必要があります。センター試験の文型数学レベルの内容なので、よかったら読んでみてください。</p>
+<h1>証明１：力技</h1>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070919/20070919092957.gif" width="250" height="250" alt="証明1" align="right">図のように、３つの制御点をそれぞれ (0, 0), (1, 0), (0, 1) としておきます。この座標で証明できれば、拡大縮小したり歪ませた座標系でも同じように証明できます。</p>
+<p>直線を表す方程式を <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=y+%3D+f%28x%29" class="tex" alt="y = f(x)"> とすると、(0, 1 - t) と (t, 0) を通るという条件から、<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=f%28x%29+%3D+-%28%5Cfrac%7B1%7D%7Bt%7D-1%29x+%2B+1+-+t" class="tex" alt="f(x) = -(\frac{1}{t}-1)x + 1 - t"> と求められます。</p>
+<p>さて、x 座標が <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=x_0" class="tex" alt="x_0"> である点に着目します。</p>
+<p>この点の座標は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%28x_0%2C+f%28x_0%29" class="tex" alt="(x_0, f(x_0)"> です。t を変数として考えると、t の値によって y座標の値は変化します。</p>
+<p>つまり、</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5CLarge%5Cleft.%5Cbegin%7Beqnarray%7D+f%28t%29+%26%3D%26+-%28%5Cfrac%7B1%7D%7Bt%7D-1%29x_0+%2B+1+-+t%5C%5C+%26%3D%26+-t+-+%5Cfrac%7Bx_0%7D%7Bt%7D+%2B+x_0+%2B+1+%5Cend%7Beqnarray%7D%5Cright%5C." class="tex" alt="\Large\left.\begin{eqnarray} f(t) &amp;=&amp; -(\frac{1}{t}-1)x_0 + 1 - t\\ &amp;=&amp; -t - \frac{x_0}{t} + x_0 + 1 \end{eqnarray}\right\."></center></p>
+<p>となります。</p>
+<p>f(t) が最大値をとるとき、点 <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=+%28x_0%2C+f%28t%29%29" class="tex" alt=" (x_0, f(t))"> は図2の曲線を構成する点になります。</p>
+<p>ここまでくればあとは計算するだけ。f(t) を微分すれば、<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=t+%3D+%5CLarge%5Csqrt%7Bx_0%7D" class="tex" alt="t = \Large\sqrt{x_0}"> のとき f(t) が最大値になることが分かります。</p>
+<p>ここから、<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=+x_0+%3A+t+%3D+t%5E2+%3A+t+%3D+t+%3A+1" class="tex" alt=" x_0 : t = t^2 : t = t : 1"> となることが分かります。つまり、ベジエ曲線は t : 1 - t を満たす点(図1の黒丸)の集合なのだけど、それは図2において y 座標を最大にする点の集合と同じなのです。</p>
+<p>おわり。</p>
+<h1>証明２：ちょっとエレガントに</h1>
+<p><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070919/20070919092955.gif" width="250" height="250" alt="証明2" align="right">証明１は力技だったのであまり美しくありません。もうちょっとエレガントに回答すると、証明も短くなりますし、物事の本質も見えてくるものです。</p>
+<p>ということで、さっきの図を45度傾けて計算してみます。制御点は原点と(1, 1), (-1, 1) です。</p>
+<p>ベジエ曲線を表す式を求めます。t : 1 - t に内分した点は (t, t)、(t - 1, 1 - t) となります。この２点を t : 1 - t に内分する点は</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5CLarge%5Cbegin%7Barray%7Dx%5C%5Cy%5Cend%7Barray%7D%5Cright%29+%3D+t+%5Cleft%28%5CLarge%5Cbegin%7Barray%7Dt%5C%5Ct%5Cend%7Barray%7D%5Cright%29%2B%281-t%29%5Cleft%28%5CLarge%5Cbegin%7Barray%7Dt-1%5C%5C1-t%5Cend%7Barray%7D%5Cright%29" class="tex" alt="\left(\Large\begin{array}x\\y\end{array}\right) = t \left(\Large\begin{array}t\\t\end{array}\right)+(1-t)\left(\Large\begin{array}t-1\\1-t\end{array}\right)"></center></p>
+<p>を整理して、</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5CLarge%5Cbegin%7Barray%7Dx%5C%5Cy%5Cend%7Barray%7D%5Cright%29+%3D+%5Cleft%28%5CLarge%5Cbegin%7Barray%7D-1%2B2t%5C%5C1-2t%2B2t%5E2%5Cend%7Barray%7D%5Cright%29" class="tex" alt="\left(\Large\begin{array}x\\y\end{array}\right) = \left(\Large\begin{array}-1+2t\\1-2t+2t^2\end{array}\right)"></center></p>
+<p>となります。</p>
+<p>ここで注目すべきは、</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=y%3D%5CLarge%5Cfrac%7B1%7D%7B2%7Dx%5E2%2B%5Cfrac%7B1%7D%7B2%7D" class="tex" alt="y=\Large\frac{1}{2}x^2+\frac{1}{2}"></center></p>
+<p>が成立することです。<strong>２次ベジエ曲線は２次関数</strong>（放物線）だったのです。</p>
+<p>同様に、直線の式を求めると、<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=y+%3D+%282t+-+1%29x+%2B+2t%281-t%29" class="tex" alt="y = (2t - 1)x + 2t(1-t)"> となります。</p>
+<p>放物線と直線が交わる点を求めるために、両者の y が等しいとすると、</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5CLarge%5Cfrac%7B1%7D%7B2%7Dx%5E2%2B%5Cfrac%7B1%7D%7B2%7D+%3D+%282t+-+1%29x+%2B+2t%281-t%29" class="tex" alt="\Large\frac{1}{2}x^2+\frac{1}{2} = (2t - 1)x + 2t(1-t)"></center></p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5CLarge%28x+-+%282t-1%29%29%5E2%3D0" class="tex" alt="\Large(x - (2t-1))^2=0"></center></p>
+<p>となります。</p>
+<p>つまり、放物線と直線はただ１点でのみ交わる、ということです。これは、直線が放物線の接線であることを意味します。接線である以上、直線は放物線より上でもなければ下でもないことは自明です。</p>
+<h1>まとめ</h1>
+<p>なんだか数学の講義みたいになってしましたが、まとめるとこうなります。</p>
+<ul><li>２次ベジエ曲線<ul><li>２次曲線（放物線）</li><li>２つの制御点が接点</li></ul></li><li>CG の図<ul><li>構成する直線は２次曲線の接線</li><li>構成する直線から浮かび上がる曲線は２次ベジエ曲線</li></ul></li></ul>
+<p>次回は、Illustrator などのドローソフトでも用いられている「３次ベジエ曲線」を見ていきます。</p>
+<h1>目次</h1>
+<ol><li><a href="http://d.hatena.ne.jp/nitoyon/20070918/bezier_1">ベジエ曲線の仕組み (1) - 昔話</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20070919/bezier_2">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20070920/bezier_3">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20070921/bezier_4">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a></li></ol>
+<h1>おまけ</h1>
+<p>上の Flash のソースコードです。初めて Tweener を使ってみました。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span>
+<span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">caurina</span><span class="p">.</span><span class="nx">transitions</span><span class="p">.</span><span class="nx">Tweener</span><span class="p">;</span>
+    
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">BezierTest2</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
+    <span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">flag</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dot</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BezierTest2</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="nx">dot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">);</span>
+            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">dot</span><span class="p">);</span>
+
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">drawLines</span><span class="p">()});</span>
+        <span class="p">}</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">drawLines</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+        <span class="p">{</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+            <span class="kd">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">SIZE</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">pt3</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">getInnerPoint</span><span class="p">(</span><span class="nx">pt1</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+
+            <span class="nx">dot</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span> <span class="nx">dot</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xcccccc</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">pt1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+
+            <span class="kd">var</span> <span class="nx">line</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x0099ff</span><span class="p">);</span>
+            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt3</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="nx">addChildAt</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+            <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="nx">alpha</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> 
+                <span class="nx">time</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> 
+                <span class="nx">onComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">line</span><span class="p">);}</span>
+            <span class="p">});</span>
+
+            <span class="nx">p</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">;</span>
+            <span class="nx">t</span> <span class="o">=</span> <span class="p">(</span><span class="nx">flag</span> <span class="o">?</span> <span class="nx">t</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">:</span> <span class="nx">t</span> <span class="o">-</span> <span class="mf">0.02</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">t</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">||</span> <span class="nx">t</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="nx">flag</span> <span class="o">=</span> <span class="o">!</span><span class="nx">flag</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getInnerPoint</span><span class="p">(</span><span class="nx">p0</span><span class="o">:*</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:*</span><span class="p">,</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">+</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">t</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">+</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">t</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070919/bezier_2" class="hatena-bookmark-button" data-hatena-bookmark-title="ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/09/19/bezier-2/" data-lang="ja" data-size="horizontal" data-text="ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/09/18/bezier-1/" rel="previous">ベジエ曲線の仕組み (1) - 昔話</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/09/20/bezier-3/" rel="next">ベジエ曲線の仕組み (3) - ３次ベジエ曲線&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

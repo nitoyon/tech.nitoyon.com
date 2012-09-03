@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>フォント情報を元に歪めて描画：ユメのカタチ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="フォント情報を元に歪めて描画：ユメのカタチ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/07/25/shape-of-a-dream/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="埋め込みフォントの情報を swfassist で取得するから先へ進んで、フォントのベクタ情報を加工して遊んでみよう。(追記) 手元の Firefox だと「bytes が読み取れない」と例外が出る。ブラウザや Player のバージョンによっては動かない！？ bytes は Flash Player 9.0.115.0 以降にしかないので、それ以前のバージョンでは動かない…ということだ。swfassist には描画の仕方を定義する FlashGraphics クラスがある。これを拡張して、FuzzyFlashGraphics というクラスを作成してみた。与えられた座標から、ずらして描画す..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年07月25日</h2>
+<h1>フォント情報を元に歪めて描画：ユメのカタチ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080725/shape_of_a_dream" class="hatena-bookmark-button" data-hatena-bookmark-title="フォント情報を元に歪めて描画：ユメのカタチ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/07/25/shape-of-a-dream/" data-lang="ja" data-size="horizontal" data-text="フォント情報を元に歪めて描画：ユメのカタチ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p><a href="http://d.hatena.ne.jp/nitoyon/20080724/embed_font_swfassist">埋め込みフォントの情報を swfassist で取得する</a>から先へ進んで、フォントのベクタ情報を加工して遊んでみよう。</p>
+<p>(追記) <s>手元の Firefox だと「bytes が読み取れない」と例外が出る。ブラウザや Player のバージョンによっては動かない！？</s> bytes は Flash Player 9.0.115.0 以降にしかないので、それ以前のバージョンでは動かない…ということだ。</p>
+<p>swfassist には描画の仕方を定義する FlashGraphics クラスがある。これを拡張して、FuzzyFlashGraphics というクラスを作成してみた。与えられた座標から、ずらして描画するためのクラスだ。</p>
+<p>さっそく例。ランダムにずらしつつ、ずらす幅を時間ごとに変化させてみた。</p>
+<center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFuzzyFontDemo.swf&amp;up_background=%23000000&amp;synd=open&amp;w=300&amp;h=300&amp;title=shape+of+a+dream&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript></center>
+<p>FlashGraphics オブジェクトのコールバック関数 f で歪め方を定義する。そこそこ汎用的に遊べるんじゃないかと思う。</p>
+<p>フォントの座標情報が手中にあるんだから、なんかしら面白いことができそうなんだけど、これぐらいしか思いつかないなぁ…。</p>
+<p>ソースは以下に。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">SWF</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">Shape</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">ShapeRecord</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">ShapeRecordTypeConstants</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">inprogress</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">ShapeCollector</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">ShapeDrawer</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">ShapeOutlineDrawer</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">frameRate</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">FuzzyFontDemo</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;アニトＭ-教漢.TTF&#39;</span><span class="p">,</span> <span class="nx">fontName</span><span class="o">=</span><span class="s1">&#39;anito&#39;</span><span class="p">,</span> <span class="nx">unicodeRange</span><span class="o">=</span><span class="s1">&#39;U+5922&#39;</span><span class="p">)]</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">font</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FuzzyFontDemo</span><span class="p">(){</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">DataInput</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ByteArrayInputStream</span><span class="p">(</span><span class="nx">loaderInfo</span><span class="p">.</span><span class="nx">bytes</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">ReadingContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ReadingContext</span><span class="p">();</span>
+            <span class="kd">var</span> <span class="nx">reader</span><span class="o">:</span><span class="nx">SWFReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SWFReader</span><span class="p">();</span>
+            <span class="kd">var</span> <span class="nx">swf</span><span class="o">:</span><span class="nx">SWF</span> <span class="o">=</span> <span class="nx">reader</span><span class="p">.</span><span class="nx">readSWF</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span>
+
+            <span class="kd">var</span> <span class="nx">shapeCollector</span><span class="o">:</span><span class="nx">ShapeCollector</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ShapeCollector</span><span class="p">();</span>
+            <span class="nx">swf</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="nx">shapeCollector</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">shape</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="nx">shapeCollector</span><span class="p">.</span><span class="nx">shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+            <span class="kd">var</span> <span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">sprite</span><span class="p">);</span>
+
+            <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+                <span class="kd">var</span> <span class="nx">fuzzy</span><span class="o">:</span><span class="nx">FuzzyFlashGraphics</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FuzzyFlashGraphics</span><span class="p">(</span><span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">;</span>
+                <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
+                <span class="nx">fuzzy</span><span class="p">.</span><span class="nx">f</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span><span class="p">{</span>
+                    <span class="nx">pt</span><span class="p">.</span><span class="nx">x</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="nx">a</span><span class="p">;</span>
+                    <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="nx">a</span><span class="p">;</span>
+                    <span class="k">return</span> <span class="nx">pt</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="kd">var</span> <span class="nx">drawer</span><span class="o">:</span><span class="nx">ShapeOutlineDrawer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ShapeOutlineDrawer</span><span class="p">();</span>
+                <span class="nx">drawer</span><span class="p">.</span><span class="nx">graphics</span> <span class="o">=</span> <span class="nx">fuzzy</span><span class="p">;</span>
+
+                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+                <span class="nx">drawer</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">shape</span><span class="p">);</span>
+                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="p">});</span>
+
+            <span class="nx">sprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+            <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">FlashGraphics</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">FuzzyFlashGraphics</span> <span class="kr">extends</span> <span class="nx">FlashGraphics</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FuzzyFlashGraphics</span><span class="p">(</span><span class="nx">graphics</span><span class="o">:</span><span class="nx">Graphics</span> <span class="o">=</span> <span class="kc">null</span><span class="p">){</span>
+        <span class="kr">super</span><span class="p">(</span><span class="nx">graphics</span><span class="p">);</span>
+        <span class="nx">_f</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span><span class="p">{</span><span class="k">return</span> <span class="nx">pt</span><span class="p">;}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_f</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">f</span><span class="p">()</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span><span class="k">return</span> <span class="nx">_f</span><span class="p">;}</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">f</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="nb">Function</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">_f</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;}</span>
+
+    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">curveTo</span><span class="p">(</span><span class="nx">controlX</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">controlY</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">anchorX</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">anchorY</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">controlX</span><span class="p">,</span> <span class="nx">controlY</span><span class="p">));</span>
+        <span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">anchorX</span><span class="p">,</span> <span class="nx">anchorY</span><span class="p">));</span>
+        <span class="kr">super</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">lineTo</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">));</span>
+        <span class="kr">super</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">moveTo</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">));</span>
+        <span class="kr">super</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080725/shape_of_a_dream" class="hatena-bookmark-button" data-hatena-bookmark-title="フォント情報を元に歪めて描画：ユメのカタチ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/07/25/shape-of-a-dream/" data-lang="ja" data-size="horizontal" data-text="フォント情報を元に歪めて描画：ユメのカタチ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/07/24/embed-font-swfassist/" rel="previous">埋め込みフォントの情報を swfassist で取得する</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/07/28/fleverlight1/" rel="next">Fleverlight 勉強会に参加してきた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/04/17/git-bash-ime/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="先日の UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!! という記事で、msysGit 1.7.10 の Git Bash で IME からの日本語入力できない件を伝えていたが、この件についてもう少し深入りしてみた。.inputrc を設定してもうまくいかない記事へのコメントで指摘をいただいたのが、.inputrc にset convert-meta offset meta-flag onset output-meta onと設定してみる、という方法だった。しかし、この通りに設定しても期待通りの結果にはならなかった。いろい..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2012年04月17日</h2>
+<h1>msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120417/git_bash_ime" class="hatena-bookmark-button" data-hatena-bookmark-title="msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/04/17/git-bash-ime/" data-lang="ja" data-size="horizontal" data-text="msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>先日の <a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a> という記事で、msysGit 1.7.10 の Git Bash で IME からの日本語入力できない件を伝えていたが、この件についてもう少し深入りしてみた。</p>
+<h1>.inputrc を設定してもうまくいかない</h1>
+<p>記事へのコメントで指摘をいただいたのが、<code>.inputrc</code> に</p>
+<div class="highlight"><pre><span class="nb">set </span>convert-meta off
+<span class="nb">set </span>meta-flag on
+<span class="nb">set </span>output-meta on
+</pre>
+</div>
+
+<p>と設定してみる、という方法だった。</p>
+<p>しかし、この通りに設定しても期待通りの結果にはならなかった。</p>
+<p>いろいろ検索してみると、生の MSYS では「この方法でうまくいく」と記述してあるページは多かった。</p>
+<p>生の MSYS ではうまくいくのに、msysGit ではうまくいかない理由はなぜか。この原因を調べてみたところ、次の事実に行き当たった。</p>
+<a name="seemore"></a>
+<h1>msysGit は msys-1.0.dll にパッチを当てている</h1>
+<p>msysGit は MSYS が配布している <code>msys-1.0.dll</code> に対してパッチを当てている。</p>
+<p>そのパッチがこちら。</p>
+<ul><li><a href="https://github.com/msysgit/msysgit/blob/be1eadf11789b4ef295731a5049732c5eb4c51fa/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch">msysgit/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch at be1eadf11789b4ef295731a5049732c5eb4c51fa &#183; msysgit/msysgit</a></li></ul>
+<p>ざっと覗いてみると、コンソールの出力が ANSI から Unicode になるように頑張っている箇所があった。</p>
+<div class="highlight"><pre><span class="gu">@@ -1008,7 +1010,7 @@ fhandler_console::clear_screen (int x1, int y1, int x2, int y2)</span>
+       tlc.X = x2;
+       tlc.Y = y2;
+     }
+<span class="gd">-  FillConsoleOutputCharacterA (get_output_handle (), &#39; &#39;,</span>
+<span class="gi">+  FillConsoleOutputCharacterW (get_output_handle (), L&#39; &#39;,</span>
+ 			       num,
+ 			       tlc,
+ 			       &amp;done);
+<span class="gu">@@ -1244,7 +1246,7 @@ fhandler_console::char_command (char c)</span>
+ 	      savebuf = (PCHAR_INFO) cmalloc (HEAP_1_BUF, sizeof (CHAR_INFO) *
+ 					     savebufsiz.X * savebufsiz.Y);
+ 
+<span class="gd">-	      ReadConsoleOutputA (get_output_handle (), savebuf,</span>
+<span class="gi">+	      ReadConsoleOutputW (get_output_handle (), savebuf,</span>
+ 				  savebufsiz, cob, &amp;now.srWindow);
+ 	    }
+ 	  else          /* restore */
+<span class="gu">@@ -1258,7 +1260,7 @@ fhandler_console::char_command (char c)</span>
+ 	      if (!savebuf)
+ 		break;
+ 
+<span class="gd">-	      WriteConsoleOutputA (get_output_handle (), savebuf,</span>
+<span class="gi">+	      WriteConsoleOutputW (get_output_handle (), savebuf,</span>
+ 				   savebufsiz, cob, &amp;now.srWindow);
+ 
+</pre>
+</div>
+
+<p>そしてパッチの先頭を見ると、次のようなコメントがあった。</p>
+<pre class="">Still TODO:
+- handle console input
+- add wrappers for dynamically loaded *A functions (see autoload.cc 310ff)</pre>
+<p>なるほど、コンソールへの入力は ANSI のままなので、IME から直接マルチバイト文字列を流し込むとうまくいかないのだろう。</p>
+<p>なんとなく <code>ReadConsoleInputA()</code> を <code>ReadConsoleInputW()</code> に変更したら動くような気がしなくもないけど、MSYS のビルド環境を整えるところから…と思うと気が遠くなる。</p>
+<h1>おまけ</h1>
+<p>先日の記事を書いた直後に TortoiseGit の日本語プロジェクトが新たに始まったようだ。</p>
+<ul><li><a href="http://tortoisegitjapan.com/">TortoiseGit Japan</a></li></ul>
+<p>日本語化した DLL を配布していたり、インストール手順を解説してくれていたりするので、TortoiseGit を使っている人はチェックしておくとよいだろう。</p>
+<div class="seealso">
+<h1>あわせてどうぞ</h1>
+<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20120412/msysgit_utf8_2">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20120221/msysgit_utf8">msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20120417/git_bash_ime" class="hatena-bookmark-button" data-hatena-bookmark-title="msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/04/17/git-bash-ime/" data-lang="ja" data-size="horizontal" data-text="msysGit 1.7.10 の Git Bash に日本語が入力できない件について少し調べた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2012/04/12/msysgit-utf8-2/" rel="previous">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2012/04/19/tiny-jp-webfont/" rel="next">文字を制限した軽量な日本語 Web フォントを作成する方法&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

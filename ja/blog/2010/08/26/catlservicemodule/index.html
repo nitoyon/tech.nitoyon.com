@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ATL の CAtlServiceModuleT を使ってサービスを作る"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Win32 でサービス開発すると、ServiceMain や Handler の登録処理などが煩雑で、毎回サンプルコードを探して検索して時間を無駄に浪費してしまう。そこで、ATL に定義されている CAtlServiceModuleT クラスを使って簡単にサービスを作る方法を確立してみた。今回のコードは atlbase.h 内の CAtlServiceModuleT 周辺のソースコードを追いつつ、Visual C++ 2005 と Visual C++ 2008 で動作することを確認している。ただし、Microsoft の意図とは違う使い方をしているので、実戦投入する場合は十分に注意して..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年08月26日</h2>
+<h1>ATL の CAtlServiceModuleT を使ってサービスを作る</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100826/catlservicemodule" class="hatena-bookmark-button" data-hatena-bookmark-title="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-lang="ja" data-size="horizontal" data-text="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Win32 でサービス開発すると、<code>ServiceMain</code> や <code>Handler</code> の登録処理などが煩雑で、毎回サンプルコードを探して検索して時間を無駄に浪費してしまう。そこで、ATL に定義されている <code>CAtlServiceModuleT</code> クラスを使って簡単にサービスを作る方法を確立してみた。</p>
+<p>今回のコードは atlbase.h 内の <code>CAtlServiceModuleT</code> 周辺のソースコードを追いつつ、Visual C++ 2005 と Visual C++ 2008 で動作することを確認している。ただし、Microsoft の意図とは違う使い方をしているので、実戦投入する場合は十分に注意してほしい。</p>
+<h1>ソースコード</h1>
+<p>さっそくソースコード。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="cp">#define _ATL_NO_COM_SUPPORT</span>
+<span class="cp">#include &lt;atlbase.h&gt;</span>
+<span class="cp">#include &lt;tchar.h&gt;</span>
+<span class="cp">#define SERVICE_NAME TEXT(&quot;ServiceName&quot;)</span>
+
+<span class="k">class</span> <span class="nc">CMyServiceModule</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CAtlServiceModuleT</span><span class="o">&lt;</span><span class="n">CMyServiceModule</span><span class="o">&gt;</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">HANDLE</span> <span class="n">m_hStopEvent</span><span class="p">;</span>
+
+    <span class="n">CMyServiceModule</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+        <span class="n">_tcscpy_s</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_countof</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">),</span> <span class="n">SERVICE_NAME</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kt">bool</span> <span class="n">ParseCommandLine</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">lpCmdLine</span><span class="p">,</span> <span class="n">HRESULT</span><span class="o">*</span> <span class="n">pnRetCode</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="o">*</span><span class="n">pnRetCode</span> <span class="o">=</span> <span class="n">S_OK</span><span class="p">;</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">HRESULT</span> <span class="n">Start</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">SERVICE_TABLE_ENTRY</span> <span class="n">st</span><span class="p">[]</span> <span class="o">=</span>
+        <span class="p">{</span>
+            <span class="p">{</span> <span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_ServiceMain</span> <span class="p">},</span>
+            <span class="p">{</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">}</span>
+        <span class="p">};</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">::</span><span class="n">StartServiceCtrlDispatcher</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span> <span class="o">=</span> <span class="n">GetLastError</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">HRESULT</span> <span class="n">Run</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span> <span class="o">=</span> <span class="n">SW_HIDE</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="n">CreateEvent</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">TRUE</span><span class="p">,</span> <span class="n">FALSE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">m_hStopEvent</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">AtlHresultFromLastError</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="n">LogEvent</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;Service started&quot;</span><span class="p">));</span>
+        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_RUNNING</span><span class="p">);</span>
+
+        <span class="c1">// ここでワーカー スレッドを作るなり、何らかの処理を実装する</span>
+
+        <span class="n">WaitForSingleObject</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">,</span> <span class="n">INFINITE</span><span class="p">);</span>
+        <span class="n">CloseHandle</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">OnStop</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_STOP_PENDING</span><span class="p">);</span>
+        <span class="n">SetEvent</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="n">WINAPI</span> <span class="n">_tWinMain</span><span class="p">(</span><span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">LPTSTR</span><span class="p">,</span> <span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">CMyServiceModule</span> <span class="n">module</span><span class="p">;</span>
+
+    <span class="c1">//if (!module.IsInstalled())</span>
+    <span class="c1">//    module.Install();</span>
+
+    <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<h1>使い方</h1>
+<p>サービス登録するには、<code>sc create</code> コマンドを使うか、<code>_tWinMain()</code> のコメントアウトしてある部分を消して一度実行するとよい。</p>
+<p>登録したサービスを [開始] すると、サービスが開始する。現在の実装では何もせずに停止されるのを待機するだけのものとなっている。[停止] を実行すると無事に停止することを確認できる。</p>
+<h1>解説</h1>
+<p>軽く解説していく。<code>atlbase.h</code> で定義されている <code>CAtlServiceModuleT</code> のソースと、上に掲載している <code>CMyServiceModule</code> のソースを見比べると理解できるはず…。</p>
+<h2>#include 処理</h2>
+<p>まずは、<code>CAtlServiceModuleT</code> が定義されている <code>atlbase.h</code> を include する。</p>
+<p><code>CAtlServiceModuleT</code> は ATL で定義される <code>CAtlExeModuleT</code> を継承したクラスだ。</p>
+<p>ATL の XXXXModule クラスは COM に必要な初期化などをやってくれるが、今回は COM は使わないので <code>_ATL_NO_COM_SUPPORT</code> を事前に define しておく。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="cp">#define _ATL_NO_COM_SUPPORT</span>
+<span class="cp">#include &lt;atlbase.h&gt;</span>
+<span class="cp">#include &lt;tchar.h&gt;</span>
+</pre>
+</div>
+
+<h2>クラス定義</h2>
+<p><code>CAtlServiceModuleT</code> は ATL の <code>CComObject</code> クラスなどと同じように、クラス名をテンプレート引数に渡して継承してやる。</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">CMyServiceModule</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CAtlServiceModuleT</span><span class="o">&lt;</span><span class="n">CMyServiceModule</span><span class="o">&gt;</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="c1">// 停止用のイベント</span>
+    <span class="n">HANDLE</span> <span class="n">m_hStopEvent</span><span class="p">;</span>
+
+<span class="c1">// ...</span>
+<span class="p">};</span>
+</pre>
+</div>
+
+<p><code>CAtlServiceModuleT</code> には <code>WinMain</code> メソッドや、その他のサービス実装に便利なメソッドが定義されている。</p>
+<p>ここでは、追加でサービス停止時にシグナル化される <code>m_hStopEvent</code> を追加で定義してあげた。public なのは気持ち悪いが、<code>CAtlServiceModuleT</code> クラスの他のフィールドも public なのでそれに合わせる形とした。</p>
+<h2>コンストラクタ</h2>
+<div class="highlight"><pre>    <span class="n">CMyServiceModule</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">// 停止用のイベントを初期化</span>
+        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+
+        <span class="c1">// サービス名を設定</span>
+        <span class="n">_tcscpy_s</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_countof</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">),</span> <span class="n">SERVICE_NAME</span><span class="p">);</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<p><code>m_szServiceName</code> にサービス名を設定している。</p>
+<p><code>CAtlServiceModuleT</code> のコンストラクタには、リソースからサービス名を取得する実装があるのだが、リソースに依存するのは不便だったので、自力でサービス名を設定するようにしておいた。これでリソースがなくても、<code>m_szServiceName</code> にサービス名が設定される。<code>ServiceName</code> のところは自分で作るサービス名に適宜置き換えるべし。</p>
+<h2>エントリポイント</h2>
+<p>ここでアプリケーションのエントリポイントを見ておく。</p>
+<div class="highlight"><pre><span class="kt">int</span> <span class="n">WINAPI</span> <span class="n">_tWinMain</span><span class="p">(</span><span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">LPTSTR</span><span class="p">,</span> <span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// サービス モジュールのインスタンスを作成</span>
+    <span class="n">CMyServiceModule</span> <span class="n">module</span><span class="p">;</span>
+
+    <span class="c1">// サービスをインストールするには次のようにする</span>
+    <span class="c1">//if (!module.IsInstalled())</span>
+    <span class="c1">//    module.Install();</span>
+
+    <span class="c1">// モジュールの WinMain に処理を委譲すうｒ</span>
+    <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>単純に処理を <code>CAtlServiceModuleT::WinMain</code> に委譲している。呼ばれた <code>CAtlServiceModuleT::WinMain()</code> は、「<code>CAtlServiceModuleT::GetCommandLine()</code> を実行し、成功すれば <code>CAtlServiceModuleT::Start()</code> を呼ぶ」という実装になっている。</p>
+<p>コメントアウトされてる部分はサービスの登録処理だ。必要に応じて活用してもよいだろう。</p>
+<h2>ParseCommandLine メソッド</h2>
+<p><code>CAtlServiceModuleT::GetCommandLine()</code> は COM サーバーとして登録するための処理を実装しているので、次のように何もしない処理でオーバーライドした。</p>
+<div class="highlight"><pre>    <span class="kt">bool</span> <span class="n">ParseCommandLine</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">lpCmdLine</span><span class="p">,</span> <span class="n">HRESULT</span><span class="o">*</span> <span class="n">pnRetCode</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="o">*</span><span class="n">pnRetCode</span> <span class="o">=</span> <span class="n">S_OK</span><span class="p">;</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<h2>Start メソッド</h2>
+<p><code>CAtlServiceModuleT::Start()</code> は、「サービスの登録を行う」以外にも、「レジストリの <code>HKCR\AppID</code> から COM サーバーの情報を読み出してサービスかどうか判定する」という処理が入っている。</p>
+<p>そこで、「サービスを登録を行う」部分だけを抜き出してオーバーライドしている。</p>
+<div class="highlight"><pre>    <span class="n">HRESULT</span> <span class="n">Start</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">SERVICE_TABLE_ENTRY</span> <span class="n">st</span><span class="p">[]</span> <span class="o">=</span>
+        <span class="p">{</span>
+            <span class="p">{</span> <span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_ServiceMain</span> <span class="p">},</span>
+            <span class="p">{</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">}</span>
+        <span class="p">};</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">::</span><span class="n">StartServiceCtrlDispatcher</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span> <span class="o">=</span> <span class="n">GetLastError</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<p>この部分で StartServiceCtrlDispatcher() API を使って _ServiceMain を登録する。</p>
+<p>CAtlServiceModuleT::_ServiceMain() は Handler を登録して、成功すれば Run() を呼び出すようになっている。次は Run() の実装を見ていく。</p>
+<h2>Run メソッド</h2>
+<p>CAtlServiceModuleT::Run() ではメッセージ ループを使った実装があるが、ここではシンプルな独自定義を行うことにした。</p>
+<div class="highlight"><pre>    <span class="n">HRESULT</span> <span class="n">Run</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span> <span class="o">=</span> <span class="n">SW_HIDE</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">// イベントを作成</span>
+        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="n">CreateEvent</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">TRUE</span><span class="p">,</span> <span class="n">FALSE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">m_hStopEvent</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">AtlHresultFromLastError</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="c1">// サービス起動成功</span>
+        <span class="n">LogEvent</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;Service started&quot;</span><span class="p">));</span>
+        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_RUNNING</span><span class="p">);</span>
+
+        <span class="c1">// ここでワーカー スレッドを作るなり、何らかの処理を実装する</span>
+
+        <span class="c1">// イベントがシグナル化するまで待機する</span>
+        <span class="n">WaitForSingleObject</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">,</span> <span class="n">INFINITE</span><span class="p">);</span>
+        <span class="n">CloseHandle</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<h2>OnStop メソッド</h2>
+<p>サービス停止が要求されると、<code>OnStop()</code> メソッドが呼ばれる。このあたりの流れは、<code>CAtlServiceModuleT::Handler()</code> の実装を確認するとよい。</p>
+<p>ここでは <code>OnStop()</code> のデフォルト実装をオーバーライドし、停止通知用のイベントをシグナル化している。</p>
+<div class="highlight"><pre>    <span class="kt">void</span> <span class="n">OnStop</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_STOP_PENDING</span><span class="p">);</span>
+        <span class="n">SetEvent</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<h2>その他</h2>
+<p><code>LogEvent()</code> ではデフォルトでイベントログに出力するが、これもオーバーライドしてもよいかもしれない。</p>
+<h1>まとめ</h1>
+<p>繰り返しになるが、<code>CAtlServiceModuleT</code> クラスの内部実装に依存した形で活用しているので注意してもらいたい。メンテナンス性を考えると独自ラッパーを作ったほうが安心かもしれない。その場合にも <code>CAtlServiceModuleT</code> の実装はかなり参考になるはずだ。</p>
+<h1>追記</h1>
+<p>この記事を書いたあとに知ったのですが、Microsoft が公開するサンプルコード集、<a href="http://1code.codeplex.com/">All-In-One Code Framework</a> に C++ で実装するサービスのサンプル「<code>CppWindowsService</code>」が含まれています。ATL と似た <code>CServiceBase</code> クラスと、それを継承した <code>CSampleService</code> クラスのコードがあるので参照してみるとよいでしょう。</p>
+<ul><li><a href="http://1code.codeplex.com/SourceControl/changeset/view/54555#986932">ServiceBase.cpp (Change Set 54555)</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100826/catlservicemodule" class="hatena-bookmark-button" data-hatena-bookmark-title="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-lang="ja" data-size="horizontal" data-text="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/07/26/p1/" rel="previous">東山三十六峰のマイマップを作った</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/09/24/wikipedia-db-table/" rel="next">Wikipedia が記事の履歴をどのように DB に格納してるか調べてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

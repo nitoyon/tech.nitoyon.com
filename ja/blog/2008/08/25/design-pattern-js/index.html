@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>具体例で説明するデザインパターン - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="具体例で説明するデザインパターン"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/08/25/design-pattern-js/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="この記事には間違いが多く含まれていることが指摘されています。詳しくは 「具体例で説明するデザインパターン」はかなり間違ってる - disり用。 をご覧くださいデザインパターンってなんだかたいそうなものに考えられがちだけど、実は、そこかしこのライブラリや仕様に取り込まれていることが多い。「デザインパターン分からん」とか「で、どうやって使うのよ」と悶々としている人には、「どういうところで使わているのか」を知っておけばイメージも沸きやすいし、意外にたいしたことないんだな、ということが分かるんじゃないだろうか。そこで、JavaScript やその周辺の技術で、デザインパターンがどのように使われて..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年08月25日</h2>
+<h1>具体例で説明するデザインパターン</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080825/design_pattern_js" class="hatena-bookmark-button" data-hatena-bookmark-title="具体例で説明するデザインパターン - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/25/design-pattern-js/" data-lang="ja" data-size="horizontal" data-text="具体例で説明するデザインパターン - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<div style="background-color: yellow; padding: 1em; color: red">この記事には間違いが多く含まれていることが指摘されています。詳しくは <a href="http://d.hatena.ne.jp/rryu/20080830/1220098080">「具体例で説明するデザインパターン」はかなり間違ってる - disり用。</a> をご覧ください</div>
+<p>デザインパターンってなんだかたいそうなものに考えられがちだけど、実は、そこかしこのライブラリや仕様に取り込まれていることが多い。</p>
+<p>「デザインパターン分からん」とか「で、どうやって使うのよ」と悶々としている人には、<strong>「どういうところで使わているのか」</strong>を知っておけばイメージも沸きやすいし、意外にたいしたことないんだな、ということが分かるんじゃないだろうか。</p>
+<p>そこで、JavaScript やその周辺の技術で、デザインパターンがどのように使われているかを紹介してみることにする。</p>
+<p>ここでは、<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4797311126/nitoyoncom-22/ref=nosim">GoF本</a>の順番に沿って、以下の11個のパターンを取り上げる。</p>
+<ul><li>生成に関するパターン<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#factory_method">Factory Method</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#abstract_factory">Abstract Factory</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#builder">Builder</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#prototype">Prototype</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#singleton">Singleton</a></li></ul></li><li>構造に関するパターン<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#adapter">Adapter</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#composite">Composite</a></li></ul></li><li>振る舞いに関するパターン<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#chain_of_responsibility">Chain Of Responsibility</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#iterator">Iterator</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#observer">Observer</a></li><li><a href="http://d.hatena.ne.jp/nitoyon/20080825/design_pattern_js#visitor">Visitor</a></li></ul></li></ul>
+<p>それでは、レッツゴー！</p>
+<a name="seemore"></a>
+<h1><a name="factory_method"></a>Factory Method</h1>
+<p><strong>(追記) 訂正： この説明は factory method については述べていますが、Factory Method パターンには該当しませんでした。申し訳ございません。<a href="http://b.hatena.ne.jp/HiromitsuTakagi/20080825#bookmark-9759096">ブックマークコメント</a>で指摘いただいた <a href="http://d.hatena.ne.jp/HiromitsuTakagi/">id:HiromitsuTakagi</a> 様、ありがとうございます。</strong></p>
+<h2>ざっくり説明</h2>
+<p>new を使わずにインスタンス生成をメソッドで行う。パラメータによって生成するものを変えることも多い。</p>
+<h2>具体例</h2>
+<p>HTML DOM の createElement() が該当する。</p>
+<div class="highlight"><pre><span class="c1">// table タグを作成</span>
+<span class="kd">var</span> <span class="nx">table</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">);</span>
+<span class="nx">table</span><span class="p">.</span><span class="nx">rows</span><span class="p">;</span>                     <span class="c1">// 空の配列</span>
+
+<span class="c1">// div タグを作成</span>
+<span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
+<span class="nx">div</span><span class="p">.</span><span class="nx">rows</span><span class="p">;</span>                       <span class="c1">// undefined</span>
+</pre>
+</div>
+
+<p>第一引数に与えたタグ名によって、異なる HTML ノードが作成されているのが分かる。</p>
+<p>DOM 仕様で言えば、createElement("table") では HTMLTableElement オブジェクトが、createElement("div") では HTMLDivElement オブジェクトが返されている。</p>
+<h2>まとめ</h2>
+<ul><li>インスタンス化するためのメソッドを定義する</li><li>DOM の document.createElement() は factory メソッドである</li></ul>
+<h1><a name="abstract_factory"></a>Abstract Factory</h1>
+<h2>ざっくり説明</h2>
+<p>オブジェクトを作成するためのインターフェースを集約する。どの Factory を渡すかによって、異なるインスタンス群を生成できるようになる。</p>
+<h2>具体例</h2>
+<p>HTML DOM と XML DOM の document には共通の Factory メソッド createElement() や createTextNode を備えている。</p>
+<p>これを利用して次のような create() 関数を作ってみた。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">create</span><span class="p">(</span><span class="nx">factory</span><span class="p">,</span><span class="nx">nodeName</span><span class="p">){</span>
+  <span class="k">return</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">nodeName</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">html_div</span> <span class="o">=</span> <span class="nx">create</span><span class="p">(</span><span class="nb">document</span><span class="p">,</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">html_div</span> <span class="k">instanceof</span> <span class="nx">HTMLDivElement</span><span class="p">);</span> <span class="c1">// true</span>
+
+<span class="kd">var</span> <span class="nx">xmldoc</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">implementation</span><span class="p">.</span><span class="nx">createDocument</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;&quot;</span><span class="p">,</span><span class="kc">null</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">xml_div</span> <span class="o">=</span> <span class="nx">create</span><span class="p">(</span><span class="nx">xmldoc</span><span class="p">,</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">xml_div</span> <span class="k">instanceof</span> <span class="nx">HTMLDivElement</span><span class="p">);</span> <span class="c1">// false</span>
+</pre>
+</div>
+
+<p>create() 関数は、渡される Factory がどのようなものかは知らないが、createElement() メソッドを実行すればインスタンス生成できることを知っている。</p>
+<p>そのため、HTML DOM の document を渡されたときは、HTML 用のタグを作成するし、XML DOM の document を渡されたときは、XML 用のノードを作成する。</p>
+<h2>まとめ</h2>
+<ul><li>Factory を取り替えることで、作成するオブジェクト群を変えられるようにしたのが Abstract Factory</li></ul>
+<h1><a name="builder"></a>Builder</h1>
+<h2>ざっくり説明</h2>
+<p>オブジェクトを作成して組み立てていくためのライブラリを提供する。既存の組み立て方では複雑になる場合や、将来変わる可能性があるときに威力を発揮する。</p>
+<h2>具体例</h2>
+<p>DOM ツリーを作成する手順は煩雑だしソースも読みにくい。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">);</span>
+<span class="nx">p</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;myParagraph&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">);</span>
+<span class="nx">p</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">txt</span><span class="p">);</span>
+<span class="nx">div</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
+<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>だけども、innerHTML を使えば一発。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&lt;p class=&#39;myParagraph&#39;&gt;foo&lt;/p&gt;&quot;</span><span class="p">;</span>
+<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>innerHTML はある意味 DOM ノードの Builder であると言ってよいだろう。</p>
+<p>jQuery のノード生成の機能、Builder みたいなもんだ。簡単に DOM ツリーを作れる。</p>
+<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;div&gt;&quot;</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;&quot;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span><span class="s2">&quot;myParagraph&quot;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+   <span class="p">)</span>
+  <span class="p">.</span><span class="nx">appendTo</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">);</span>
+</pre>
+</div>
+
+<h2>まとめ</h2>
+<ul><li>複雑なものを簡単に作れるようにしておく</li><li>作るための手順が変わったときにも、Builder さえ変更すればよいので依存性が小さくなる</li><li>DOM ノードの Builder として innerHTML や jQuery が挙げられる</li></ul>
+<h1><a name="prototype"></a>Prototype</h1>
+<h2>ざっくり説明</h2>
+<p>原型からコピーしてオブジェクトを作成する。</p>
+<h2>具体例</h2>
+<p>JavaScript の prototype オブジェクトが近い。ただ、デザパタの Prototype パターンとは少し違うので注意すべし。</p>
+<p>デザパタの Prototype パターンは、原型(prototype)からコピーすることでインスタンス生成する。clone() といったほうがイメージが近いかもしれない。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">prototypeGoF</span><span class="p">(</span><span class="nx">proto</span><span class="p">){</span>
+  <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{};</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">name</span> <span class="k">in</span> <span class="nx">proto</span><span class="p">){</span>
+    <span class="nx">obj</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">proto</span><span class="p">[</span><span class="nx">name</span><span class="p">];</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">base</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;prop&quot;</span> <span class="o">:</span><span class="s2">&quot;foo&quot;</span><span class="p">};</span>
+<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">prototypeGoF</span><span class="p">(</span><span class="nx">base</span><span class="p">);</span>
+
+<span class="c1">// 複製されている</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>        <span class="c1">// &quot;foo&quot;</span>
+
+<span class="c1">// 原型 base を変更しても、a の値は変わらない</span>
+<span class="nx">base</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span><span class="p">;</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span>         <span class="c1">// &quot;foo&quot;</span>
+</pre>
+</div>
+
+<p>それに対して、JavaScript の prototype では、prototype オブジェクトが参照として渡される。あとから prototype を変更しても反映される。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">A</span><span class="p">(){}</span>
+<span class="nx">A</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;foo&quot;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">A</span><span class="p">();</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>  <span class="c1">// &quot;foo&quot;</span>
+
+<span class="nx">A</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span><span class="p">;</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>  <span class="c1">// &quot;bar&quot;</span>
+</pre>
+</div>
+
+<h2>まとめ</h2>
+<ul><li>原型からオブジェクトを作る</li><li>JavaScript の言語仕様に取り込まれているけど、Prototype パターンがコピーなのに対して、JavaScript の prototype は参照渡しなので注意してね</li></ul>
+<h1><a name="singleton"></a>Singleton</h1>
+<h2>ざっくり説明</h2>
+<p>オブジェクト指向でグローバル変数っぽいものを実現したいときに使う。</p>
+<h2>具体例</h2>
+<p>JavaScript ではグローバル空間汚染できまくりなので、いまさら例える必要はないんじゃないかな。</p>
+<p>とはいえ、Singleton にはインスタンスが１つしかないことを保証する、という意味合いもある。これを JavaScript で実現するには次のようにするのが定石になっている。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nx">$</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="c1">// ...</span>
+  <span class="p">};</span>
+<span class="p">}());</span>
+</pre>
+</div>
+
+<p>無名関数で隠して、グローバル領域に書き込んでる。JavaScript のいくつかのライブラリで実際に使われている手法。</p>
+<h2>まとめ</h2>
+<ul><li>グローバル変数を使いにくい or 使えない言語でグローバル変数を実現するためのもの。</li></ul>
+<h1><a name="adapter"></a>Adapter</h1>
+<h2>ざっくり説明</h2>
+<p>クラスのインターフェースを変える。別名 Wrapper。</p>
+<h2>具体例</h2>
+<p>IE では addEventListener がなくて困るので定義してあげる。</p>
+<div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">){</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span><span class="nx">fn</span><span class="p">){</span>
+    <span class="nx">attachEvent</span><span class="p">(</span><span class="s2">&quot;on&quot;</span> <span class="o">+</span> <span class="nx">type</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span><span class="nx">fn</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="nb">window</span><span class="p">.</span><span class="nx">event</span><span class="p">);});</span>
+  <span class="p">};</span>
+  <span class="nx">Element</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>これで IE でも addEventListener が使えるようになった。</p>
+<p>ただ、デザインパターンの流儀では、サブクラスを定義して元のクラスを隠蔽するのが基本。ここでは、JavaScript 流のやり方で、直接インターフェースを変えてるので、Adapter パターンと言い切るのは少し苦しいかもしれない。</p>
+<h2>まとめ</h2>
+<ul><li>クラスのインターフェースを変えるときに使う</li><li>既存のオブジェクトを変更できないときに使う</li><li>JavaScript はビルトインのオブジェクトも変更できちゃうので、直接的に書いちゃうよね。</li></ul>
+<h1><a name="composite"></a>Composite</h1>
+<h2>ざっくり説明</h2>
+<p>階層構造を表現するためのオブジェクト構造。</p>
+<h2>具体例</h2>
+<p>DOM ノード。</p>
+<p>addChild()、removeChild() などのメソッドで追加・削除できる。childNodes プロパティで子ノードを参照する。parentNode プロパティもあるね。</p>
+<h2>まとめ</h2>
+<ul><li>階層構造を表現する</li><li>DOM ノードは Composite パターン使ってるね。階層構造だもんね。</li></ul>
+<h1><a name="chain_of_responsibility"></a>Chain Of Responsibility</h1>
+<h2>ざっくり説明</h2>
+<p>要求を表すオブジェクトが順番に伝わっていく仕組み。オブジェクトがチェーン状に伝わっていき、それぞれの責任範囲で実装を行える。</p>
+<h2>具体例</h2>
+<p>DOM イベントでは、イベントオブジェクトが対象のオブジェクトから親ノードへ順番に伝わっていく。</p>
+<p>例えば、この例では、div タグでクリックされると、イベントが div タグに到達して「div clicked!!」と表示される。そのあと、body タグにイベントが到達し、「body clicked!!」と表示される。div と body でそれぞれ独立に同じイベントを処理できるようになっている。</p>
+<div class="highlight"><pre><span class="o">&lt;</span><span class="nx">body</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span><span class="nx">example</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">script</span><span class="o">&gt;</span>
+<span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">);</span>
+<span class="nx">div</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">){</span>
+  <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;div clicked!!&quot;</span><span class="p">);</span>
+<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+
+<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
+  <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;body clicked!!&quot;</span><span class="p">);</span>
+<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="err">/script&gt;</span>
+<span class="o">&lt;</span><span class="err">/body&gt;</span>
+</pre>
+</div>
+
+<p>もう一例挙げておこう。プロトタイプチェーンという言葉にもあるとおり、prototype は Chain Of Responsibility パターンだ。例えば、arr という配列に対して、arr.myProperty を参照すると、</p>
+<ol><li>a.myProperty</li><li>Array.prototype.myProperty</li><li>Object.prototype.myProperty</li></ol>
+<p>の順番に myProperty プロパティを探す。</p>
+<h2>まとめ</h2>
+<ul><li>順番に情報が伝わっていく</li><li>DOM イベントのバブリングフェーズでは、イベントオブジェクトが順番に伝わっていく</li><li>プロトタイプチェーンもそう。</li></ul>
+<h1><a name="iterator"></a>Iterator</h1>
+<h2>ざっくり説明</h2>
+<p>オブジェクトを順番にアクセスするための方法を提供する。</p>
+<h2>具体例</h2>
+<p>JavaScript ではあんまりイテレータは使わないんだけど、DOM ノードをイテレータ的に使ってみよう。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">;</span>
+<span class="k">while</span><span class="p">(</span><span class="nx">p</span><span class="p">){</span>
+  <span class="nx">myFunc</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
+  <span class="nx">p</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">nextSibling</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>nextSibling は同じ階層の次の要素を取得するプロパティ。nextSibling を使えば、ノード自身をイテレータのように扱える。</p>
+<p>実際、jQuery のソースコード中には</p>
+<div class="highlight"><pre><span class="k">for</span> <span class="p">(</span> <span class="p">;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">nextSibling</span> <span class="p">)</span>
+  <span class="k">if</span> <span class="p">(</span> <span class="nx">n</span><span class="p">.</span><span class="nx">nodeType</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// 省略</span>
+  <span class="p">}</span>
+</pre>
+</div>
+
+<p>というようなコードがある。カウンタ変数 i を使ったほうが読みやすい気もするが、この辺は好みだね。</p>
+<h2>まとめ</h2>
+<ul><li>順番にアクセスする</li><li>nextSibling プロパティを使えば、DOM ノードをイテレータ的に使える</li></ul>
+<h1><a name="observer"></a>Observer</h1>
+<h2>ざっくり説明</h2>
+<p>オブジェクトの状態が変わったときに、依存するオブジェクトに自動的に知らせるための仕組み。</p>
+<h2>具体例</h2>
+<p>DOM イベントは Observer パターンそのもの。</p>
+<p>addEventListener を使えば、イベント発生したときに呼ばれる関数を登録できる。</p>
+<div class="highlight"><pre><span class="nx">elm</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
+  <span class="c1">// その１</span>
+<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+
+<span class="nx">elm</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
+  <span class="c1">// その２</span>
+<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>このように、１つの対象(Subject)に対して複数のイベントリスナ(Observer)を登録できるところがポイント。イベントが発生すると、全部のイベントリスナが呼ばれる。</p>
+<p>あんまり使わないけど、removeEventListener で登録解除できる。また、イベント発生させるときには、dispatchEvent() メソッドを利用できる。</p>
+<h2>まとめ</h2>
+<ul><li>通知を複数の対象に知らせるための仕組み</li><li>DOM イベントの仕組みが Observer パターンそのまんまなんだよ。</li></ul>
+<h1><a name="visitor"></a>Visitor</h1>
+<h2>ざっくり説明</h2>
+<p>既存のオブジェクト構造を、外部から操作するための仕組みを追加する。</p>
+<h2>具体例</h2>
+<p>SAX（Simple API for XML）。</p>
+<p>Java のソースだけど、<a href="http://ja.wikipedia.org/wiki/Simple_API_for_XML">Simple API for XML - Wikipedia</a> より引用。</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.xml.parsers.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.xml.sax.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.xml.sax.helpers.DefaultHandler</span><span class="o">;</span>
+ 
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ParserConfigurationException</span><span class="o">,</span><span class="n">SAXException</span><span class="o">,</span><span class="n">IOException</span> <span class="o">{</span>
+    <span class="n">SAXParserFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="n">SAXParserFactory</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+    <span class="n">SAXParser</span> <span class="n">parser</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="na">newSAXParser</span><span class="o">();</span>
+ 
+    <span class="n">parser</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">&quot;http://example.com/rss&quot;</span><span class="o">,</span><span class="k">new</span> <span class="n">DefaultHandler</span><span class="o">()</span> <span class="o">{</span>
+      <span class="kd">private</span> <span class="n">String</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
+      <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">isItemStarted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+ 
+      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">startElement</span><span class="o">(</span><span class="n">String</span> <span class="n">uri</span><span class="o">,</span><span class="n">String</span> <span class="n">localName</span><span class="o">,</span><span class="n">String</span> <span class="n">qName</span><span class="o">,</span><span class="n">Attributes</span> <span class="n">attributes</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">qName</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">&quot;item&quot;</span><span class="o">))</span> <span class="o">{</span>
+          <span class="n">isItemStarted</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+      <span class="o">}</span>
+ 
+      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">endElement</span><span class="o">(</span><span class="n">String</span> <span class="n">uri</span><span class="o">,</span><span class="n">String</span> <span class="n">localName</span><span class="o">,</span><span class="n">String</span> <span class="n">qName</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">isItemStarted</span> <span class="o">&amp;&amp;</span> <span class="n">qName</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">&quot;title&quot;</span><span class="o">))</span> <span class="o">{</span>
+          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">text</span><span class="o">);</span>
+        <span class="o">}</span>
+      <span class="o">}</span>
+ 
+      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">characters</span><span class="o">(</span><span class="kt">char</span><span class="o">[]</span> <span class="n">ch</span><span class="o">,</span><span class="kt">int</span> <span class="n">start</span><span class="o">,</span><span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">ch</span><span class="o">,</span><span class="n">start</span><span class="o">,</span><span class="n">length</span><span class="o">);</span>
+      <span class="o">}</span>
+    <span class="o">});</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre>
+</div>
+
+<p>SAX でパース処理を開始すると、XML のノードを上から順番に見ていき、ノードの内容に応じて、Visitor（ここでは、DefaultHandler） の startElement(),endElement(),characters() などのメソッドを呼び出していく。</p>
+<h2>まとめ</h2>
+<ul><li>SAX はライブラリの構造として Visitor パターンを取り入れている</li></ul>
+<h1>あとがき</h1>
+<p>以上、長くなっちゃったけど、なんとなくイメージが伝われば幸いです。</p>
+<p>デザパタについて詳しく知りたい場合は <a href="http://ja.wikipedia.org/wiki/%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3_(%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2)">デザインパターン (ソフトウェア) - Wikipedia</a> や、定番の書籍を参照あれ。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E5%86%8D%E5%88%A9%E7%94%A8%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3-%E3%82%A8%E3%83%AA%E3%83%83%E3%82%AF-%E3%82%AC%E3%83%B3%E3%83%9E/dp/4797311126%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797311126"><img src="http://ecx.images-amazon.com/images/I/418CWTjHAFL._SL160_.jpg" class="hatena-asin-detail-image" alt="オブジェクト指向における再利用のためのデザインパターン" title="オブジェクト指向における再利用のためのデザインパターン"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E5%86%8D%E5%88%A9%E7%94%A8%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3-%E3%82%A8%E3%83%AA%E3%83%83%E3%82%AF-%E3%82%AC%E3%83%B3%E3%83%9E/dp/4797311126%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797311126">オブジェクト指向における再利用のためのデザインパターン</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> エリック ガンマ</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> ソフトバンククリエイティブ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 1999-10</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4797311126%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4797311126">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88Java%E8%A8%80%E8%AA%9E%E3%81%A7%E5%AD%A6%E3%81%B6%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E5%85%A5%E9%96%80-%E7%B5%90%E5%9F%8E-%E6%B5%A9/dp/4797327030%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797327030"><img src="http://ecx.images-amazon.com/images/I/51k0udCitAL._SL160_.jpg" class="hatena-asin-detail-image" alt="増補改訂版Java言語で学ぶデザインパターン入門" title="増補改訂版Java言語で学ぶデザインパターン入門"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88Java%E8%A8%80%E8%AA%9E%E3%81%A7%E5%AD%A6%E3%81%B6%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E5%85%A5%E9%96%80-%E7%B5%90%E5%9F%8E-%E6%B5%A9/dp/4797327030%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4797327030">増補改訂版Java言語で学ぶデザインパターン入門</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 結城 浩</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> ソフトバンククリエイティブ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2004-06-19</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 大型本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4797327030%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4797327030">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E6%8C%87%E5%90%91%E3%83%AA%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF%E3%83%AA%E3%83%B3%E3%82%B0%E5%85%A5%E9%96%80%7E%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A8%E3%82%A2%E8%A8%AD%E8%A8%88%E3%82%92%E6%94%B9%E5%96%84%E3%81%99%E3%82%8B27%E3%81%AE%E4%BD%9C%E6%B3%95-%E3%82%B8%E3%83%A7%E3%82%B7%E3%83%A5%E3%82%A2%E3%83%BB%E3%82%B1%E3%83%AA%E3%83%BC%E3%82%A8%E3%83%96%E3%82%B9%E3%82%AD%E3%83%BC/dp/4822282384%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4822282384"><img src="http://ecx.images-amazon.com/images/I/51FBETlRf5L._SL160_.jpg" class="hatena-asin-detail-image" alt="パターン指向リファクタリング入門~ソフトウエア設計を改善する27の作法" title="パターン指向リファクタリング入門~ソフトウエア設計を改善する27の作法"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E6%8C%87%E5%90%91%E3%83%AA%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF%E3%83%AA%E3%83%B3%E3%82%B0%E5%85%A5%E9%96%80%7E%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A8%E3%82%A2%E8%A8%AD%E8%A8%88%E3%82%92%E6%94%B9%E5%96%84%E3%81%99%E3%82%8B27%E3%81%AE%E4%BD%9C%E6%B3%95-%E3%82%B8%E3%83%A7%E3%82%B7%E3%83%A5%E3%82%A2%E3%83%BB%E3%82%B1%E3%83%AA%E3%83%BC%E3%82%A8%E3%83%96%E3%82%B9%E3%82%AD%E3%83%BC/dp/4822282384%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4822282384">パターン指向リファクタリング入門~ソフトウエア設計を改善する27の作法</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> ジョシュア・ケリーエブスキー</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 日経BP社</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2005-08-04</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4822282384%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4822282384">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<p>この特集で取り上げられなかったパターンは以下の１２個。</p>
+<ul><li>Bridge、Decorator、Facade、Flyweight、Proxy、Command、Interpreter、Mediator、Memento、State、Strategy、Template Method。</li></ul>
+<p>JavaScript 界隈で使われているところが思いあたらなかった。JavaScript 以外だったらよく使うものもあるんだけど…。この辺で使ってるのに！というのがあったら教えてほしいです。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080825/design_pattern_js" class="hatena-bookmark-button" data-hatena-bookmark-title="具体例で説明するデザインパターン - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/25/design-pattern-js/" data-lang="ja" data-size="horizontal" data-text="具体例で説明するデザインパターン - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/08/24/air-book/" rel="previous">「標準Adobe AIR完全解説」出版のお知らせ</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/09/16/p1/" rel="next">でかいテレビも悪くない&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

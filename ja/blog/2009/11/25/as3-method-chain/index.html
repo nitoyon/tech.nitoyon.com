@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3 でメソッドチェーンしたくなる話 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3 でメソッドチェーンしたくなる話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/11/25/as3-method-chain/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="いろんな AS3 のサンプルが掲載されていて楽しい ActionSnippet | paste it in your timeline - or in your constructor で Functions Returning Functions が紹介されていた。シンプルで美しいのだけど、ソースに１箇所無駄があったので省いてみたものを紹介する。// Functions Returning Functions (Revised)// original: http://actionsnippet.com/?p=2430// - Removed line variable by using..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年11月25日</h2>
+<h1>AS3 でメソッドチェーンしたくなる話</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091125/as3_method_chain" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でメソッドチェーンしたくなる話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/25/as3-method-chain/" data-lang="ja" data-size="horizontal" data-text="AS3 でメソッドチェーンしたくなる話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>いろんな AS3 のサンプルが掲載されていて楽しい <a href="http://actionsnippet.com/">ActionSnippet | paste it in your timeline - or in your constructor</a> で <a href="http://actionsnippet.com/?p=2430">Functions Returning Functions</a> が紹介されていた。</p>
+<p>シンプルで美しいのだけど、ソースに１箇所無駄があったので省いてみたものを紹介する。</p>
+<div class="highlight"><pre><span class="c1">// Functions Returning Functions (Revised)</span>
+<span class="c1">// original: http://actionsnippet.com/?p=2430</span>
+<span class="c1">//  - Removed line variable by using arguments.callee.</span>
+<span class="kr">package</span> <span class="p">{</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">FlashTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FlashTest</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">connect</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">xp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">yp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">col</span><span class="o">:</span><span class="nx">uint</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nx">col</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">xp</span><span class="p">,</span> <span class="nx">yp</span><span class="p">);</span>
+            <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">xp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">yp</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">xp</span><span class="p">,</span> <span class="nx">yp</span><span class="p">);</span>
+                <span class="k">return</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">;</span>
+            <span class="p">};</span>
+        <span class="p">}</span>
+         
+        <span class="c1">// draw a triangle</span>
+        <span class="nx">connect</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">100</span><span class="p">)(</span><span class="mi">300</span><span class="p">,</span><span class="mi">300</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span><span class="mi">300</span><span class="p">)(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+
+        <span class="c1">// draw a box</span>
+        <span class="nx">connect</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span> <span class="mh">0xFF0000</span><span class="p">)(</span><span class="mi">150</span><span class="p">,</span><span class="mi">100</span><span class="p">)(</span><span class="mi">150</span><span class="p">,</span><span class="mi">150</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">150</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>このサンプルがやってることは非常にシンプルで、<code>connect()</code> 関数を呼び出すと、<code>lineTo</code> するだけの関数が返ってくる。この関数を呼ぶと、さらに自分自身が返ってくるので、<code>connect(200,100)(300,300)(100,300)(200, 100);</code> のように順番に呼び出していくと三角形が描けてしまうわけだ。</p>
+<p>このサンプルはやり過ぎにしても、ActionScript の標準ライブラリではメソッドチェーンやりたいと思うことが度々ある。昔はあまり思わなかったんだけど、jQuery や Ruby などに慣れてくると、他の場所でもメソッドチェーンしたくなる病にかかる。</p>
+<p>たとえば <code>lineTo</code> は</p>
+<div class="highlight"><pre><span class="c1">// (注) 実際にはこのように書くとエラーになります</span>
+<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span><span class="mi">300</span><span class="p">).</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">300</span><span class="p">).</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+</pre>
+</div>
+
+<p>のように書けたら嬉しいし、あの憎き <code>Matrix</code> も</p>
+<div class="highlight"><pre><span class="c1">// (注) 実際にはこのように書くとエラーになります</span>
+<span class="kd">var</span> <span class="nx">mtx</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="nx">Matrix</span>
+    <span class="p">.</span><span class="nx">identity</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">rotate</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>とできると immutable になってかなり嬉しい。</p>
+<p>かといって、このあたりを丸々ラップしなおすのは面倒なので、結局文句いいながら使い続けてる。他力本願。</p>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091125/as3_method_chain" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でメソッドチェーンしたくなる話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/25/as3-method-chain/" data-lang="ja" data-size="horizontal" data-text="AS3 でメソッドチェーンしたくなる話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/11/20/extention-vs-my-code/" rel="previous">Skype Extension for Firefox と Security error" code: "1000</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/11/26/as3-method-chain-2/" rel="next">AS3 でメソッドチェーンしたくなる話 (2)&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

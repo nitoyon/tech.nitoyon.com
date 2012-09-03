@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/04/01/swfassist-abcdump/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Tamarin の abcdump.as を活用して、SWF をダンプしてみよう。abcdump を使うためには、まず、SWF の中から ABC(ActionScript ByteCode)を取り出す必要がある。前回取り上げた flash-decompiler を使ってもいいんだけど、せっかくなので、前々から試してみたかった swfassistを使ってみた。いきなり凝ったものを作るのは大変なので、まずは SWF から ABC を抽出するアプリを AIR で作ってみた。サンプルデータ試しにこの簡単な AS をコンパイルして SWF にする。package{ import flash.dis..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年04月01日</h2>
+<h1>OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080401/swfassist_abcdump" class="hatena-bookmark-button" data-hatena-bookmark-title="OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/01/swfassist-abcdump/" data-lang="ja" data-size="horizontal" data-text="OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Tamarin の abcdump.as を活用して、SWF をダンプしてみよう。</p>
+<p>abcdump を使うためには、まず、SWF の中から ABC(ActionScript ByteCode)を取り出す必要がある。前回取り上げた flash-decompiler を使ってもいいんだけど、せっかくなので、前々から試してみたかった <a href="http://www.libspark.org/wiki/yossy/swfassist">swfassist</a>を使ってみた。</p>
+<p>いきなり凝ったものを作るのは大変なので、まずは SWF から ABC を抽出するアプリを AIR で作ってみた。</p>
+<h1>サンプルデータ</h1>
+<p>試しにこの簡単な AS をコンパイルして SWF にする。</p>
+<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>SWF に対して、今回作った ABC 切り出しツールを適用する。</p>
+<p>切り出された ABC を abcdump でダンプする。</p>
+<div class="highlight"><pre><span class="nx">magic</span> <span class="mi">2</span><span class="nx">e0010</span>
+<span class="nx">Cpool</span> <span class="nx">numbers</span> <span class="nx">size</span> <span class="mi">3</span> <span class="mi">1</span> <span class="o">%</span>
+<span class="nx">Cpool</span> <span class="nx">strings</span> <span class="nx">count</span> <span class="mi">13</span> <span class="nx">size</span> <span class="mi">130</span> <span class="mi">46</span> <span class="o">%</span>
+<span class="nx">Cpool</span> <span class="nx">namespaces</span> <span class="nx">count</span> <span class="mi">5</span> <span class="nx">size</span> <span class="mi">9</span> <span class="mi">3</span> <span class="o">%</span>
+<span class="nx">Cpool</span> <span class="nx">nssets</span> <span class="nx">count</span> <span class="mi">0</span> <span class="nx">size</span> <span class="mi">1</span> <span class="mi">0</span> <span class="o">%</span>
+<span class="nx">Cpool</span> <span class="nx">names</span> <span class="nx">count</span> <span class="mi">9</span> <span class="nx">size</span> <span class="mi">25</span> <span class="mi">8</span> <span class="o">%</span>
+<span class="nx">MethodInfo</span> <span class="nx">count</span> <span class="mi">3</span> <span class="nx">size</span> <span class="mi">13</span> <span class="mi">4</span> <span class="o">%</span>
+<span class="nx">InstanceInfo</span> <span class="nx">size</span> <span class="mi">8</span> <span class="mi">2</span> <span class="o">%</span>
+<span class="nx">ClassInfo</span> <span class="nx">size</span> <span class="mi">2</span> <span class="mi">0</span><span class="o">%</span>
+<span class="nx">ScriptInfo</span> <span class="nx">size</span> <span class="mi">7</span> <span class="mi">2</span> <span class="o">%</span>
+<span class="nx">MethodBodies</span> <span class="nx">size</span> <span class="mi">76</span> <span class="mi">27</span> <span class="o">%</span>
+<span class="nx">script0</span>
+
+<span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">Sprite</span>
+<span class="p">{</span>
+
+  <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span><span class="o">:*</span>     <span class="cm">/* disp_id -1*/</span>
+  <span class="p">{</span>
+    <span class="c1">// local_count=1 max_scope=1 max_stack=2 code_len=13</span>
+    <span class="mi">0</span>       <span class="nx">getlocal0</span>           
+    <span class="mi">1</span>       <span class="nx">pushscope</span>           
+    <span class="mi">2</span>       <span class="nx">getlocal0</span>           
+    <span class="mi">3</span>       <span class="nx">constructsuper</span>      <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="mi">5</span>       <span class="nx">findpropstrict</span>      <span class="nx">trace</span>
+    <span class="mi">7</span>       <span class="nx">pushstring</span>          <span class="s2">&quot;test&quot;</span>
+    <span class="mi">9</span>       <span class="nx">callpropvoid</span>        <span class="nx">trace</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="mi">12</span>      <span class="nx">returnvoid</span>          
+  <span class="p">}</span>
+
+
+  <span class="kr">static</span> <span class="kd">function</span> <span class="nx">Test$cinit</span><span class="p">()</span><span class="o">:*</span>        <span class="cm">/* disp_id 0*/</span>
+  <span class="p">{</span>
+    <span class="c1">// local_count=1 max_scope=1 max_stack=1 code_len=3</span>
+    <span class="mi">0</span>       <span class="nx">getlocal0</span>           
+    <span class="mi">1</span>       <span class="nx">pushscope</span>           
+    <span class="mi">2</span>       <span class="nx">returnvoid</span>          
+  <span class="p">}</span>
+
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nx">script0$init</span><span class="p">()</span><span class="o">:*</span>       <span class="cm">/* disp_id 0*/</span>
+<span class="p">{</span>
+  <span class="c1">// local_count=1 max_scope=7 max_stack=2 code_len=35</span>
+  <span class="mi">0</span>         <span class="nx">getlocal0</span>           
+  <span class="mi">1</span>         <span class="nx">pushscope</span>           
+  <span class="mi">2</span>         <span class="nx">getscopeobject</span>      <span class="mi">0</span>
+  <span class="mi">4</span>         <span class="nx">getlex</span>              <span class="nb">Object</span>
+  <span class="mi">6</span>         <span class="nx">pushscope</span>           
+  <span class="mi">7</span>         <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="o">::</span><span class="nx">EventDispatcher</span>
+  <span class="mi">9</span>         <span class="nx">pushscope</span>           
+  <span class="mi">10</span>        <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">DisplayObject</span>
+  <span class="mi">12</span>        <span class="nx">pushscope</span>           
+  <span class="mi">13</span>        <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">InteractiveObject</span>
+  <span class="mi">15</span>        <span class="nx">pushscope</span>           
+  <span class="mi">16</span>        <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">DisplayObjectContainer</span>
+  <span class="mi">18</span>        <span class="nx">pushscope</span>           
+  <span class="mi">19</span>        <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">Sprite</span>
+  <span class="mi">21</span>        <span class="nx">pushscope</span>           
+  <span class="mi">22</span>        <span class="nx">getlex</span>              <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="o">::</span><span class="nx">Sprite</span>
+  <span class="mi">24</span>        <span class="nx">newclass</span>            <span class="nx">Test</span>
+  <span class="mi">26</span>        <span class="nx">popscope</span>            
+  <span class="mi">27</span>        <span class="nx">popscope</span>            
+  <span class="mi">28</span>        <span class="nx">popscope</span>            
+  <span class="mi">29</span>        <span class="nx">popscope</span>            
+  <span class="mi">30</span>        <span class="nx">popscope</span>            
+  <span class="mi">31</span>        <span class="nx">popscope</span>            
+  <span class="mi">32</span>        <span class="nx">initproperty</span>        <span class="nx">Test</span>
+  <span class="mi">34</span>        <span class="nx">returnvoid</span>          
+<span class="p">}</span>
+
+<span class="nx">OPCODE</span>  <span class="nx">SIZE</span>    <span class="o">%</span> <span class="nx">OF</span> <span class="mi">51</span>
+<span class="nx">getlex</span>          <span class="mi">14</span>      <span class="mi">27</span><span class="o">%</span>
+<span class="nx">pushscope</span>       <span class="mi">9</span>       <span class="mi">17</span><span class="o">%</span>
+<span class="nx">popscope</span>        <span class="mi">6</span>       <span class="mi">11</span><span class="o">%</span>
+<span class="nx">getlocal0</span>       <span class="mi">4</span>       <span class="mi">7</span><span class="o">%</span>
+<span class="nx">returnvoid</span>      <span class="mi">3</span>       <span class="mi">5</span><span class="o">%</span>
+<span class="nx">callpropvoid</span>    <span class="mi">3</span>       <span class="mi">5</span><span class="o">%</span>
+<span class="nx">pushstring</span>      <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+<span class="nx">constructsuper</span>  <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+<span class="nx">newclass</span>        <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+<span class="nx">findpropstrict</span>  <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+<span class="nx">getscopeobject</span>  <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+<span class="nx">initproperty</span>    <span class="mi">2</span>       <span class="mi">3</span><span class="o">%</span>
+</pre>
+</div>
+
+<p>それっぽいものが出てきたー！</p>
+<p>abcdump.as のビルド方法は <a href="http://www.5etdemi.com/blog/archives/2007/01/as3-decompiler/">AS3 decompiler</a> あたりを参照あれ。</p>
+<p>SWF から ABC を切り出す AIR のソースコードは以下に。</p>
+<a name="seemore"></a>
+<p>Input.swf を読み出して、out*.abc としてファイル出力するだけの簡単なコードです。</p>
+<p>Flex3 + AIR 1.0 で出来てるよ。</p>
+<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">net</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">SWF</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">loadSWF</span><span class="p">();</span>
+        <span class="p">}</span>
+    
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">loadSWF</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="c1">// Input.swf をロード</span>
+            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">dataFormat</span> <span class="o">=</span> <span class="nx">URLLoaderDataFormat</span><span class="p">.</span><span class="nx">BINARY</span><span class="p">;</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">Event</span><span class="p">.</span><span class="nx">COMPLETE</span><span class="p">,</span> <span class="nx">completeHandler</span><span class="p">);</span>
+            <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s1">&#39;Input.swf&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">completeHandler</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="nx">URLLoader</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
+
+            <span class="c1">// swfassist でダンプ</span>
+            <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">DataInput</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ByteArrayInputStream</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">ReadingContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ReadingContext</span><span class="p">();</span>
+            <span class="nx">context</span><span class="p">.</span><span class="nx">needsABCData</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">reader</span><span class="o">:</span><span class="nx">SWFReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SWFReader</span><span class="p">();</span>
+            <span class="kd">var</span> <span class="nx">swf</span><span class="o">:</span><span class="nx">SWF</span> <span class="o">=</span> <span class="nx">reader</span><span class="p">.</span><span class="nx">readSWF</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span>
+
+            <span class="c1">// AbcVisitor で visit</span>
+            <span class="kd">var</span> <span class="nx">abcVisitor</span><span class="o">:</span><span class="nx">AbcVisitor</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AbcVisitor</span><span class="p">();</span>
+            <span class="nx">swf</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="nx">abcVisitor</span><span class="p">);</span>
+
+            <span class="c1">// 情報を出力</span>
+            <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+            <span class="nx">t</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;frame rate: &quot;</span> <span class="o">+</span> <span class="nx">swf</span><span class="p">.</span><span class="nx">header</span><span class="p">.</span><span class="nx">frameRate</span> <span class="o">+</span> <span class="s2">&quot;\nVersion: &quot;</span> <span class="o">+</span> <span class="nx">swf</span><span class="p">.</span><span class="nx">header</span><span class="p">.</span><span class="nx">version</span>
+                <span class="o">+</span> <span class="s2">&quot;\nabc count: &quot;</span> <span class="o">+</span> <span class="nx">abcVisitor</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">AbstractTagVisitor</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">DoABC</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filesystem</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">AbcVisitor</span> <span class="kr">extends</span> <span class="nx">AbstractTagVisitor</span><span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    
+    <span class="c1">// ABC に反応</span>
+    <span class="nx">override</span> <span class="kr">public</span> <span class="kd">function</span> <span class="nx">visitDoABC</span><span class="p">(</span><span class="nx">tag</span><span class="o">:</span><span class="nx">DoABC</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+        <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">tag</span><span class="p">.</span><span class="nx">abcData</span><span class="p">){</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// フレーム名を取り除く</span>
+        <span class="c1">// framename 0x00 ABC</span>
+        <span class="kd">var</span> <span class="nx">pos</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">while</span><span class="p">(</span><span class="nx">tag</span><span class="p">.</span><span class="nx">abcData</span><span class="p">.</span><span class="nx">readByte</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="p">}</span>
+
+        <span class="c1">// ファイルに出力</span>
+        <span class="c1">// C:\Documents and Settings\username\Application Data\AppName\Local Store</span>
+        <span class="kd">var</span> <span class="nx">fs</span><span class="o">:</span><span class="nx">FileStream</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileStream</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">file</span><span class="o">:</span><span class="nx">File</span> <span class="o">=</span> <span class="nx">File</span><span class="p">.</span><span class="nx">applicationStorageDirectory</span><span class="p">.</span><span class="nx">resolvePath</span><span class="p">(</span><span class="s2">&quot;out&quot;</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s2">&quot;.abc&quot;</span><span class="p">);</span>
+        <span class="nx">trace</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">nativePath</span><span class="p">);</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">);</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">writeBytes</span><span class="p">(</span><span class="nx">tag</span><span class="p">.</span><span class="nx">abcData</span><span class="p">,</span> <span class="nx">tag</span><span class="p">.</span><span class="nx">abcData</span><span class="p">.</span><span class="nx">position</span><span class="p">);</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080401/swfassist_abcdump" class="hatena-bookmark-button" data-hatena-bookmark-title="OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/01/swfassist-abcdump/" data-lang="ja" data-size="horizontal" data-text="OSS で SWF をデコンパイルする(2) - swfassist と abcdump で亜流デコンパイラ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/03/31/flash-decompiler-review/" rel="previous">OSS で SWF をデコンパイルする(1) - flash-decompiler を使ってみる</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/04/03/eventhandler-trace/" rel="next">addEventListener のハンドラに trace&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

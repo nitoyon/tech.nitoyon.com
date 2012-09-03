@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/02/12/cl-eval-mindmap/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ANSI Common Lisp の 3.1.2 The Evaluation Model あたりを読みつつ、Common Lisp が S式をどのように評価するかを理解してみました。マインドマップを書きながら読んでいきました。できあがったのはこんなの。あまり自信ないのでなんか変なこと書いてたら教えてください。こうやって図にしてみると、評価の手順は本当にシンプルなことに驚きます。すごいなぁ。マインドマップについてマインドマップは XMind という Eclipse ベースのフリーのツールを使って描いてみました。ほとんどの操作がキーボードでできるのがよかったです。ただ、ダウンロードするため..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年02月12日</h2>
+<h1>Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090212/cl_eval_mindmap" class="hatena-bookmark-button" data-hatena-bookmark-title="Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/12/cl-eval-mindmap/" data-lang="ja" data-size="horizontal" data-text="Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>ANSI Common Lisp の <a href="http://www.franz.com/support/documentation/6.0/ansicl/subsecti/theevalu.htm">3.1.2 The Evaluation Model</a> あたりを読みつつ、Common Lisp が S式をどのように評価するかを理解してみました。</p>
+<p>マインドマップを書きながら読んでいきました。できあがったのはこんなの。あまり自信ないのでなんか変なこと書いてたら教えてください。</p>
+<center><a href="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090212/20090212004414_original.png"><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090212/20090212004414.png" width="450" height="214" alt="Common Lisp Evaluation Model"></a></center>
+<p>こうやって図にしてみると、評価の手順は本当にシンプルなことに驚きます。すごいなぁ。</p>
+<h1>マインドマップについて</h1>
+<p>マインドマップは <a href="http://www.xmind.net/">XMind</a> という Eclipse ベースのフリーのツールを使って描いてみました。ほとんどの操作がキーボードでできるのがよかったです。ただ、ダウンロードするためにはアカウント登録が必要で、登録すると <a href="http://share.xmind.net/">XMind Share</a> で公開するためのアカウントがついてきて、探した限りでは退会できませんでした。なんという強制参加…。せっかくなので、今回作ったものを <a href="http://share.xmind.net/nitoyon/xmind-819696/">http://share.xmind.net/nitoyon/xmind-819696/</a> にアップロードしておきました。生の xmind ファイルもここからダウンロードできますよ。</p>
+<p>マインドマップ初挑戦でしたが、作った人が思い出すには便利なメモ方法だと思いました。問題は他人に伝わるか。分類はできるんだけど、分類の意図が伝わりにくい印象です。マインドマップを他人に見せるときには、しっかり推敲して、それでも伝わりにくそうだったら注釈や補足を付け加えたほうがよさそうです。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090212/cl_eval_mindmap" class="hatena-bookmark-button" data-hatena-bookmark-title="Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/12/cl-eval-mindmap/" data-lang="ja" data-size="horizontal" data-text="Common Lisp 仕様書の Evaluation Model を読んでマインドマップにまとめた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/02/10/caravan2008-kyoto/" rel="previous">セキュリティ＆プログラミングキャンプキャラバン京都2008に行ってみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/02/12/flashcontent-noscript/" rel="next">&lt;div id="flashcontent"&gt;の中身も…&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

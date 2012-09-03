@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>&quot;XRay&quot; - ActionScript3 版の Firebug みたいなデバッグツール - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="&quot;XRay&quot; - ActionScript3 版の Firebug みたいなデバッグツール"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/10/15/xray-as3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ActionScript 2 用のデバッグツールとして有名だった XRay が ActionScript 3 に対応したようです。DisplayObject の階層を表示してくれたり、オブジェクトのプロパティを修正したり、ログ用のコンソールになったりと機能豊富です。しかも、Flash CS3 だけでなく、Flex や AIR でも使えるようです。ということで、早速、試してみました。ダウンロードしてソースコードに２行追加するだけXRay のソースコードを拾ってきます。Google Code にあるので、SVN で拾ってきましょう。http://osflash-xray.googlecode..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年10月15日</h2>
+<h1>"XRay" - ActionScript3 版の Firebug みたいなデバッグツール</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081015/xray_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="&quot;XRay&quot; - ActionScript3 版の Firebug みたいなデバッグツール - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/15/xray-as3/" data-lang="ja" data-size="horizontal" data-text=""XRay" - ActionScript3 版の Firebug みたいなデバッグツール - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015005521.png" width="450" height="184"></center>
+<p>ActionScript 2 用のデバッグツールとして有名だった XRay が <a href="http://rockonflash.wordpress.com/2008/10/11/xray-yes-it-does-as3/">ActionScript 3 に対応した</a>ようです。</p>
+<p>DisplayObject の階層を表示してくれたり、オブジェクトのプロパティを修正したり、ログ用のコンソールになったりと機能豊富です。しかも、Flash CS3 だけでなく、Flex や AIR でも使えるようです。</p>
+<p>ということで、早速、試してみました。</p>
+<h1>ダウンロードしてソースコードに２行追加するだけ</h1>
+<p>XRay のソースコードを拾ってきます。Google Code にあるので、SVN で拾ってきましょう。</p>
+<ul><li><a href="http://osflash-xray.googlecode.com/svn/trunk/as3/trunk/">http://osflash-xray.googlecode.com/svn/trunk/as3/trunk/</a></li></ul>
+<p>では、自分の Flash に仕込んでみましょう。</p>
+<p>ActionScript のソースコードに import 文を追加します。</p>
+<div class="highlight"><pre><span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">blitzagency</span><span class="p">.</span><span class="nx">xray</span><span class="p">.</span><span class="nx">inspector</span><span class="p">.</span><span class="nx">Xray</span><span class="p">;</span>
+</pre>
+</div>
+
+<p>スクリプトの最初のほうで、インスタンスを作って addChild してあげます。</p>
+<div class="highlight"><pre><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Xray</span><span class="p">());</span>
+</pre>
+</div>
+
+<p>この２行だけで準備は完了です。</p>
+<p>あ、Flex の場合は、専用の Flex2Xray というクラスを new するだけで OK です。こんな感じです。</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="nt">&lt;mx:Application</span> <span class="na">xmlns:mx=</span><span class="s">&quot;http://www.adobe.com/2006/mxml&quot;</span>
+    <span class="na">applicationComplete=</span><span class="s">&quot;init()&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;mx:Script&gt;</span>
+        <span class="cp">&lt;![CDATA[</span>
+<span class="cp">            import com.blitzagency.xray.inspector.flex2.Flex2Xray;</span>
+
+<span class="cp">            private function init():void{</span>
+<span class="cp">               var xray:Flex2Xray = new Flex2Xray();</span>
+<span class="cp">            }</span>
+<span class="cp">        ]]&gt;</span>
+    <span class="nt">&lt;/mx:Script&gt;</span>
+<span class="nt">&lt;/mx:Application&gt;</span>
+</pre>
+</div>
+
+<h1>ビューワを起動する</h1>
+<p>ログを表示するビューワは別途 SWF の形で提供されています。以下の URL からダウンロードして、ブラウザで表示するなり、スタンドアロン版 Flash Player で起動するなりしてください。</p>
+<ul><li><a href="http://www.rockonflash.com/xray/flex/Xray.zip">http://www.rockonflash.com/xray/flex/Xray.zip</a></li></ul>
+<p>Application View の「Go」ボタンを押すと、階層表示できます。左側のツリーを適度に開いていくと、Flash の構造が丸見えですね。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015004411.png" width="450" height="305"></center>
+<p>選択した DisplayObject は右側でプロパティが表示されてます。値を修正して反映することもできるので、ちょっとした動作チェックも可能です。このあたりは、まさに Firebug みたいな感じですね。</p>
+<h1>デバッグログを出力する</h1>
+<p>スクリプト側で次のようにすると、XRay にログを出力できます。</p>
+<div class="highlight"><pre><span class="c1">// 最初のほう</span>
+<span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">blitzagency</span><span class="p">.</span><span class="nx">xray</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">XrayLog</span><span class="p">;</span>
+
+<span class="c1">// スクリプトのどこか</span>
+<span class="kd">var</span> <span class="nx">log</span><span class="o">:</span><span class="nx">XrayLog</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XrayLog</span><span class="p">();</span>
+
+<span class="nx">log</span><span class="p">.</span><span class="nx">debug</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
+<span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
+<span class="nx">log</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
+<span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
+<span class="nx">log</span><span class="p">.</span><span class="nx">fatal</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
+</pre>
+</div>
+
+<p>出力したログを XRay のビューワで確認できます。レベルごとに絞り込み表示したり、検索したりも可能です。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015004410.png" width="450" height="276"></center>
+<p>ただ、ログの表示はお世辞にも見やすいとは言えない感じで、あまり魅力的ではありません。別のツールを併用したほうがよいかもしれません。</p>
+<h1>まとめ</h1>
+<p>AS2 時代に XRay を愛用した人にとっては嬉しいですね。</p>
+<p>AS3 になって、色んなデバッグツールが百花繚乱してるので、今更 XRay を選ぶ理由もないような気がします。ビューワの独特な見た目に抵抗ある人も少なからずいるのではないでしょうか。せっかくなので、次回は、AS3 界隈に登場しているデバッグツールをまとめてみたいと思います。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081015/xray_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="&quot;XRay&quot; - ActionScript3 版の Firebug みたいなデバッグツール - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/15/xray-as3/" data-lang="ja" data-size="horizontal" data-text=""XRay" - ActionScript3 版の Firebug みたいなデバッグツール - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/10/14/smalltalk-heap-sort/" rel="previous">Smalltalk でヒープソートを書いてみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/10/16/as3-debug-library/" rel="next">ActionScript 3.0 用デバッグ支援ライブラリいろいろ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

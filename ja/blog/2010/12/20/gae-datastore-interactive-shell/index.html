@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Google App Engine で Datastore を Python 対話シェルから参照する - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Google App Engine で Datastore を Python 対話シェルから参照する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/12/20/gae-datastore-interactive-shell/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="いまさらながらに Google App Engine をちょろちょろと触っている。Datastore を対話シェルから使えると便利そうなので、やり方を確立してみた。結論としては次のコードを対話シェル上で実行すれば使えるようになった。(Google App Engine SDK for Python Windows 版 1.4.0 にて確認)import osimport sysimport tempfileDIR_PATH = r&amp;quot;C:\Program Files\Google\google_appengine&amp;quot;APP_ID = &amp;quot;helloworld&amp;qu..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年12月20日</h2>
+<h1>Google App Engine で Datastore を Python 対話シェルから参照する</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20101220/gae_datastore_interactive_shell" class="hatena-bookmark-button" data-hatena-bookmark-title="Google App Engine で Datastore を Python 対話シェルから参照する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/12/20/gae-datastore-interactive-shell/" data-lang="ja" data-size="horizontal" data-text="Google App Engine で Datastore を Python 対話シェルから参照する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>いまさらながらに Google App Engine をちょろちょろと触っている。</p>
+<p>Datastore を対話シェルから使えると便利そうなので、やり方を確立してみた。</p>
+<p>結論としては次のコードを対話シェル上で実行すれば使えるようになった。(Google App Engine SDK for Python Windows 版 1.4.0 にて確認)</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="n">DIR_PATH</span> <span class="o">=</span> <span class="s">r&quot;C:\Program Files\Google\google_appengine&quot;</span>
+<span class="n">APP_ID</span> <span class="o">=</span> <span class="s">&quot;helloworld&quot;</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span> <span class="o">+=</span> <span class="p">[</span>
+  <span class="n">DIR_PATH</span><span class="p">,</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;antlr3&#39;</span><span class="p">),</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;django&#39;</span><span class="p">),</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;fancy_urllib&#39;</span><span class="p">),</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;ipaddr&#39;</span><span class="p">),</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;webob&#39;</span><span class="p">),</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;yaml&#39;</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">apiproxy_stub_map</span><span class="p">,</span><span class="n">datastore_file_stub</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;APPLICATION_ID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">APP_ID</span>
+
+<span class="n">datastore_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="s">&#39;dev_appserver.datastore&#39;</span><span class="p">)</span>
+<span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">apiproxy</span> <span class="o">=</span> <span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">APIProxyStubMap</span><span class="p">()</span>
+<span class="n">datastore</span> <span class="o">=</span> <span class="n">datastore_file_stub</span><span class="o">.</span><span class="n">DatastoreFileStub</span><span class="p">(</span><span class="n">APP_ID</span><span class="p">,</span> <span class="n">datastore_path</span><span class="p">)</span>
+<span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">apiproxy</span><span class="o">.</span><span class="n">RegisterStub</span><span class="p">(</span><span class="s">&#39;datastore_v3&#39;</span><span class="p">,</span> <span class="n">datastore</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>Windows 版以外でも、<code>DIR_PATH</code> のところをインストール先のパスに変更すれば動くと思う。<code>APP_ID</code> は <code>helloworld</code> にしているが、自分のアプリケーションの ID に変えると、ローカルでテスト中のデータを読み取れる。</p>
+<p>こんな感じに試せて嬉しい。</p>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">db</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">t</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+<span class="n">datastore_types</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span><span class="s">u&#39;A&#39;</span><span class="p">,</span> <span class="il">1L</span><span class="p">,</span> <span class="n">_app</span><span class="o">=</span><span class="s">u&#39;helloworld&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="o">.</span><span class="n">id</span><span class="p">()</span>
+<span class="il">1L</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">t</span>
+<span class="s">&#39;test&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="mi">1</span>
+</pre>
+</div>
+
+<p>Web から使う DB と同じものを参照しているので、Web で設定した内容をインタラクティブ シェル上で確認することもできて嬉しい。</p>
+<h1>スクリプトを作るまで</h1>
+<a name="seemore"></a>
+<p>何も考えずにスクリプト パスを通して DataStore の API を叩いてみると次の例外が発生した。</p>
+<pre>google.appengine.api.datastore_errors.BadArgumentError: app must not be empty.</pre>
+<p>datastore_types.py にて次のようにして APPLICATION_ID を参照していたので、</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">ResolveAppId</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Validate app id, providing a default.</span>
+<span class="sd">  (snip)</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;APPLICATION_ID&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+  <span class="n">ValidateString</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">datastore_errors</span><span class="o">.</span><span class="n">BadArgumentError</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">app</span>
+</pre>
+</div>
+
+<p>MS-DOS 上で環境変数 APPLICATION_ID を設定してやった。</p>
+<pre>set APPLICATION_ID=test</pre>
+<p>すると、次のようなエラーが。</p>
+<pre>AssertionError: No api proxy found for service "datastore_v3"</pre>
+<p>このへんで諦めつつ検索したら、<a href="http://tech.einaregilsson.com/2010/10/11/unit-testing-model-classes-in-google-app-engine/">Unit testing model classes in Google App Engine</a> に単体テストの手順があったのでソースを奪ってきた。</p>
+<p>ここのソースでは DatastoreFileStub に <code>'/dev/null'</code> を渡していて、一時的な DataStore を作成していた。(<code>'/dev/null'</code> と聞くと Windows では動かなさそうに見えたが、App Engine SDK で <code>'/dev/null'</code> のときは特別扱いしていたので関係ない)</p>
+<p>今回は Web 側のデータを読み込みたかったので、SDK のソースを辿っていたら、<code>tools\dev_appserver_main.py</code> に DataStore として</p>
+<div class="highlight"><pre><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span>
+             <span class="s">&#39;dev_appserver.datastore&#39;</span><span class="p">),</span>
+</pre>
+</div>
+
+<p>が利用されてることが分かったので、この値を利用するようにしてみた。</p>
+<div class="seealso">
+<h1>関連エントリ</h1>
+<ul><li><a href="http://d.hatena.ne.jp/nitoyon/20101230/gae_interactive_console_shortcut">Google App Engine の Interactive Console で Ctrl-Enter で実行させる</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20101220/gae_datastore_interactive_shell" class="hatena-bookmark-button" data-hatena-bookmark-title="Google App Engine で Datastore を Python 対話シェルから参照する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/12/20/gae-datastore-interactive-shell/" data-lang="ja" data-size="horizontal" data-text="Google App Engine で Datastore を Python 対話シェルから参照する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/09/28/html5-shodo/" rel="previous">HTML5 で書道が楽しめる The Shodo の完成度がすごい</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/12/22/regsetvalueex-cbdata-size/" rel="next">レジストリに RegSetValueEx で REG_SZ を設定するときのバイト数&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

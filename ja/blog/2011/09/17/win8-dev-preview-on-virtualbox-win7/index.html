@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2011/09/17/win8-dev-preview-on-virtualbox-win7/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="(2012/03/01 追記) Windows 8 Consumer Preview も同じ手順で導入できました。Windows 8 の開発者プレビューが一般公開されたので試しに触ってみた。最初、ESXi 4.1 にインストールしようとしたけど途中で再起動してしまってうまくいかない。検索しても成功したという報告が見つけられなかった*1。Hyper V や VirtualBox なら簡単にインストールできるらしいので、無料で入手できる VirtualBox にインストールしてみた。試した手順をまとめておく。環境Windows 7 Professional SP1 (64bit)Virtua..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2011年09月17日</h2>
+<h1>Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110917/win8_dev_preview_on_virtualbox_win7" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/09/17/win8-dev-preview-on-virtualbox-win7/" data-lang="ja" data-size="horizontal" data-text="Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><strong>(2012/03/01 追記) <a href="http://windows.microsoft.com/en-US/windows-8/iso">Windows 8 Consumer Preview</a> も同じ手順で導入できました</strong>。</p>
+<p>Windows 8 の開発者プレビューが<a href="http://msdn.microsoft.com/en-us/windows/home/">一般公開された</a>ので試しに触ってみた。</p>
+<p>最初、ESXi 4.1 にインストールしようとしたけど途中で再起動してしまってうまくいかない。検索しても成功したという報告が見つけられなかった<span class="footnote"><a href="#f1" title="ただし、VMware 8 なら動くという報告はあり http://itknowledgeexchange.techtarget.com/information-technology/windows-8-developer-preview-and-esxivmware-workstation/" name="fn1">*1</a></span>。</p>
+<p>Hyper V や VirtualBox なら簡単にインストールできるらしいので、無料で入手できる VirtualBox にインストールしてみた。</p>
+<p>試した手順をまとめておく。</p>
+<h1>環境</h1>
+<ul><li>Windows 7 Professional SP1 (64bit)</li><li>VirtualBox 4.1.2 for Windows</li></ul>
+<h1>1. ISO ファイルをダウンロード</h1>
+<p><a href="http://msdn.microsoft.com/en-us/windows/apps/br229516">http://msdn.microsoft.com/en-us/windows/apps/br229516</a> から ISO ファイルをダウンロードする。</p>
+<h1>2. VirtualBox をダウンロード</h1>
+<p>VirtualBox 4.1.2 for Windows をダウンロードしてインストール。</p>
+<h1>3. 仮想マシンを作成</h1>
+<p>VirtualBox を起動して、<code>[新規]</code> ボタンをおして仮想マシンを作成する。</p>
+<p>OS のバージョンは <code>[Windows 2008]</code> としておいた。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917160743.png" width="450" height="302"></center>
+<p>残りのオプションはデフォルトで作成。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917160744.png" width="450" height="302"></center>
+<a name="seemore"></a>
+<h1>4. ISO ファイルを DVD として認識させる</h1>
+<p>ダウンロードした ISO ファイルが DVD ドライブに入っているように見せかける。</p>
+<ol><li>[設定] ボタンを押して、左から [ストレージ] を選択。</li><li><code>[IDE コントローラ]</code> の下の <code>[空]</code> を選択。</li><li>ディスクのアイコンをクリックして、<code>[仮想CD/DVDディスクファイルの選択...]</code> をクリック。<br><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917160745.png" width="450" height="216"></li><li>ダウンロードした ISO ファイルを選択。</li><li><code>[OK]</code> を押して設定を保存。</li></ol>
+<h1>5. 仮想マシンを起動</h1>
+<p><code>[起動]</code> ボタンを押して仮想マシンを起動する。</p>
+<p>各種設定はデフォルトでインストールする。</p>
+<p>ただし、<code>[Which type of installation do you want?]</code> では <code>[Custom (advanced)]</code> を選ぶのを忘れずに。<code>[Upgrade]</code> を選んでも HDD 上に OS は入っていないので意味なし。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917162900.png" width="450" height="388"></center>
+<p>途中、ゲスト OS が再起動するが気にせず続行。</p>
+<h1>6. 初期アカウントの作成</h1>
+<p>アカウントは <code>Windows Live ID</code> を使うか、ローカルアカウントを作るか選択できる。<code>Windows Live ID</code> を使うといくつかの設定やお気に入りなどを同期できるようだ。</p>
+<p><code>Don't want to log on with a Windows Live ID?</code> をクリックすると、ローカルアカウントを作成できる。</p>
+<p>インストール時の設定画面もバリバリ Metro。チェックボックスが今時のスマートフォン風になっている。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917162901.png" width="450" height="338"></center>
+<h1>7. 起動完了！</h1>
+<p>しばらく待つと Metro な UI が表示される。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20110917/20110917162902.png" width="450" height="348"></center>
+<p>ただし、このままでは Metro なアプリケーションが起動しない。</p>
+<p>次のようにすると起動するようになった。</p>
+<ol><li><code>Desktop</code> ボタンを押して、従来の Windows デスクトップに移動</li><li>デスクトップを右クリックして、メニューから <code>Screen Resolution</code> を選択</li><li>1024×768 以上に設定</li></ol>
+<p>何か困ったら、スタートボタンを押せば最初の画面に戻るようになっている。</p>
+<h1>ちょっと触った感想</h1>
+<p>Metro UI かっこいい。</p>
+<p>ただ、普通の PC で Metro UI は使いにくい。いままで Office を使って仕事していたような人は、いままで通りのデスクトップを使うことになるだろう。</p>
+<p>ただ、Web みたり、メールみたり、写真取り込んだり…といった人には Metro で十分かもしれない。そういう層に、どれだけ Metro が受け入れられるか、そのまま Windows Phone を使ってもらえるようになるかが Microsoft の勝負所かもしれない。</p>
+<div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: ただし、VMware 8 なら動くという報告はあり http://itknowledgeexchange.techtarget.com/information-technology/windows-8-developer-preview-and-esxivmware-workstation/</p></div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110917/win8_dev_preview_on_virtualbox_win7" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/09/17/win8-dev-preview-on-virtualbox-win7/" data-lang="ja" data-size="horizontal" data-text="Windows 8 開発者プレビューを Win7 上の VirtualBox で動かしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2011/09/07/end-of-maps-api-for-flash/" rel="previous">Google Maps API for Flash が廃止、3年でサポート打ち切り</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2011/09/18/no-flash-on-metro-ie10/" rel="next">IE10 Metro 版では Flash が動かないので、いよいよ Flash 終わった感&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

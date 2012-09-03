@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/08/01/atlcom-dispatch/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="そんなわけで、前回紹介した C# で COM コンポーネントを公開する 方法で、コーディングして遊んでたのだけれど、どうもコレクションを実装してもうまく行かないので困り果てた話をしておこう。JScript だと DISPID_VALUE が呼ばれない通常、COM オブジェクトをコレクションとして公開するには DISPID 0 (DISPID_VALUE) で Item メソッドを公開する。具体的にはこう。 [Guid(&amp;quot;E5C9BABC-CF32-46de-ADF7-B1FF56126966&amp;quot;)] public interface IFoo { [DispId(0)]..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年08月01日</h2>
+<h1>C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080801/atlcom_dispatch" class="hatena-bookmark-button" data-hatena-bookmark-title="C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/01/atlcom-dispatch/" data-lang="ja" data-size="horizontal" data-text="C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>そんなわけで、前回紹介した <a href="http://d.hatena.ne.jp/nitoyon/20080731/c_sharp_com">C# で COM コンポーネントを公開する</a> 方法で、コーディングして遊んでたのだけれど、どうもコレクションを実装してもうまく行かないので困り果てた話をしておこう。</p>
+<h1>JScript だと DISPID_VALUE が呼ばれない</h1>
+<p>通常、COM オブジェクトをコレクションとして公開するには DISPID 0 (DISPID_VALUE) で Item メソッドを公開する。具体的にはこう。</p>
+<div class="highlight"><pre>    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;E5C9BABC-CF32-46de-ADF7-B1FF56126966&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">interface</span> <span class="nx">IFoo</span>
+    <span class="p">{</span>
+        <span class="p">[</span><span class="nx">DispId</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+        <span class="kr">int</span> <span class="nx">Item</span><span class="p">(</span><span class="kr">int</span> <span class="nx">i</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="p">[</span><span class="nx">ClassInterface</span><span class="p">(</span><span class="nx">ClassInterfaceType</span><span class="p">.</span><span class="nx">None</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nx">ProgId</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">)]</span>
+    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;B13E1F81-991F-4498-AB1F-FF83FB97914D&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Foo</span> <span class="o">:</span> <span class="nx">IFoo</span>
+    <span class="p">{</span>
+        <span class="kr">public</span> <span class="kr">int</span> <span class="nx">Item</span><span class="p">(</span><span class="kr">int</span> <span class="nx">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">i</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<p>DispId 属性を使って、ディスパッチID を 0 に強制している。</p>
+<p>VBScript からコレクション（配列）のようにアクセスできることが確認できる。</p>
+<div class="highlight"><pre><span class="k">Dim</span> <span class="n">test</span>
+<span class="k">Set</span> <span class="n">test</span> <span class="o">=</span> <span class="n">CreateObject</span><span class="p">(</span><span class="s">&quot;Test.Foo&quot;</span><span class="p">)</span>
+
+<span class="k">For</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">To</span> <span class="mi">10</span>
+    <span class="n">WScript</span><span class="p">.</span><span class="n">echo</span><span class="p">(</span><span class="n">test</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="k">Next</span>
+<span class="c">&#39; 1 2 3 4 ...</span>
+</pre>
+</div>
+
+<p>でも、JScript からだと、なぜか表示されない。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ActiveXObject</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">);</span>
+
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+  <span class="nx">WScript</span><span class="p">.</span><span class="nx">echo</span><span class="p">(</span><span class="nx">test</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+<span class="p">}</span>
+<span class="c1">// 何も表示されない…</span>
+</pre>
+</div>
+
+<p>どうやら、JScript で hoge[0] と書くと、hoge.0 というプロパティを探しに行くらしい。COM 的に表現すると、DISPID 0 の Item() メソッドを呼ぶのではなく、GetIDsOfNames() メソッドを呼んで、DISPID を探し始めるようだ…。</p>
+<h1>ATL で書き直し</h1>
+<p>C# は GetIDsObNames() がラップされているため、細かく制御できない。つまり、C# で JScript からコレクションに見えるオブジェクトを作ることは不可能だ。</p>
+<p>仕方がないので、ATL で書き直すことにした。ATL COM を使うのは初めてだったけど、<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4881356992/nitoyoncom-22/ref=nosim">ATL COMプログラミング</a> を読みながら習得していった。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/ATL-COM%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E2%80%95ATL%E3%81%A8VisualC-%E3%81%A7%E4%BD%9C%E3%82%8B%E9%AB%98%E6%80%A7%E8%83%BDCOM%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88-Programmer%E2%80%99s-SELECTION/dp/4881356992%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4881356992"><img src="http://ecx.images-amazon.com/images/I/51QTCM6068L._SL160_.jpg" class="hatena-asin-detail-image" alt="ATL COMプログラミング―ATLとVisualC++で作る高性能COMコンポーネント (Programmer’s SELECTION)" title="ATL COMプログラミング―ATLとVisualC++で作る高性能COMコンポーネント (Programmer’s SELECTION)"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/ATL-COM%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E2%80%95ATL%E3%81%A8VisualC-%E3%81%A7%E4%BD%9C%E3%82%8B%E9%AB%98%E6%80%A7%E8%83%BDCOM%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88-Programmer%E2%80%99s-SELECTION/dp/4881356992%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4881356992">ATL COMプログラミング―ATLとVisualC++で作る高性能COMコンポーネント (Programmer’s SELECTION)</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> リチャード グリムス</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 翔泳社</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 1999-01</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4881356992%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4881356992">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<p>COM 関係の本はいくつかチャレンジしたが、これが一番分かりやすかった。ちょっと情報が古いけど、Visual Studio 2005 を触りながらでも理解できた。</p>
+<h1>IDispatchImpl を拡張して添え字でアクセス可能に</h1>
+<p>通常、ATL でデュアルインターフェースを実装するには、IDispatchImpl を利用する。IDispatchImpl の実装を眺めてみると、GetIDsOfNames() などのメソッドはタイプライブラリ(tlb)から情報を読み取っている。つまり、IDispatchImpl では動的に増減する可変長のコレクションは扱えない。</p>
+<p>仕方がないので、IDispatchImpl を継承したクラスで拡張していくことにした。まずは、ヘッダファイル。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="c1">// IDipatchArrayImpl</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">ATL_NO_VTABLE</span> <span class="n">IDispatchArrayImpl</span> <span class="o">:</span> <span class="k">public</span> <span class="n">T</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">STDMETHOD</span><span class="p">(</span><span class="n">GetIDsOfNames</span><span class="p">)(</span><span class="n">REFIID</span> <span class="n">riid</span><span class="p">,</span> <span class="n">LPOLESTR</span><span class="o">*</span> <span class="n">rgszNames</span><span class="p">,</span> <span class="n">UINT</span> <span class="n">cNames</span><span class="p">,</span>
+        <span class="n">LCID</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">DISPID</span><span class="o">*</span> <span class="n">rgdispid</span><span class="p">);</span>
+    <span class="n">STDMETHOD</span><span class="p">(</span><span class="n">Invoke</span><span class="p">)(</span><span class="n">DISPID</span> <span class="n">dispidMember</span><span class="p">,</span> <span class="n">REFIID</span> <span class="n">riid</span><span class="p">,</span>
+        <span class="n">LCID</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">WORD</span> <span class="n">wFlags</span><span class="p">,</span> <span class="n">DISPPARAMS</span><span class="o">*</span> <span class="n">pdispparams</span><span class="p">,</span> <span class="n">VARIANT</span><span class="o">*</span> <span class="n">pvarResult</span><span class="p">,</span>
+        <span class="n">EXCEPINFO</span><span class="o">*</span> <span class="n">pexcepinfo</span><span class="p">,</span> <span class="n">UINT</span><span class="o">*</span> <span class="n">puArgErr</span><span class="p">);</span>
+
+    <span class="k">virtual</span> <span class="n">HRESULT</span> <span class="n">ArrayGet</span><span class="p">(</span><span class="kt">int</span> <span class="n">index</span><span class="p">,</span> <span class="n">VARIANT</span><span class="o">*</span> <span class="n">pvarResult</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">virtual</span> <span class="o">~</span><span class="n">IDispatchArrayImpl</span><span class="p">(){};</span>
+<span class="p">};</span>
+</pre>
+</div>
+
+<p>IDispatch のインターフェースと ArrayGet というメソッドを宣言している。テンプレートを使ってるのは ATL の流儀に則るための必然。</p>
+<p>コレクションに見せたいクラスでは、IDispatchImpl を継承する代わりに、次のように IDispatchArrayImpl を継承する。</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">ATL_NO_VTABLE</span> <span class="n">CDomUiNodeList</span> <span class="o">:</span>
+    <span class="k">public</span> <span class="n">CComObjectRootEx</span><span class="o">&lt;</span><span class="n">CComSingleThreadModel</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="k">public</span> <span class="n">CComCoClass</span><span class="o">&lt;</span><span class="n">CDomUiNodeList</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">CLSID_DomUiNodeList</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="k">public</span> <span class="n">IDispatchArrayImpl</span><span class="o">&lt;</span><span class="n">IDispatchImpl</span><span class="o">&lt;</span><span class="n">IDomUiNodeList</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">IID_IDomUiNodeList</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">LIBID_dom4winuiLib</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+</pre>
+</div>
+
+<p>このクラスの実装はこんな具合。詳しくはコメントを参照あれ。</p>
+<div class="highlight"><pre><span class="c1">// IDipatchArrayImpl</span>
+<span class="cp">#define DISPID_ARRAY 5</span>
+
+<span class="c1">// プロパティ名が数字だったら、DISPID_ARRAY を足した</span>
+<span class="c1">// DISPID を返す</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">STDMETHODIMP</span> <span class="n">IDispatchArrayImpl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">GetIDsOfNames</span><span class="p">(</span><span class="n">REFIID</span> <span class="n">riid</span><span class="p">,</span> <span class="n">LPOLESTR</span><span class="o">*</span> <span class="n">rgszNames</span><span class="p">,</span> <span class="n">UINT</span> <span class="n">cNames</span><span class="p">,</span>
+    <span class="n">LCID</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">DISPID</span><span class="o">*</span> <span class="n">rgdispid</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// assumes that cNames == 1</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">cNames</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// digit check</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">iswdigit</span><span class="p">(</span><span class="o">*</span><span class="n">rgszNames</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="p">{</span>
+            <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">_wtoi</span><span class="p">(</span><span class="o">*</span><span class="n">rgszNames</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="o">*</span><span class="n">rgdispid</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="n">DISPID_ARRAY</span><span class="p">;</span>
+                <span class="k">return</span> <span class="n">ERROR_SUCCESS</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">T</span><span class="o">::</span><span class="n">GetIDsOfNames</span><span class="p">(</span><span class="n">riid</span><span class="p">,</span> <span class="n">rgszNames</span><span class="p">,</span> <span class="n">cNames</span><span class="p">,</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">rgdispid</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// DISPID が DISPID_ARRAY 以上なら ArrayGet を呼び出す</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">STDMETHODIMP</span> <span class="n">IDispatchArrayImpl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">Invoke</span><span class="p">(</span><span class="n">DISPID</span> <span class="n">dispidMember</span><span class="p">,</span> <span class="n">REFIID</span> <span class="n">riid</span><span class="p">,</span>
+    <span class="n">LCID</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">WORD</span> <span class="n">wFlags</span><span class="p">,</span> <span class="n">DISPPARAMS</span><span class="o">*</span> <span class="n">pdispparams</span><span class="p">,</span> <span class="n">VARIANT</span><span class="o">*</span> <span class="n">pvarResult</span><span class="p">,</span>
+    <span class="n">EXCEPINFO</span><span class="o">*</span> <span class="n">pexcepinfo</span><span class="p">,</span> <span class="n">UINT</span><span class="o">*</span> <span class="n">puArgErr</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Array member</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">dispidMember</span> <span class="o">&gt;=</span> <span class="n">DISPID_ARRAY</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">dispidMember</span> <span class="o">-</span> <span class="n">DISPID_ARRAY</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">wFlags</span> <span class="o">&amp;</span> <span class="n">DISPATCH_PROPERTYGET</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// index 番目の要素を返す</span>
+            <span class="k">return</span> <span class="n">ArrayGet</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pvarResult</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span> <span class="c1">// return null</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">T</span><span class="o">::</span><span class="n">Invoke</span><span class="p">(</span><span class="n">dispidMember</span><span class="p">,</span> <span class="n">riid</span><span class="p">,</span> <span class="n">lcid</span><span class="p">,</span> <span class="n">wFlags</span><span class="p">,</span> <span class="n">pdispparams</span><span class="p">,</span> <span class="n">pvarResult</span><span class="p">,</span> <span class="n">pexcepinfo</span><span class="p">,</span> <span class="n">puArgErr</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// 内部で持ってる nodes コレクションの値を</span>
+<span class="c1">// pvarResult に設定してあげる</span>
+<span class="n">HRESULT</span> <span class="n">CDomUiNodeList</span><span class="o">::</span><span class="n">ArrayGet</span><span class="p">(</span><span class="kt">int</span> <span class="n">index</span><span class="p">,</span> <span class="n">VARIANT</span><span class="o">*</span> <span class="n">pvarResult</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">UINT</span><span class="p">)</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">nodes</span><span class="p">.</span><span class="n">GetCount</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">QueryInterface</span><span class="p">(</span><span class="n">IID_IDispatch</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span><span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pvarResult</span><span class="o">-&gt;</span><span class="n">pdispVal</span><span class="p">);</span>
+        <span class="n">pvarResult</span><span class="o">-&gt;</span><span class="n">vt</span> <span class="o">=</span> <span class="n">VT_DISPATCH</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span> <span class="c1">// return null;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>これで、hoge.0 でアクセスされても 0 番目の要素を返せるようになった。JScript から CoClass を配列として参照できるようになったわけだ。めでたしめでたし。</p>
+<p>ソース全体は以下を参照あれ。</p>
+<ul><li><a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/DomUiNodeList.cpp?rev=16007">DomUiNodeList.cpp - CodeRepos::Share</a></li><li><a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/DomUiNodeList.h?rev=16007">DomUiNodeList.h - CodeRepos::Share</a></li></ul>
+<h1>おまけ：任意のプロパティを書き換えられるようにするには</h1>
+<p>ここまでできたら、CoClass に JScript から任意のプロパティを設定可能にするコードも書ける。</p>
+<p>ここでは詳しい手順は省略するが、IDispatchImplExtensible というクラスを実装したので、興味のある人はソースをみてほしい。</p>
+<ul><li><a href="http://coderepos.org/share/browser/lang/cplusplus/dom4winui/trunk/src/IDispatchImplExtensible.h?rev=16007">IDispatchImplExtensible.h - CodeRepos::Share</a></li></ul>
+<p>このクラスは IDispatchImpl と同じように使いたかったので、大部分のソースを IDispatchImpl からコピってきて、GetIDsOfNames と Invoke の実装に手を入れている。</p>
+<p>ただ、現状のコードでは VT_DISPATCH 型を上書きするときに Release() してないので、たぶんメモリリークが発生する。流用する人はその辺のところを気をつけて自己責任でよろしく。</p>
+<h1>まとめ</h1>
+<p>以上、<a href="http://d.hatena.ne.jp/nitoyon/20080720/wsh_dom">dom4winui.js</a> の裏側でした。</p>
+<p>参考文献：</p>
+<ul><li><a href="http://www.ddj.com/184410820">Dr. Dobb's | Extending JScript</a></li><li><a href="http://www.eggheadcafe.com/forumarchives/win32programmerole/Jul2005/post23442263.asp">win32 programmer ole COM Collections/arrays accessed from JScript</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080801/atlcom_dispatch" class="hatena-bookmark-button" data-hatena-bookmark-title="C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/01/atlcom-dispatch/" data-lang="ja" data-size="horizontal" data-text="C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/07/31/c-sharp-com/" rel="previous">C# で COM コンポーネントを公開する</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/08/04/pv3d-racing/" rel="next">PV3D でレーシングゲーム&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

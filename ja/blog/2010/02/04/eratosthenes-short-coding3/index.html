@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ActionScript3 で素数列挙を short coding (3) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ActionScript3 で素数列挙を short coding (3)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/02/04/eratosthenes-short-coding3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ActionScript3 で素数列挙を short coding (2) のあと、さらに進化は続いていた。前回は184文字まで縮まっていたが、現在のところ175文字にまでなった。「もう無理だろう」というようなところから、さらに10文字近くも縮まるなんて驚きである。例によって変遷の過程を紹介する。たたき台 (184文字)前回の最後に紹介したのがこのコード。実際にはインデントと改行はないが、読みやすくするためにインデントしたもので紹介していく。package{import flash.display.*;public class C extends Sprite{ function C()..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2010年02月04日</h2>
+<h1>ActionScript3 で素数列挙を short coding (3)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100204/eratosthenes_short_coding3" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 で素数列挙を short coding (3) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/04/eratosthenes-short-coding3/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 で素数列挙を short coding (3) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="/ja/blog/2010/02/02/eratosthenes-short-coding2/">ActionScript3 で素数列挙を short coding (2)</a> のあと、さらに進化は続いていた。前回は184文字まで縮まっていたが、現在のところ175文字にまでなった。</p>
+<p>「もう無理だろう」というようなところから、さらに10文字近くも縮まるなんて驚きである。例によって変遷の過程を紹介する。</p>
+<h1>たたき台 (184文字)</h1>
+<p>前回の最後に紹介したのがこのコード。実際にはインデントと改行はないが、読みやすくするためにインデントしたもので紹介していく。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">,</span><span class="nx">a</span><span class="o">=</span><span class="p">[];</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="p">])</span>
+          <span class="k">for</span><span class="p">(</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">);</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+            <span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<h1>if 文を消す (182文字)</h1>
+<p><a href="http://wonderfl.net/user/psyark">psyark さん</a>による && を活用したコード。このあたりから、解読が一層難しくなってくる。</p>
+<ul><li><a href="http://wonderfl.net/code/9bbad625c7cfdd2d2c9ae4f839e31892ff2413a1">Enumerate Prime Numbers (ignore warnings 182 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+  <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+  <span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="kd">function</span> <span class="nx">C</span><span class="p">(</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="p">){</span>
+      <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">a</span><span class="o">=</span><span class="p">[];</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
+          <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span><span class="o">&amp;&amp;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">))</span>
+            <span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>使ってるテクニック</p>
+<ul><li><code>if</code> の条件を２つ目の <code>for</code> 文の条件判定に <code>&&</code> で突っ込むことで、<code>if</code> を不要にした</li><li><code>beginFill</code> を <code>for</code> 文の中にもっていくことで、<code>,</code> を省けた。<code>c=1</code> は前回登場したデフォルト引数にするテクニックでコンストラクタに移動した。</li><li><code>drawRect</code> が何度も呼ばれることをいとわない</li></ul>
+<br />
+<h1>1重の for 文になった (181文字)</h1>
+<p><a href="http://wonderfl.net/user/o8que">o8que さん</a>による for が２重から１重になってしまったコード。もはや解読は不能に近い。</p>
+<ul><li><a href="http://wonderfl.net/code/2905d587a4ff3324e6c433cb7a868369a933e801">Enumerate Prime Numbers (ignore warnings 181 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">=</span><span class="mi">2</span><span class="o">,</span> <span class="nx">a</span><span class="o">=</span><span class="p">[];</span>
+        <span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">||</span> <span class="nx">d</span><span class="o">&gt;</span><span class="mi">2</span><span class="nx">E3</span> <span class="o">?</span>
+          <span class="p">(</span><span class="nx">d</span><span class="o">=++</span><span class="nx">c</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span> <span class="o">:</span>
+          <span class="o">!</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">);</span>
+        <span class="p">)</span>
+        <span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p><s>使ってるテクニック</s>アルゴリズム解読</p>
+<ul><li>２つの <code>for</code> を２通りに使うために、三項演算子を使って分岐している<ul><li>c が素数で d が 2E3<span class="footnote"><a href="#f1" title="1E3でいいと思うが…" name="fn1">*1</a></span>より小さいとき<ul><li><code>beginFill</code> を呼ぶ</li><li>d を c だけ増やす</li><li>a[d] にフラグを立る</li><li><code>drawRect</code> する。</li></ul></li><li>c が素数で d 2E3 を超えたとき、または、c が素数ではないとき<ul><li><code>d=++c</code> で c をインクリメントして d に代入する</li></ul></li></ul></li></ul>
+<h1>ケチくさく1文字減らす (180文字)</h1>
+<p><a href="http://wonderfl.net/user/nitoyon">わたし</a> がo8queさんのコードに驚嘆しつつ、分からないなりに１文字減らすことに成功したヤツ。</p>
+<ul><li><a href="http://wonderfl.net/code/777ef768bf7781a93556479947b6e78324759b04">Enumerate Prime Numbers (ignore warnings 180 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">a</span><span class="o">=</span><span class="p">[</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">=</span><span class="mi">2</span><span class="p">];</span>
+          <span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">||</span> <span class="nx">d</span><span class="o">&gt;</span><span class="mi">2</span><span class="nx">E3</span> <span class="o">?</span>
+              <span class="p">(</span><span class="nx">d</span><span class="o">=++</span><span class="nx">c</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span> <span class="o">:</span>
+              <span class="o">!</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">);</span>
+          <span class="p">)</span>
+        <span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>使ってるテクニック</p>
+<ul><li><code>d=c=2,a=[]</code> を <code>a=[d=c=2]</code> にした。実は配列 a はインデックス 2 以降しか利用しないので、インデックス 0 の場所に何が入っていようが関係ない。</li></ul>
+<h1>括弧を不要に (178文字)</h1>
+<p><a href="http://wonderfl.net/user/9re">9re</a> さんによる、三項演算子を for の外に出したコード。少し読みやすくなった気がする。</p>
+<ul><li><a href="http://wonderfl.net/code/0edf7e236cea087e38b2b3fe031df1cd675f5806">Enumerate Prime Numbers (178 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">a</span><span class="o">=</span><span class="p">[</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">=</span><span class="mi">2</span><span class="p">];</span><span class="nx">c</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span><span class="o">||</span><span class="nx">d</span><span class="o">&gt;</span><span class="mi">2</span><span class="nx">E3</span><span class="o">?</span>
+            <span class="nx">d</span><span class="o">=++</span><span class="nx">c</span><span class="o">:</span>
+            <span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>使ってるテクニック</p>
+<ul><li><code>(d=++c)<1E3</code> の括弧が無駄だったので、<code>d=++c</code> を <code>for</code> から出して、三項演算子の中に突っ込んだ。</li></ul>
+<h1>FlexSprite!! (176文字)</h1>
+<p>このあたりから、コードの改造ではなく別の観点からのショートコード化の研究が行われる。今後、ActionScript でのショートコーディングするときには定型として使えそうである。</p>
+<p>口火を切ったのは <a href="http://wonderfl.net/user/uwi">uwi</a> さん。</p>
+<ul><li><a href="http://wonderfl.net/code/54528ed6e9b8300b3a69de1772d214b5a6a158a5">forked from: Enumerate Prime Numbers (176 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">mx</span><span class="p">.</span><span class="nx">core</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nx">FlexSprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">a</span><span class="o">=</span><span class="p">[</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">=</span><span class="mi">2</span><span class="p">];</span><span class="nx">c</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span><span class="o">||</span><span class="nx">d</span><span class="o">&gt;</span><span class="mi">2</span><span class="nx">E3</span><span class="o">?</span><span class="nx">d</span><span class="o">=++</span><span class="nx">c</span><span class="o">:</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>使ってるテクニック</p>
+<ul><li><code>Sprite</code> ではなく <code>FlexSprite</code> を用いている。クラス名は長くなったが、名前空間が <code>flash.display</code> から <code>mx.core</code> になったので、トータルでは2文字減っている。</li></ul>
+<h1>import の位置を変える (175文字)</h1>
+<p>言われてみればなんで気づかなかったんだろう、という修正で1文字短縮。<a href="http://wonderfl.net/user/Nicolas">Nicolas</a> さんによる import の位置を変更する修正。</p>
+<ul><li><a href="http://wonderfl.net/code/54528ed6e9b8300b3a69de1772d214b5a6a158a5">forked from: Enumerate Prime Numbers (176 letters) (Sieve of Eratosthenes) - wonderfl build flash online</a></li></ul>
+<p>インデントするとこうなる。</p>
+<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nx">FlexSprite</span><span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
+    <span class="k">with</span><span class="p">(</span><span class="nx">graphics</span><span class="p">)</span>
+      <span class="k">for</span><span class="p">(</span><span class="nx">a</span><span class="o">=</span><span class="p">[</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">=</span><span class="mi">2</span><span class="p">];</span><span class="nx">c</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span><span class="o">||</span><span class="nx">d</span><span class="o">&gt;</span><span class="mi">2</span><span class="nx">E3</span><span class="o">?</span><span class="nx">d</span><span class="o">=++</span><span class="nx">c</span><span class="o">:</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="o">*</span><span class="mi">4</span><span class="o">,</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">4</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="kd">import</span> <span class="nx">mx</span><span class="p">.</span><span class="nx">core</span><span class="p">.</span><span class="o">*</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>使ってるテクニック</p>
+<ul><li><code>import</code> 文を <code>public class C</code> の手前ではなく、最後に持ってくることで、<code>import</code> 文の末尾 <code>;</code> を省略できる…!</li></ul>
+<h1>まとめ</h1>
+<p>さすがにそろそろ限界か。それとも常識を覆す何かが出てくるのか…。</p>
+<p>一昔前に、ブログなどでショートコーディングの話を見たときには「難しそう」と思ったのだけど、当事者になってみると無駄な努力に全力で取り組むのは楽しいものである。また、wonderfl という共通のプラットフォーム上で記録が塗り替えられていく様子を見れるのがよかった。</p>
+<p>今回の企画が始まって、改めて <a href="http://www.amazon.co.jp/Short-Coding-%7E%E8%81%B7%E4%BA%BA%E9%81%94%E3%81%AE%E6%8A%80%E6%B3%95%7E-Ozy/dp/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839925232">Short Coding ~職人達の技法~</a> を読み直してみてるが、前にざっと見たときよりも楽しく読めている。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/Short-Coding-%7E%E8%81%B7%E4%BA%BA%E9%81%94%E3%81%AE%E6%8A%80%E6%B3%95%7E-Ozy/dp/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839925232"><img src="http://ecx.images-amazon.com/images/I/41r3XRAEcKL._SL160_.jpg" class="hatena-asin-detail-image" alt="Short Coding ~職人達の技法~" title="Short Coding ~職人達の技法~"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Short-Coding-%7E%E8%81%B7%E4%BA%BA%E9%81%94%E3%81%AE%E6%8A%80%E6%B3%95%7E-Ozy/dp/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839925232">Short Coding ~職人達の技法~</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> Ozy</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> 毎日コミュニケーションズ</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2007-08-09</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本（ソフトカバー）</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4839925232%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4839925232">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+<div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: 1E3でいいと思うが…</p></div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100204/eratosthenes_short_coding3" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 で素数列挙を short coding (3) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/02/04/eratosthenes-short-coding3/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 で素数列挙を short coding (3) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2010/02/02/eratosthenes-short-coding2/" rel="previous">ActionScript3 で素数列挙を short coding (2)</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2010/02/16/teraco29-hige5/" rel="next">大阪てら子29 HIGE5 に参加したよ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

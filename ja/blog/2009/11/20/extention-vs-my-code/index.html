@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Skype Extension for Firefox と Security error&quot; code: &quot;1000 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Skype Extension for Firefox と Security error&quot; code: &quot;1000"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/11/20/extention-vs-my-code/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="いままで動いていた自作の JavaScript が Firefox でいつの間にか動かなくなる現象が発生したので調べてみた。エラーを見ると Security error&quot; code: &quot;1000 とある。ぐぐってみると、どうやら CSS の insertRule に失敗したときに発生するエラーのようだ。(参考：(solved) Javascriptのエラー: Security error&amp;quot;code: &amp;quot;1000 | anobota)HTML の構造を見てみるとFirebug で HTML の構造を見てみると、見覚えのない JavaScript と CSS が追加されて..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年11月20日</h2>
+<h1>Skype Extension for Firefox と Security error" code: "1000</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091120/extention_vs_my_code" class="hatena-bookmark-button" data-hatena-bookmark-title="Skype Extension for Firefox と Security error&quot; code: &quot;1000 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/20/extention-vs-my-code/" data-lang="ja" data-size="horizontal" data-text="Skype Extension for Firefox と Security error" code: "1000 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>いままで動いていた自作の JavaScript が Firefox でいつの間にか動かなくなる現象が発生したので調べてみた。</p>
+<p>エラーを見ると <code>Security error" code: "1000</code> とある。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20091120/20091120014333.png" border="1"></center>
+<p>ぐぐってみると、どうやら CSS の insertRule に失敗したときに発生するエラーのようだ。(参考：<a href="http://haraita9283.blog98.fc2.com/blog-entry-288.html">(solved) Javascriptのエラー: Security error&quot;code: &quot;1000 |  anobota</a>)</p>
+<h1>HTML の構造を見てみると</h1>
+<p>Firebug で HTML の構造を見てみると、見覚えのない JavaScript と CSS が追加されている。</p>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20091120/20091120014335.jpg" border="1" width="458" height="312"></center>
+<a name="seemore"></a>
+<p>名前から判断するに、Skype と一緒にインストールされる Skype Extension for Firefox が動的に挿入するもののようだ。</p>
+<h1>どこが悪かったのか</h1>
+<p>で、改めて自分が書いたスクリプトを見てみると CSS 関係で次のような処理があった。</p>
+<div class="highlight"><pre><span class="nx">addStyle</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">selector</span><span class="p">,</span> <span class="nx">property</span><span class="p">){</span>
+  <span class="c1">// 一番最後のスタイルシートオブジェクトを取得</span>
+  <span class="kd">var</span> <span class="nx">sheets</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">styleSheets</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">sheet</span> <span class="o">=</span> <span class="nx">sheets</span><span class="p">[</span><span class="nx">sheets</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+
+  <span class="c1">// CSS の最後に追加</span>
+  <span class="c1">// IE では addRule を、Firefox では insertRule を使う</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">sheet</span><span class="p">.</span><span class="nx">addRule</span><span class="p">){</span>
+    <span class="nx">sheet</span><span class="p">.</span><span class="nx">addRule</span><span class="p">(</span><span class="nx">selector</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="nx">property</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> 
+      <span class="nx">sheet</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+  <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">sheet</span><span class="p">.</span><span class="nx">insertRule</span><span class="p">){</span>
+    <span class="nx">sheet</span><span class="p">.</span><span class="nx">insertRule</span><span class="p">(</span><span class="nx">selector</span> <span class="o">+</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="nx">property</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> 
+      <span class="nx">sheet</span><span class="p">.</span><span class="nx">cssRules</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">},</span>
+</pre>
+</div>
+
+<p>最後のスタイルシートオブジェクトに対して insertRule で CSS のルールを追加しようとしてる。</p>
+<p>ところが、Skype のプラグインが追加で CSS を突っ込んでいたため、「最後のスタイルシートオブジェクト」は Skype プラグインのものになってしまっていた。ここに insertRule しようとして、サンドボックスが異なってエラーになってたようだ。</p>
+<h1>これも相性問題か</h1>
+<p>今まで動いていたコードが動かなくなった理由は「Skype をインストールしたこと」が原因だったようだ。</p>
+<p>Skype Extension for Firefox はお行儀が悪いので即効で削除した。削除してみると、何事もなかったように動くようになっていた。Skpye はデフォルトでポート 80 を listen したり、いろいろとお行儀が悪くて嫌だ。</p>
+<p>個人的に使ってるだけのスクリプトなので、対策は以上で終わりとしたが、世間に公開してるものだったらそうはいかない。今回のようなケースでは「一番最後のスタイルシートオブジェクト」を取得するのではなく、動的にルールを追加していくスタイルシートオブジェクトを事前に決めておくか、スクリプトで動的にスタイルシートオブジェクトを作成して、そこに insertRule していくべきだったのかもしれない。</p>
+<p>Firefox のような自由に機能拡張できてしまうブラウザでは、動的に CSS や DOM ノードが追加されてもある程度は耐久性のあるように作らなきゃいけないのかもしれない。</p>
+<p>なんともめんどくさい世の中よ。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091120/extention_vs_my_code" class="hatena-bookmark-button" data-hatena-bookmark-title="Skype Extension for Firefox と Security error&quot; code: &quot;1000 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/11/20/extention-vs-my-code/" data-lang="ja" data-size="horizontal" data-text="Skype Extension for Firefox と Security error" code: "1000 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/10/31/easy-double-open-face/" rel="previous">AS3 で簡単２重袋文字</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/11/25/as3-method-chain/" rel="next">AS3 でメソッドチェーンしたくなる話&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

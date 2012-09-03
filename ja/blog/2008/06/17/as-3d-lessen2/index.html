@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/06/17/as-3d-lessen2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="このまま実装を進めていくとソースが複雑になりそうなので少し地盤を固めておこう。座標計算を簡潔にするために行列クラスを導入する。Matrix3D クラス前回は軸の周りの回転を公式p.x = Math.cos(rad) * x + Math.sin(rad) * y;p.y = -Math.sin(rad) * x + Math.cos(rad) * y;を使って直接計算していたけど、ここを行列に置き換えてみる。ちょうど、3D ライブラリ FIVe3D 2.1 に Matrix3D クラスがあったのでこれを借用した。X軸周りに rad ラジアン回転する演算は次のように書けるようになる。// ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年06月17日</h2>
+<h1>AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080617/as_3d_lessen2" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/17/as-3d-lessen2/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080617/20080617020339.png" width="448" height="197"></center>
+<p>このまま実装を進めていくとソースが複雑になりそうなので少し地盤を固めておこう。</p>
+<p>座標計算を簡潔にするために行列クラスを導入する。</p>
+<h1>Matrix3D クラス</h1>
+<p>前回は軸の周りの回転を公式</p>
+<pre>p.x =  Math.cos(rad) * x + Math.sin(rad) * y;
+p.y = -Math.sin(rad) * x + Math.cos(rad) * y;</pre>
+<p>を使って直接計算していたけど、ここを行列に置き換えてみる。</p>
+<p>ちょうど、3D ライブラリ <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> に Matrix3D クラスがあったのでこれを借用した。</p>
+<p>X軸周りに rad ラジアン回転する演算は次のように書けるようになる。</p>
+<div class="highlight"><pre><span class="c1">// 回転前の点 p1 を定義</span>
+<span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+
+<span class="c1">// rad ラジアン回転する行列を作成</span>
+<span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
+
+<span class="c1">// 行列に p1 を渡すと、回転後の座標が返ってくる</span>
+<span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span>   <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>中でやってる計算は前回と全く同じなんだけども、計算式が Matrix3D クラスの中に隠蔽されている分、ソースがすっきりした。</p>
+<p>この連載ではライブラリを極力使わない方針なのだけど、行列に関しては例外とさせていただく。さすがに行列演算をフルスクラッチするのは面倒だし、誰が作ってもだいたい同じになるので既存の資産を活用することにした。</p>
+<p>PV3D にも同じようなことをする Matrix3D クラスがある。使い方はちょっと違うので要注意。</p>
+<h1>行列を使うメリットってなんなのよ</h1>
+<p>行列と聞くと途端に拒否反応が出る人も多そうなんだけど、<strong>座標変換してくれるありがたい仕組み</strong>ぐらいに考えておくとよいだろう。</p>
+<p>さきほどの例では、行列 matrix は「X軸を中心に rad 回転する」という変換を表している。イメージ的には</p>
+<pre>      matrix1
+p1 ------------> p2</pre>
+<p>という感じ。点 p1 に matrix を適用すると、場所 p2 に移動する。p2 は p1 を X 軸を中心に rad 回転した場所になっている。</p>
+<p>それでは、点 p1 を Y軸方向に rad1 回転したあと、Z 軸方向に rad2 回転させてみよう。ちょうど前回のサンプルのような感じだ。</p>
+<p>普通に考えると次のようなコーディングになる。</p>
+<div class="highlight"><pre><span class="c1">// 回転前の点 from を定義</span>
+<span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+
+<span class="c1">// Y 軸方向に rad1 ラジアン回転する行列 matrix1 を作成</span>
+<span class="kd">var</span> <span class="nx">matrix1</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+<span class="nx">matrix1</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
+
+<span class="c1">// Z 軸方向に rad2 ラジアン回転する行列 matrix2 を作成</span>
+<span class="kd">var</span> <span class="nx">matrix2</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+<span class="nx">matrix2</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad2</span><span class="p">);</span>
+
+<span class="c1">// matrix1 と matrix2 を適用</span>
+<span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix1</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">p2</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix2</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">p3</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>イメージとしては、こんな感じ。</p>
+<pre>      matrix1          matrix2
+p1 ------------> p2 ------------> p3</pre>
+<p>p1 に matrix1 を適用して、次に matrix2 を適用している。もちろんこれで動くんだけど、例えば点の数が１万個あったとすると、行列の演算は２万回発生することになる。</p>
+<p>実は、行列の効果は合成できるので、簡単に高速化できる。matrix1 の効果と matrix2 の効果をあらかじめ合成した行列を作っておく。イメージとしてはこんな感じ。</p>
+<pre>       matrix1 + matrix2 (=matrix3)
+p1 ----------------------------------> p3
+
+※イメージをつかみやすいように「matrix1 + matrix2」と
+  記述しているが、数学的には行列の積となる。</pre>
+<p>これだと、１万個の点があっても、それぞれに matrix3 を１回ずつ適用するだけでOK。合計１万回の演算で済むことになる。ざっくりだけど、座標変換の計算負荷が半分になる。</p>
+<p>ソースコードで書くとこうなる。</p>
+<div class="highlight"><pre><span class="c1">// X軸とY軸の周りに回転する行列</span>
+<span class="kd">var</span> <span class="nx">matrix3</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+<span class="nx">matrix3</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad1</span><span class="p">);</span>
+<span class="nx">matrix3</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad2</span><span class="p">);</span>
+
+<span class="c1">// 行列を適用</span>
+<span class="kd">var</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix3</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+</pre>
+</div>
+
+<h1>整備結果</h1>
+<p>イメージは掴めただろうか。では、実践編。前回のコードを Matrix3D を使いながら拡張していこう。</p>
+<p>立方体をいくつも配置してみた。</p>
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d2.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=300&amp;title=3D+Study2&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript>
+<p>コアのコードはこんな具合。</p>
+<div class="highlight"><pre>    <span class="c1">// 回転行列を作成</span>
+    <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+    <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+    <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+
+    <span class="c1">// 描画</span>
+    <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+        <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+    <span class="p">}</span>
+</pre>
+</div>
+
+<p>まず、マウスの位置に応じて、回転する角度を決めて Matrix3D オブジェクトを作成している。そのあと、それぞれの立方体を表す Cube オブジェクトに Matrix3D オブジェクトを与えて、回転具合を伝えている。</p>
+<p>Cube オブジェクトの draw() メソッドでは、与えられた行列に応じて座標変換を行って描画している。</p>
+<p>前回よりも見た目も凝っているけど、Matrix3D を導入したたので行数はあまり変わらない。もしかしたら、前回よりも読みやすいかもしれない。</p>
+<h1>まとめ</h1>
+<p>行列は座標変換する魔法の箱。理論が分からなくても、イメージを掴みさえすれば、ばんばん使っていったらいいんじゃなかろうか。</p>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20080618/as_3d_lessen3">次回</a>に続く。</p>
+<div class="seealso">
+<h1>連載目次</h1>
+<ul><li><a href="/ja/blog/2008/06/16/as-3d-lessen1/">AS3.0 で 3D プログラミングを１から勉強する (1)</a></li><li><a href="/ja/blog/2008/06/17/as-3d-lessen2/">AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入</a></li><li><a href="/ja/blog/2008/06/18/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影</a></li><li><a href="/ja/blog/2008/06/20/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る</a></li><li><a href="/ja/blog/2008/06/23/as-3d-lessen5/">AS3.0 で 3D プログラミングを１から勉強する (5) - テクスチャを張る</a></li></ul>
+</div>
+<p>ソースは以下に（95行）。</p>
+<a name="seemore"></a>
+<p>要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。</p>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d2</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cubes</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d2</span><span class="p">(){</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+
+            <span class="nx">cubes</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+
+            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">250</span><span class="p">;</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
+            <span class="nx">changeHandler</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+            <span class="c1">// 回転行列を作成</span>
+            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+
+            <span class="c1">// 描画</span>
+            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
+                <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Cube</span> <span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Cube</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="nb">Number</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span><span class="k">return</span> <span class="nx">f</span> <span class="o">?</span> <span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">:</span> <span class="o">-</span><span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;};</span>
+
+        <span class="c1">// 立方体の頂点８つを作成する</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>  <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">z</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">));</span>
+            <span class="nx">points</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="c1">// 回転後の各頂点の座標を計算</span>
+        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">pt</span><span class="p">);</span>
+            <span class="nx">p</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pt</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// 頂点の間を線で結ぶ</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]);</span>
+            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">p</span><span class="p">[(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]);</span>
+            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
+        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080617/as_3d_lessen2" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/17/as-3d-lessen2/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/06/16/as-3d-lessen1/" rel="previous">AS3.0 で 3D プログラミングを１から勉強する (1)</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/06/18/as-3d-lessen3/" rel="next">AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

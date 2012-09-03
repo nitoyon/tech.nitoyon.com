@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>UNIQLO_GRID みたいに「うねうね」揺れる線 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="UNIQLO_GRID みたいに「うねうね」揺れる線"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/11/21/uniqlo-grid-line/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="既に各所で話題になっている UNIQLO_GRID ですが、ドラッグしたときに線が「うねうね」と揺れる様がステキだったので、マネしてみました。ドラッグして遊んでみてください（表示されない場合はリロードを）。手書き風効果に使えそうですね。揺れ具合など改善の余地はたくさんありそうです。それはそうと、どうやってアルゴリズムを想像したかを記録しておきます。右クリックから拡大して、UNIQLO_GRID の線がベクターであることを確認少ししか動かしていないときは直線として描画されていることを発見曲線になる条件は、移動距離や移動時間ではなく、mouseMove イベントの発生回数ではないかと仮定（実..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年11月21日</h2>
+<h1>UNIQLO_GRID みたいに「うねうね」揺れる線</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071121/uniqlo_grid_line" class="hatena-bookmark-button" data-hatena-bookmark-title="UNIQLO_GRID みたいに「うねうね」揺れる線 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/21/uniqlo-grid-line/" data-lang="ja" data-size="horizontal" data-text="UNIQLO_GRID みたいに「うねうね」揺れる線 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>既に各所で話題になっている <a href="http://www.uniqlo.com/grid/">UNIQLO_GRID</a> ですが、ドラッグしたときに線が「うねうね」と揺れる様がステキだったので、マネしてみました。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FUneuneLine.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=450&amp;h=300&amp;title=uneune+line&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>ドラッグして遊んでみてください（表示されない場合はリロードを）。</p>
+<p>手書き風効果に使えそうですね。揺れ具合など改善の余地はたくさんありそうです。</p>
+<p>それはそうと、どうやってアルゴリズムを想像したかを記録しておきます。</p>
+<ol><li>右クリックから拡大して、UNIQLO_GRID の線がベクターであることを確認</li><li>少ししか動かしていないときは直線として描画されていることを発見</li><li>曲線になる条件は、移動距離や移動時間ではなく、mouseMove イベントの発生回数ではないかと仮定（実際は違うかも）</li><li>曲線になった瞬間、途中に通った場所がベジェ曲線の中間点として採用されることを発見</li><li>試験実装→そこそこそれっぽく動く</li><li>マウスを早く動かすと、汚いことを発見→マウスの移動距離が既定値を超えると、その点をベジェ曲線の中間点、コントロールポイントとして採用するようにした</li><li>完成！</li></ol>
+<p>ソースコードは以下に（93行）：</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">UneuneLine</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">start</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>            <span class="c1">// 描画開始地点</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">controls</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>         <span class="c1">// コントロールのリスト</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">anchors</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>          <span class="c1">// アンカーポイントのリスト</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cur</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>              <span class="c1">// 現在のマウス地点</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">prev</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>             <span class="c1">// 直前のコントロールもしくはアンカーポイント</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>              <span class="c1">// マウスの移動数</span>
+        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WAIT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>        <span class="c1">// マウスの移動数の閾値</span>
+        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">DISTANCE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>    <span class="c1">// マウスの移動距離の閾値</span>
+        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">RANDOM</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>    <span class="c1">// 揺れ具合</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">UneuneLine</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="nx">mouseDownHandler</span><span class="p">);</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">enterFrameHandler</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseDownHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="c1">// イベント登録</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+
+            <span class="c1">// パラメータ初期化</span>
+            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="nx">start</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">stageX</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageY</span><span class="p">);</span>
+            <span class="nx">cur</span> <span class="o">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+            <span class="nx">prev</span> <span class="o">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">clone</span><span class="p">();;</span>
+            <span class="nx">controls</span> <span class="o">=</span> <span class="p">[</span><span class="kc">null</span><span class="p">];</span>
+            <span class="nx">anchors</span> <span class="o">=</span> <span class="p">[</span><span class="nx">start</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">cur</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageX</span><span class="p">;</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageY</span><span class="p">;</span>
+            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="nx">WAIT</span> <span class="o">||</span> <span class="nx">count</span> <span class="o">&lt;</span> <span class="nx">WAIT</span> <span class="o">&amp;&amp;</span> <span class="nx">Point</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nx">DISTANCE</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// コントロールポイント追加</span>
+                <span class="nx">prev</span> <span class="o">=</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+                <span class="nx">controls</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">());</span>
+                <span class="nx">count</span> <span class="o">=</span> <span class="nx">WAIT</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="nx">WAIT</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">||</span> <span class="nx">Point</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nx">DISTANCE</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// アンカーポイント追加</span>
+                <span class="nx">prev</span> <span class="o">=</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+                <span class="nx">anchors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">());</span>
+
+                <span class="c1">// コントロールポイントの位置を修正</span>
+                <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">anchors</span><span class="p">[</span><span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]);</span>
+                <span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">controls</span><span class="p">[</span><span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]);</span>
+                <span class="nx">c</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="nx">c</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+
+                <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseUpHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+
+            <span class="nx">start</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="nx">cur</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">enterFrameHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">start</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// 始点へ移動</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">x</span><span class="p">,</span> <span class="nx">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">y</span><span class="p">);</span>
+
+                <span class="c1">// ベジェ曲線を描画</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+                <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span>
+                        <span class="nx">controls</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
+                        <span class="nx">controls</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
+                        <span class="nx">anchors</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span>  <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
+                        <span class="nx">anchors</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span>  <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="c1">// 終点へ移動</span>
+                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071121/uniqlo_grid_line" class="hatena-bookmark-button" data-hatena-bookmark-title="UNIQLO_GRID みたいに「うねうね」揺れる線 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/21/uniqlo-grid-line/" data-lang="ja" data-size="horizontal" data-text="UNIQLO_GRID みたいに「うねうね」揺れる線 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/11/20/live-coding5/" rel="previous">LiveCoding#5 に参加します</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/11/26/flex2-box2dflashas3/" rel="next">mxmlcでBox2DFlashAS3のサンプルをビルドする方法&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

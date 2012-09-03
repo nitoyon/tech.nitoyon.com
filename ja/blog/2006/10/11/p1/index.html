@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Selenium IDE でテストにパスワードを埋め込まない方法 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Selenium IDE でテストにパスワードを埋め込まない方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2006/10/11/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前置きWeb アプリのテストツールとして有名な Selenium ですが、テストの中にパスワードを生で書くことに抵抗がある場合があります。そこで、Selenium IDE 限定ですが、テストが開始されるとパスワード入力ダイアログが登場し、そのパスワードを使ってログインするような方法を探しました。どういうときに便利かというと、例えば、楽天のアフィリエイトのレポートを開くのを自動化できます。このページ、１日ごとにクッキーが初期化されてしまいます。パスワードマネージャに記録させる手もあるのですが、買い物までできてしまうパスワードを可逆な形で PC に保存するのには抵抗があります。自動化以外にも..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2006年10月11日</h2>
+<h1>Selenium IDE でテストにパスワードを埋め込まない方法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20061011/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Selenium IDE でテストにパスワードを埋め込まない方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2006/10/11/p1/" data-lang="ja" data-size="horizontal" data-text="Selenium IDE でテストにパスワードを埋め込まない方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<h1>前置き</h1>
+<p>Web アプリのテストツールとして有名な Selenium ですが、テストの中にパスワードを生で書くことに抵抗がある場合があります。そこで、Selenium IDE 限定ですが、テストが開始されるとパスワード入力ダイアログが登場し、そのパスワードを使ってログインするような方法を探しました。</p>
+<p>どういうときに便利かというと、例えば、楽天のアフィリエイトのレポートを開くのを自動化できます。このページ、１日ごとにクッキーが初期化されてしまいます。パスワードマネージャに記録させる手もあるのですが、買い物までできてしまうパスワードを可逆な形で PC に保存するのには抵抗があります。</p>
+<p>自動化以外にも、サービスインしてしまった Web サービスのテストを自動化する場合にも応用できるかもしれません。</p>
+<br />
+<h1>やり方</h1>
+<p>まずは、パスワード入力画面を表示して、その内容を変数に保存します。</p>
+<p>コマンドに store、値にはパスワードを保存する変数名（例えば、<font color=blue>password</font>） を指定します。そして、対象には長くなりますが次の値を設定します。</p>
+<table><tr><th>コマンド</th><th>対象</th><th>値</th></tr><tr><td>store</td><td>(以下の値)</td><td><font color=blue>password</font></td></tr></table>
+<blockquote><p>javascript{var p={value:""};PROMPT = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);PROMPT.promptPassword(window, "Enter Password", "Enter password.", p, null, {}); p.value;}</p></blockquote>
+<p>パスワード入力画面は FireFox の Components を使って表示しています。入力した文字が *(アスタリスク) で表示されるので安心です。</p>
+<p>あとは、このパスワードをフォームに流し込むだけです。パスワード入力欄の名前が <b>p</b> だとすると、こうなります。</p>
+<table><tr><th>コマンド</th><th>対象</th><th>値</th></tr><tr><td>type</td><td>p</td><td><font color=blue>${password}</font></td></tr></table>
+<h1>応用例</h1>
+<p>パスワードは Selenium IDE のメモリ空間に保存され続けます。これを応用して、同じパスワードのサイトで入力の手間を省く技があります。変数名はパスワードの種類に応じて変更してください。</p>
+<blockquote><p>javascript{if(storedVars['<font color=blue>password</font>']){storedVars['<font color=blue>password</font>'];}else{var p={value:""};PROMPT = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);PROMPT.promptPassword(window, "Enter Password", "Enter password.", p, null, {}); p.value;}}</p></blockquote>
+<p>分かりやすく整形すると、こういう構文になってます。</p>
+<pre><font color="green">// 既に入力していた場合には</font>
+if(storedVars['<font color=blue>password</font>'])
+{
+	<font color="green">// 前の値を利用</font>
+	storedVars['<font color=blue>password</font>'];
+}
+else
+{
+	<パスワード入力ダイアログを表示>
+}</pre>
+<p>メモリ上に変数にパスワードの値が保存されたままなことに抵抗がある方は次のようにして上書きしてください（メモリ上から消されることを保証しているわけではありません。あくまで気慰み程度に...）。</p>
+<table><tr><th>コマンド</th><th>対象</th><th>値</th></tr><tr><td>store</td><td></td><td><font color=blue>password</font></td></tr></table>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20061011/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="Selenium IDE でテストにパスワードを埋め込まない方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2006/10/11/p1/" data-lang="ja" data-size="horizontal" data-text="Selenium IDE でテストにパスワードを埋め込まない方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2006/10/01/p1/" rel="previous">Google Earth API（β版）がこっそり公開されていた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2006/11/09/p1/" rel="next">prototype.js 1.4.0 の Enumerable.min のバグ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2011/09/29/async-await-in-js/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Windows 8 開発者プレビューでの開発を試していたところ、非同期プログラミングを簡単に書ける await キーワードが面白かったので紹介します。Windows 8 用に Metro アプリを開発する場合、WinRT(Windows Runtime)というフレームワークを使ってプログラミングします。WinRT では、UI 応答速度を上げるための工夫として、少しでも時間がかかる可能性のある処理は、非同期の API のみが提供されています。なんかめんどくさそうですよね。いえいえ、そんなことはありません。.NET 5 から導入される async/await キーワードでとても簡単に書けてし..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2011年09月29日</h2>
+<h1>WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110929/async_await_in_js" class="hatena-bookmark-button" data-hatena-bookmark-title="WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/09/29/async-await-in-js/" data-lang="ja" data-size="horizontal" data-text="WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Windows 8 開発者プレビューでの開発を試していたところ、非同期プログラミングを簡単に書ける <code>await</code> キーワードが面白かったので紹介します。</p>
+<p>Windows 8 用に Metro アプリを開発する場合、WinRT(Windows Runtime)というフレームワークを使ってプログラミングします。</p>
+<p>WinRT では、UI 応答速度を上げるための工夫として、少しでも時間がかかる可能性のある処理は、非同期の API のみが提供されています。</p>
+<p>なんかめんどくさそうですよね。</p>
+<p>いえいえ、そんなことはありません。.NET 5 から導入される <code>async</code>/<code>await</code> キーワードでとても簡単に書けてしまいます。</p>
+<h1>HelloWorld アプリケーションのサンプル</h1>
+<p>たとえば、<a href="http://msdn.microsoft.com/en-us/library/windows/apps/br211380%28v=vs.85%29.aspx">HelloWorld アプリケーション</a>では次のようなサンプルが紹介されています。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1">// UI を表示するページのコンストラクタ</span>
+<span class="c1">// UI スレッドで実行される</span>
+<span class="k">public</span> <span class="nf">MainPage</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">InitializeComponent</span><span class="p">();</span>
+
+    <span class="c1">// RSS/Atom を読み取る</span>
+    <span class="n">GetFeedAsync</span><span class="p">(</span><span class="s">&quot;http://windowsteamblog.com/windows/b/developers/atom.aspx&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// 非同期に RSS/Atom を読み取るメソッド</span>
+<span class="c1">// async キーワードがついているので、非同期で</span>
+<span class="c1">// 実行される可能性がある </span>
+<span class="c1">// (メソッドの完了を待たずに、呼び出し元に</span>
+<span class="c1">//  処理を返すことがある)</span>
+<span class="k">private</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">GetFeedAsync</span><span class="p">(</span><span class="kt">string</span> <span class="n">feedUriString</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">SyndicationClient</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">SyndicationClient</span><span class="p">();</span>
+    <span class="n">Uri</span> <span class="n">feedUri</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">feedUriString</span><span class="p">);</span>
+
+    <span class="k">try</span>
+    <span class="p">{</span>
+        <span class="c1">// 非同期で RSS/Atom を読み取る</span>
+        <span class="c1">// await キーワードがあるので、GetFeedAsync()</span>
+        <span class="c1">// メソッドは処理の完了を待たずに、いったん</span>
+        <span class="c1">// 呼び出し元に return する</span>
+        <span class="n">SyndicationFeed</span> <span class="n">feed</span> <span class="p">=</span> 
+            <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
+
+        <span class="c1">// ここから先は、非同期で RSS/Atom を</span>
+        <span class="c1">// 読み取り完了時の処理</span>
+        <span class="n">FeedData</span> <span class="n">feedData</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FeedData</span><span class="p">();</span>
+        <span class="n">feedData</span><span class="p">.</span><span class="n">Title</span> <span class="p">=</span> <span class="n">feed</span><span class="p">.</span><span class="n">Title</span><span class="p">.</span><span class="n">Text</span><span class="p">;</span>
+
+        <span class="k">foreach</span> <span class="p">(</span><span class="n">SyndicationItem</span> <span class="n">item</span> <span class="k">in</span> <span class="n">feed</span><span class="p">.</span><span class="n">Items</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// RSS の各要素の処理を行う</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">catch</span> <span class="p">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// 非同期での RSS/Atom の読み取りに</span>
+        <span class="c1">// 失敗したときの処理</span>
+        <span class="n">TitleText</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="n">ex</span><span class="p">.</span><span class="n">Message</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<p>コメントで説明してしまいましたが、詳しく見ていきましょう。</p>
+<a name="seemore"></a>
+<h1><code>await</code> でいったん呼び出し元に戻る</h1>
+<p><code>await</code> の部分の処理の構造は次のようになっています。</p>
+<div class="highlight"><pre><span class="k">try</span>
+<span class="p">{</span>
+    <span class="c1">// 非同期で RSS/Atom を読み取る</span>
+    <span class="n">SyndicationFeed</span> <span class="n">feed</span> <span class="p">=</span> 
+        <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
+
+    <span class="c1">// 成功時の処理</span>
+<span class="p">}</span>
+<span class="k">catch</span> <span class="p">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 失敗時の処理</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>同期処理のようなコードになっていますね。</p>
+<p>しかし、実際には <code>await</code> キーワードの場所で、メソッドは呼び出し元に処理を返します。その結果、非同期処理の実行中に UI をブロックすることはありません。</p>
+<p>その後、RSS/Atom の読み取りが成功または失敗した段階で、メソッドの続きが実行されます。</p>
+<p>成功時には、読み取り結果があたかも同期で実行したかのように戻り値として返され、成功時の処理を実行します。失敗時には例外が投げられるので、異常系の処理も簡単に書けます。</p>
+<p>イメージ的には次のようなコードを書いているのと同じになります。</p>
+<div class="highlight"><pre>    <span class="cm">/* !!!! 実際には動かない擬似的なコード !!!! */</span>
+    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedSuccess</span> <span class="p">+=</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span>
+    <span class="p">{</span>
+        <span class="c1">// 成功時の処理</span>
+    <span class="p">}</span>
+    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedError</span> <span class="p">+=</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span>
+    <span class="p">{</span>
+        <span class="c1">// 失敗時の処理</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 非同期で RSS/Atom を読み取る</span>
+    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
+</pre>
+</div>
+
+<br />
+<h1>すばらしい！</h1>
+<p>非同期を同期的に書けるなんてすばらしい。</p>
+<p>コールバックやイベントハンドラ地獄から抜け出せそうな予感！</p>
+<h1>ところで、どういう仕組みなのか？</h1>
+<p>ところで、<code>await</code> キーワードはどのような仕組みで動いているのでしょうか。</p>
+<p>WinRT の非同期メソッドは全て、<code>Task</code> オブジェクト、<code>Task&lt;TResult&gt;</code> オブジェクトを返すように実装されています。<code>Task</code> クラス、<code>Task&lt;TResult&gt;</code> クラスは、非同期処理を表現するクラスです。</p>
+<p>自前のメソッドでも、<code>async</code> キーワードをつけることで、<code>void</code> を返すメソッドは戻り値 <code>Task</code> として、型 <code>T</code> を返すメソッドは戻り値 <code>Task&lt;T&gt;</code> として扱われます。</p>
+<p>.NET 5 では継続の仕組みが導入されたので、メソッドの処理の途中で、処理をぶった切ったり、再開したりすることができるようになっています。</p>
+<p><code>async</code>/<code>await</code> キーワードは、<code>Task</code> クラス、<code>Task&lt;TResult&gt;</code> クラスを利用しつつ、継続を利用してメソッドの処理を途中で中断したり、中断したところから続きをやり直したりするためのシンタックス シュガーになっているそうです。</p>
+<h1>JavaScript でも実現できるんじゃね？</h1>
+<p>ところで、JavaScript 1.7 からは <code>yield</code> が使えるようになっています（ただし、現時点で動くのは Firefox のみ）。</p>
+<p>そこで、<code>yield</code> を使っても同じような仕組みを実現できるんじゃないかと思って作ってみました。</p>
+<p>ほぼ形は似ていますが、XHR を使った Ajax 処理を <code>await</code> 風に書けるようにしてみました。</p>
+<p><code>await</code> や <code>return</code> の変わりに <code>yield</code> を使っています。また、XHR を <code>await</code> できるように変換する <code>awaitable</code> 関数を作っています。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">doXhrTwice</span> <span class="o">=</span> <span class="nx">async</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">xhr</span> <span class="o">=</span> <span class="nx">awaitable</span><span class="p">(</span><span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">());</span>
+    <span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">yield</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;finished: &quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span>  <span class="s2">&quot;, </span>
+<span class="s2">        status: &quot;</span> <span class="o">+</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+
+    <span class="nx">xhr</span> <span class="o">=</span> <span class="nx">awaitable</span><span class="p">(</span><span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">());</span>
+    <span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s2">&quot;not_found.png&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">result</span> <span class="o">=</span> <span class="nx">yield</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;finished: &quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span>  <span class="s2">&quot;, </span>
+<span class="s2">        status: &quot;</span> <span class="o">+</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+
+    <span class="nx">yield</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+<p>これの関数を普通に呼び出すと、ログ出力は次のようになります。</p>
+<div class="highlight"><pre><span class="cm">/*   doXhr start</span>
+<span class="cm"> *   doXhr end</span>
+<span class="cm"> *   finished: true, status: 200</span>
+<span class="cm"> *   finished: false, status: 404</span>
+<span class="cm"> */</span>
+<span class="kd">function</span> <span class="nx">init1</span><span class="p">(){</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr start&quot;</span><span class="p">);</span>
+    <span class="nx">doXhrTwice</span><span class="p">();</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr end&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p><code>init1</code> から <code>doXhrTwice</code> を呼んでもすぐに処理が返ってくるので、関数呼び出し直後に `doXhr end` が出力されます。ただ、<code>doXhrTwice</code> の中では同期的に処理を書けています。</p>
+<p>次に、<code>doXhrTwice</code> を同期的に呼んでみます。</p>
+<div class="highlight"><pre><span class="err">/*   doXhr start</span>
+ <span class="o">*</span>   <span class="nx">finished</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="mi">200</span>
+ <span class="o">*</span>   <span class="nx">finished</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="mi">404</span>
+ <span class="o">*</span>   <span class="nx">doXhr</span> <span class="nx">end</span><span class="o">:</span> <span class="mi">3</span>
+<span class="kd">var</span> <span class="nx">init2</span> <span class="o">=</span> <span class="nx">async</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr start&quot;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">yield</span> <span class="nx">doXhrTwice</span><span class="p">();</span>
+    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr end: &quot;</span> <span class="o">+</span> <span class="nx">ret</span><span class="p">);</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+<p><code>doXhrTwice</code> の戻り値 <code>3</code> を <code>init2</code> で取得できています。<code>doXhrTwice</code> が終わったあと、`doXhr end` が出力されています。</p>
+<p>もちろん、処理は同期的に書いていますが、この間、<code>init2</code> 関数は <code>yield</code> で処理をシステムに返しているので、UI はブロックされません。<code>async</code> の実装の中で、<code>doXhrTwice</code> 完了時に <code>yield</code> された処理を再開しています。</p>
+<p><code>async</code> や <code>awaitable</code> の実装も含めたソースは <a href="https://gist.github.com/1232433">https://gist.github.com/1232433</a> に置いています。</p>
+<h1>なんか楽しい</h1>
+<p>JavaScript ではクロスブラウザ的な意味で実用的ではないけれど、何か楽しくコードが書けそうです。</p>
+<p>Python には yield が実装されているので、同じ仕組みをそのまま流用できそうです。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20110929/async_await_in_js" class="hatena-bookmark-button" data-hatena-bookmark-title="WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2011/09/29/async-await-in-js/" data-lang="ja" data-size="horizontal" data-text="WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2011/09/18/no-flash-on-metro-ie10/" rel="previous">IE10 Metro 版では Flash が動かないので、いよいよ Flash 終わった感</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2011/10/04/craft-launch3-my-plugins/" rel="next">CraftLaunch 3 を便利にする自作プラグイン６つ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

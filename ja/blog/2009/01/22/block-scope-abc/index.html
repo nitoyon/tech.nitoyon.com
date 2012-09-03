@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ActionScript3 ブロックスコープの ABC - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ActionScript3 ブロックスコープの ABC"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="※ AS3 にはブロックスコープがないよ、という内容です一時変数の効率化｜_level0.KAYAC という記事に怪しいことが書いてあったので突っ込んでおきます。この記事によると、for の中で変数を宣言するよりも// 中バージョンfunction foo1():void{ for(var i:int = 0; i &amp;lt; 10; i++){ var a:Object = new Object(); }}外で宣言をしたほうが// 外バージョンfunction foo2():void{ var a:Object; for(var i:int = 0; i &amp;lt; 10; i++){ a..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年01月22日</h2>
+<h1>ActionScript3 ブロックスコープの ABC</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090122/block_scope_abc" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 ブロックスコープの ABC - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 ブロックスコープの ABC - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>※ AS3 にはブロックスコープがないよ、という内容です</p>
+<p><a href="http://level0.kayac.com/2009/01/localvariables_optimization.php">一時変数の効率化｜_level0.KAYAC</a> という記事に怪しいことが書いてあったので突っ込んでおきます。</p>
+<p>この記事によると、for の中で変数を宣言するよりも</p>
+<div class="highlight"><pre><span class="c1">// 中バージョン</span>
+<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>外で宣言をしたほうが</p>
+<div class="highlight"><pre><span class="c1">// 外バージョン</span>
+<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>a が宣言される回数が少ないので効率的だとしています。</p>
+<p>けれども、<strong>これは間違い</strong>です。</p>
+<p>for の中で宣言したとしても、for のあとで変数は生き残ってます。さらに、for の前でも参照できます。</p>
+<h1>実証コードを見てみよう</h1>
+<p>以下に実証コードを。</p>
+<div class="highlight"><pre><span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                       <span class="c1">// NaN</span>
+
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+  <span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                     <span class="c1">// 0, 1, ..., 9</span>
+<span class="p">}</span>
+
+<span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                       <span class="c1">// 9</span>
+</pre>
+</div>
+
+<p>for の中で var a を宣言していますが、for を抜けたあとも 9 ですね。また、for の前では NaN（Number の初期値） になっています。</p>
+<p>ということで、var は実はどこに書いても同じ。全て<strong>関数の冒頭に宣言した場合と同じ</strong>になるわけです。</p>
+<h1>ブロックスコープと let</h1>
+<p>この性質のことを専門用語でいうと、「<strong>ActionScript 3はブロックスコープを持たない</strong>」といえます。var 宣言は <strong>関数スコープ</strong> 内に変数を作成します。</p>
+<p>そういえば、次の警告に出くわしたことある人も多いのでは。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span><span class="p">;</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+  <span class="c1">// 警告: 変数定義が重複しています。</span>
+  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>この警告からも、AS3 がブロックスコープを持たないのが分かりますね。</p>
+<p>対して、C++ や Java はブロックスコープを持つので、ブロックでだけ有効な変数を宣言することができます。</p>
+<p>ちなみに、JavaScript だと with を使ってブロックスコープを再現できるのですが、AS3 では with はなかったことになってるので使えません。（関連）<a href="http://d.hatena.ne.jp/amachang/20090119/1232331329">for 文と無名関数のイディオム - IT戦記</a></p>
+<p>また、JavaScript 1.7 からは let を使ってブロックスコープを宣言することができます。</p>
+<p><strike>ECMAScript 3.1 にも取り込まれるはずです</strike> (追記)←取り込まれない方向のようです。失礼しました。</p>
+<h1>バイトコードを見てみた</h1>
+<p>ここからが本題。</p>
+<p>せっかくなので</p>
+<ul><li>var を for の中に置く場合 （中バージョン）</li><li>var を for の外に置く場合 （外バージョン）</li></ul>
+<p>でバイトコードがどう変わるかを見てみた。</p>
+<a name="seemore"></a>
+<p>これが検証用のソースコード。</p>
+<div class="highlight"><pre><span class="c1">// 中バージョン</span>
+<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// 外バージョン</span>
+<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>Flex SDK 3.2 の asc.jar でコンパイルして、Tamarin 付属の abcdump でバイトコードを眺めてみた。</p>
+<p>中バージョンではこんな感じになった。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="kc">undefined</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>    <span class="cm">/* disp_id 0*/</span>
+<span class="p">{</span>
+  <span class="c1">// local_count=3 max_scope=0 max_stack=2 code_len=33</span>
+  <span class="mi">0</span>         <span class="nx">pushnull</span>
+  <span class="mi">1</span>         <span class="nx">coerce</span>              <span class="nb">Object</span>
+  <span class="mi">3</span>         <span class="nx">setlocal2</span>
+  <span class="mi">4</span>         <span class="nx">pushbyte</span>            <span class="mi">0</span>
+  <span class="mi">6</span>         <span class="nx">convert_i</span>
+  <span class="mi">7</span>         <span class="nx">setlocal1</span>
+  <span class="mi">8</span>         <span class="nx">jump</span>                <span class="nx">L1</span>
+
+  <span class="nx">L2</span><span class="o">:</span>
+  <span class="mi">12</span>        <span class="nx">label</span>
+  <span class="mi">13</span>        <span class="nx">findpropstrict</span>      <span class="nb">Object</span>
+  <span class="mi">15</span>        <span class="nx">constructprop</span>       <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  <span class="mi">18</span>        <span class="nx">coerce</span>              <span class="nb">Object</span>
+  <span class="mi">20</span>        <span class="nx">setlocal2</span>
+  <span class="mi">21</span>        <span class="nx">getlocal1</span>
+  <span class="mi">22</span>        <span class="nx">increment_i</span>
+  <span class="mi">23</span>        <span class="nx">convert_i</span>
+  <span class="mi">24</span>        <span class="nx">setlocal1</span>
+
+  <span class="nx">L1</span><span class="o">:</span>
+  <span class="mi">25</span>        <span class="nx">getlocal1</span>
+  <span class="mi">26</span>        <span class="nx">pushbyte</span>            <span class="mi">10</span>
+  <span class="mi">28</span>        <span class="nx">iflt</span>                <span class="nx">L2</span>
+
+  <span class="mi">32</span>        <span class="nx">returnvoid</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>いっぱい出てきたが、焦らずにゆっくり見ていこう。</p>
+<h1>最初にローカル変数の準備</h1>
+<p>まずは冒頭の7行。</p>
+<p>コメントでバイトコードにほぼ等しい AS3 の該当するコードを補っておいた。</p>
+<div class="highlight"><pre><span class="c1">// var a:Object = null</span>
+  <span class="mi">0</span>  <span class="nx">pushnull</span>          <span class="c1">// null をスタックに積む</span>
+  <span class="mi">1</span>  <span class="nx">coerce</span>     <span class="nb">Object</span> <span class="c1">// スタック1番上を Object にキャスト</span>
+  <span class="mi">3</span>  <span class="nx">setlocal2</span>         <span class="c1">// pop して register 2 に代入</span>
+
+<span class="c1">// var i:int = 0</span>
+  <span class="mi">4</span>  <span class="nx">pushbyte</span>   <span class="mi">0</span>      <span class="c1">// 0 をスタックに積む</span>
+  <span class="mi">6</span>  <span class="nx">convert_i</span>         <span class="c1">// スタック1番上を int にキャストする</span>
+  <span class="mi">7</span>  <span class="nx">setlocal1</span>         <span class="c1">// pop して register 1 に代入</span>
+
+  <span class="mi">8</span>  <span class="nx">jump</span>       <span class="nx">L1</span>     <span class="c1">// L1 に移動</span>
+</pre>
+</div>
+
+<p>関数の最初ではローカル変数 a と i を準備していることが分かる。</p>
+<p>ここまでのバイトコードは、「外バージョン」も「中バージョン」も同じだった。<strong>ローカル変数は宣言した場所によらず、関数の冒頭で確保される</strong>ようだ。</p>
+<h1>for を抜けるチェック</h1>
+<p>次、L1 の処理を見ていく。</p>
+<div class="highlight"><pre><span class="nx">L1</span><span class="o">:</span>
+<span class="c1">// i &lt; 10</span>
+  <span class="mi">25</span> <span class="nx">getlocal1</span>         <span class="c1">// i (register 1)をスタックに積む</span>
+  <span class="mi">26</span> <span class="nx">pushbyte</span>   <span class="mi">10</span>     <span class="c1">// 10 をスタックに積む</span>
+  <span class="mi">28</span> <span class="nx">iflt</span>       <span class="nx">L2</span>     <span class="c1">// スタック上の2つの値を比較して、</span>
+                       <span class="c1">// i が小さければ L2 にジャンプする</span>
+
+  <span class="mi">32</span> <span class="nx">returnvoid</span>        <span class="c1">// void を返す</span>
+</pre>
+</div>
+
+<p>i < 10 である限りは、L2 にジャンプし続けるわけですな。実はここも、外バージョンと中バージョンで同じ。</p>
+<h1>いよいよ for の中を解析</h1>
+<p>最後に L2。ここで外と中の違いがでてくる。</p>
+<p>まずは中バージョン（<code>var a:Object = new Object()</code>）。</p>
+<div class="highlight"><pre><span class="nx">L2</span><span class="o">:</span>
+  <span class="mi">12</span>  <span class="nx">label</span>
+
+<span class="c1">// a = new Object()</span>
+  <span class="mi">13</span> <span class="nx">findpropstrict</span>  <span class="nb">Object</span>
+  <span class="mi">15</span> <span class="nx">constructprop</span>   <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1">// new Object() する</span>
+  <span class="mi">18</span> <span class="nx">coerce</span>          <span class="nb">Object</span>     <span class="c1">// Object にキャストする</span>
+  <span class="mi">20</span> <span class="nx">setlocal2</span>                  <span class="c1">// a (register 2) に代入</span>
+
+<span class="c1">// i++</span>
+  <span class="mi">21</span> <span class="nx">getlocal1</span>        <span class="c1">// i (register 1) をスタックに取り出す</span>
+  <span class="mi">22</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
+  <span class="mi">23</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
+  <span class="mi">24</span> <span class="nx">setlocal1</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
+</pre>
+</div>
+
+<p>素直な感じ。</p>
+<p>次は外バージョン（<code>a = new Object()</code>）。</p>
+<div class="highlight"><pre><span class="c1">// var c:* = new Object()</span>
+  <span class="mi">13</span> <span class="nx">findpropstrict</span>  <span class="nb">Object</span>
+  <span class="mi">15</span> <span class="nx">constructprop</span>   <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1">// new Object() する</span>
+  <span class="mi">18</span> <span class="nx">dup</span>                        <span class="c1">// スタック上で複製する</span>
+  <span class="mi">19</span> <span class="nx">setlocal3</span>                  <span class="c1">// pop して register 3 に代入</span>
+
+<span class="c1">// a = (new の結果)</span>
+  <span class="mi">20</span> <span class="nx">coerce</span>    <span class="nb">Object</span> <span class="c1">// スタック1番上を Object にキャストする</span>
+  <span class="mi">22</span> <span class="nx">setlocal1</span>        <span class="c1">// a (register 2) に代入</span>
+
+<span class="c1">// c = null</span>
+  <span class="mi">23</span> <span class="nx">getlocal3</span>        <span class="c1">// c (register 3) をスタックに複製する</span>
+  <span class="mi">24</span> <span class="nx">kill</span>      <span class="mi">3</span>      <span class="c1">// register 3 を undefined に初期化する</span>
+  <span class="mi">26</span> <span class="nx">pop</span>              <span class="c1">// スタックの1番上を取り除く</span>
+
+<span class="c1">// i++</span>
+  <span class="mi">27</span> <span class="nx">getlocal2</span>        <span class="c1">// i (register 1) をスタックに取り出す</span>
+  <span class="mi">28</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
+  <span class="mi">29</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
+  <span class="mi">30</span> <span class="nx">setlocal2</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
+</pre>
+</div>
+
+<p>ということで、new の結果を一時変数 var c:* に代入したような扱いになっている。</p>
+<p>一時変数がどこからでてくるのかがよく分からなかったが、もしかしたら、</p>
+<div class="highlight"><pre><span class="nx">x</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+</pre>
+</div>
+
+<p>のような構文で <code>y = new Object()</code> の結果を <code>x</code> に代入するための一時オブジェクトなのかもしれない。</p>
+<p>C++ でいうコピーコンストラクタと代入演算子の違いのような感じ。</p>
+<h1>バイトコードを見た感想</h1>
+<p>こうやって見ると、</p>
+<div class="highlight"><pre><span class="c1">// 中バージョン</span>
+<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>の方が</p>
+<div class="highlight"><pre><span class="c1">// 外バージョン</span>
+<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>よりも多少効率がよかった。とはいえ、ほんとうに些細な違いであり、無視していいレベルのはずだ。普通にコードを書いたら、ボトルネックは別の場所に出てくるだろう。</p>
+<h1>結論</h1>
+<ul><li>AS3 は関数スコープ</li><li>書きやすいほうで書け</li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090122/block_scope_abc" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 ブロックスコープの ABC - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 ブロックスコープの ABC - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/01/21/active-hogehoge/" rel="previous">Active ナントカで年代測定</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/01/23/abcdump-build/" rel="next">Tamarin の abcdump.as から abcdump.exe を作成する方法 2009年1月版&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

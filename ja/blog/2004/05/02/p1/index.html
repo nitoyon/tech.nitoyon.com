@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>DESKWIN改造 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="DESKWIN改造"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2004/05/02/p1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="使い勝手が悪かったので多少改造。ホットキーで Windows キーを使うための改造Ctrl, Alt, Shift のどれも使わず単体でホットキーを指定したときは、Windows キーとの組み合わせと判断する。例）Shift+C -&gt; Shift+CC -&gt; Win+CTDeskwinOptions.cpp にて。 void MakeRegisterHotkeyParam(THotkey aHotkey, int&amp;amp; aVk, int&amp;amp; aMod) { aVk = aHotkey &amp;gt;&amp;gt; 16; aMod = aHotkey &amp;amp; 0xffff; + if(..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2004年05月02日</h2>
+<h1>DESKWIN改造</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20040502/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="DESKWIN改造 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2004/05/02/p1/" data-lang="ja" data-size="horizontal" data-text="DESKWIN改造 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>使い勝手が悪かったので多少改造。</p>
+<h1>ホットキーで Windows キーを使うための改造</h1>
+<p>Ctrl, Alt, Shift のどれも使わず単体でホットキーを指定したときは、Windows キーとの組み合わせと判断する。</p>
+<p>例）</p>
+<blockquote><p>Shift+C   -> Shift+C</p><p>C         -> Win+C</p></blockquote>
+<p>TDeskwinOptions.cpp にて。</p>
+<div class="highlight"><pre>  <span class="kt">void</span> <span class="n">MakeRegisterHotkeyParam</span><span class="p">(</span><span class="n">THotkey</span> <span class="n">aHotkey</span><span class="p">,</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="n">aVk</span><span class="p">,</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="n">aMod</span><span class="p">)</span>
+  <span class="p">{</span>
+        <span class="n">aVk</span> <span class="o">=</span> <span class="n">aHotkey</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">;</span>
+        <span class="n">aMod</span> <span class="o">=</span> <span class="n">aHotkey</span> <span class="o">&amp;</span> <span class="mh">0xffff</span><span class="p">;</span>
+ <span class="o">+</span>      <span class="k">if</span><span class="p">(</span><span class="n">aMod</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+ <span class="o">+</span>            <span class="n">aMod</span> <span class="o">=</span> <span class="n">MOD_WIN</span><span class="p">;</span>
+  <span class="p">}</span>
+</pre>
+</div>
+
+<h1>デスクトップを切り替えるとき、きれいに切り替わるように</h1>
+<p>ウインドウを非表示にしていく順番が逆じゃないと汚い。</p>
+<p>CDeskwinEngine.cpp にて。</p>
+<div class="highlight"><pre> <span class="o">-</span><span class="k">for</span> <span class="p">(</span><span class="n">TWindowList</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span><span class="o">=</span><span class="n">aWindowList</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span> <span class="p">;</span> <span class="n">i</span><span class="o">!=</span><span class="n">aWindowList</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+ <span class="o">+</span><span class="k">for</span> <span class="p">(</span><span class="n">TWindowList</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span><span class="o">=</span><span class="n">aWindowList</span><span class="p">.</span><span class="n">end</span><span class="p">()</span> <span class="p">;</span> <span class="n">i</span><span class="o">!=</span><span class="n">aWindowList</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">i</span><span class="o">--</span><span class="p">)</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20040502/p1" class="hatena-bookmark-button" data-hatena-bookmark-title="DESKWIN改造 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2004/05/02/p1/" data-lang="ja" data-size="horizontal" data-text="DESKWIN改造 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2004/05/01/p2/" rel="previous">仮想デスクトップツール</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2004/05/07/p1/" rel="next">WinHECがらみの記事&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

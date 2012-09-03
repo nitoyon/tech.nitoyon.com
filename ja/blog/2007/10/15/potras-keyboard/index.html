@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>PotrAs 高速化 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="PotrAs 高速化"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/15/potras-keyboard/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="週末に時間を作って PotrAs を高速化してみました。デモ： KANA KEYBOARD (ソース)使い方：Flash の画面をクリックするキーボードを適当に叩くと文字列が迫ってくる200px のかな文字を最初にがががっとベクタ化してます。ベクタ化してるので、枠線をつけたり、回転、透明化させたり自由自在。高速化したところ特にアルゴリズムには手を入れず、オブジェクトの生成回数や参照回数を減らしただけです。どれも語りつくされてきた手法ですが、実際に速度が速くなるところを目の当たりにするとうれしいものがあります。例１：for の中で new するのをやめる前for(var i:int = 0..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月15日</h2>
+<h1>PotrAs 高速化</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071015/potras_keyboard" class="hatena-bookmark-button" data-hatena-bookmark-title="PotrAs 高速化 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/15/potras-keyboard/" data-lang="ja" data-size="horizontal" data-text="PotrAs 高速化 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>週末に時間を作って <a href="http://snippets.libspark.org/trac/wiki/nitoyon/PotrAs">PotrAs</a> を高速化してみました。</p>
+<p>デモ： KANA KEYBOARD (<a href="http://snippets.libspark.org/svn/as3/PotrAs/samples/potras/demo20070929/KanaKeyboard.as">ソース</a>)</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Fsnippets.libspark.org%2Fsvn%2Fas3%2FPotrAs%2Fsamples%2Fpotras%2Fdemo20070929%2Fbin%2FKanaKeyboard.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=360&amp;title=Kana+Keyboard&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>使い方：</p>
+<ul><li>Flash の画面をクリックする</li><li>キーボードを適当に叩くと文字列が迫ってくる</li></ul>
+<p>200px のかな文字を最初にがががっとベクタ化してます。ベクタ化してるので、枠線をつけたり、回転、透明化させたり自由自在。</p>
+<h1>高速化したところ</h1>
+<p>特にアルゴリズムには手を入れず、オブジェクトの生成回数や参照回数を減らしただけです。どれも語りつくされてきた手法ですが、実際に速度が速くなるところを目の当たりにするとうれしいものがあります。</p>
+<h2>例１：for の中で new するのをやめる</h2>
+<p>前</p>
+<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>後</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<h2>例２：関数の戻り値をオブジェクトで返さないようにする</h2>
+<p>前</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">doHogehoge</span><span class="p">()</span><span class="o">:</span><span class="nx">Point</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+    <span class="c1">// ...</span>
+    <span class="nx">ret</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>後</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">doHogehoge</span><span class="p">(</span><span class="nx">p</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<h2>例３：配列の長さを覚えておく</h2>
+<p>前</p>
+<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>後</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">len</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>これだけで、処理速度がたいたい 2/3 ぐらいになりました。他にも、ループが入り組んでるところで Math.abs をインライン展開したりしたけど、目に見えるほどの効果を感じたのは上の３つぐらいです。</p>
+<p>トレース処理は６つの部分から成り立っているのですが、細かな速度変化は次のようになってます。（サンプル画像を10回トレースしたときの所要時間）</p>
+<ol><li>path: 1917ms -> 373ms</li><li>sums: 265ms -> 269ms</li><li>lon: 3115ms -> 2072ms</li><li>best: 1102ms -> 798ms</li><li>adjust: 3438ms -> 2215ms</li><li>smooth: 144ms -> 128ms</li></ol>
+<p>もっと最適化の余地はありそうなのですが、ソースコードが機械生成したようになっていくのが悲しいところです。</p>
+<ul><li>参考：<a href="http://actionscript.g.hatena.ne.jp/ConquestArrow/20070621/1182359767">actionscriptグループ - ConquestArrow.addEventListener(); - ActionScript3 最適化・高速化Tips 簡易まとめ</a></li></ul>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071015/potras_keyboard" class="hatena-bookmark-button" data-hatena-bookmark-title="PotrAs 高速化 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/15/potras-keyboard/" data-lang="ja" data-size="horizontal" data-text="PotrAs 高速化 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/12/as3-histogram4/" rel="previous">AS3 でヒストグラムを作る (4) - 周辺分布</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/16/why-i-am-learning-actionscript/" rel="next">ActionScript がイケてるたった１つの理由&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

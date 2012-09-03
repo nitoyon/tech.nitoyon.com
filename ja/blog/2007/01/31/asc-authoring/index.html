@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>asc_authoring.jar で遊んでみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="asc_authoring.jar で遊んでみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/01/31/asc-authoring/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ActionScript の勉強会で話してキタ！ - IT戦記 のプレゼンで、asc_authoring.jar を使った開発が紹介されていたので早速ためしてみました。asc_authoring.jar の入手プレゼンにもあるように、まずは Flash 9 Alpha をインストールして asc_authoring.jar を入手します。バイトコードを作ってみるプレゼンをたよりに実験します。// Test.aspackage { public class Test { public function Test() { trace(&amp;quot;Test&amp;quot;); } }}という Te..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年01月31日</h2>
+<h1>asc_authoring.jar で遊んでみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070131/asc_authoring" class="hatena-bookmark-button" data-hatena-bookmark-title="asc_authoring.jar で遊んでみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/01/31/asc-authoring/" data-lang="ja" data-size="horizontal" data-text="asc_authoring.jar で遊んでみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://d.hatena.ne.jp/amachang/20070130/1170144721">ActionScript の勉強会で話してキタ！ - IT戦記</a> のプレゼンで、asc_authoring.jar を使った開発が紹介されていたので早速ためしてみました。</p>
+<a name="seemore"></a>
+<h1>asc_authoring.jar の入手</h1>
+<p>プレゼンにもあるように、まずは Flash 9 Alpha をインストールして asc_authoring.jar を入手します。</p>
+<h1>バイトコードを作ってみる</h1>
+<p>プレゼンをたよりに実験します。</p>
+<div class="highlight"><pre><span class="c1">// Test.as</span>
+<span class="kr">package</span> <span class="p">{</span>
+  <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;Test&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>という Test.as があったとして</p>
+<pre>java -jar asc_authoring.jar \
+  -import global.abc \
+  -import playerglobal.abc \
+  Test.as</pre>
+<p>とすれば、コンパイルは完了。バイトコードに相当する Test.abc ができます。abc という拡張子は ActionScript ByteCode の略なんだろうな。</p>
+<h1>SWF を作ってみる</h1>
+<p>SWF を作るには、Sprite クラスを継承したクラスを用意する必要があります。</p>
+<div class="highlight"><pre><span class="c1">// MySprite.as</span>
+<span class="kr">package</span> <span class="p">{</span>
+  <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+  <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+  <span class="kr">public</span> <span class="kr">class</span> <span class="nx">MySprite</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">MySprite</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">test</span><span class="o">:</span><span class="nx">Test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Test</span><span class="p">();</span>
+      <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+      <span class="nx">text</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+      <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s1">&#39;MySprite&#39;</span><span class="p">;</span>
+      <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>手始めに mxmlc でコンパイルする場合を紹介します。</p>
+<pre>mxmlc -default-size 400 300 MySprite.as </pre>
+<p>これだけで MySprite.swf が出力できます。</p>
+<p>MySprite.as で Test.as を参照しているのですが、そのへんも自動的に判別してリンクしてくれています。</p>
+<br />
+<p>では、次に本題の asc_authoring.jar でのコンパイルをしてみましょう。SWF を作るには -swf でルートになる Sprite クラスを指定します。</p>
+<pre><font color="red"># !!実行時エラー!!</font>
+java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-swf MySprite,400,300</strong> \
+ MySprite.as</pre>
+<p>これで MySprite.as はできるのですが、Test クラスが SWF に含まれていないため、実行時に参照エラーになります。</p>
+<p>実行時エラーがいやん、という人は -strict をつければコンパイル時にエラーになります。</p>
+<pre><font color="red"># !!コンパイル時エラー!!</font>
+java -jar asc_authoring.jar \
+ <strong>-strict</strong> \
+ -import global.abc \
+ -import playerglobal.abc \
+ -swf MySprite,400,300 \
+ MySprite.as
+
+[Compiler] Error #1180: Call to a possibly undefined method Test.
+   MyScript.as, Ln 7, Col 27:
+         var test:Test = new Test();
+   ..........................^
+
+1 error found</pre>
+<p>さてさて、参照エラーを解決するには -in パラメータを使って、必要なクラスを列挙してやる必要があります。ここでは、Test.as があればいいので、-in Test.as ですね。</p>
+<pre>java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-in Test.as</strong> \
+ -swf MySprite,400,300 \
+ MySprite.as</pre>
+<p>これで成功。</p>
+<br />
+<p>ソースコードからではなく ByteCode をリンクしてみたい気もします。直感的には -import Test.abc を使って次のようにできそうなんですが....</p>
+<pre><font color="red"># !!実行時エラー!!</font>
+java -jar asc_authoring.jar \
+ -import global.abc \
+ -import playerglobal.abc \
+ <strong>-import Test.abc</strong> \
+ -swf MySprite,400,300 \
+ MySprite.as</pre>
+<p>コンパイルもできるんだけど、実行時に参照エラーになっちゃう。</p>
+<p>MySprite.swf をバイナリエディタで覗いてみると、確かにこの場合だと Test.abc の中身が MySprite.swf には含まれていないご様子。</p>
+<p>ByteCode のリンクはできないんだろうか・・・。</p>
+<h1>strict について補足</h1>
+<p>strict の話がでたのでついでに補足。mxmlc はデフォルトで strict オン、asc_authoring.jar はオフになってます。切り替えるにはこうします。</p>
+<table><tr><th></th><th>ON</th><th>OFF</th></tr><tr><td>asc_authoring.jar</td><td>-strict</td><td>(デフォルト)</td></tr><tr><td>mxmlc</td><td>(デフォルト)</td><td>-strict=false</td></tr></table>
+<h1>まとめ</h1>
+<p>mxmlc と asc_authoring の違いを感覚的にまとめてみるとこんな感じ。</p>
+<ul><li>mxmlc<ul><li>依存関係を自動的に探して、まとめてコンパイル・リンクしてくれる賢い人</li><li>吐けるのは .swf のみ</li><li>Sprite クラスを継承した ActionScript や MXML 以外はコンパイルできない</li></ul></li><li>asc_authoring.jar<ul><li>コンパイルやリンクはできるけど、手取り足取り依存関係を教えてあげなきゃいけない面倒な人</li><li>.swf だけでなく、.abc も吐ける</li><li>どんなクラスでもコンパイルできる</li></ul></li></ul>
+<p>asc_authoring.jar は手間はかかるけど、ネイティブに近い分だけかわいい。Tamarin の avmplus.exe から直接 .abc を扱えるから余計にかわいく見えるのかな。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070131/asc_authoring" class="hatena-bookmark-button" data-hatena-bookmark-title="asc_authoring.jar で遊んでみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/01/31/asc-authoring/" data-lang="ja" data-size="horizontal" data-text="asc_authoring.jar で遊んでみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/01/25/p1/" rel="previous">はてブのCSSをカスタマイズしてみた</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/02/01/tamarin-trial/" rel="next">Tamarin と遊んでみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

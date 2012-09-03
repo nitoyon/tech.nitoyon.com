@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ECMAScript 4 のリファレンス実装を導入してみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ECMAScript 4 のリファレンス実装を導入してみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/31/es4-reference-implementation/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ecmascript.org に ES4 のリファレンス実装が公開されていたので導入してみた。といっても、まだまだ初期バージョンでほとんど動作しないので、導入はお薦めできない。動かしてみたらこんな感じ。&amp;gt;&amp;gt; var a = 3;&amp;gt;&amp;gt; a3&amp;gt;&amp;gt; var b:int = 3;**ERROR** VerifyError: unable to resolve fixture for multiname: {multiname: [nspublic &amp;#39;&amp;#39;]::int } (near &amp;lt;no filename&amp;gt;:1.1-1.3)&amp;gt;..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月31日</h2>
+<h1>ECMAScript 4 のリファレンス実装を導入してみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071031/es4_reference_implementation" class="hatena-bookmark-button" data-hatena-bookmark-title="ECMAScript 4 のリファレンス実装を導入してみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/31/es4-reference-implementation/" data-lang="ja" data-size="horizontal" data-text="ECMAScript 4 のリファレンス実装を導入してみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>ecmascript.org に ES4 のリファレンス実装が公開されていたので導入してみた。</p>
+<p>といっても、まだまだ初期バージョンで<strong>ほとんど動作しない</strong>ので、導入はお薦めできない。</p>
+<p>動かしてみたらこんな感じ。</p>
+<div class="highlight"><pre>&gt;&gt; var <span class="nv">a</span> <span class="o">=</span> 3;
+&gt;&gt; a
+3
+&gt;&gt; var b:int <span class="o">=</span> 3;
+**ERROR** VerifyError: unable to resolve fixture <span class="k">for </span>multiname: <span class="o">{</span>multiname: <span class="o">[</span>ns
+public <span class="s1">&#39;&#39;</span><span class="o">]</span>::int <span class="o">}</span> <span class="o">(</span>near &lt;no filename&gt;:1.1-1.3<span class="o">)</span>
+&gt;&gt; var <span class="nv">arr</span> <span class="o">=</span> <span class="o">[]</span>;
+**ERROR** VerifyError: unable to resolve fixture <span class="k">for </span>multiname: <span class="o">{</span>multiname: <span class="o">[</span>ns
+public <span class="s1">&#39;&#39;</span><span class="o">]</span>::int <span class="o">}</span> <span class="o">(</span>near &lt;no filename&gt;:1.1-1.3<span class="o">)</span>
+</pre>
+</div>
+
+<p><a href="http://d.hatena.ne.jp/nitoyon/20071030/es4_overview">Draft に書いてある新機能</a> どころか、ES3 相当の文法でもエラーになっちゃう。</p>
+<p>まあ、この程度ってこった…。ほとんど遊べない。</p>
+<p>こんな状態でもインストールしてみたい、という酔狂な人に向けて手順を公開しておく。環境は Windows XP＋Cygwin。Mac 版もあるので、SML/NJ を導入すれば動くと思う。</p>
+<h1>1. Cygwin のインストール</h1>
+<p><a href="http://cygwin.com/">Cygwin Information and Installation</a> からインストーラをダウンロードして実行。パッケージの選択で、gcc・make・wget を追加でチェックするのを忘れずに。</p>
+<p>既に Cygwin を導入している人は、gcc・make・wget が入っているか確認しておいてね。</p>
+<h1>2. SML/NJ のインストール</h1>
+<p><a href="http://www.smlnj.org/dist/working/110.64/index.html">SML/NJ 110.64</a>を導入。Windows 版ではなく、Cygwin 版を導入する点に注意。</p>
+<p>cygwin の bash を開いて、以下のコマンドをコンソールに貼り付けて実行する。</p>
+<div class="highlight"><pre><span class="c"># 環境変数の設定</span>
+<span class="nb">export </span><span class="nv">SMLNJ_CYGWIN_RUNTIME</span><span class="o">=</span>1
+
+<span class="c"># SML/NJ のダウンロード -&gt; 展開 -&gt; インストール</span>
+<span class="nv">d</span><span class="o">=</span>/usr/share/smlnj
+mkdir <span class="nv">$d</span>
+<span class="nb">cd</span> <span class="nv">$d</span>
+<span class="nv">v</span><span class="o">=</span>110.64
+wget http://smlnj.cs.uchicago.edu/dist/working/<span class="nv">$v</span>/config.tgz
+gunzip &lt;config.tgz | tar xf -
+config/install.sh
+</pre>
+</div>
+
+<p>ビルドが始まるので、しばらく待機。</p>
+<pre class="">    :
+    :
+[compiling (2660-export.cm):2660-export.sml]
+[code: 221, data: 37, env: 40 bytes]
+config/install.sh: Installation complete.</pre>
+<p>これで、成功。</p>
+<p>(参考：<a href="http://d.hatena.ne.jp/netPlant/20060918#1158592862">Isabelle のインストール for Cygwin - 箱庭のオンガク。</a>)</p>
+<h1>3. ES4 reference interpreter を導入</h1>
+<p><a href="http://www.ecmascript.org/download.php">http://www.ecmascript.org/download.php</a> から es4-pre-release.M0.cygwin-x86.tar.gz をダウンロードする。</p>
+<p>あとは展開して es4 を実行すればよい。smlnj にパスを通しておくのを忘れずに。</p>
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/share/smlnj/bin
+
+<span class="nv">$ </span>ls
+es4-pre-release.M0.cygwin-x86.tar.gz
+
+<span class="nv">$ </span>tar xvfz es4-pre-release.M0.cygwin-x86.tar.gz
+es4
+es4/decimal.exe
+es4/es4
+es4/es4.heap.x86-cygwin
+es4/LICENSE
+
+<span class="nv">$ </span><span class="nb">cd </span>es4
+
+<span class="nv">$ </span>./es4
+&gt;&gt;
+</pre>
+</div>
+
+<p>&gt;&gt;と表示されれば成功。</p>
+<p>もし、</p>
+<div class="highlight"><pre>The Cygwin release of the ECMAScript Edition 4 Reference implementation
+currently requires an installation of SML/NJ.
+
+Please install SML/NJ version 110.64 or later.
+
+You can download the latest version of SML/NJ from http://www.smlnj.org.
+</pre>
+</div>
+
+<p>と表示されるなら、SML/NJ のインストールに失敗したか、パスが通っていないかのどちらかだろう。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071031/es4_reference_implementation" class="hatena-bookmark-button" data-hatena-bookmark-title="ECMAScript 4 のリファレンス実装を導入してみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/31/es4-reference-implementation/" data-lang="ja" data-size="horizontal" data-text="ECMAScript 4 のリファレンス実装を導入してみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/31/adobe-max-eve/" rel="previous">Adobe MAX 参戦前夜</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/11/01/adobe-max1-flex-best-practice/" rel="next">Adobe MAX リアルタイムレポート：Flex採用時のプロジェクトのワークフローとベストプラクティス&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

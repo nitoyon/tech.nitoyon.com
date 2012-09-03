@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3.0 で光るテキスト効果を作ってみた - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3.0 で光るテキスト効果を作ってみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/09/07/glowing-text/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="TVCM とか映画予告編などでよく見かける「文字が左から右に光るエフェクト」を ActionScript 3.0 で作ってみた。完成品はこんな具合。Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。文字を編集することもできる。編集後の文字ですぐに光り始める！やってることTextField を表示TextField を BitmapData に表示して、GlowFitler で光らせる (bmpGlow)円形のマスク Sprite を用意 (msk)。周りに行くに従って透明になるようにしておく。2. で作った bmpGlow に 3. のマスク m..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年09月07日</h2>
+<h1>AS3.0 で光るテキスト効果を作ってみた</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090907/glowing_text" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で光るテキスト効果を作ってみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/09/07/glowing-text/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で光るテキスト効果を作ってみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090906/20090906110733.png" width="450" height="80"></center>
+<p>TVCM とか映画予告編などでよく見かける「文字が左から右に光るエフェクト」を ActionScript 3.0 で作ってみた。</p>
+<p>完成品はこんな具合。</p>
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FGlowingHelloWorld.swf&amp;up_background=%23000000&amp;synd=open&amp;w=450&amp;h=100&amp;title=Glowing+Hello+World&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>Flash Player 9 以上がインストールされていると、ここに完成品が表示されますよ。</noscript></center>
+<p>文字を編集することもできる。編集後の文字ですぐに光り始める！</p>
+<h1>やってること</h1>
+<ol><li>TextField を表示</li><li>TextField を BitmapData に表示して、GlowFitler で光らせる (<code>bmpGlow</code>)</li><li>円形のマスク Sprite を用意 (<code>msk</code>)。周りに行くに従って透明になるようにしておく。</li><li>2. で作った <code>bmpGlow</code> に 3. のマスク <code>msk</code> を適用する。マスクを徐々に右に移動していけば、光ってるところが移動しているように見える。</li></ol>
+<p>苦労したのはグラデーションのマスクを適用させるところ。マスクとマスクされる <code>DisplayObject</code> の両方の  <code>cacheAsBitmap</code> プロパティを <code>true</code> に設定しておく必要がある。</p>
+<p>当初、それに気付かずに、<code>copyPixel()</code> を使って<a href="http://wonderfl.net/code/7689123caaff96fc89a3855b76dec5022443c740">泥臭く実装していた</a>んだけど、cacheAsBitmap すればアルファの Sprite で透明度を利用したマスクを作れることを<a href="http://wonderfl.net/code/fb15467c08b713fd630ace5fa691a13f6c6f810d">教えてもらった</a>。<code>cacheAsBitmap</code> を使って <a href="http://wonderfl.net/code/6478e7a910e69f15bdc14d0faf6b492c7001ca55">書き直した</a>ら、10行短くなって、ソースコードも素直になって万歳。</p>
+<p>ソースコードは以下に（73行）。</p>
+<a name="seemore"></a>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1">// Glowing Hellow World revised. (lines: 83 -&gt; 73) </span>
+<span class="c1">//------------------------------------------------------- </span>
+<span class="c1">// An experiment on creating a dynamic glow text effect. </span>
+<span class="c1">// You can edit the text!!! </span>
+
+<span class="kr">package</span><span class="p">{</span> 
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span> 
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span> 
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
+
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;450&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;80&quot;</span><span class="p">)]</span> 
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">GlowingHelloWorld</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span> 
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">GlowingHelloWorld</span><span class="p">(){</span> 
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span> 
+        <span class="kd">var</span> <span class="nx">ptZero</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span> 
+
+        <span class="c1">// initialize canvas. </span>
+        <span class="kd">var</span> <span class="nx">bmpGlow</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">())</span> <span class="nx">as</span> <span class="nx">Bitmap</span><span class="p">;</span> 
+
+        <span class="c1">// Show original text (input) </span>
+        <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span> 
+        <span class="nx">text</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span> 
+        <span class="nx">text</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span> 
+        <span class="nx">text</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;50&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="o">&gt;</span><span class="nx">HELLO</span> <span class="nx">WORLD</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString(); </span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span> 
+        <span class="nx">text</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> <span class="nx">updateGlow</span><span class="p">()</span> <span class="p">});</span> 
+
+        <span class="c1">// Create a glow BitmapData. </span>
+        <span class="kd">var</span> <span class="nx">bmdGlow</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">bmdCanvas</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span> 
+        <span class="kd">var</span> <span class="nx">updateGlow</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> 
+            <span class="c1">// dispose existing BitmapData. </span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">bmdGlow</span><span class="p">)</span> <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span> 
+
+            <span class="c1">// Glow it. </span>
+            <span class="nx">bmdGlow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">textWidth</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">text</span><span class="p">.</span><span class="nx">textHeight</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="mi">0</span><span class="p">);;</span> 
+            <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span> 
+            <span class="kd">var</span> <span class="nx">glow</span><span class="o">:</span><span class="nx">GlowFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
+            <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmdGlow</span><span class="p">,</span> <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">ptZero</span><span class="p">,</span> <span class="nx">glow</span><span class="p">);</span> 
+
+            <span class="c1">// Update canvas BitmapData. </span>
+            <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">bitmapData</span> <span class="o">=</span> <span class="nx">bmdGlow</span><span class="p">;</span> 
+        <span class="p">}</span> 
+        <span class="nx">updateGlow</span><span class="p">();</span> 
+
+        <span class="c1">// Create a mask sprite. </span>
+        <span class="kd">var</span> <span class="nx">msk</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span> 
+        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;radial&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">255</span><span class="p">]);</span> 
+        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span> 
+        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span> 
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">msk</span><span class="p">);</span>
+
+        <span class="c1">// Set mask.</span>
+        <span class="nx">msk</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">-</span> <span class="nx">text</span><span class="p">.</span><span class="nx">textHeight</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="nx">msk</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">msk</span><span class="p">;</span>
+
+        <span class="c1">// Start animation loop. </span>
+        <span class="kd">var</span> <span class="nx">counter</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> 
+            <span class="c1">// move the mask</span>
+            <span class="nx">msk</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">counter</span><span class="p">;</span>
+
+            <span class="c1">// update counter... </span>
+            <span class="nx">counter</span> <span class="o">+=</span> <span class="mi">14</span><span class="p">;</span> 
+            <span class="k">if</span> <span class="p">(</span><span class="nx">counter</span> <span class="o">&gt;</span> <span class="mi">800</span><span class="p">){</span> 
+                <span class="nx">counter</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span><span class="p">;</span> 
+            <span class="p">}</span> 
+        <span class="p">});</span> 
+    <span class="p">}</span> 
+<span class="p">}</span> 
+<span class="p">}</span> 
+</pre>
+</div>
+
+</div>
+<div class="seealso">
+<h1>あわせてどうぞ</h1>
+<ul><li><a href="/ja/blog/2008/07/25/shape-of-a-dream/">フォント情報を元に歪めて描画：ユメのカタチ</a></li><li><a href="/ja/blog/2008/07/24/embed-font-swfassist/">埋め込みフォントの情報を swfassist で取得する</a></li><li><a href="/ja/blog/2007/10/05/potras-pop/">PotrAs でチラシ文字</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090907/glowing_text" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で光るテキスト効果を作ってみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/09/07/glowing-text/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で光るテキスト効果を作ってみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/09/03/hatebu-nenkan200908/" rel="previous">はてブ年鑑の2009年8月分をアップロードした</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/09/08/easy-open-face/" rel="next">GlowFilter で簡単袋文字&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

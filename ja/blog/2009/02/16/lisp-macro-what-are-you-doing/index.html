@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Common Lisp のマクロが何をやってるか把握する - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Common Lisp のマクロが何をやってるか把握する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/02/16/lisp-macro-what-are-you-doing/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Common Lisp のマクロの背後で何が行われているのかがいまいち分からなかったので、少し詳しく見ていくことにした。On Lisp の7章 マクロ には、defmacro と macroexpand-1 の内部処理を Lisp でエミュレートしたコードが紹介されている。(defmacro our-expander (name) `(get ,name &amp;#39;expander))(defmacro our-defmacro (name parms &amp;amp;body body) (let ((g (gensym))) `(progn (setf (our-expander &amp;#39..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年02月16日</h2>
+<h1>Common Lisp のマクロが何をやってるか把握する</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090216/lisp_macro_what_are_you_doing" class="hatena-bookmark-button" data-hatena-bookmark-title="Common Lisp のマクロが何をやってるか把握する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/16/lisp-macro-what-are-you-doing/" data-lang="ja" data-size="horizontal" data-text="Common Lisp のマクロが何をやってるか把握する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Common Lisp のマクロの背後で何が行われているのかがいまいち分からなかったので、少し詳しく見ていくことにした。</p>
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274066371/nitoyoncom-22/ref=nosim">On Lisp</a> の<a href="http://user.ecc.u-tokyo.ac.jp/~tt076524/onlispjhtml/macros.html">7章 マクロ</a> には、<code>defmacro</code> と <code>macroexpand-1</code> の内部処理を Lisp でエミュレートしたコードが紹介されている。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">our-expander</span> <span class="p">(</span><span class="nv">name</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="nb">get</span> <span class="o">,</span><span class="nv">name</span> <span class="ss">&#39;expander</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nb">defmacro</span> <span class="nv">our-defmacro</span> <span class="p">(</span><span class="nv">name</span> <span class="nv">parms</span> <span class="k">&amp;body</span> <span class="nv">body</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">g</span> <span class="p">(</span><span class="nb">gensym</span><span class="p">)))</span>
+    <span class="o">`</span><span class="p">(</span><span class="k">progn</span>
+       <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="ss">&#39;,name</span><span class="p">)</span>
+             <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="o">,</span><span class="nv">g</span><span class="p">)</span>
+                 <span class="p">(</span><span class="k">block</span> <span class="o">,</span><span class="nv">name</span>
+                        <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="o">,</span><span class="nv">parms</span> <span class="p">(</span><span class="nb">cdr</span> <span class="o">,</span><span class="nv">g</span><span class="p">)</span>
+                          <span class="o">,@</span><span class="nv">body</span><span class="p">))))</span>
+       <span class="ss">&#39;,name</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nb">defun</span> <span class="nv">our-macroexpand-1</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nb">and</span> <span class="p">(</span><span class="nb">consp</span> <span class="nv">expr</span><span class="p">)</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nb">funcall</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">))</span> <span class="nv">expr</span><span class="p">)</span>
+      <span class="nv">expr</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>7章の冒頭に登場する <code>nil!</code> を <code>our-defmacro</code> を使って定義したとしよう。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="nv">our-defmacro</span> <span class="nv">nil!</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>このとき、いったいどういう処理が実施されてるんだろう。それ理解するのが今回の趣旨。</p>
+<a name="seemore"></a>
+<h1>our-defmacro がすること</h1>
+<p>our-defmacro はマクロなので、<code>(our-defmacro nil! (var) `(setq ,var nil))</code> は次のように展開される。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="k">progn</span>
+  <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="ss">&#39;nil!</span><span class="p">)</span>
+        <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="ss">#:G3123</span><span class="p">)</span>
+            <span class="p">(</span><span class="k">block</span> <span class="nv">nil!</span>
+                   <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="ss">#:G3123</span><span class="p">)</span>
+                   <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">)))))</span>
+  <span class="ss">&#39;nil!</span><span class="p">)))</span>
+<span class="c1">; #:G3123 が gensym で定義されたシンボルだとしておく</span>
+</pre>
+</div>
+
+<p><code>progn</code> では２つの式を順番に評価している。１つ目が <code>setf</code> で２つ目が <code>'nil!</code> だ。</p>
+<p>２つ目の結果が <code>progn</code> の評価結果となるので、この式の戻り値はシンボル <code>nil!</code> となる。</p>
+<p>１つ目の <code>setf</code> のところを見ていこう。<code>our-expander</code> マクロが登場してるのでこれも展開してみる。</p>
+<div class="highlight"><pre>  <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nb">get</span> <span class="ss">&#39;nil!</span> <span class="ss">&#39;expander</span><span class="p">)</span> <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="ss">#:G3123</span><span class="p">)</span> <span class="p">(</span><span class="o">...</span><span class="p">))</span> <span class="p">)</span>
+</pre>
+</div>
+
+<p><code>nil!</code> シンボルの <code>expander</code> プロパティに lambda を設定している。この lambda は ANSI Common Lisp の仕様書で expansion function と定義されているものに該当するようだ。</p>
+<p>expansion function は「マクロを展開する処理」を実装した関数である。マクロ評価時に expansion function がどうやって呼ばれるかを見ていこう。</p>
+<h1>expansion function はどう呼ばれるか</h1>
+<p>expansion function を呼び出すのは <code>our-macroexpand-1</code> だ。こいつを見ていく。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="nb">defun</span> <span class="nv">our-macroexpand-1</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nb">and</span> <span class="p">(</span><span class="nb">consp</span> <span class="nv">expr</span><span class="p">)</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">)))</span>
+      <span class="p">(</span><span class="nb">funcall</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">))</span> <span class="nv">expr</span><span class="p">)</span>
+      <span class="nv">expr</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>この関数は <code>(our-macro-expand '(nil! x))</code> のように呼び出す。</p>
+<p>１行目の <code>if</code> では、引数のチェックをしている。</p>
+<ol><li><code>expr</code> が <code>cons</code> であるか？</li><li><code>car expr</code>（つまり <code>'nil!</code>）に <code>expand</code> プロパティが定義されているか？</li></ol>
+<p><code>'(nil! x)</code> はこの条件を満たすので、晴れて２行目が評価される。</p>
+<p>２行目は、<code>(funcall [expansion function] expr)</code> を実施している。ここで expansion function が呼ばれている。引数は <code>expr</code> だ。</p>
+<p>つまり、expansion function は <code>'(nil! x)</code> を引数に呼び出されることが分かった。</p>
+<h1>expansion function の定義を見つつ、our-macroexpand-1 の結果を追う</h1>
+<p>引数が分かったところで、expansion function の動きを追っていく。</p>
+<p>expansion function を再掲しておく。この関数の引数が <code>'(nil! x)</code> である。</p>
+<div class="highlight"><pre>  <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
+      <span class="p">(</span><span class="k">block</span> <span class="nv">nil!</span>
+             <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">expr</span><span class="p">)</span>
+             <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">)))))</span>
+</pre>
+</div>
+
+<p><code>(block nil! ...)</code> では <code>nil!</code> という名前のブロックを定義してる。この構文のおかげで、マクロの中で <code>return-from nil!</code> を実行できるわけだ。</p>
+<p>次の、<code>destructuring-bind</code> は <code>var</code> に引数の <code>cdr</code> を代入してる。ただの代入じゃなくて、構造化代入を使ってるが、詳しくは、On Lisp の <a href="http://user.ecc.u-tokyo.ac.jp/~tt076524/onlispjhtml/destructuring.html">18. 構造化代入</a> に書いてあるのでここでは触れない。</p>
+<p>ということで、ブロックの中を整理すると、次のような評価になる。</p>
+<div class="highlight"><pre>  <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nv">x</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>シングルクォートで書き直すとこうなる。</p>
+<div class="highlight"><pre>  <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nv">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">list</span> <span class="ss">&#39;setq</span> <span class="nv">var</span> <span class="ss">&#39;nil</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>さらに <code>let</code> で書き直すとこうなる。</p>
+<div class="highlight"><pre>  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">var</span> <span class="nv">x</span><span class="p">))</span>
+    <span class="p">(</span><span class="nb">list</span> <span class="ss">&#39;setq</span> <span class="nv">var</span> <span class="ss">&#39;nil</span><span class="p">))</span>
+</pre>
+</div>
+
+<p>つまり、expansion function の評価結果は</p>
+<div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">x</span> <span class="no">nil</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>である。</p>
+<h1>おわりに</h1>
+<p>マクロの説明なのにマクロを使ってるのが少し気持ち悪いが、処理系内で何が起こってるかを説明するためにはこのような書き方になるんだと思う。</p>
+<p>実際に処理系がマクロを評価する場合、<code>our-macroexpand-1</code> で展開した結果のリストを再度評価する。つまり、<code>(setq x nil)</code> を評価して、実際に <code>x</code> に <code>nil</code> が代入される。もし、マクロの評価結果のリストがマクロなら、もう一度、上記のような処理を実施するわけだ。</p>
+<p>ちなみに、<code>our-expander</code> にあたる関数は Common Lisp では  <code>macro-function</code> が用意されている。こいつにシンボル名を渡せば expansion function を取得できる。</p>
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/On-Lisp-%E3%83%9D%E3%83%BC%E3%83%AB-%E3%82%B0%E3%83%AC%E3%82%A2%E3%83%A0/dp/4274066371%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4274066371"><img src="http://ecx.images-amazon.com/images/I/41PR3HVafyL._SL160_.jpg" class="hatena-asin-detail-image" alt="On Lisp" title="On Lisp"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/On-Lisp-%E3%83%9D%E3%83%BC%E3%83%AB-%E3%82%B0%E3%83%AC%E3%82%A2%E3%83%A0/dp/4274066371%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4274066371">On Lisp</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> ポール グレアム</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> オーム社</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2007-03</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4274066371%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4274066371">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090216/lisp_macro_what_are_you_doing" class="hatena-bookmark-button" data-hatena-bookmark-title="Common Lisp のマクロが何をやってるか把握する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/16/lisp-macro-what-are-you-doing/" data-lang="ja" data-size="horizontal" data-text="Common Lisp のマクロが何をやってるか把握する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/02/12/flashcontent-noscript/" rel="previous">&lt;div id="flashcontent"&gt;の中身も…</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/02/17/polygon-monalisa/" rel="next">「50個のポリゴンでモナリザ」を AS3 で&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

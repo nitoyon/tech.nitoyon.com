@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3.0 で 3D プログラミングを１から勉強する (1) - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3.0 で 3D プログラミングを１から勉強する (1)"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/06/16/as-3d-lessen1/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="3D の原理をあまり知らなかったので、ActionScript 3.0 で１から勉強してみた。１からなのでフレームワークは使わず、自力で実装していく。Web 上には色んな資料があってありがたいだけど、玉石混交な上に、有用なものでも一本道で幅の狭いものが多い。前提知識のない自分にとっては、資料間の関連性を理解するのが大変だった。なので、なるべく簡単なところからスタートしつつ、広く浅く体験していくことを目標としてみる。まずは、四面体をワイヤーフレームで表示するところからスタートしよう。四面体を定義するまずは、3次元上の点を表現する Point3D クラスを作る。class Point3D {..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年06月16日</h2>
+<h1>AS3.0 で 3D プログラミングを１から勉強する (1)</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080616/as_3d_lessen1" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (1) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/16/as-3d-lessen1/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (1) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080616/20080616033932.png" width="433" height="165"></center>
+<p>3D の原理をあまり知らなかったので、ActionScript 3.0 で１から勉強してみた。１からなのでフレームワークは使わず、自力で実装していく。</p>
+<p>Web 上には色んな資料があってありがたいだけど、玉石混交な上に、有用なものでも一本道で幅の狭いものが多い。前提知識のない自分にとっては、資料間の関連性を理解するのが大変だった。</p>
+<p>なので、なるべく簡単なところからスタートしつつ、広く浅く体験していくことを目標としてみる。まずは、四面体をワイヤーフレームで表示するところからスタートしよう。</p>
+<h1>四面体を定義する</h1>
+<p>まずは、3次元上の点を表現する Point3D クラスを作る。</p>
+<div class="highlight"><pre><span class="kr">class</span> <span class="nx">Point3D</span> <span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">_x</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_y</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_z</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="nx">x</span> <span class="o">=</span> <span class="nx">_x</span><span class="p">;</span>
+        <span class="nx">y</span> <span class="o">=</span> <span class="nx">_y</span><span class="p">;</span>
+        <span class="nx">z</span> <span class="o">=</span> <span class="nx">_z</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>四面体を作るために、メインのクラスに４つの点を定義した。</p>
+<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d1</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">);</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span>   <span class="mi">0</span><span class="p">);</span>
+    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p4</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">);</span>
+</pre>
+</div>
+
+<h1>２次元空間に表示する</h1>
+<p>３次元の点を２次元空間に描画する方法を考える。</p>
+<p>とはいえ、一番最初のサンプルなので、真上（もしくは真下）から見たところを表示する。つまり、Z の値を無視して表示する。３次元空間上の(0, 0, 100) という点は、(0, 0) に表示する。</p>
+<p>プロット先の座標を求めて（といっても、Zの値を無視するだけだけど）、線で結んでやれば四面体を真上から見た図ができた。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080616/20080616033931.png" width="399" height="221"></center>
+<h1>回転！</h1>
+<p>これだとあまりにも退屈なので、回転させてみよう。</p>
+<p>カメラが回転するのは難しいので、四面体に回転してもらうことにする。こっちはちょー簡単。</p>
+<p>ある点 p を原点周りに rad ラジアンだけ回転させるには</p>
+<pre>p.x =  Math.cos(rad) * x + Math.sin(rad) * y;
+p.y = -Math.sin(rad) * x + Math.cos(rad) * y;</pre>
+<p>とする。(詳しく知りたい人は「回転行列」あたりのキーワードで検索すべし)</p>
+<p>x と y を y と z に置き換えれば X 軸周りの回転になるし、z と x に置き換えれば Y 軸周りの回転になる。</p>
+<p>マウスの位置に応じて Y 軸周りと Z 軸の周りに回転させるようにしてみた。回転後の座標を線で繋げば回転する四面体の完成だ。</p>
+<script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FStudy3d1.swf&amp;up_background=%23000000&amp;synd=open&amp;w=300&amp;h=300&amp;title=3D+Study&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)</noscript>
+<p>ソースはたった86行。ローテクだけど、回転し続けていれば立体に見えなくもない。</p>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20080617/as_3d_lessen2">第２回</a>に続く。</p>
+<div class="seealso">
+<h1>連載目次</h1>
+<ul><li><a href="/ja/blog/2008/06/16/as-3d-lessen1/">AS3.0 で 3D プログラミングを１から勉強する (1)</a></li><li><a href="/ja/blog/2008/06/17/as-3d-lessen2/">AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入</a></li><li><a href="/ja/blog/2008/06/18/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (3) - 透視投影</a></li><li><a href="/ja/blog/2008/06/20/as-3d-lessen3/">AS3.0 で 3D プログラミングを１から勉強する (4) - 面に色を塗る</a></li><li><a href="/ja/blog/2008/06/23/as-3d-lessen5/">AS3.0 で 3D プログラミングを１から勉強する (5) - テクスチャを張る</a></li></ul>
+</div>
+<p>今回のソースは以下に（86行）。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d1</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">);</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span>   <span class="mi">0</span><span class="p">);</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p4</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">);</span>
+
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d1</span><span class="p">(){</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+
+            <span class="nx">changeHandler</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">pp1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">pp2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">p2</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">pp3</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">p3</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">pp4</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">p4</span><span class="p">);</span>
+
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+            <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">pp1</span><span class="p">);</span> <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">pp2</span><span class="p">);</span>
+            <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">pp3</span><span class="p">);</span> <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">pp4</span><span class="p">);</span>
+            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp1</span><span class="p">,</span> <span class="nx">pp2</span><span class="p">);</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp1</span><span class="p">,</span> <span class="nx">pp3</span><span class="p">);</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp1</span><span class="p">,</span> <span class="nx">pp4</span><span class="p">);</span>
+            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp2</span><span class="p">,</span> <span class="nx">pp3</span><span class="p">);</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp2</span><span class="p">,</span> <span class="nx">pp4</span><span class="p">);</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">pp3</span><span class="p">,</span> <span class="nx">pp4</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">_p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">_p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">_p</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">_p</span><span class="p">.</span><span class="nx">z</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>
+
+            <span class="c1">// y rotate</span>
+            <span class="nx">p</span> <span class="o">=</span> <span class="nx">rotate2d</span><span class="p">(</span><span class="nx">ret</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            <span class="nx">ret</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+
+            <span class="c1">// z rotate</span>
+            <span class="nx">p</span> <span class="o">=</span> <span class="nx">rotate2d</span><span class="p">(</span><span class="nx">ret</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="o">-</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            <span class="nx">ret</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">rotate2d</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+            <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>  <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">*</span> <span class="nx">x</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">*</span> <span class="nx">y</span><span class="p">;</span>
+            <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">*</span> <span class="nx">x</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">*</span> <span class="nx">y</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">p</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Point3D</span> <span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">_x</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_y</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_z</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="nx">x</span> <span class="o">=</span> <span class="nx">_x</span><span class="p">;</span>
+        <span class="nx">y</span> <span class="o">=</span> <span class="nx">_y</span><span class="p">;</span>
+        <span class="nx">z</span> <span class="o">=</span> <span class="nx">_z</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080616/as_3d_lessen1" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3.0 で 3D プログラミングを１から勉強する (1) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/16/as-3d-lessen1/" data-lang="ja" data-size="horizontal" data-text="AS3.0 で 3D プログラミングを１から勉強する (1) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/06/13/p1/" rel="previous">E4X の変数展開 深追い (2)</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/06/17/as-3d-lessen2/" rel="next">AS3.0 で 3D プログラミングを１から勉強する (2) - 行列の導入&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Box2DFlashAS3 の見た目を豪華にしてみる - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Box2DFlashAS3 の見た目を豪華にしてみる"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/11/29/box2dflashas3-bitmap/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回 のサンプルを改造して、見た目に一味加えてみた。ちょっぴり実写志向。（表示されない場合はリロードをお願いします）原理は簡単。Box2dFlashAS3 は、もともとが C++ のコードなだけに、エンジンに描画処理が含まれていない。前回も自前で lineTo を使って描画してたのだけど、今回は事前に Sprite を用意しておいた。enterFrame で b2Body の位置と角度を Sprite に反映させている。ただ、物理エンジンの初期化と Sprite の描画の両方を AS3 で書いているので、ソースコードが無駄に長い。もうちょっと複雑になるときは、しっかり設計したほうがよさそ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年11月29日</h2>
+<h1>Box2DFlashAS3 の見た目を豪華にしてみる</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071129/box2dflashas3_bitmap" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の見た目を豪華にしてみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/29/box2dflashas3-bitmap/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の見た目を豪華にしてみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p><a href="http://d.hatena.ne.jp/nitoyon/20071127/box2d_simple_sample">前回</a> のサンプルを改造して、見た目に一味加えてみた。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBox2dSimpleSample2.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=480&amp;h=480&amp;title=Box2dFlashAS3+simple+sample&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>ちょっぴり実写志向。（表示されない場合はリロードをお願いします）</p>
+<p>原理は簡単。Box2dFlashAS3 は、もともとが C++ のコードなだけに、エンジンに描画処理が含まれていない。前回も自前で lineTo を使って描画してたのだけど、今回は事前に Sprite を用意しておいた。enterFrame で b2Body の位置と角度を Sprite に反映させている。</p>
+<p>ただ、物理エンジンの初期化と Sprite の描画の両方を AS3 で書いているので、ソースコードが無駄に長い。もうちょっと複雑になるときは、しっかり設計したほうがよさそうだ。</p>
+<p>だるまの絵は以下のサイトから借用させていただいた。無駄にアフィリエイト（笑）。</p>
+<table border="0" cellpadding="0" cellspacing="0"><tr><td valign="top"><div style="border:1px solid #000000;margin:0px;padding:6px 0px;background-color:#ffffff;width:160px;text-align:center;float:left"><a href="http://hb.afl.rakuten.co.jp/hgc/06acb2e0.1701f697.06acb2e1.36b7e8da/?pc=http%3a%2f%2fitem.rakuten.co.jp%2ftokyo-treasures%2fmi2007-darumaotoshi%2f%3fscid%3daf_ich_link_tbl&amp;m=http%3a%2f%2fm.rakuten.co.jp%2ftokyo-treasures%2fn%2fmi2007-darumaotoshi" target="_blank" style="color:#0000ff;"><img src="http://hbb.afl.rakuten.co.jp/hgb/?pc=http%3a%2f%2fthumbnail.image.rakuten.co.jp%2f%400_mall%2ftokyo-treasures%2fcabinet%2fitem-wazakka%2fki-2007.jpg%3f_ex%3d128x128&amp;m=http%3a%2f%2fthumbnail.image.rakuten.co.jp%2f%400_mall%2ftokyo-treasures%2fcabinet%2fitem-wazakka%2fki-2007.jpg%3f_ex%3d80x80" alt="だるま落とし" border="0" style="margin:0px;padding:0px"></a><p style="font-size:12px;line-height:1.4em;text-align:left;margin:0px;padding:2px 6px"><a href="http://hb.afl.rakuten.co.jp/hgc/06acb2e0.1701f697.06acb2e1.36b7e8da/?pc=http%3a%2f%2fitem.rakuten.co.jp%2ftokyo-treasures%2fmi2007-darumaotoshi%2f%3fscid%3daf_ich_link_tbl&amp;m=http%3a%2f%2fm.rakuten.co.jp%2ftokyo-treasures%2fn%2fmi2007-darumaotoshi" target="_blank" style="color:#0000ff;">だるま落とし</a><br><span style="color:#000000;">価格：892円（税込、送料別）</span><br></p></div></td></tr></table>
+<p>ソースコードは以下に(139行)。</p>
+<p>(追記)1.4.3 では import Engine のところを import Box2d に変更すれば動きます。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Dynamics</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="nx">Shapes</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Common</span><span class="p">.</span><span class="nb">Math</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;350&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Box2dSimpleSample2</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// loop counter</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">first</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// init flag</span>
+
+        <span class="c1">// Box2d</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_world</span><span class="o">:</span><span class="nx">b2World</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_physScale</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_floor</span><span class="o">:</span><span class="nx">b2Body</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_blocks</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+
+        <span class="c1">// Sprites</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">spriteFloor</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">spriteBlocks</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;daruma.png&quot;</span><span class="p">)]</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">daruma</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">colors</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0x333366</span><span class="p">,</span> <span class="mh">0xffffdd</span><span class="p">,</span> <span class="mh">0xcc0000</span><span class="p">,</span> <span class="mh">0xffcc00</span><span class="p">,</span> <span class="mh">0x006600</span><span class="p">];</span>
+
+        <span class="c1">// display param</span>
+        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">LOOP</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">280</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">FADE_OUT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Box2dSimpleSample2</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;CLICK TO START!!!&quot;</span><span class="p">;</span>
+            <span class="nx">text</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="nx">text</span><span class="p">.</span><span class="nx">visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+                <span class="nx">init</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+            <span class="c1">// init sprites</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">first</span><span class="p">){</span>
+                <span class="nx">first</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+                <span class="c1">// init floor sprite</span>
+                <span class="nx">spriteFloor</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
+                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">300</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+                <span class="nx">addChild</span><span class="p">(</span><span class="nx">spriteFloor</span><span class="p">);</span>
+
+                <span class="c1">// init blocks sprite</span>
+                <span class="nx">spriteBlocks</span> <span class="o">=</span> <span class="p">[];</span>
+                <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x999999</span><span class="p">);</span>
+                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="o">-</span><span class="mi">28</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+                    <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+                    <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+                <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">DisplayObject</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">daruma</span><span class="p">());</span>
+                <span class="nx">bmp</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="nx">bmp</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+                <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+
+                <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                    <span class="nx">Update</span><span class="p">();</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+
+            <span class="c1">// Construct a world object</span>
+            <span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
+            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
+            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
+            <span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+            <span class="c1">// Create floor</span>
+            <span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">20</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
+            <span class="nx">m_floor</span> <span class="o">=</span> <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
+
+            <span class="c1">// Add bodies</span>
+            <span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
+            <span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
+            <span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
+            <span class="nx">m_blocks</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="nx">i</span> <span class="o">==</span> <span class="mi">5</span> <span class="o">?</span> <span class="mi">30</span> <span class="o">:</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">120</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">-</span> <span class="p">(</span><span class="nx">i</span> <span class="o">==</span> <span class="mi">5</span> <span class="o">?</span> <span class="mi">18</span> <span class="o">:</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                <span class="nx">m_blocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Update</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">init</span><span class="p">();</span>
+            <span class="p">}</span>
+
+            <span class="c1">// Update physics</span>
+            <span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+
+            <span class="c1">// Render</span>
+            <span class="kd">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="nx">LOOP</span> <span class="o">-</span> <span class="nx">FADE_OUT</span> <span class="o">?</span> <span class="p">(</span><span class="nx">LOOP</span> <span class="o">-</span> <span class="nx">count</span><span class="p">)</span> <span class="o">/</span> <span class="nx">FADE_OUT</span> <span class="o">:</span> 
+                                <span class="nx">count</span> <span class="o">&lt;</span> <span class="nx">FADE_OUT</span>        <span class="o">?</span> <span class="nx">count</span> <span class="o">/</span> <span class="nx">FADE_OUT</span> <span class="o">:</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">spriteFloor</span><span class="p">,</span> <span class="nx">m_floor</span><span class="p">,</span> <span class="nx">alpha</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">m_blocks</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">spriteBlocks</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">m_blocks</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">alpha</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">,</span> <span class="nx">body</span><span class="o">:</span><span class="nx">b2Body</span><span class="p">,</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="nx">sprite</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_position</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">;</span>
+            <span class="nx">sprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_position</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">;</span>
+            <span class="nx">sprite</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_rotation</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">;</span>
+            <span class="nx">sprite</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">=</span> <span class="nx">alpha</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071129/box2dflashas3_bitmap" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の見た目を豪華にしてみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/29/box2dflashas3-bitmap/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の見た目を豪華にしてみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/11/27/box2d-simple-sample/" rel="previous">Box2DFlashAS3 の単純なサンプルと使い方</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/12/02/livecoding-5/" rel="next">LiveCoding#5 でコーディングしてきた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

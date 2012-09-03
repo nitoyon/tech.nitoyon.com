@@ -9,6 +9,8 @@ var Site = {
 
 
 
+
+
 Site.archives.posts = [
 	{url: "/en/blog/2009/04/05/irbweb-ruby-on-your-browser/", title: "IRBWEB - Try Ruby on Your Browser!"},
 	{url: "/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/", title: "Processing \"FireCube\" example ported to ActionScript 3.0"},

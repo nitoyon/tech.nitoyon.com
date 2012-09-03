@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>On Lisp 続き 6章～9章 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="On Lisp 続き 6章～9章"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="On Lisp を読みつつのメモだったり感想だったりの続き。いよいよマクロへ。6. 表現としての関数Lisp でネットワークを定義する。DSL だなぁ、すごい。7. マクロいよいよマクロ。逆クォート,で打ち消し、,@で展開マクロ展開時に引数に置き換えてほしいものの前に , や ,@ をつけるイメージマクロ展開の確認xyzzy には pprint がないので展開を確認できないテンプレートの使い方と展開形の確認 に対応方法が書いてあるけど、ここからは clisp で確認していくことにする構造化代入よく分からないのでパスマクロのモデルdefmacro の簡易実装が書いてあるが、理解できない…。..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年02月05日</h2>
+<h1>On Lisp 続き 6章～9章</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090205/on_lisp2" class="hatena-bookmark-button" data-hatena-bookmark-title="On Lisp 続き 6章～9章 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-lang="ja" data-size="horizontal" data-text="On Lisp 続き 6章～9章 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274066371/nitoyoncom-22/ref=nosim">On Lisp</a> を読みつつのメモだったり感想だったりの続き。いよいよマクロへ。</p>
+<h1>6. 表現としての関数</h1>
+<ul><li>Lisp でネットワークを定義する。</li><li>DSL だなぁ、すごい。</li></ul>
+<h1>7. マクロ</h1>
+<p>いよいよマクロ。</p>
+<ul><li>逆クォート<ul><li>,で打ち消し、,@で展開</li><li>マクロ展開時に引数に置き換えてほしいものの前に , や ,@ をつけるイメージ</li></ul></li><li>マクロ展開の確認<ul><li>xyzzy には pprint がないので展開を確認できない</li><li><a href="http://www.shido.info/lisp/macro1.html">テンプレートの使い方と展開形の確認</a> に対応方法が書いてある</li><li>けど、ここからは clisp で確認していくことにする</li></ul></li><li>構造化代入<ul><li>よく分からないのでパス</li></ul></li><li>マクロのモデル<ul><li>defmacro の簡易実装が書いてある</li><li>が、理解できない…。ひとまずパス。</li></ul></li><li>関数からマクロへ<ul><li>単純に変換できない場合の対処法</li></ul></li></ul>
+<p> + のマクロ版が</p>
+<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">sum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
+  <span class="o">`</span><span class="p">(</span><span class="nb">apply</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="p">(</span><span class="nb">list</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)))</span>
+</pre>
+</div>
+
+<p>と定義されていたが、これでもいけた。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">mysum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
+  <span class="o">`</span><span class="p">(</span><span class="nb">funcall</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="o">,@</span><span class="nb">rest</span><span class="p">))</span>
+</pre>
+</div>
+
+<h2>いつマクロを使うべきか</h2>
+<ul><li>基本はマクロ</li><li>マクロが必要なときはマクロ<ul><li>いつ必要かを説明していくよ</li></ul></li></ul>
+<h2>マクロにしかできないこと</h2>
+<p>引数の評価を抑制する。</p>
+<p>On Lisp に出てきた while を使ってみる。</p>
+<div class="highlight"><pre><span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">x</span> <span class="mi">10</span><span class="p">)</span> <span class="p">(</span><span class="nv">sum</span> <span class="mi">0</span><span class="p">))</span> 
+  <span class="p">(</span><span class="nv">while</span> <span class="p">(</span><span class="nb">&gt;</span> <span class="nv">x</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="p">(</span><span class="nb">incf</span> <span class="nv">sum</span> <span class="nv">x</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">decf</span> <span class="nv">x</span><span class="p">))</span> <span class="nv">sum</span><span class="p">)</span>
+</pre>
+</div>
+
+<p>すごく手続きっぽい書き方になってしまったが、while の中の setq は x の値によって呼ばれる回数が変わってくる。全く評価されないかもしれない。</p>
+<ol><li>変形(setfパターン)<ul><li>setf は引数として与えられた値に書き込む</li><li><pre>(let <span class="footnote"><a href="#f1" title="x '(3 4" name="fn1">*1</a></span>) (setf (car x) 9) x)  ; (9 4)</pre></li><li>第一引数を見て判断するのでマクロでないとできない</li></ul></li><li>束縛<ul><li>let や setq などのレキシカルな束縛を変更する処理はマクロが必須</li></ul></li><li>条件分岐<ul><li>条件が満たされたときのみ評価するにはマクロが必須</li><li><code>(if t (print 3) (print 4))</code> で 4 が表示されては困る。if が関数なら呼び出す時点で評価されてしまう。</li></ul></li><li>複数回の評価<ul><li>while など、ループのたびに評価されるようにするにはマクロが必須。</li></ul></li><li>呼び出し側環境の利用<ul><li>呼ばれた場所のコンテキストに応じた変数を使える</li><li>これは危険。通常は使うな。 (On Lisp の本では継続とATNコンパイラで利用している)</li></ul></li><li>新しい環境を包み込む<ul><li>ちょっと分からん。保留。</li></ul></li><li>関数呼び出しの節約<ul><li>インラインでも同じ</li></ul></li></ol>
+<p>悩むような微妙なケース。</p>
+<p>avg のサンプル</p>
+<div class="highlight"><pre><span class="nb">&gt;</span><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">avg</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
+  <span class="o">`</span><span class="p">(</span><span class="nb">/</span> <span class="p">(</span><span class="nb">+</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)</span> <span class="o">,</span><span class="p">(</span><span class="nb">length</span> <span class="nv">args</span><span class="p">)))</span>
+<span class="nb">&gt;</span> <span class="p">(</span><span class="nb">pprint</span> <span class="p">(</span><span class="nb">macroexpand-1</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">avg</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span><span class="p">)))</span>
+<span class="c1">; (/ (+ 10 11 12) 3)</span>
+</pre>
+</div>
+
+<p>コンパイル時には長さが固定された状態になっている。</p>
+<p>長所まとめ：</p>
+<ol><li>コンパイル時計算<ul><li>一部をコンパイル時に展開できる。上の avg みたいな。</li><li>詳細は13章</li></ul></li><li>Lisp との連携<ul><li>一部を Lisp に任せられる。DSL などで有利。</li><li>よく分からんが詳細は19章とのこと</li></ul></li><li>関数呼び出しの節約<ul><li>inline でも同じだけど。</li></ul></li></ol>
+<p>短所まとめ：</p>
+<ol><li>マクロを渡せない<ul><li>apply に関数を渡すことはできるけど、マクロを渡すことはできない。</li><li>lambda で擬似的に再現することはできるが不便。</li></ul></li><li>読みにくい</li><li>デバッグしにくい</li><li>再帰が難しい (→10.4 章)</li></ol>
+<p>長所と短所のバランスが大事。</p>
+<h2>で、どう使うの？</h2>
+<ul><li>構文変換として使うよ。<ul><li>よくあるパターンをマクロで定義すれば、処理が明確になって嬉しいよね。</li><li>defun も lambda で生成した関数を symbol-function で登録しているに過ぎない</li></ul></li><li>DSLとして使うよ。<ul><li>「再描画しつつ○○する」の共通武運を with-redraw マクロで実装</li><li>(雑感) lambda でもできなくはなさそうだが、ソースはすっきりするのかな</li></ul></li></ul>
+<h1>9. 変数捕捉</h1>
+<p>マクロ引数の捕捉</p>
+<ul><li>マクロに渡された変数名が内部で宣言してる変数とかぶってしまう。</li><li>マクロ内で定義したスコープに本来の値が奪われてしまう。</li><li>で、どうしたらいいの？はあとで</li></ul>
+<p>フリーシンボルの捕捉</p>
+<ul><li>グローバルなつもりで使っている変数名が、マクロを展開した場所で既に使われている。</li><li>で、どうしたらいいの？はあとで</li></ul>
+<ul><li>フリー<ul><li>束縛されていないこと</li><li>スコープ内に定義がない</li></ul></li><li>骨格<ul><li>マクロ呼び出し時の引数を取り除いたもの</li><li>バッククォートを使っている場合は ,x のようなカンマがつくものを取り除いたのが骨格</li></ul></li></ul>
+<p>捕捉可能の定義。</p>
+<ol><li>あるシンボルが骨格内にフリーなまま登場する<ul><li>gripe の例</li></ul></li><li>マクロの引数が束縛または評価される骨格の一部に、あるシンボルが束縛されている<ul><li>for の例</li></ul></li></ol>
+<p>for の例を解決するいろんな方法を取り上げる</p>
+<ul><li>別の let に入れる</li><li>gensym する</li><li>lambda に入れる</li></ul>
+<div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: x '(3 4</p></div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090205/on_lisp2" class="hatena-bookmark-button" data-hatena-bookmark-title="On Lisp 続き 6章～9章 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-lang="ja" data-size="horizontal" data-text="On Lisp 続き 6章～9章 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/02/03/ansicl-chm/" rel="previous">ANSI Common Lisp の仕様書を HTML Help にした</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/02/06/silverlight2-trial/" rel="next">Silverlight 2 でちょっとしたアプリケーションをデザイナと作った話&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

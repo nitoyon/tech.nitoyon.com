@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>JS や AS で長い関数をリファクタリングする１手法 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="JS や AS で長い関数をリファクタリングする１手法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/07/10/refactoring-long-function-using-local-functions/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="200行ぐらいある関数を、分かりやすく書きなおそう、というお話。お題はこんなJavaScript。あとで、軽く ActionScript 3.0 も出てくるよ。function fly(){ // 初期化処理 var init = false; // 50行ぐらい初期化処理 // うまくいったら init が true になる // 実行 if(init) { var succeeded = false; // 100行ぐらい実行 } // 終了処理 // 30行ぐらい終了処理}構造化プログラミングについて知ってる人なら、きっとこうする。function fly(){ if(startF..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年07月10日</h2>
+<h1>JS や AS で長い関数をリファクタリングする１手法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070710/refactoring_long_function_using_local_functions" class="hatena-bookmark-button" data-hatena-bookmark-title="JS や AS で長い関数をリファクタリングする１手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/07/10/refactoring-long-function-using-local-functions/" data-lang="ja" data-size="horizontal" data-text="JS や AS で長い関数をリファクタリングする１手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>200行ぐらいある関数を、分かりやすく書きなおそう、というお話。</p>
+<p>お題はこんなJavaScript。あとで、軽く ActionScript 3.0 も出てくるよ。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// 初期化処理</span>
+    <span class="kd">var</span> <span class="nx">init</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="c1">// 50行ぐらい初期化処理</span>
+    <span class="c1">// うまくいったら init が true になる</span>
+
+    <span class="c1">// 実行</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">init</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">succeeded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="c1">// 100行ぐらい実行</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 終了処理</span>
+    <span class="c1">// 30行ぐらい終了処理</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>構造化プログラミングについて知ってる人なら、きっとこうする。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="nx">doFly</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="nx">endFly</span><span class="p">();</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>構造がたいそうすっきりした。</p>
+<p>問題は、startFly()・doFly()・endFly() をどこに記述するか。</p>
+<h1>fly() の横に記述</h1>
+<p>一番ありがちな手法。fly() 関数の横に並べる。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">startFly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">doFly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">endFly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="nx">doFly</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="nx">endFly</span><span class="p">();</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>局所的にはきれいになったけど、１個だったはずの関数が３個になってしまった。</p>
+<p>一般に、関数の数が多いほどソースコードは理解しにくくなる。だから、関数の数が増えるのはできる限り避けたい。</p>
+<p>そもそも、startFly() 関数や endFly() 関数は、fly() の中からしか呼ばないはずなのに、他の関数からも参照できるところに置くのは理にかなっていない。</p>
+<p>ならば、fly() の横ではなく、fly() の中にしまってみるのはどうだろう。</p>
+<h1>fly() の中に収納</h1>
+<p>さっきのは C言語っぽかったけど、こうやったら JavaScript っぽい。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">startFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">doFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">endFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 実際の処理開始</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="nx">doFly</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="nx">endFly</span><span class="p">();</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>fly() 関数の行数は変わらないけど、処理の流れはすっきりする。ソースコードから流れを追いやすいし、startFly() 関数や endFly() 関数が fly() 関数の中からしか呼ばないことが一目瞭然。</p>
+<p>構造が仕様を語る。分かりやすいソースコードの基本。</p>
+<h1>一般化してみた</h1>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">A</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// 関数内の変数</span>
+    <span class="kd">var</span> <span class="nx">param1</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="kd">var</span> <span class="nx">param2</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="c1">// 関数内の関数</span>
+    <span class="kd">var</span> <span class="nx">func1</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">func2</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+    <span class="p">}</span>
+
+    <span class="c1">// function A() の実体</span>
+    <span class="kd">var</span> <span class="nx">AImpl</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//</span>
+    <span class="p">}</span>
+
+    <span class="nx">AImpl</span><span class="p">();</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>変数を冒頭に、次に関数、最後に AImpl() を書く。</p>
+<p>関数 A() の中からは、AImpl() のみを呼ぶだけ。</p>
+<p>AImpl() の中では、なるべく if 文と関数呼び出しだけで書くようにするときれいなソースになりそう。</p>
+<p>面白いのが、このクラス全体が１つのクラスになっている。クロージャにより func1() と func2() から param1 や param2 を参照できる。param1 や param2 はクラスのフィールドのようだし、func1() や func2() はクラスのメソッドのように見える。AImple() 関数はコンストラクタといったところ。</p>
+<p>もう１つ面白いところ。関数内の関数を他の場所で使いたくなったら、関数の外に出して、宣言部分をちょろっと変えるだけでよい。お手軽。</p>
+<p>逆に、１箇所からしか参照してないグローバルな関数を発見したら、呼び出し元の関数に収納しちゃってもよいかもしれない。</p>
+<h1>ActionScript 3.0 でも</h1>
+<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">Bird</span>
+<span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="nx">doFly</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="nx">endFly</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">startFly</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span>
+    <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">doFly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+    <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">endFly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+    <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>と fly() の横にメソッドとして書くよりも</p>
+<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">Bird</span>
+<span class="p">{</span>
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">startFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">doFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">endFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
+        <span class="p">{</span>
+            <span class="c1">// ...</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="nx">doFly</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="nx">endFly</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>と書いたほうが分かりやすいかもしれない。</p>
+<p>private なメソッドだから、最初のやつで別にいいような気がしないでもない。でも、private なメソッドは、クラス内部からみるとグローバルにアクセスできる関数。前者の方法で書いていくと、いつの間にか private なメソッドが30個…、意味分からん…、となってしまうことを考えると、後者の方が読みやすいソースになるかもしれない。</p>
+<p>別のクラスに分けちゃえよ、という気もしないでもないが、クラスが増えるのは、それはそれで管理対象が増えてしまうので避けておきたい。</p>
+<p>ちゃんと設計したらこんなことしなくてもいいでしょ、という意見もありそう。ごもっともなんだけど、JS とか AS みたいなスクリプト言語って、あまり設計は考えずに勢いで書いていきたいものだ。そういうときに、この方法は便利じゃね？ってことで。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070710/refactoring_long_function_using_local_functions" class="hatena-bookmark-button" data-hatena-bookmark-title="JS や AS で長い関数をリファクタリングする１手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/07/10/refactoring-long-function-using-local-functions/" data-lang="ja" data-size="horizontal" data-text="JS や AS で長い関数をリファクタリングする１手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/07/06/mactopia-betsuyaku/" rel="previous">MS 運営の Mac ポータルサイト Mactopia が熱い</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/07/12/google-maps-dq/" rel="next">『googlemapでドラクエ』でドラクエ 公開&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

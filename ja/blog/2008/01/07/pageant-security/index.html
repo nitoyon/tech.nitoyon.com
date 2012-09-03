@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>pageant.exe の仕組みと危険性 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="pageant.exe の仕組みと危険性"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/01/07/pageant-security/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="PuTTY で SSH2 接続するとき、毎回パスフレーズを入力するのがめんどくさいという理由で pageant を常時起動してる人も多いのでは。そんな pageant の仕組みと、使っていく上でのリスクが気になったので、ちょっくらソースを読んでみた。プロセス間通信の仕組みPuTTY や WinSCP3 など、pageant を利用するアプリケーションは、何らかの方法で pageant と通信しているはずだ。この通信処理を実装しているのが winpgntc.c であり、PuTTY も WinSCP3 もソースコードに winpgntc.c を含んでいる。リクエスト側細かくなるけど、PuTT..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2008年01月07日</h2>
+<h1>pageant.exe の仕組みと危険性</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080107/pageant_security" class="hatena-bookmark-button" data-hatena-bookmark-title="pageant.exe の仕組みと危険性 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/07/pageant-security/" data-lang="ja" data-size="horizontal" data-text="pageant.exe の仕組みと危険性 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>PuTTY で SSH2 接続するとき、毎回パスフレーズを入力するのがめんどくさいという理由で pageant を常時起動してる人も多いのでは。</p>
+<p>そんな pageant の仕組みと、使っていく上でのリスクが気になったので、ちょっくらソースを読んでみた。</p>
+<h1>プロセス間通信の仕組み</h1>
+<p>PuTTY や WinSCP3 など、pageant を利用するアプリケーションは、何らかの方法で pageant と通信しているはずだ。この通信処理を実装しているのが winpgntc.c であり、PuTTY も WinSCP3 もソースコードに winpgntc.c を含んでいる。</p>
+<h2>リクエスト側</h2>
+<p>細かくなるけど、PuTTY や WinSCP3 がリクエストするときの手順は次のようになっている。</p>
+<ol><li>pageant の（非表示になっている）ウインドウを FindWindow 関数で探し出す。</li><li>CreateFileMapping 関数でプロセス間で共有できるメモリを確保する。メモリ名は「PageantRequest[スレッドID]」。</li><li>共有メモリに所定の形式でリクエスト用の ID やデータを突っ込む。詳細は後述。</li><li>1. で取得したウインドウに WM_COPYDATA メッセージを送る。パラメータの COPYDATASTRUCT には AGENT_COPYDATA_ID（0x804e50ba）と 2. で作成した共有メモリ名が入っている。</li></ol>
+<h2>pageant 側</h2>
+<p>次に WM_COPYDATA を受信したあとの pageant.exe の処理をみていく。winpgnt.c の WndProc 関数にて実装されている。</p>
+<ol><li>WM_COPYDATA を受け取ったら、パラメータをチェックする（パラメータに AGENT_COPYDATA_ID が渡されていない場合はエラーを返す）。</li><li>同じくパラメータの共有メモリ名をもとに、OpenFileMapping 関数を使って共有メモリを開く。</li><li>(WinNT 系のみ) 共有メモリの owner と pageant.exe を起動したユーザーが同じかどうかを確認する。異なる場合はエラーを返す（pageant を起動したユーザー以外がリクエストできなくするため）。</li><li>リクエストに応じて処理を行い、結果を共有メモリに書き込む（answer_msg 関数）。</li></ol>
+<h1>pageant と PuTTY でやり取りされるデータ</h1>
+<p>通信の仕組みが分かったので、次は SSH2 接続するときの流れを見ていく。</p>
+<p>リクエストの種類に応じた ID が定義されている。</p>
+<pre>SSH1_AGENTC_REQUEST_RSA_IDENTITIES
+<strong>SSH2_AGENTC_REQUEST_IDENTITIES</strong>
+SSH1_AGENTC_RSA_CHALLENGE
+<strong>SSH2_AGENTC_SIGN_REQUEST</strong>
+SSH1_AGENTC_ADD_RSA_IDENTITY
+SSH2_AGENTC_ADD_IDENTITY
+SSH1_AGENTC_REMOVE_RSA_IDENTITY
+SSH2_AGENTC_REMOVE_IDENTITY
+SSH1_AGENTC_REMOVE_ALL_RSA_IDENTITIES
+SSH2_AGENTC_REMOVE_ALL_IDENTITIES</pre>
+<p>このうち、PuTTY が SSH2 するときには、SSH2_AGENTC_REQUEST_IDENTITIES と SSH2_AGENTC_SIGN_REQUEST のみが利用される。</p>
+<p>処理の流れを見てみよう。</p>
+<ol><li>PuTTY が接続先のサーバーに SSH2 接続を開始し、公開鍵と公開鍵で署名（暗号化）されたデータを受け取る。署名前のデータはサーバーのみが知っている。</li><li>PuTTY は pageant に SSH2_AGENTC_REQUEST_IDENTITIES をリクエストする。この結果、pageant が知っている鍵の一覧を取得できる。秘密鍵ではなく、公開鍵の一覧が渡されることに注意。</li><li>PuTTY は 1. で知った公開鍵が、2. の一覧に存在するか調べる。存在する場合は、pageant が秘密鍵を知っていることを意味する。存在しない場合は、pageant の利用を諦める。</li><li>PuTTY は 1. でサーバーから得た公開鍵と暗号化されたデータを pageant に渡す。このときのリクエスト ID が SSH2_AGENTC_SIGN_REQUEST。データを秘密鍵で署名してくれ、ということ。</li><li>SSH2_AGENTC_SIGN_REQUEST を受け取った pageant は、メモリ上に保有している秘密鍵で与えられたデータを署名して、共有メモリに書き込んで PuTTY に処理を返す。</li><li>PuTTY は秘密鍵を知ることなく、秘密鍵で署名されたデータを受け取る。<ul><li>サーバーが公開鍵で署名したデータを、秘密鍵で署名した状態。つまり、サーバーが暗号化する前の原文を知ることができた。</li><li>これ以降の通信では、共通鍵が用いられるので pageant の出番はない。</li></ul></li></ol>
+<p>注目すべきは、pageant が保有している秘密鍵が外に漏れることはないこと。pageant は秘密鍵は漏らさず、与えられたデータを秘密鍵で署名する機能だけを公開している。</p>
+<h1>分かったこと</h1>
+<p>当たり前のことなんだけど、pageant が起動中は（同じユーザー権限で起動している）<strong>任意のプロセスが pageant が知っている秘密鍵を使って、データを署名できる</strong>。</p>
+<p>悪意のあるプロセスは、プロセス間通信を利用して SSH 接続を開始するのに十分な情報を知ることができるわけだ。しかも、これらのプロセス間通信は、利用者が気づかないところで行われる（警告のウインドウは表示されない）。</p>
+<p>この問題に対処すべく、PuTTY ごった煮版の pageant では、右クリックのメニューに「常に要求を確認」という項目が追加されている。チェックしておくと、何らかのプロセス（PuTTY や WinSCP3 を含む）が秘密鍵での署名を要求してきたときに、次のような確認ダイアログが出るようになる。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080106/20080106021940.png" width="300" height="97"></center>
+<p>悪意のあるプロセスが署名しようとしても、その手前で気づけるわけだ。Windows Vista の UAC のようなイメージ。ちょっと面倒だけど、落としどころの１つとしては妥当な線かもしれない。</p>
+<p>もちろん、pageant を使う上でのリスクは、まだまだ残っている。一番でかい危険性は、メモリ上に生の秘密鍵を持っているところ。秘密鍵とパスフレーズが同時にばれたような状態だ。メモリダンプされたら一貫の終わり。pageant が起動した状態でハイバネートすると、生の秘密鍵が HDD に書かれてしまう。</p>
+<h1>おまけ：ssh-agent は？</h1>
+<p>OpenSSH FreeBSD 版の ssh-agent にも軽く目を通してみた。こちらは socket でプロセス間通信している模様。送信元プロセスの uid 比較も行っているようだ（参考：<a href="http://opengrok.creo.hu/dragonfly/xref/src/crypto/openssh-4/ssh-agent.c#after_select">ssh-agent.c</a>）。</p>
+<p>ssh-agent のマニュアルによると</p>
+<blockquote><p>エージェントは要求されたチャンネルを経由して秘密鍵を送るようなことは決してしません。かわりに、秘密鍵が必要な操作はすべてエージェント側でおこない、結果だけが要求した側に返されるようになっています。このためエージェントを使うことによって秘密鍵がクライアントに漏れるようなことはありません。</p><cite><a href="http://www.unixuser.org/~euske/doc/openssh/jman/ssh-agent.html">SSH-AGENT (1)</a></cite></blockquote>
+<p>とあるので、pageant と似たような仕組みなんだろう。</p>
+<p>とはいえ、root 権限を持っている人は、su して ssh-agent と通信はできるはず。試してないけど。信頼できない人が管理しているサーバーで、ssh-agent を利用するのは、たとえ一時的であっても控えたほうがよさそうだ。</p>
+<p>ssh-agent のご利用も計画的に。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080107/pageant_security" class="hatena-bookmark-button" data-hatena-bookmark-title="pageant.exe の仕組みと危険性 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/07/pageant-security/" data-lang="ja" data-size="horizontal" data-text="pageant.exe の仕組みと危険性 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2008/01/04/p1/" rel="previous">謹賀新年</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2008/01/11/kanasan-js2/" rel="next">Kanasan.JS JavaScript第5版読書会#2 のお知らせ&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

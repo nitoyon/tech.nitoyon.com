@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Box2d で多角形を扱うときの注意点 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Box2d で多角形を扱うときの注意点"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/05/11/box2d-polygon/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Box2d で多角形を作るときには b2PolygonDef を使うのだけれど、はまるポイントが意外に多い。今回はそのうち４つを紹介するよ。点を定義する順番に注意凸包にせよ頂点数は８個まで多角形の中心を取得してる？基本vertexCount に頂点の数、vertices 配列に頂点の座標を設定する。var shapeDef:b2PolygonDef = new b2PolygonDef();shapeDef.vertexCount = 3;shapeDef.vertices[0].Set(0, 0);shapeDef.vertices[1].Set(50, 50);shapeDef.ve..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年05月11日</h2>
+<h1>Box2d で多角形を扱うときの注意点</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090511/box2d_polygon" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2d で多角形を扱うときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/05/11/box2d-polygon/" data-lang="ja" data-size="horizontal" data-text="Box2d で多角形を扱うときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Box2d で多角形を作るときには <code>b2PolygonDef</code> を使うのだけれど、はまるポイントが意外に多い。今回はそのうち４つを紹介するよ。</p>
+<ol><li>点を定義する順番に注意</li><li>凸包にせよ</li><li>頂点数は８個まで</li><li>多角形の中心を取得してる？</li></ol>
+<h1>基本</h1>
+<p><code>vertexCount</code> に頂点の数、<code>vertices</code> 配列に頂点の座標を設定する。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">shapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
+<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertexCount</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">);</span>
+</pre>
+</div>
+
+<p><code>shapeDef</code> を作ったあとにどうすべきかは、<a href="http://d.hatena.ne.jp/nitoyon/20090428/box2dflashas3_2_0_2">Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</a> をご覧あれ。</p>
+<h1>はまりポイント１：点を定義する順番に注意</h1>
+<p>時計回りに座標をしないとダメ。</p>
+<p>反時計周りにすると、落ちてこなかったりする。</p>
+<h1>はまりポイント２：凸包にせよ</h1>
+<p>へっこんだ部分やクロスする部分があるとダメ。</p>
+<blockquote><p>おかしな動きをする五角形</p><p><img src="http://image.gihyo.co.jp/assets/images/dev/feature/01/box2d/0004/04-02.jpg"></p><cite><a href="http://gihyo.jp/dev/feature/01/box2d/0004?page=3">Box2DでActionScript物理プログラミング：第4回　いろいろな形の物体を作る｜gihyo.jp … 技術評論社</a></cite></blockquote>
+<p>どうしてもへっこんだ多角形を作りたい場合には、複数の凸包を組み合わせて作るしかない。</p>
+<h1>はまりポイント３：頂点数は８個まで</h1>
+<p>多角形の頂点数は最大 8 個に制限されている。(※2.0.2 の場合。バージョンによって異なるかもしれない)</p>
+<a name="seemore"></a>
+<p>8個以上の頂点を作りたいときの対策は２つ。好きなほうを選ぶとよいだろう。</p>
+<ol><li><code>Box2D.Common.b2Setting</code> の <code>b2_maxPolygonVertices</code> で定義されている最大頂点数を変更する</li><li>複数の shape に分解する</li></ol>
+<p>2つ目の分解を選ぶときには色々と注意が必要だ。</p>
+<p>分解した多角形の頂点が特定の頂点に集まるとパフォーマンス上の問題が生じる。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090511/20090511005635.png" width="445" height="204"></center>
+<p>図の左側がその例。一番下の頂点に全ての四角形の頂点が集中しているが、この頂点が衝突したときの計算量が増えて処理落ちしてしまう。</p>
+<p>右の例のように頂点を分散させる工夫が必要だ。</p>
+<p><a href="http://d.hatena.ne.jp/nitoyon/20090415/hokkaido">北海道を落とすとどう跳ねるのか</a> では特定の頂点から開始して、左回り・右回りに多角形に使う頂点を選んでいってる。少し複雑になってるが、上の図の右にある分解を実現している。</p>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1">// points には x 座標、 y 座標が順番に入ってる</span>
+<span class="kd">var</span> <span class="nx">x0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">(),</span> <span class="nx">y0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">y1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">(),</span> <span class="nx">x1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+
+<span class="c1">// 点がある限り続ける</span>
+<span class="k">while</span><span class="p">(</span><span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">){</span>
+    <span class="c1">// 今回の多角形の頂点数を決める。最大 8</span>
+    <span class="kd">var</span> <span class="nx">pointsLeft</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">points</span><span class="p">.</span><span class="nx">length</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
+
+    <span class="c1">// 1つ目と最後の頂点を設定する</span>
+    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
+    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">pointsLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
+    <span class="c1">// 残りの点を設定</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">pointsLeft</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+            <span class="c1">// 偶数版目は時計回りの点を設定する</span>
+            <span class="nx">x0</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
+            <span class="nx">y0</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
+            <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="c1">// 奇数版目は反時計回りの場所にある点を設定する</span>
+            <span class="nx">y1</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+            <span class="nx">x1</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+            <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">pointsLeft</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 点の数を設定して、shape を追加する</span>
+    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertexCount</span> <span class="o">=</span> <span class="nx">pointsLeft</span><span class="p">;</span>
+    <span class="nx">body</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<p>ただ、このように分解した結果、分解した多角形の隙間を小さな島がすり抜けてしまう現象が発生してしまった。図形のサイズが一定ではない場合には、<code>b2_maxPolygonVertices</code> を変更する方法を選択すべきだったのかもしれない。</p>
+<h1>はまりポイント４：多角形の中心を取得してる？</h1>
+<p><code>b2DebugDraw</code> を使っていると気づきにくいのだけど、物体の位置は物体の重心で表現される。そのため、多角形を表示する <code>Sprite</code> は <code>Sprite</code> の <code>(0, 0)</code> を物体の重心に合わせておくべきだ。そうしないと、物体がずれて表示されてしまう。</p>
+<p>重心はあらかじめ計算しておくこともできるが、複数の shape を組み合わせたり、物体を動的に作ったりする場合には面倒だ。Box2d が認識している重心を取得するのが確実だろう。</p>
+<p>この１文で完璧。</p>
+<div class="highlight"><pre><span class="c1">// SetMassFromShapes() を実行したあとに調べてね</span>
+<span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">GetLocalCenter</span><span class="p">();</span>
+</pre>
+</div>
+
+<p><code>Sprite</code> の <code>(0, 0)</code> をこの座標に対応する位置にしておこう。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090511/box2d_polygon" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2d で多角形を扱うときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/05/11/box2d-polygon/" data-lang="ja" data-size="horizontal" data-text="Box2d で多角形を扱うときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/05/05/hatebu-nenkan-200904/" rel="previous">はてブ年鑑2009年4月分を更新した</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/05/12/zenjido-bkm/" rel="next">全自動ブックマーク棚卸しが想像以上に有意義な件&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

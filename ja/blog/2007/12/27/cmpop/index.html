@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>論理演算子（&amp;&amp; と ||）を応用する - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="論理演算子（&amp;&amp; と ||）を応用する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/12/27/cmpop/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="jQuery のソースコードを見ていて面白いのがあった。function add(a, b){ addImpl(b &amp;amp;&amp;amp; a, b || a);}function addImpl(a, b){ // ...}理解するためには、論理演算子を詳しく理解する必要がある。論理演算子詳細JavaScript（というか ECMAScript）の論理演算子は、評価結果が true/false で返される訳ではなく、結果が確定した時点で評価した値が返される。まずは、|| を試してみよう。alert(2 || 0); // 2alert(2 || 3); // 2alert({} || n..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年12月27日</h2>
+<h1>論理演算子（&& と ||）を応用する</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071227/cmpop" class="hatena-bookmark-button" data-hatena-bookmark-title="論理演算子（&amp;&amp; と ||）を応用する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/27/cmpop/" data-lang="ja" data-size="horizontal" data-text="論理演算子（&& と ||）を応用する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>jQuery のソースコードを見ていて面白いのがあった。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="nx">addImpl</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">||</span> <span class="nx">a</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nx">addImpl</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>理解するためには、論理演算子を詳しく理解する必要がある。</p>
+<h1>論理演算子詳細</h1>
+<p>JavaScript（というか ECMAScript）の論理演算子は、評価結果が true/false で返される訳ではなく、結果が確定した時点で評価した値が返される。</p>
+<p>まずは、|| を試してみよう。</p>
+<div class="highlight"><pre><span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">||</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 2</span>
+<span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">||</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 2</span>
+<span class="nx">alert</span><span class="p">({}</span> <span class="o">||</span> <span class="kc">null</span><span class="p">)</span>      <span class="c1">// [object Object]</span>
+
+<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 3</span>
+<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 0</span>
+<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="kc">undefined</span><span class="p">);</span> <span class="c1">// undefined</span>
+</pre>
+</div>
+
+<p>左オペランドが true として評価できるなら、左オペランドの値自身が返る。右オペランドはどんな値だったとしても評価結果が返る。</p>
+<p>ECMAScript の仕様書から抜き出すと、こういう手順になってる。</p>
+<ol><li>左オペランドを評価する</li><li>左オペランドの結果を Boolean に変換</li><li>変換結果が true なら、<strong>左オペランドの評価結果</strong>を返す</li><li>右オペランドを評価</li><li><strong>右オペランドの評価結果</strong>を返す</li></ol>
+<p>alert(0 || 0) と alert(0 || undefined) の結果が違うあたりが面白い。</p>
+<p>次は、&&。</p>
+<div class="highlight"><pre><span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">&amp;&amp;</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 3</span>
+<span class="nx">alert</span><span class="p">(</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="p">{})</span>         <span class="c1">// [object Object]</span>
+
+<span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">&amp;&amp;</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 0</span>
+<span class="nx">alert</span><span class="p">(</span><span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="mi">3</span><span class="p">);</span>      <span class="c1">// null</span>
+<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="kc">undefined</span><span class="p">);</span> <span class="c1">// 0</span>
+</pre>
+</div>
+
+<p>左オペランドが true として評価できるなら、右オペランドの評価結果が返り、そうでない場合は左オペランドの結果が返る。</p>
+<p>ECMAScript の仕様書には次のようにある。</p>
+<ol><li>左オペランドを評価する</li><li>左オペランドの結果を Boolean に変換</li><li>変換結果が false なら、<strong>左オペランドの結果</strong>を返す</li><li>右オペランドを評価する</li><li><strong>右オペランドの評価結果</strong>を返す</li></ol>
+<p>ということで、ECMAScriptは、論理演算子の結果が Boolean とは限らないわけだ。Perl や Ruby でも似たような感じなので、スクリプト系ではこういう仕様が多いのかな。</p>
+<p>ちなみに、3 > 1 は 3 とはならずに true となるので注意が必要。</p>
+<h1>で、最初の例に戻る。</h1>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="nx">addImpl</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">||</span> <span class="nx">a</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nx">addImpl</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+<p>add が呼ばれたときに、a と b が undefined でない場合、</p>
+<ul><li>b && a => a</li><li>b || a => b</li></ul>
+<p>なので、addImpl に適切に a と b が渡る。</p>
+<p>a が undefined でなく、b が省略された場合（つまり、undefined の場合）は、</p>
+<ul><li>b && a => undefined</li><li>b || a => a</li></ul>
+<p>となる。</p>
+<h1>まとめると、</h1>
+<div class="highlight"><pre><span class="nx">add</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>と</p>
+<div class="highlight"><pre><span class="nx">add</span><span class="p">(</span><span class="kc">undefined</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>が同じになる。第１引数を省略できるわけだ。</p>
+<h1>感想</h1>
+<p>デフォルト引数の感覚からいくと、省略可能な引数は後ろにあってほしいんだけどな…。</p>
+<p>ただ、論理演算子で処理を実行する技はよく使うので覚えておいたほうがよさげ。</p>
+<ul><li>JavaScript で undefined を防ぐために param || {};</li><li>Perl で open(FILE, "foo.txt") or die;</li></ul>
+<p>とかはよく見るよ。</p>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071227/cmpop" class="hatena-bookmark-button" data-hatena-bookmark-title="論理演算子（&amp;&amp; と ||）を応用する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/12/27/cmpop/" data-lang="ja" data-size="horizontal" data-text="論理演算子（&& と ||）を応用する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/12/26/as-event-extra-arg/" rel="previous">イベントハンドラに追加のパラメータを渡す</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/12/30/kotoshi-matome/" rel="next">今年まとめ（自己満足）&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

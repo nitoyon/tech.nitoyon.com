@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Processing の燃えるエフェクトを AS3 に移植した - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Processing の燃えるエフェクトを AS3 に移植した"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/03/26/firecube-as3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Processing のサンプル FireCube が興味深かったので ActionScript 3.0 に移植してみました。完成品がこれ。(Flash Player 9 以上が有効なら、ここに Flash が表示されますよ！)パフォーマンス改善Processing 版のhttp://processing.org/learning/topics/firecube.html&quot;&gt;ソースコード に比べて、AS3 版ではいくつかのパフォーマンス改善を行っています。オリジナルでは、何かと色んな処理をピクセルごとの演算をしていました。ノイズの作成周りのピクセルとの平均色の変換それぞれ、ActionS..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2009年03月26日</h2>
+<h1>Processing の燃えるエフェクトを AS3 に移植した</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090326/firecube_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="Processing の燃えるエフェクトを AS3 に移植した - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/26/firecube-as3/" data-lang="ja" data-size="horizontal" data-text="Processing の燃えるエフェクトを AS3 に移植した - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png" width="398" height="168"></center>
+<p>Processing のサンプル <a href="http://processing.org/learning/topics/firecube.html">FireCube</a> が興味深かったので ActionScript 3.0 に移植してみました。</p>
+<p>完成品がこれ。</p>
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=FireCube+AS3&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が有効なら、ここに Flash が表示されますよ！)</noscript></center>
+<h1><b>パフォーマンス改善</b></h1>
+<p>Processing 版の<a href="<a href="http://processing.org/learning/topics/firecube.html">http://processing.org/learning/topics/firecube.html</a></p>
+<p>">ソースコード</a> に比べて、AS3 版ではいくつかのパフォーマンス改善を行っています。</p>
+<p>オリジナルでは、何かと色んな処理をピクセルごとの演算をしていました。</p>
+<ul><li>ノイズの作成</li><li>周りのピクセルとの平均</li><li>色の変換</li></ul>
+<p>それぞれ、ActionScript 3.0 では次のように実装しました。</p>
+<ul><li>ノイズの作成 → <code>BitmapData.noise()</code></li><li>周りのピクセルとの平均 → <code>ConvolutionFilter</code></li><li>色の変換 → <code>BitmapData.paletteMap()</code></li></ul>
+<p>その結果、ピクセルごとではなく、画像に対して一気に計算できたので、パフォーマンスが大幅に向上しました。</p>
+<p>BitmapData 系のメソッドが充実してるのは ActionScript の楽しいところですね。</p>
+<h1><b>苦しんだところ</b></h1>
+<p>AS3.0 で苦しんだところといえば、HSB がネイティブにサポートされてないこと。仕方がないので、<a href="http://ja.wikipedia.org/wiki/HSV%E8%89%B2%E7%A9%BA%E9%96%93">HSV色空間 - Wikipedia</a> を参考にしながら HSVtoRGB という関数を中途半端に実装しました。</p>
+<p>あと、Cube の描画も面倒だったので、円でお茶を濁しておきました。マウスで場所を変えられるから許してね。</p>
+<h1><b>まとめ</b></h1>
+<p>さらに炎っぽくさせるとしたら「ゆらめき」を与えるところでしょうか。当然、DisplacementMapFilter を使って頑張ることになります。</p>
+<p>ソースは以下に（83行）。</p>
+<a name="seemore"></a>
+<div class="fix-height-syntax">
+<div class="highlight"><pre><span class="c1">// Processing FireCube (AS3 version) </span>
+<span class="c1">// original source: http://processing.org/learning/topics/firecube.html</span>
+<span class="kr">package</span> <span class="p">{</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+<span class="kr">public</span> <span class="kr">class</span> <span class="nx">FireCube</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+
+    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FireCube</span><span class="p">(){</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+        <span class="c1">// Create circle</span>
+        <span class="kd">var</span> <span class="nx">circle</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+        <span class="c1">// Create buffered image</span>
+        <span class="kd">var</span> <span class="nx">fire</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">pg</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">noiseBmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+        <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">pg</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+
+        <span class="c1">// Generate the palette</span>
+        <span class="kd">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//Hue goes from 0 to 85: red to yellow</span>
+            <span class="c1">//Saturation is always the maximum: 255</span>
+            <span class="c1">//Lightness is 0..255 for x=0..128, and 255 for x=128..255</span>
+            <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">x</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">x</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">g</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Use ConvolutionFilter to calculate for every pixel</span>
+        <span class="kd">var</span> <span class="nx">filter</span><span class="o">:</span><span class="nx">ConvolutionFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ConvolutionFilter</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">65</span><span class="p">);</span>
+
+        <span class="c1">// Prepare points and matrix</span>
+        <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">HEIGHT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+        <span class="c1">// Do loop</span>
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
+            <span class="c1">// Randomize the bottom row of the fire buffer</span>
+            <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">noise</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">noiseBmd</span><span class="p">,</span> <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt0</span><span class="p">);</span>
+
+            <span class="c1">// Display circle</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mouseX</span><span class="p">;</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">mouseY</span><span class="p">;</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">circle</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+
+            <span class="c1">// Add pixel values around current pixel</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">fire</span><span class="p">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt1</span><span class="p">,</span> <span class="nx">filter</span><span class="p">);</span>
+
+            <span class="c1">// Output everything to screen using our palette colors</span>
+            <span class="nx">pg</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">fire</span><span class="p">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">,</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">g</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="c1">// AS3 does not natively support HSV...  :-(</span>
+    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">h</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">120</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;not implemented&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</div>
+<div class="seealso">
+<h1>あわせてどうぞ</h1>
+<ul><li><a href="/ja/blog/2007/09/28/bitmapdata-extend/">BitmapData の範囲拡張を実装するなら…</a></li><li><a href="/ja/blog/2008/05/26/google-earth/">Google Maps を Google Earth 風にする</a></li><li><a href="/ja/blog/2008/05/23/google-maps-earth2/">Google Maps で地球儀 (2)</a></li><li><a href="/ja/blog/2007/10/09/as3-histogram1/">AS3 でヒストグラムを作る (1)</a></li></ul>
+</div>
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090326/firecube_as3" class="hatena-bookmark-button" data-hatena-bookmark-title="Processing の燃えるエフェクトを AS3 に移植した - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/03/26/firecube-as3/" data-lang="ja" data-size="horizontal" data-text="Processing の燃えるエフェクトを AS3 に移植した - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2009/03/24/hatebu-blog/" rel="previous">濃いはてなーが大好きな濃いブログBEST50</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2009/03/27/tunnel-as3/" rel="next">Processing のトンネルを AS3 で書いてみた&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

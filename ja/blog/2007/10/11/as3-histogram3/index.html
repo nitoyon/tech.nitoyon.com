@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正 - てっく煮ブログ</title>
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/10/11/as3-histogram3/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="前回のスライダ作成で準備は整いました。いよいよ、今回は Photoshop のレベル補正機能もどきを完成させます。まずは完成品から。補正後のヒストグラムも表示してみました。スライダの場所によってどのような影響がでるのかが一目瞭然ですね。３つのスライダの意味Photoshop のレベル補正には黒、灰色、白の３つのスライダーがあります。黒がシャドウ(レベル0)の指定、白がハイライト(レベル255)の指定です。白のスライダより右の階調は白飛びする、と言い換えると分かりやすいかもしれません。白と黒のスライダだけを実装するなら、ColorTransform でいけますが、問題は灰色のスライダです。..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2007年10月11日</h2>
+<h1>AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071011/as3_histogram3" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/11/as3-histogram3/" data-lang="ja" data-size="horizontal" data-text="AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>前回のスライダ作成で準備は整いました。いよいよ、今回は Photoshop のレベル補正機能もどきを完成させます。</p>
+<p>まずは完成品から。</p>
+<p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FHistogram3.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=280&amp;h=410&amp;title=Level+adjustment&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
+<p>補正後のヒストグラムも表示してみました。スライダの場所によってどのような影響がでるのかが一目瞭然ですね。</p>
+<h1>３つのスライダの意味</h1>
+<p>Photoshop のレベル補正には黒、灰色、白の３つのスライダーがあります。黒がシャドウ(レベル0)の指定、白がハイライト(レベル255)の指定です。白のスライダより右の階調は白飛びする、と言い換えると分かりやすいかもしれません。</p>
+<p>白と黒のスライダだけを実装するなら、ColorTransform でいけますが、問題は灰色のスライダです。灰色のスライダは中間調(レベル128)を表し、ガンマ補正で調整しているようです。ガンマ補正の数式は次のようになります。</p>
+<p><center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Clarge+x%27+%3D+++x_m%5C%28%5Cfrac%7Bx%7D%7Bx_m%7D%5C%29%5E%7B1%2F%5Cgamma%7D" class="tex" alt="\large x' =   x_m\(\frac{x}{x_m}\)^{1/\gamma}"></center></p>
+<p>x' は変換後の明るさを表します。<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=x_m" class="tex" alt="x_m"> は x の最大値です。</p>
+<p>数式がややこしいですが、x<sub>m</sub>=1 の場合を考えてみるとイメージしやすいでしょう。</p>
+<table><tr><td><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cgamma%3D1" class="tex" alt="\gamma=1"> のとき</td><td>x' = x （変化なし）</td></tr><tr><td><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cgamma%3D0.5" class="tex" alt="\gamma=0.5"> のとき</td><td>x' = <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=x%5E2" class="tex" alt="x^2">  （暗くなる）</td></tr><tr><td><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cgamma%3D2" class="tex" alt="\gamma=2"> のとき</td><td>x' = <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Csqrt%7Bx%7D" class="tex" alt="\sqrt{x}"> （明るくなる）</td></tr></table>
+<p>以上をふまえると、トーンカーブで表現すると、３つのスライダによる影響は次のようになります。</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20071011/20071011085635.jpg" width="193" height="226"></center>
+<h1>ActionScript で実装</h1>
+<p>トーンカーブやガンマ補正を ActionScript で実現するには BitmapData.paletteMap が便利です。</p>
+<p>と、そのためには、γ値を求めておかなければなりません。３つのスライダの値をそれぞれ x<sub>b</sub>, x<sub>g</sub>, x<sub>w</sub> とします。</p>
+<p>ガンマ補正の式において x<sub>m</sub> = x<sub>b</sub> - x<sub>w</sub> となります。また、x = x<sub>g</sub> - x<sub>b</sub> のときに x'/x<sub>m</sub>=0.5 となることから、<img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cgamma" class="tex" alt="\gamma"> についての方程式を解くことができます。</p>
+<center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cgamma%3D%5Cfrac%7B%5Clog%5Cfrac%7Bx_g-x_b%7D%7Bx_w-x_b%7D%7D%7B%5Clog+0.5%7D" class="tex" alt="\gamma=\frac{\log\frac{x_g-x_b}{x_w-x_b}}{\log 0.5}"></center>
+<p>ということで、スライダの値を反映させる部分のソースコードはこうなってます。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">gamma</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">((</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">mapR</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapG</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapB</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">i</span> <span class="o">&gt;</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mh">0xff</span> <span class="o">:</span> <span class="mi">255</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">i</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="nx">gamma</span><span class="p">);</span>
+    <span class="nx">mapG</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="nx">mapR</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nx">bmd</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">bmdOrigin</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">mapR</span><span class="p">,</span> <span class="nx">mapG</span><span class="p">,</span> <span class="nx">mapB</span><span class="p">);</span>
+</pre>
+</div>
+
+<p>全体のソースコードは158行です。凝ったことをしている割には、意外と短いと思いませんか？　ActionScript の表現力に感心してしまいます。</p>
+<p>明日は、ちょっと趣向を変えて、別のヒストグラムを取り上げます。</p>
+<p>ソースコード全体は以下に(158行)。</p>
+<a name="seemore"></a>
+<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;256&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;410&quot;</span><span class="p">)]</span>
+    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Histogram3</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
+        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;kunimi.jpg&quot;</span><span class="p">)]</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SampleImage</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2pos</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h1</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h3</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+
+        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Histogram3</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">SampleImage</span><span class="p">())).</span><span class="nx">bitmapData</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
+
+            <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">140</span><span class="p">;</span>
+            <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
+
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">createSlider</span><span class="p">()).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">115</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">bmdOrigin</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">gamma</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">((</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
+                    <span class="kd">var</span> <span class="nx">mapR</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapG</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapB</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+                    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">i</span> <span class="o">&gt;</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mh">0xff</span> <span class="o">:</span> <span class="mi">255</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">i</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="nx">gamma</span><span class="p">);</span>
+                        <span class="nx">mapG</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">;</span>
+                        <span class="nx">mapR</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">;</span>
+                    <span class="p">}</span>
+                    <span class="nx">bmd</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">bmdOrigin</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">mapR</span><span class="p">,</span> <span class="nx">mapG</span><span class="p">,</span> <span class="nx">mapB</span><span class="p">);</span>
+
+                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+                    <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="c1">// ヒストグラムを作成する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="c1">// グレースケール化</span>
+            <span class="kd">var</span> <span class="nx">cmf</span><span class="o">:</span><span class="nx">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorMatrixFilter</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
+                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
+                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">cmf</span><span class="p">);</span>
+
+            <span class="c1">// threshold でカウント</span>
+            <span class="kd">var</span> <span class="nx">values</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> 
+                    <span class="nx">i</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
+
+            <span class="c1">// 描画</span>
+            <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">50</span><span class="p">;</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">/</span> <span class="nx">max</span> <span class="o">*</span> <span class="mi">100</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="c1">// スライダーを作成する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createSlider</span><span class="p">()</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
+            <span class="c1">// スライド可能範囲描画</span>
+            <span class="kd">var</span> <span class="nx">slider</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">useHandCursor</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+            <span class="c1">// つまみ作成</span>
+            <span class="nx">h1</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">)));</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="nx">h2</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x999999</span><span class="p">)));</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">128</span><span class="p">;</span>
+            <span class="nx">h3</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">)));</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+
+            <span class="c1">// mouseDown</span>
+            <span class="nx">slider</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">localX</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">slider</span><span class="p">.</span><span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">)).</span><span class="nx">x</span><span class="p">;</span>
+
+                <span class="c1">// ドラッグするつまみを決定する</span>
+                <span class="kd">var</span> <span class="nx">d1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">d2</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">d3</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+                <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">d1</span><span class="p">,</span> <span class="nx">d2</span><span class="p">,</span> <span class="nx">d3</span><span class="p">);</span>
+                <span class="nx">dragging</span> <span class="o">=</span> <span class="p">(</span><span class="nx">max</span> <span class="o">==</span> <span class="nx">d1</span> <span class="o">?</span> <span class="nx">h1</span> <span class="o">:</span> <span class="nx">max</span> <span class="o">==</span> <span class="nx">d2</span> <span class="o">?</span> <span class="nx">h2</span> <span class="o">:</span> <span class="nx">h3</span><span class="p">);</span>
+
+                <span class="c1">// 場所補正</span>
+                <span class="kd">var</span> <span class="nx">bounds</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">dragging</span><span class="p">);</span>
+                <span class="nx">dragging</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">right</span><span class="p">),</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+                <span class="nx">updateH2</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+
+                <span class="nx">dragging</span><span class="p">.</span><span class="nx">startDrag</span><span class="p">(</span><span class="kc">false</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="c1">// mouseMove</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">updateH2</span><span class="p">);</span>
+
+            <span class="c1">// mouseUp</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">dragging</span><span class="p">.</span><span class="nx">stopDrag</span><span class="p">();</span>
+                    <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+
+            <span class="k">return</span> <span class="nx">slider</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// つまみを描画する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createButton</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="k">return</span> <span class="nx">s</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// つまみの移動可能範囲を計算する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h1</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h3</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// 真ん中のつまみの位置を計算する</span>
+        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateH2</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">&amp;&amp;</span> <span class="nx">dragging</span> <span class="o">!=</span> <span class="nx">h2</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">*</span> <span class="nx">h2pos</span> <span class="o">+</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">){</span>
+                <span class="nx">h2pos</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071011/as3_histogram3" class="hatena-bookmark-button" data-hatena-bookmark-title="AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/10/11/as3-histogram3/" data-lang="ja" data-size="horizontal" data-text="AS3 でヒストグラムを作る (3) - Photoshop みたいなレベル補正 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2007/10/10/as3-histogram2/" rel="previous">AS3 でヒストグラムを作る (2) - スライダー篇</a>
+	
+
+	|
+
+	
+		<a href="/ja/blog/2007/10/12/as3-histogram4/" rel="next">AS3 でヒストグラムを作る (4) - 周辺分布&nbsp;&raquo;</a>
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
