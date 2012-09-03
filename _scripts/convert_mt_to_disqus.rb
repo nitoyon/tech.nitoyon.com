@@ -31,6 +31,8 @@ $id_prefix = "/ja/blog/"
 # URL domain
 $site_domain = "http://tech.nitoyon.com"
 
+# email uniq id
+$email_uniq_id = 1
 
 
 require 'rexml/document'
@@ -128,7 +130,7 @@ def output_xml(entries, posts_dir)
       c = REXML::Element.new "wp:comment"
       c.add_element("wp:comment_id").text = num.to_s
       c.add_element("wp:comment_author").text = comment[:author]
-      c.add_element("wp:comment_author_email")
+      c.add_element("wp:comment_author_email").text = "noreply%04d@wordpress.disqus.com" % $email_uniq_id
       c.add_element("wp:comment_author_url").text = comment[:url]
       c.add_element("wp:comment_author_IP")
       c.add_element("wp:comment_date_gmt").text = comment[:date].strftime "%Y-%m-%d %H:%M:%S"
@@ -137,6 +139,7 @@ def output_xml(entries, posts_dir)
       c.add_element("wp:comment_parent").text = "0"
 
       num = num + 1
+      $email_uniq_id = $email_uniq_id.succ
       item.add_element(c)
     }
 
