@@ -1,7 +1,7 @@
 ---
 layout: post
 title: DISQUS へのコメントのインポートが意外に面倒
-tags: ''
+tags: てっく煮
 lang: ja
 old_url: http://d.hatena.ne.jp/nitoyon/20120731/disqus_comment_import
 ---
@@ -9,7 +9,7 @@ old_url: http://d.hatena.ne.jp/nitoyon/20120731/disqus_comment_import
 
 おおよその過去記事の表示は問題なくなったところであり、もう間もなく移転できるところまで来ているんだけど、コメント欄の移行で手間取っている。
 
-新生ブログのコメント欄には<a href="http://disqus.com/">DISQUS</a>を採用することを検討している。DISQUS はコメント欄の請負サービスとしては最大手だろう。英語圏では CNN や Time、MLB.com などが、日本では <a href="http://jp.techcrunch.com/">TechCrunch JAPAN</a> などが採用している。
+新生ブログのコメント欄には <a href="http://disqus.com/">DISQUS</a> を採用することを検討している。DISQUS はコメント欄の請負サービスとしては最大手だろう。英語圏では CNN や Time、MLB.com などが、日本では <a href="http://jp.techcrunch.com/">TechCrunch JAPAN</a> などが採用している。
 
 アカウント登録して、JavaScript を貼り付けるだけで高機能なコメント欄ができあがるので、気軽で便利なのである。
 
@@ -55,7 +55,7 @@ Imports may take up to 24 hours to complete.
 
 ちなみに、自分のインポートの進捗状況は http://import.disqus.com、サービス全体 Importer の動作状況は http://status.disqus.com で確認できるようになっている。
 
-(追記 2012/08/04) 再度、やってみたところ、数分以内にインポートが終了した。たまたま Importer の調子が悪かったようだ。
+何度か繰り返していると、運がいいと数分以内にインポートが終了したが、やはり 1 日待たなければならないこともある。Importer の調子次第のようだ。
 
 **コメント フォーマットの CDATA にやられる
 XML の作成については、基本的に [http://help.disqus.com/customer/portal/articles/472150-custom-xml-import-format:title=DISQUS - Custom XML Import Format] に従えばいい。
@@ -83,7 +83,20 @@ XML の作成については、基本的に [http://help.disqus.com/customer/por
 
 インポート後にコメントを編集はできるのだが、コメントの末尾に「(Edited by a moderator)」と表示されてしまう。これでは印象が悪いので、結局最初からやり直すことにした。
 
-やりなおしすると、当然、1 日待たねばならない。いま、それを待っているところである・・・。
+やりなおしすると、当然、1 日待たねばならない。
+
+**メールアドレスにやられる
+メールアドレスの設定にも罠があった。仕様によると、
+>http://help.disqus.com/customer/portal/articles/472150-custom-xml-import-format:title=DISQUS - Custom XML Import Format>
+<code>&lt;wp:comment_author_email&gt;</code> を手動で設定する場合はユーザーごとに一意になるようにしなければならない。そうしないと、同じ名前が表示されてしまう。
+<<
+とある。
+
+手動で設定せずに、空欄にしておけばよいと思っていた。英語圏のユーザーに限っていえばその通りだった。
+
+空欄にした場合、ユーザー名から <code>username@wordpress.disqus.net</code> のようなメールアドレスが生成されてインポートされる。ただ、ユーザー名が日本語全角文字のみだったときには、一律に <code>none@wordpress.disqus.net</code> としてインポートされてしまう。
+
+結果として、「日本語のみの名前のコメントは同じ名前が表示されてしまう」現象が発生した。これでは悲しすぎるので、スクリプトを改造して、必ず一意になるようなメールアドレスを割り振って XML を生成するようにした。
 
 **まとめ
 DISQUS のインポートは用意周到に。締め切りのあるケースではやりたくない作業である。
