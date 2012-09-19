@@ -16,11 +16,13 @@ Performance improvement
 =======================
 
 [Processing version](http://processing.org/learning/topics/firecube.html) calculates every pixel color when
+
 * creating noise,
 * combining values from adjacent pixels and
 * converting color.
 
 So I implement it as follows:
+
 * creating noise -> `BitmapData.noise()`
 * combining values from adjacent pixels -> `ConvolutionFilter`
 * converting color -> `BitmapData.paletteMap()`
