@@ -12,7 +12,7 @@ var Site = {
 
 
 Site.archives.posts = [
-	{url: "/ja/blog/2012/09/04/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"},
+	{url: "/ja/blog/2012/09/20/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"},
 	{url: "/ja/blog/2012/08/27/hatena-blog/", title: "暫定で「はてなブログ」に移転した"},
 	{url: "/ja/blog/2012/07/31/disqus-comment-import/", title: "DISQUS へのコメントのインポートが意外に面倒"},
 	{url: "/ja/blog/2012/06/27/english-blog-renewal/", title: "英語ブログを新調した話と移転計画"},
