@@ -59,88 +59,100 @@
 <p>I created a globe using Google Maps API for Flash.</p>
 
 <p>It is impossible to get the image data by <code>BitmapData.draw()</code>, so I used a <code>DisplacementMapFilter</code>.</p>
-<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='200' width='200'>
-	<param name='src' value='http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf' />
-	<param name='play' value='true' />
-	<param name='loop' value='true' />
-	<param name='bgcolor' value='#000000' />
-	<param name='quality' value='high' />
-	<embed bgcolor='#000000' height='200' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf' width='200'>
-	</embed>
-</object><noscript>(Flash Player 9 or above required)</noscript>
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="200"
+    height="200" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
+    <param name="src" value="http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf"/>
+    <param name="play" value="true"/>
+    <param name="loop" value="true"/>
+    <param name="bgcolor" value="#000000"/>
+    <param name="quality" value="high"/>
+    <embed src="http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf" width="200" height="200" bgcolor="#000000" play="true" loop="true"
+    quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
+    </embed>
+</object>
+
+
+<p><noscript>(Flash Player 9 or above required)</noscript></p>
+
 <p>Here is the code(70 lines):</p>
-<div class='highlight'><pre><code class='actionscript'><span class='kd'>package</span> <span class='p'>{</span>
-    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>display</span><span class='p'>.</span><span class='o'>*;</span>
-    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>geom</span><span class='p'>.</span><span class='o'>*;</span>
-    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>filters</span><span class='p'>.</span><span class='nx'>DisplacementMapFilter</span><span class='o'>;</span>
-    <span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>utils</span><span class='p'>.</span><span class='nf'>setInterval</span><span class='o'>;</span>
-    <span class='kd'>import</span> <span class='nx'>com</span><span class='p'>.</span><span class='nx'>google</span><span class='p'>.</span><span class='nx'>maps</span><span class='p'>.</span><span class='o'>*;</span>
 
-    <span class='p'>[</span><span class='nx'>SWF</span><span class='p'>(</span><span class='nx'>backgroundColor</span><span class='o'>=</span><span class='s2'>&quot;0x000000&quot;</span><span class='p'>)]</span>
-    <span class='kd'>public</span> <span class='kd'>class</span> <span class='nx'>GoogleEarthAs3_2</span> <span class='kd'>extends</span> <span class='nb'>Sprite</span> <span class='p'>{</span>
-        <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>WIDTH</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>800</span><span class='o'>;</span>
-        <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>HEIGHT</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>500</span><span class='o'>;</span>
-        <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>RADIUS</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>81</span><span class='o'>;</span>
-        <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>map</span><span class='o'>:</span><span class='nx'>Map</span><span class='o'>;</span>
+<div class="highlight"><pre><code class="actionscript"><span class="kd">package</span> <span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">DisplacementMapFilter</span><span class="o">;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nf">setInterval</span><span class="o">;</span>
+    <span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="o">*;</span>
 
-        <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>GoogleEarthAs3_2</span><span class='p'>()</span> <span class='p'>{</span>
-            <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>scaleMode</span> <span class='o'>=</span> <span class='s2'>&quot;noScale&quot;</span><span class='o'>;</span>
-            <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>align</span> <span class='o'>=</span> <span class='s2'>&quot;TL&quot;</span><span class='o'>;</span>
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">GoogleEarthAs3_2</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">800</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">RADIUS</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">81</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="k">var</span> <span class="nx">map</span><span class="o">:</span><span class="nx">Map</span><span class="o">;</span>
 
-            <span class='nx'>map</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nx'>Map</span><span class='p'>();</span>
-            <span class='nx'>map</span><span class='p'>.</span><span class='nx'>key</span> <span class='o'>=</span> <span class='s2'>&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class='o'>;</span>
-            <span class='nx'>map</span><span class='p'>.</span><span class='nx'>setSize</span><span class='p'>(</span><span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='mi'>800</span><span class='o'>,</span> <span class='mi'>500</span><span class='p'>));</span>
-            <span class='nx'>map</span><span class='p'>.</span><span class='nx'>addEventListener</span><span class='p'>(</span><span class='nx'>MapEvent</span><span class='p'>.</span><span class='nx'>MAP_READY</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:*</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-                <span class='k'>var</span> <span class='nx'>lng</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-                <span class='k'>var</span> <span class='nx'>types</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[</span><span class='nx'>MapType</span><span class='p'>.</span><span class='nx'>SATELLITE_MAP_TYPE</span><span class='o'>,</span> <span class='nx'>MapType</span><span class='p'>.</span><span class='nx'>PHYSICAL_MAP_TYPE</span><span class='o'>,</span> <span class='nx'>MapType</span><span class='p'>.</span><span class='nx'>NORMAL_MAP_TYPE</span><span class='p'>];</span>
-                <span class='k'>var</span> <span class='nx'>type</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-                <span class='nx'>map</span><span class='p'>.</span><span class='nx'>setCenter</span><span class='p'>(</span><span class='k'>new</span> <span class='nx'>LatLng</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='nx'>lng</span><span class='p'>)</span><span class='o'>,</span> <span class='mi'>1</span><span class='o'>,</span> <span class='nx'>types</span><span class='p'>[</span><span class='mi'>0</span><span class='p'>]);</span>
-                <span class='nx'>map</span><span class='p'>.</span><span class='nx'>disableDragging</span><span class='p'>();</span>
+        <span class="kd">public</span> <span class="kd">function</span> <span class="nx">GoogleEarthAs3_2</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
 
-                <span class='nf'>setInterval</span><span class='p'>(</span><span class='kd'>function</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span>
-                <span class='p'>{</span>
-                    <span class='nx'>lng</span> <span class='o'>-=</span> <span class='mi'>3</span><span class='o'>;</span>
-                    <span class='nx'>type</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>&lt;</span> <span class='mf'>0.05</span> <span class='o'>?</span> <span class='p'>(</span><span class='nx'>type</span> <span class='o'>+</span> <span class='mi'>1</span><span class='p'>)</span> <span class='o'>%</span> <span class='mi'>3</span> <span class='o'>:</span> <span class='nx'>type</span><span class='o'>;</span>
-                    <span class='nx'>map</span><span class='p'>.</span><span class='nx'>setCenter</span><span class='p'>(</span><span class='k'>new</span> <span class='nx'>LatLng</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='nx'>lng</span><span class='p'>)</span><span class='o'>,</span> <span class='mi'>1</span><span class='o'>,</span> <span class='nx'>types</span><span class='p'>[</span><span class='nx'>type</span><span class='p'>]);</span>
-                    <span class='nx'>lng</span> <span class='o'>=</span> <span class='nx'>lng</span> <span class='o'>%</span> <span class='mi'>360</span><span class='o'>;</span>
-                <span class='p'>}</span><span class='o'>,</span> <span class='mi'>200</span><span class='p'>);</span>
-            <span class='p'>});</span>
+            <span class="nx">map</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Map</span><span class="p">();</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="s2">&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class="o">;</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">800</span><span class="o">,</span> <span class="mi">500</span><span class="p">));</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">MapEvent</span><span class="p">.</span><span class="nx">MAP_READY</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="k">var</span> <span class="nx">lng</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                <span class="k">var</span> <span class="nx">types</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span><span class="nx">MapType</span><span class="p">.</span><span class="nx">SATELLITE_MAP_TYPE</span><span class="o">,</span> <span class="nx">MapType</span><span class="p">.</span><span class="nx">PHYSICAL_MAP_TYPE</span><span class="o">,</span> <span class="nx">MapType</span><span class="p">.</span><span class="nx">NORMAL_MAP_TYPE</span><span class="p">];</span>
+                <span class="k">var</span> <span class="nx">type</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                <span class="nx">map</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">(</span><span class="k">new</span> <span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">lng</span><span class="p">)</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="nx">types</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+                <span class="nx">map</span><span class="p">.</span><span class="nx">disableDragging</span><span class="p">();</span>
 
-            <span class='k'>var</span> <span class='nx'>bmd</span><span class='o'>:</span><span class='nb'>BitmapData</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>BitmapData</span><span class='p'>(</span><span class='nx'>WIDTH</span><span class='o'>,</span> <span class='nx'>HEIGHT</span><span class='o'>,</span> <span class='kc'>false</span><span class='o'>,</span> <span class='mi'>0</span><span class='p'>);</span>
-            <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>j</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>j</span> <span class='o'>&lt;</span> <span class='nx'>RADIUS</span> <span class='o'>*</span> <span class='mi'>2</span><span class='o'>;</span> <span class='nx'>j</span><span class='o'>++</span><span class='p'>){</span>
-                <span class='k'>var</span> <span class='nx'>ay</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>PI</span> <span class='sr'>/ 2 - Math.acos(1 - j /</span> <span class='nx'>RADIUS</span><span class='p'>);</span>
-                <span class='k'>var</span> <span class='nx'>dy</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='nx'>RADIUS</span> <span class='o'>-</span> <span class='nx'>j</span> <span class='o'>-</span> <span class='nx'>RADIUS</span> <span class='o'>*</span> <span class='nx'>ay</span><span class='o'>;</span>
-                <span class='k'>var</span> <span class='nx'>rx</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='nx'>RADIUS</span> <span class='o'>*</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>cos</span><span class='p'>(</span><span class='nx'>ay</span><span class='p'>);</span>
-                <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='nx'>RADIUS</span> <span class='o'>-</span> <span class='nx'>rx</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='nx'>RADIUS</span> <span class='o'>+</span> <span class='nx'>rx</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>){</span>
-                    <span class='k'>var</span> <span class='nx'>ax</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>PI</span> <span class='sr'>/ 2 - Math.acos(1 - (i - RADIUS + rx) /</span> <span class='nx'>rx</span><span class='p'>);</span>
-                    <span class='k'>var</span> <span class='nx'>dx</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='nx'>RADIUS</span> <span class='o'>-</span> <span class='nx'>i</span> <span class='o'>-</span> <span class='nx'>rx</span> <span class='o'>*</span> <span class='nx'>ax</span><span class='o'>;</span>
+                <span class="nf">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span>
+                <span class="p">{</span>
+                    <span class="nx">lng</span> <span class="o">-=</span> <span class="mi">3</span><span class="o">;</span>
+                    <span class="nx">type</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.05</span> <span class="o">?</span> <span class="p">(</span><span class="nx">type</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">:</span> <span class="nx">type</span><span class="o">;</span>
+                    <span class="nx">map</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">(</span><span class="k">new</span> <span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">lng</span><span class="p">)</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="nx">types</span><span class="p">[</span><span class="nx">type</span><span class="p">]);</span>
+                    <span class="nx">lng</span> <span class="o">=</span> <span class="nx">lng</span> <span class="o">%</span> <span class="mi">360</span><span class="o">;</span>
+                <span class="p">}</span><span class="o">,</span> <span class="mi">200</span><span class="p">);</span>
+            <span class="p">});</span>
 
-                    <span class='nx'>bmd</span><span class='p'>.</span><span class='nx'>setPixel</span><span class='p'>(</span><span class='nx'>i</span><span class='o'>,</span> <span class='nx'>j</span><span class='o'>,</span> <span class='nx'>getColor</span><span class='p'>(</span><span class='nx'>dx</span> <span class='o'>*</span> <span class='mi'>3</span> <span class='o'>+</span> <span class='mi'>128</span><span class='o'>,</span> <span class='nx'>dy</span> <span class='o'>*</span> <span class='mi'>3</span> <span class='o'>+</span> <span class='mi'>128</span><span class='o'>,</span> <span class='mi'>128</span><span class='p'>));</span>
-                <span class='p'>}</span>
-            <span class='p'>}</span>
+            <span class="k">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">j</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">RADIUS</span> <span class="o">*</span> <span class="mi">2</span><span class="o">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">){</span>
+                <span class="k">var</span> <span class="nx">ay</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="sr">/ 2 - Math.acos(1 - j /</span> <span class="nx">RADIUS</span><span class="p">);</span>
+                <span class="k">var</span> <span class="nx">dy</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">RADIUS</span> <span class="o">-</span> <span class="nx">j</span> <span class="o">-</span> <span class="nx">RADIUS</span> <span class="o">*</span> <span class="nx">ay</span><span class="o">;</span>
+                <span class="k">var</span> <span class="nx">rx</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">RADIUS</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">ay</span><span class="p">);</span>
+                <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">RADIUS</span> <span class="o">-</span> <span class="nx">rx</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">RADIUS</span> <span class="o">+</span> <span class="nx">rx</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+                    <span class="k">var</span> <span class="nx">ax</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="sr">/ 2 - Math.acos(1 - (i - RADIUS + rx) /</span> <span class="nx">rx</span><span class="p">);</span>
+                    <span class="k">var</span> <span class="nx">dx</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">RADIUS</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">-</span> <span class="nx">rx</span> <span class="o">*</span> <span class="nx">ax</span><span class="o">;</span>
 
-            <span class='k'>var</span> <span class='nx'>diff</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>HEIGHT</span> <span class='o'>-</span> <span class='mi'>2</span> <span class='o'>*</span> <span class='nx'>RADIUS</span><span class='p'>)</span> <span class='o'>/</span> <span class='mi'>2</span><span class='o'>;</span>
-            <span class='nx'>map</span><span class='p'>.</span><span class='nx'>filters</span> <span class='o'>=</span> <span class='p'>[</span><span class='k'>new</span> <span class='nx'>DisplacementMapFilter</span><span class='p'>(</span><span class='nx'>bmd</span><span class='o'>,</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='nx'>diff</span><span class='o'>,</span> <span class='nx'>diff</span><span class='p'>)</span><span class='o'>,</span> <span class='mi'>1</span><span class='o'>,</span> <span class='mi'>2</span><span class='o'>,</span> <span class='mi'>128</span><span class='o'>,</span> <span class='mi'>128</span><span class='p'>)];</span>
-            <span class='k'>var</span> <span class='nx'>matrix</span><span class='o'>:</span><span class='nb'>Matrix</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Matrix</span><span class='p'>();</span>
-            <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>translate</span><span class='p'>(</span><span class='o'>-</span><span class='nx'>diff</span><span class='o'>,</span> <span class='o'>-</span><span class='nx'>diff</span><span class='p'>);</span>
-            <span class='nx'>map</span><span class='p'>.</span><span class='nx'>transform</span><span class='p'>.</span><span class='nx'>matrix</span> <span class='o'>=</span> <span class='nx'>matrix</span><span class='o'>;</span>
-            <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>map</span><span class='p'>);</span>
+                    <span class="nx">bmd</span><span class="p">.</span><span class="nx">setPixel</span><span class="p">(</span><span class="nx">i</span><span class="o">,</span> <span class="nx">j</span><span class="o">,</span> <span class="nx">getColor</span><span class="p">(</span><span class="nx">dx</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">128</span><span class="o">,</span> <span class="nx">dy</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">128</span><span class="o">,</span> <span class="mi">128</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
 
-            <span class='k'>var</span> <span class='nx'>msk</span><span class='o'>:</span><span class='nb'>Sprite</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Sprite</span><span class='p'>();</span>
-            <span class='nx'>msk</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>beginFill</span><span class='p'>(</span><span class='mi'>0</span><span class='p'>);</span>
-            <span class='nx'>msk</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>drawCircle</span><span class='p'>(</span><span class='nx'>RADIUS</span><span class='o'>,</span> <span class='nx'>RADIUS</span><span class='o'>,</span> <span class='nx'>RADIUS</span><span class='p'>);</span>
-            <span class='nx'>msk</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>endFill</span><span class='p'>();</span>
-            <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>msk</span><span class='p'>);</span>
-            <span class='nx'>mask</span> <span class='o'>=</span> <span class='nx'>msk</span><span class='o'>;</span>
-        <span class='p'>}</span>
+            <span class="k">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="nx">HEIGHT</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">RADIUS</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">DisplacementMapFilter</span><span class="p">(</span><span class="nx">bmd</span><span class="o">,</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nx">diff</span><span class="o">,</span> <span class="nx">diff</span><span class="p">)</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">128</span><span class="o">,</span> <span class="mi">128</span><span class="p">)];</span>
+            <span class="k">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="o">-</span><span class="nx">diff</span><span class="o">,</span> <span class="o">-</span><span class="nx">diff</span><span class="p">);</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">transform</span><span class="p">.</span><span class="nx">matrix</span> <span class="o">=</span> <span class="nx">matrix</span><span class="o">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
 
-        <span class='kd'>private</span> <span class='kd'>static</span> <span class='kd'>function</span> <span class='nx'>getColor</span><span class='p'>(</span><span class='nx'>r</span><span class='o'>:</span><span class='nb'>int</span><span class='o'>,</span> <span class='nx'>g</span><span class='o'>:</span><span class='nb'>int</span><span class='o'>,</span> <span class='nx'>b</span><span class='o'>:</span><span class='nb'>int</span><span class='p'>)</span><span class='o'>:</span><span class='nb'>uint</span> <span class='p'>{</span>
-            <span class='k'>return</span> <span class='nx'>r</span> <span class='o'>*</span> <span class='mh'>0x10000</span> <span class='o'>+</span> <span class='nx'>g</span> <span class='o'>*</span> <span class='mh'>0x100</span> <span class='o'>+</span> <span class='nx'>b</span><span class='o'>;</span>
-        <span class='p'>}</span>
-    <span class='p'>}</span>
-<span class='p'>}</span>
+            <span class="k">var</span> <span class="nx">msk</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+            <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+            <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">RADIUS</span><span class="o">,</span> <span class="nx">RADIUS</span><span class="o">,</span> <span class="nx">RADIUS</span><span class="p">);</span>
+            <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">msk</span><span class="p">);</span>
+            <span class="nx">mask</span> <span class="o">=</span> <span class="nx">msk</span><span class="o">;</span>
+        <span class="p">}</span>
+
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">function</span> <span class="nx">getColor</span><span class="p">(</span><span class="nx">r</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nb">uint</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">r</span> <span class="o">*</span> <span class="mh">0x10000</span> <span class="o">+</span> <span class="nx">g</span> <span class="o">*</span> <span class="mh">0x100</span> <span class="o">+</span> <span class="nx">b</span><span class="o">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
+
+
+
+
 
 </div>
 

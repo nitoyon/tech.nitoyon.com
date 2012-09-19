@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Processing &quot;FireCube&quot; example ported to ActionScript 3.0"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="Processing example FireCube is so interesting to me. I ported it to ActionScript 3.0.The result is&amp;#8230;(Flash Player 9 or later required)Performance improvementProcessing version calculates every pixel color whencreating noise,combining values from adjacent pixels andconverting color.So I imple..."/>
+	<meta property="og:description" content="Processing example FireCube is so interesting to me. I ported it to ActionScript 3.0.The result is...(Flash Player 9 or later required)Performance improvementProcessing version calculates every pixel color whencreating noise,combining values from adjacent pixels andconverting color.So I implement..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="TECH-NI Blog"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -56,125 +56,133 @@
 <div class="entry">
 <div class="entry-body">
 <section>
-<center><img height='168' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png' width='398' /></center>
-<p>Processing example <a href='http://processing.org/learning/topics/firecube.html'>FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png" width="398" height="168"></center>
 
-<p>The result is&#8230;</p>
-<center><script src='http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js'> </script><noscript>(Flash Player 9  or later required)</noscript></center>
-<h1 id='performance_improvement'>Performance improvement</h1>
 
-<p><a href='http://processing.org/learning/topics/firecube.html'>Processing version</a> calculates every pixel color when</p>
+<p>Processing example <a href="http://processing.org/learning/topics/firecube.html">FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
+
+<p>The result is...</p>
+
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"> </script><noscript>(Flash Player 9  or later required)</noscript></center>
+
+
+<h1>Performance improvement</h1>
+
+<p><a href="http://processing.org/learning/topics/firecube.html">Processing version</a> calculates every pixel color when</p>
 
 <ul>
 <li>creating noise,</li>
-
 <li>combining values from adjacent pixels and</li>
-
 <li>converting color.</li>
 </ul>
+
 
 <p>So I implement it as follows:</p>
 
 <ul>
-<li>creating noise -&gt; <code>BitmapData.noise()</code></li>
-
-<li>combining values from adjacent pixels -&gt; <code>ConvolutionFilter</code></li>
-
-<li>converting color -&gt; <code>BitmapData.paletteMap()</code></li>
+<li>creating noise -> <code>BitmapData.noise()</code></li>
+<li>combining values from adjacent pixels -> <code>ConvolutionFilter</code></li>
+<li>converting color -> <code>BitmapData.paletteMap()</code></li>
 </ul>
 
-<h1 id='difficulty'>Difficulty</h1>
+
+<h1>Difficulty</h1>
 
 <p>HSV color space is not supported in AS3! I created a function called <code>HSVtoRGB</code>.</p>
 
-<p>Drawing a cube was a pain. So, I changed a cube to circle&#8230;</p>
+<p>Drawing a cube was a pain. So, I changed a cube to circle...</p>
 
 <p>Here is the code: (83 lines)</p>
-<div class='highlight'><pre><code class='actionscript'><span class='c1'>// Processing FireCube (AS3 version) </span>
-<span class='c1'>// original source: http://processing.org/learning/topics/firecube.html</span>
-<span class='kd'>package</span> <span class='p'>{</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>display</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>filters</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>geom</span><span class='p'>.</span><span class='o'>*;</span>
 
-<span class='kd'>public</span> <span class='kd'>class</span> <span class='nx'>FireCube</span> <span class='kd'>extends</span> <span class='nb'>Sprite</span><span class='p'>{</span>
-    <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>WIDTH</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>200</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>HEIGHT</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>150</span><span class='o'>;</span>
+<div class="highlight"><pre><code class="actionscript"><span class="c1">// Processing FireCube (AS3 version) </span>
+<span class="c1">// original source: http://processing.org/learning/topics/firecube.html</span>
+<span class="kd">package</span> <span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>FireCube</span><span class='p'>(){</span>
-        <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>align</span> <span class='o'>=</span> <span class='s2'>&quot;TL&quot;</span><span class='o'>;</span>
-        <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>scaleMode</span> <span class='o'>=</span> <span class='s2'>&quot;noScale&quot;</span><span class='o'>;</span>
-        <span class='nx'>scaleX</span> <span class='o'>=</span> <span class='nx'>scaleY</span> <span class='o'>=</span> <span class='mi'>2</span><span class='o'>;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">FireCube</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="o">;</span>
 
-        <span class='c1'>// Create circle</span>
-        <span class='k'>var</span> <span class='nx'>circle</span><span class='o'>:</span><span class='nb'>Sprite</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Sprite</span><span class='p'>();</span>
-        <span class='nx'>circle</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>beginFill</span><span class='p'>(</span><span class='mh'>0x808080</span><span class='p'>);</span>
-        <span class='nx'>circle</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>drawCircle</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>10</span><span class='p'>);</span>
-        <span class='nx'>circle</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>endFill</span><span class='p'>();</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">FireCube</span><span class="p">(){</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="o">;</span>
 
-        <span class='c1'>// Create buffered image</span>
-        <span class='k'>var</span> <span class='nx'>fire</span><span class='o'>:</span><span class='nb'>BitmapData</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>BitmapData</span><span class='p'>(</span><span class='nx'>WIDTH</span><span class='o'>,</span> <span class='nx'>HEIGHT</span><span class='o'>,</span> <span class='kc'>false</span><span class='o'>,</span> <span class='mi'>0</span><span class='p'>);</span>
-        <span class='k'>var</span> <span class='nx'>pg</span><span class='o'>:</span><span class='nb'>BitmapData</span> <span class='o'>=</span> <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>clone</span><span class='p'>();</span>
-        <span class='k'>var</span> <span class='nx'>noiseBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>BitmapData</span><span class='p'>(</span><span class='nx'>WIDTH</span><span class='o'>,</span> <span class='mi'>1</span><span class='p'>);</span>
+        <span class="c1">// Create circle</span>
+        <span class="k">var</span> <span class="nx">circle</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
 
-        <span class='k'>var</span> <span class='nx'>bmp</span><span class='o'>:</span><span class='nb'>Bitmap</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Bitmap</span><span class='p'>(</span><span class='nx'>pg</span><span class='p'>);</span>
-        <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>bmp</span><span class='p'>);</span>
+        <span class="c1">// Create buffered image</span>
+        <span class="k">var</span> <span class="nx">fire</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pg</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="k">var</span> <span class="nx">noiseBmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
 
-        <span class='c1'>// Generate the palette</span>
-        <span class='k'>var</span> <span class='nx'>r</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[]</span><span class='o'>,</span> <span class='nx'>g</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[]</span><span class='o'>,</span> <span class='nx'>b</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[];</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>x</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>x</span> <span class='o'>&lt;</span> <span class='mi'>256</span><span class='o'>;</span> <span class='nx'>x</span><span class='o'>++</span><span class='p'>)</span> <span class='p'>{</span>
-            <span class='c1'>//Hue goes from 0 to 85: red to yellow</span>
-            <span class='c1'>//Saturation is always the maximum: 255</span>
-            <span class='c1'>//Lightness is 0..255 for x=0..128, and 255 for x=128..255</span>
-            <span class='nx'>HSVtoRGB</span><span class='p'>(</span><span class='nx'>x</span> <span class='sr'>/ 3, 1, Math.min(x * 3 /</span> <span class='mf'>255.0</span><span class='o'>,</span> <span class='mi'>1</span><span class='p'>)</span><span class='o'>,</span> <span class='nx'>r</span><span class='o'>,</span> <span class='nx'>g</span><span class='o'>,</span> <span class='nx'>b</span><span class='p'>);</span>
-        <span class='p'>}</span>
+        <span class="k">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nb">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Bitmap</span><span class="p">(</span><span class="nx">pg</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
 
-        <span class='c1'>// Use ConvolutionFilter to calculate for every pixel</span>
-        <span class='k'>var</span> <span class='nx'>filter</span><span class='o'>:</span><span class='nx'>ConvolutionFilter</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nx'>ConvolutionFilter</span><span class='p'>(</span><span class='mi'>3</span><span class='o'>,</span> <span class='mi'>3</span><span class='o'>,</span> <span class='p'>[</span><span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>16</span><span class='o'>,</span> <span class='mi'>16</span><span class='o'>,</span> <span class='mi'>16</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>16</span><span class='o'>,</span> <span class='mi'>0</span><span class='p'>]</span><span class='o'>,</span> <span class='mi'>65</span><span class='p'>);</span>
+        <span class="c1">// Generate the palette</span>
+        <span class="k">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">x</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="o">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//Hue goes from 0 to 85: red to yellow</span>
+            <span class="c1">//Saturation is always the maximum: 255</span>
+            <span class="c1">//Lightness is 0..255 for x=0..128, and 255 for x=128..255</span>
+            <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">x</span> <span class="sr">/ 3, 1, Math.min(x * 3 /</span> <span class="mf">255.0</span><span class="o">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">,</span> <span class="nx">r</span><span class="o">,</span> <span class="nx">g</span><span class="o">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">}</span>
 
-        <span class='c1'>// Prepare points and matrix</span>
-        <span class='k'>var</span> <span class='nx'>matrix</span><span class='o'>:</span><span class='nb'>Matrix</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Matrix</span><span class='p'>();</span>
-        <span class='k'>var</span> <span class='nx'>pt0</span><span class='o'>:</span><span class='nb'>Point</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='nx'>HEIGHT</span> <span class='o'>-</span> <span class='mi'>1</span><span class='p'>);</span>
-        <span class='k'>var</span> <span class='nx'>pt1</span><span class='o'>:</span><span class='nb'>Point</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='o'>-</span><span class='mi'>1</span><span class='p'>);</span>
-        <span class='k'>var</span> <span class='nx'>pt2</span><span class='o'>:</span><span class='nb'>Point</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='mi'>1</span><span class='p'>);</span>
+        <span class="c1">// Use ConvolutionFilter to calculate for every pixel</span>
+        <span class="k">var</span> <span class="nx">filter</span><span class="o">:</span><span class="nx">ConvolutionFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ConvolutionFilter</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="p">[</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">,</span> <span class="mi">65</span><span class="p">);</span>
 
-        <span class='c1'>// Do loop</span>
-        <span class='nx'>addEventListener</span><span class='p'>(</span><span class='s2'>&quot;enterFrame&quot;</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:*</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-            <span class='c1'>// Randomize the bottom row of the fire buffer</span>
-            <span class='nx'>noiseBmd</span><span class='p'>.</span><span class='nx'>noise</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='mh'>0xffffffff</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>190</span><span class='o'>,</span> <span class='mi'>7</span><span class='o'>,</span> <span class='kc'>true</span><span class='p'>);</span>
-            <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>copyPixels</span><span class='p'>(</span><span class='nx'>noiseBmd</span><span class='o'>,</span> <span class='nx'>noiseBmd</span><span class='p'>.</span><span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt0</span><span class='p'>);</span>
+        <span class="c1">// Prepare points and matrix</span>
+        <span class="k">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
+        <span class="k">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">HEIGHT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
 
-            <span class='c1'>// Display circle</span>
-            <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>tx</span> <span class='o'>=</span> <span class='nx'>mouseX</span><span class='o'>;</span>
-            <span class='nx'>matrix</span><span class='p'>.</span><span class='nx'>ty</span> <span class='o'>=</span> <span class='nx'>mouseY</span><span class='o'>;</span>
-            <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>draw</span><span class='p'>(</span><span class='nx'>circle</span><span class='o'>,</span> <span class='nx'>matrix</span><span class='p'>);</span>
+        <span class="c1">// Do loop</span>
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+            <span class="c1">// Randomize the bottom row of the fire buffer</span>
+            <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">noise</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mh">0xffffffff</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">190</span><span class="o">,</span> <span class="mi">7</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">noiseBmd</span><span class="o">,</span> <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="p">);</span>
 
-            <span class='c1'>// Add pixel values around current pixel</span>
-            <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>applyFilter</span><span class='p'>(</span><span class='nx'>fire</span><span class='o'>,</span> <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt1</span><span class='o'>,</span> <span class='nx'>filter</span><span class='p'>);</span>
+            <span class="c1">// Display circle</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mouseX</span><span class="o">;</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">mouseY</span><span class="o">;</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">circle</span><span class="o">,</span> <span class="nx">matrix</span><span class="p">);</span>
 
-            <span class='c1'>// Output everything to screen using our palette colors</span>
-            <span class='nx'>pg</span><span class='p'>.</span><span class='nx'>paletteMap</span><span class='p'>(</span><span class='nx'>fire</span><span class='o'>,</span> <span class='nx'>fire</span><span class='p'>.</span><span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt2</span><span class='o'>,</span> <span class='nx'>r</span><span class='o'>,</span> <span class='nx'>g</span><span class='o'>,</span> <span class='nx'>b</span><span class='p'>);</span>
-        <span class='p'>});</span>
-    <span class='p'>}</span>
+            <span class="c1">// Add pixel values around current pixel</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">fire</span><span class="o">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt1</span><span class="o">,</span> <span class="nx">filter</span><span class="p">);</span>
 
-    <span class='c1'>// AS3 does not natively support HSV...  :-(</span>
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>HSVtoRGB</span><span class='p'>(</span><span class='nx'>h</span><span class='o'>:</span><span class='nb'>int</span><span class='o'>,</span> <span class='nx'>s</span><span class='o'>:</span><span class='nb'>Number</span><span class='o'>,</span> <span class='nx'>v</span><span class='o'>:</span><span class='nb'>Number</span><span class='o'>,</span> <span class='nx'>r</span><span class='o'>:</span><span class='nb'>Array</span><span class='o'>,</span> <span class='nx'>g</span><span class='o'>:</span><span class='nb'>Array</span><span class='o'>,</span> <span class='nx'>b</span><span class='o'>:</span><span class='nb'>Array</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span> <span class='p'>{</span>
-        <span class='k'>if</span> <span class='p'>(</span><span class='nx'>h</span> <span class='o'>&lt;</span> <span class='mi'>60</span><span class='p'>)</span> <span class='p'>{</span>
-            <span class='nx'>r</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>((</span><span class='nx'>v</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>&lt;&lt;</span> <span class='mi'>16</span><span class='p'>);</span>
-            <span class='nx'>g</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>((</span><span class='nx'>v</span> <span class='o'>*</span> <span class='p'>(</span><span class='mi'>1</span> <span class='o'>-</span> <span class='p'>(</span><span class='mi'>1</span> <span class='o'>-</span> <span class='nx'>h</span> <span class='o'>/</span> <span class='mf'>60.0</span><span class='p'>)</span> <span class='o'>*</span> <span class='nx'>s</span><span class='p'>)</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>&lt;&lt;</span> <span class='mi'>8</span><span class='p'>)</span>
-            <span class='nx'>b</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>(</span><span class='nx'>v</span> <span class='o'>*</span> <span class='p'>(</span><span class='mi'>1</span> <span class='o'>-</span> <span class='nx'>s</span><span class='p'>)</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>);</span>
-        <span class='p'>}</span> <span class='k'>else</span> <span class='k'>if</span> <span class='p'>(</span><span class='nx'>h</span> <span class='o'>&lt;</span> <span class='mi'>120</span><span class='p'>)</span> <span class='p'>{</span>
-            <span class='nx'>r</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>((</span><span class='nx'>v</span> <span class='o'>*</span> <span class='p'>(</span><span class='mi'>1</span> <span class='o'>-</span> <span class='p'>(</span><span class='o'>-</span><span class='nx'>h</span> <span class='o'>/</span> <span class='mf'>60.0</span> <span class='o'>-</span> <span class='mi'>1</span><span class='p'>)</span> <span class='o'>*</span> <span class='nx'>s</span><span class='p'>)</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>&lt;&lt;</span> <span class='mi'>16</span><span class='p'>);</span>
-            <span class='nx'>g</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>((</span><span class='nx'>v</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>&lt;&lt;</span> <span class='mi'>8</span><span class='p'>);</span>
-            <span class='nx'>b</span><span class='p'>.</span><span class='nx'>push</span><span class='p'>(</span><span class='nx'>v</span> <span class='o'>*</span> <span class='p'>(</span><span class='mi'>1</span> <span class='o'>-</span> <span class='nx'>s</span><span class='p'>)</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>);</span>
-        <span class='p'>}</span> <span class='k'>else</span> <span class='p'>{</span>
-            <span class='k'>throw</span> <span class='nb'>Error</span><span class='p'>(</span><span class='s1'>&#39;not implemented&#39;</span><span class='p'>);</span>
-        <span class='p'>}</span>
-    <span class='p'>}</span>
-<span class='p'>}</span>
-<span class='p'>}</span>
+            <span class="c1">// Output everything to screen using our palette colors</span>
+            <span class="nx">pg</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">fire</span><span class="o">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt2</span><span class="o">,</span> <span class="nx">r</span><span class="o">,</span> <span class="nx">g</span><span class="o">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="c1">// AS3 does not natively support HSV...  :-(</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">h</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">120</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;not implemented&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
+
+
+
+
 </section>
 
 </div>

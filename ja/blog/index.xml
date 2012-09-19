@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 04 Sep 2012 00:38:11 +0900</lastBuildDate>
+		<lastBuildDate>Thu, 20 Sep 2012 02:29:17 +0900</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,261 @@
 
 
 
+
+		<item>
+			<title>俺の最強ブログ システムが火を噴くぜ</title>
+			<link>http://tech.nitoyon.com/ja/blog/2012/09/04/moved-completed/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2012/09/04/moved-completed/</guid>
+			<pubDate>Tue, 04 Sep 2012 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>ブログを「はてなダイアリー」から、自分のサーバーに移転しました。</p>
+
+<p>せっかく移転するなら、<strong>2012 年の流行を取り入れた挑戦的なブログにしてみたい！</strong>と思い、構想から半年、ついにこの日を迎えることができました。</p>
+
+<p>せっかくなので、凝ったところを自慢させてください。</p>
+
+<h1>これが俺史上最強のブログ システムだ</h1>
+
+<ul>
+<li>ブログ システムとして Jekyll を採用</li>
+<li>Jekyll のプラグインを自作 (はてな記法対応、英語ブログとの統合)</li>
+<li>履歴管理は GitHub を利用、<code>git push</code> で自動でデプロイ</li>
+<li>コメント欄には DISQUS を採用、旧ブログへのコメントはインポート済み</li>
+<li>HTML5 マークアップ、CSS3、レスポンシブ Web デザインでのモバイル対応</li>
+</ul>
+
+
+<p>盛りだくさんですね。</p>
+
+<p>詳しく説明していきます。</p>
+
+<h1>ブログ システムとして Jekyll を採用</h1>
+
+<p>最近では WordPress を選ぶのが普通でしょう。WordPress は使ったことありませんが、過去に MovableType で疲弊した苦い経験があります。</p>
+
+<h2>大規模なブログ システムの悪夢</h2>
+
+<p>WordPress や MovableType などの大規模なブログ システムは、管理インターフェースが充実していたり、HTML がしっかり組んであったり、一見カスタマイズしやすいように見えます。しかし、万人の要望にこたえようとするあまり、システムは複雑であり、気軽にはカスタマイズしにくい状態です。</p>
+
+<p>ちょっとしたデザインの修正をしようとしても、元々の HTML の構造を把握するところから始めなければなりません。HTML を書き換えようにも、既存のテンプレートを読んで理解しなければ手をだせません。何らかの動作を変えようとすると、独自プラグインの作り方であったり、場合によっては、本体のソースの海に潜り込んでいく必要が出てきます。</p>
+
+<p>たとえ満足のいくカスタマイズができたとしても、何か別の改造をしようとするとまた同じような手順で<strong>独自のお作法</strong>を調べなきゃいけません。凝って調べている間はそれでもいいのですが、少し間が空くと、また最初から学習しなければなりません。</p>
+
+<p>結局、触らぬ神に祟りなし状態の塩漬けブログになってしまいました。</p>
+
+<p>そんな折、GitHub Pages でホスティングしているブログをいくつか見かけるようになってきました。
+一番最初に気づいたのが <a href="http://hozumi.github.com/2012/03/datomic-ja.html">Clojureの作者が作ったデータベースサービス Datomic.com が凄い</a> という記事でした。
+この GitHub Pages を裏で支えているのが <strong>Jekyll という「静的サイト生成ツール」</strong>です。</p>
+
+<h2>そこで超絶シンプルな Jekyll です</h2>
+
+<p><a href="https://github.com/mojombo/jekyll">Jekyll</a> は Ruby で書かれていて、ソースは 2,000 行足らずの 50KB ほどと、超絶シンプルです。GitHub Pages での実績があり、Markdown で書ける、プラグインも作れる、シンタックス ハイライトもできる、と意外に盛りだくさんです。</p>
+
+<p><code>jekyll --server --auto</code> として起動しておくと、ブラウザーから確認するための Web サーバーが起動して、テキスト エディターで記事を保存するたびに変換した結果を再生成してくれます。面倒な Web の管理インターフェースは必要ありません。</p>
+
+<p>軽量すぎるので。自分で肉付けしていかなければなりませんが、でっぷり太ったシステムをダイエットさせるよりかは気楽です。</p>
+
+<p>あぁ、なんと、プログラマー フレンドリーなんでしょう。</p>
+
+<p>弱点といえば、毎回すべての記事を生成するので、記事の数が増えてくると HTML 生成に時間がかかってしまう点でしょうか。これを改善するために、生成を高速化したり、変更点のあった記事のみを更新するプラグインを書いています。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/post_yaml_cache.rb">YAML キャッシュ プラグイン</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/site_ext.rb">site_ext プラグイン</a></li>
+</ul>
+
+
+<p>元々のソースがシンプルなので、ちょっとした改善が簡単に試せるのがうれしいところです。</p>
+
+<h2>静的サイトでも何とかなる</h2>
+
+<p>さきほど、Jekyll は「静的サイト生成ツール」だといいました。</p>
+
+<p>「静的サイト」では PHP も Perl も Ruby も動いていません。HTML や CSS をアップロードして終わり、という潔い世界です。</p>
+
+<p>いまどき、CGI なしでサイト運営できるのか、と思う人もいるかもしれません。</p>
+
+<p>「今だからこそ」可能なのです。</p>
+
+<p>CGI が必要になるケースは何があるでしょうか。</p>
+
+<ul>
+<li>コメント欄: Facebook や DISQUS などの外部サービスがある。</li>
+<li>Twitter や Facebook への対応: 特定の HTML を追加するだけ。</li>
+<li>Twitter での評判や関連エントリーの表示: そういう外部サービスがある。</li>
+<li>アクセス解析: Google Analytics に任せれば十分。</li>
+<li>トラックバック: もはや過去の遺産。 (その気になれば外部サービスがある)</li>
+</ul>
+
+
+<p>ほら、何とかなりますよね。</p>
+
+<p>インターネット初期の静的な HTML が主流の時代から、ブログ システムや CMS を使った動的なサイト生成の時代を経て、いま再び、動的な部分を外部サービスに任せれば静的なコンテンツでいける時代になったのです。</p>
+
+<h1>プラグインを使って Jekyll をカスタマイズ</h1>
+
+<p>軽量な Jekyll さんは、そのまま使うには不完全なところもあります。でも、プラグインの仕組みがあるので大丈夫。</p>
+
+<p>公式 Wiki の <a href="https://github.com/mojombo/jekyll/wiki/Plugins">Plugins</a> には、他の人が作ったプラグインがあります。これらを参考にしつつ、足りない分は自作しました。</p>
+
+<p>作ったプラグインを紹介します。</p>
+
+<h2>はてな記法で記事を書けるように</h2>
+
+<p>せっかく移転するので、過去の記事も引っさげて移転したいと考えました。</p>
+
+<p>「はてなダイアリー」では 500 件以上の記事を書いてきました。500 件の記事を手作業で Markdown に書き換えるのは苦行です。</p>
+
+<p>そこで、「はてな記法」から記事を生成するプラグインを作りました。「はてな記法」の変換処理には、「はてな記法」パーサーの <a href="https://github.com/hotchpotch/hparser/">hparser</a> を使っています。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/converters/hatena.rb">はてな記法コンバーター for Jekyll</a></li>
+</ul>
+
+
+<p>しかし、いざやってみると、hparser には未実装の記法や細かいバグが大量にありました。仕方がないので、本家に沿った出力になるように、hparser にも<a href="https://github.com/hotchpotch/hparser/pull/1">大幅に手を入れました</a>。hparser への修正は GitHub 上で pull リクエストを出して取り込んでもらっています (RubyForge には反映されていないかも)。</p>
+
+<p>あわせて、はてなダイアリーの記事を取り込むために、簡単なスクリプトを書きました。はてなダイアリーの「エクスポート機能」が出力する「はてなの日記データ形式」を入力として。エントリーごとにテキスト ファイルに出力します。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/convert_hatena_to_jekyll_posts.rb">はてなダイアリー → Jekyll インポート スクリプト convert_hatena_to_jekyll_posts.rb</a></li>
+</ul>
+
+
+<h2>Twitter や Amazon の埋め込み</h2>
+
+<p>ツイートや Amazon の商品埋め込みについては、hparser のレベルではなく、Jekyll プラグインとして実装しました。というのも、はてな記法だけでなく、Markdown で記事を書くときにも、これらの埋め込み機能を使いたかったからです。</p>
+
+<p>各種 API のドキュメントに従いつつ、実装していきました。Ruby のいい練習課題になりました…。API を叩いた結果はキャッシュしているので、初回以外は高速に動作します。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/tags/tweet.rb">tweet プラグイン for Jekyll</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/tags/amazon.rb">Amazon プラグイン for Jekyll</a></li>
+</ul>
+
+
+<h2>複数ブログにも対応!!</h2>
+
+<p><a href="/en/blog/">英語ブログ</a> と同じテンプレートを使いたかったので、複数ブログを実現するプラグインを実装しました。</p>
+
+<p>といっても、Jekyll に元々ある「カテゴリー機能」と「カテゴリーごとに別の URL に出力する機能」を流用しています。記事ごとに設定した「言語名」が、内部的にはカテゴリーとして扱われるようになっています。カテゴリーが使えなくなることを少しためらったのですが、タグ機能もあるのでそちらで十分代用できます。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/post_multilang_by_category.rb">post_multilang_by_category プラグイン</a></li>
+</ul>
+
+
+<p>テンプレートで言語によって違う表示をしたいケースに対応するために、国際化プラグインっぽいものを作りました。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/filters/locale_filter.rb">locale_filter プラグイン</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_locales/ja.yml">日本語のロケールファイル ja.yml</a></li>
+</ul>
+
+
+<h1>GitHub を積極利用</h1>
+
+<p>先ほどからいくつかのプラグインやスクリプトのリンクを貼っていますが、これらはすべて GitHub で公開しています。公開しているのはプラグインだけでなく、記事のテキスト ファイル、画像、HTML テンプレート、JavaScript など、<strong>サイト生成に必要なものはすべて GitHub で公開</strong>しています。</p>
+
+<p>つまり、GitHub からクローンして、ビルド環境を整えれば、誰でもこのブログを生成できます。</p>
+
+<p>コピー ブログを作られる怖さはありますが、ソースを公開してなくてもコピーする人はコピーするでしょう。それよりも、オープンにすることで、データ紛失の恐怖から解放されます。</p>
+
+<h2>編集履歴を公開するということ</h2>
+
+<p>もう 1 つの副作用として、<strong>記事の編集履歴が丸見えになる</strong>ことが挙げられるでしょう。たとえば、ある記事の編集履歴はこうなります。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2012-07-31-disqus-comment-import.htn">2012-07-31-disqus-comment-import.htn の編集履歴</a></li>
+</ul>
+
+
+<p>ちょっとした誤字の修正さえも万人に公開されてしまうので、恥ずかしい面はあります。</p>
+
+<p>しかし、メリットも多いと考えています。</p>
+
+<p>ブログの記事をこっそりと書き換えると、不信感を招きます。最悪のケースでは炎上してしまうかもしれません。かといって、追記や補足のたびに「○月○日追記」のように書くと、逆に、初めて見る人は読みにくくなります。2 回目に見る人に誠実になるために、初見の人に不便を強いるのは何か違います。</p>
+
+<p>そこで、GitHub の履歴です。履歴を公開していることを言い訳にすれば、思い切って記事を書き換えやすくなる気がします。将来的には、それぞれの記事ページから「編集履歴」として GitHub のページへのリンクを貼ることも検討しています。</p>
+
+<h2>GitHub から自動デプロイ</h2>
+
+<p>GitHub の <a href="http://help.github.com/post-receive-hooks/">Post-Receive Hooks</a> を使えば、<code>git push</code> したタイミングで特定の URL を叩くことができます。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/viver/20110402/p1">Webサイトをgithubで管理してpush時に自動的に同期する方法 - 古橋貞之の日記 </a></li>
+</ul>
+
+
+<p>この機能を利用して、push 時にサーバーの CGI を叩かれて、<code>git pull</code> で GitHub からデータを取得するようにしました。これだけで、簡単なデプロイ システムのできあがりです。</p>
+
+<p>サーバーは <a href="http://www.sakura.ne.jp/rentalserver/standard/">さくらのレンタルサーバー スタンダード</a> を使っていますが、CGI が使える環境なら、どこでも同じようなことはできます。</p>
+
+<p><a href="https://github.com/nitoyon/tech.nitoyon.com">git レポジトリ</a> 上には 2 つのブランチを作成しています。</p>
+
+<ul>
+<li><code>master</code> ブランチ: ソースやプラグインを置く</li>
+<li><code>html</code> ブランチ: 生成結果の HTML や CSS を置く (Jekeyll の出力ディレクトリー)</li>
+</ul>
+
+
+<p>先ほどの自作 CGI では、<code>git push</code> 通知を受けとると、<code>html</code> ブランチを pull しでいます。ブランチの構成についてはいろいろ悩んだのですが、次のサイトを参考にしつつ、いまはこの形にしています。</p>
+
+<ul>
+<li><a href="http://tokkono.cute.coocan.jp/blog/slow/index.php/programming/github-pages-workflow/">実践GitHub Pages運用のユースケースとワークフローの詳細 | ゆっくりと…</a></li>
+</ul>
+
+
+<h1>コメント欄は DISQUS を利用</h1>
+
+<p>コメント欄として Facebook の利用も検討はしたのですが、過去のコメントをインポートができないこと、コメント欄が殺伐としにくいことを理由に敬遠しました。</p>
+
+<p>そこで目をつけたのが DISQUS です。最近、いろんなところで見かけるようになってきました。有名どころでは <a href="http://jp.techcrunch.com/">TechChrunch Japan</a> が採用しています。</p>
+
+<p>DISQUS はコメントのインポートにも対応しています。しかし、これが意外に苦労して、いまも少し苦労しました。詳しくは <a href="/ja/blog/2012/07/31/disqus-comment-import/">DISQUS へのコメントのインポートが意外に面倒</a> の記事に書いてあるので、こちらをご覧ください。</p>
+
+<h1>HTML5、CSS3、レスポンシブ Web デザイン...</h1>
+
+<p>クライアント サイドの技術でも、最新の流行を取り入れてみました。</p>
+
+<h2>HTML5 マークアップ</h2>
+
+<p>今回、HTML を自由に書けるようになったので、HTML5 マークアップにチャレンジしてみました。<code>&lt;article&gt;</code> などのタグを使っています。</p>
+
+<p>IE8 以下に対応するために <a href="http://code.google.com/p/html5shiv/">html5shiv</a> を使っています。HTML5 的なアウトラインがそれっぽくなるようにも気を使いましたが、完全に自己満足な気がしています。</p>
+
+<h2>Compass で楽々 CSS3</h2>
+
+<p>CSS の生成には Compass を使っています。Compass は Scss にライブラリの皮をかぶせたものになっています。
+詳しくは過去記事の <a href="/ja/blog/2012/03/13/newdesign2012/">ブログのデザインを新しくしてみた</a> をご覧ください。</p>
+
+<p>Scss 3.2 を使うことで、Media クエリーにも簡単に対応できるようになりました。興味がある人は <a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/stylesheets/screen.scss">このサイトの screen.scss</a> を見てください。Scss は深入りすればかなり詳しいことができそうですが、あまり大した機能は使っていません。</p>
+
+<p>Jekyll で Compass を使えるように、compass プラグインを作成しました。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/converters/compass.rb">compass プラグイン</a></li>
+</ul>
+
+
+<h2>レスポンシブ Web デザインに挑戦</h2>
+
+<p>ちまたに解説が溢れているので特に書くことはありませんが、レスポンシブ Web デザインでスマートフォン対応しました。</p>
+
+<p><code>480px</code> 以下ではスマホ向けのデザインになるようにしています。</p>
+
+<p>もう 1 つの分岐点として <code>45em</code> を設定しています。画面幅が <code>45em</code> 以下なら画面にフィットするようにして、画面幅が <code>45em</code> を超えると固定幅になります。<code>max-width</code> でも対処できるのですが、画面幅に応じて、より細かいカスタマイズができるので、便利だと思いました。</p>
+
+<p>「既存のサイトをデザインそのままでレスポンシブ化するのはよくない」といわれていますが、いまのデザインがスマホ向け表示を意識したものだったので、比較的簡単に対応できました。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>移転しました。</li>
+<li>新生てっく煮ブログをよろしく。</li>
+</ul>
+
+]]></description>
+		</item>
 
 		<item>
 			<title>暫定で「はてなブログ」に移転した</title>
@@ -109,6 +364,10 @@
 <p>手動で設定せずに、空欄にしておけばよいと思っていた。英語圏のユーザーに限っていえばその通りだった。</p>
 <p>空欄にした場合、ユーザー名から <code>username@wordpress.disqus.net</code> のようなメールアドレスが生成されてインポートされる。ただ、ユーザー名が日本語全角文字のみだったときには、一律に <code>none@wordpress.disqus.net</code> としてインポートされてしまう。</p>
 <p>結果として、「日本語のみの名前のコメントは同じ名前が表示されてしまう」現象が発生した。これでは悲しすぎるので、スクリプトを改造して、必ず一意になるようなメールアドレスを割り振って XML を生成するようにした。</p>
+<h1>&lt;wp:comment_id&gt; にやられる</h1>
+<p>インポートを繰り返す場合は、<code>&lt;wp:comment_id&gt;</code> の指定にも罠があった。</p>
+<p>一度インポートしたあとに間違いを発見して、修正して XML をアップロードしても、過去にアップロードしたコメントと <code>&lt;wp:comment_id&gt;</code> が重複していると、コメントが反映されない。</p>
+<p>これを回避するために、ID の手前に a とか b とかをつけてアップロードを繰り返した。なんと面倒なことであるか。</p>
 <h1>まとめ</h1>
 <p>DISQUS のインポートは用意周到に。締め切りのあるケースではやりたくない作業である。</p>]]></description>
 		</item>
@@ -169,98 +428,6 @@
 <div class="seealso">
 <h1>あわせてどうぞ</h1>
 <ul><li><a href="/ja/blog/2012/02/28/why-google-still-uses-flash/">Google がまだ Flash を使っているサービスでみる脱 Flash の難しさ</a></li><li><a href="/ja/blog/2011/09/07/end-of-maps-api-for-flash/">Google Maps API for Flash が廃止、3年でサポート打ち切り</a></li><li><a href="/ja/blog/2011/04/26/messages-for-japan-design/">Messages for Japan に見る Google UI デザインの変化</a></li><li><a href="/ja/blog/2011/02/28/diorama-google-maps/">Google Maps をジオラマ風にしてみた</a></li><li><a href="http://tech.nitoyon.com/javascript/application/racing/1/">Google Maps で鈴鹿サーキット試走</a></li></ul>
-</div>]]></description>
-		</item>
-
-		<item>
-			<title>コンプガチャだけじゃない!?　ガチャに潜む確率の罠</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/05/17/gacha-probability/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/05/17/gacha-probability/</guid>
-			<pubDate>Thu, 17 May 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>twitter をみていたら、こんなツイートが回ってきました。</p>
-<blockquote class="twitter-tweet" lang="ja"><p>モバゲー・GREEが確率明示しないのは、搾り取るためというよりは、クレーム対応減らすため。1％でSR、って書くと「100回引いたのに出ない。詐欺だ」。確率だから、って説明すると彼らはこう返す「だから、100回に1回出るんでしょ？」…さあ、どう返そうか。</p>&mdash; saintear/セインティアさん (@saintearRX) <a href="https://twitter.com/saintearRX/status/199049818738401280" data-datetime="2012-05-06T08:15:49+00:00">5月 6, 2012</a></blockquote>
-<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<p>たしかに「1% のガチャを 100 回引いたら当たる」と思い込んでしまう人は多そうです。</p>
-<p>では、1% のガチャを 100 回引くと、どれぐらいの人が当たり、どれぐらいの人が当たらないのでしょうか。</p>
-<a name="seemore"></a>
-<h1>1% のガチャを 100 回引いて当たらない確率は？</h1>
-<p>さっそく計算してみましょう。</p>
-<p>1 回ガチャを引いて当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cfrac%7B99%7D%7B100%7D" class="tex" alt="\frac{99}{100}"> です。当たる確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=1-%5Cfrac%7B99%7D%7B100%7D" class="tex" alt="1-\frac{99}{100}"> = 1% です。</p>
-<p>2 回ガチャを引いたときに、1 度も当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E2" class="tex" alt="\left(\frac{99}{100}\right)^2"> です。つまり、1 回以上当たる確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=1-%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E2" class="tex" alt="1-\left(\frac{99}{100}\right)^2"> = 1.9% となります。</p>
-<p>3 回ガチャを引いたときに、1 度も当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E3" class="tex" alt="\left(\frac{99}{100}\right)^3"> です。1 回以上当たる確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=1-%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E3" class="tex" alt="1-\left(\frac{99}{100}\right)^3"> で 2.7% です。</p>
-<p>同じように計算していくと、結果はこうなります。</p>
-<table>
-<tr><th>ケース</th><th>まったく当たらない確率</th><th>1 回以上当たる確率</th></tr>
-<tr><td>1 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cfrac%7B99%7D%7B100%7D%3D99.0%25" class="tex" alt="\frac{99}{100}=99.0%"></td><td class="right">1.0%</td></th>
-<tr><td>2 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E2%3D98.1%25" class="tex" alt="\left(\frac{99}{100}\right)^2=98.1%"></td><td class="right">1.9%</td></th>
-<tr><td>3 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E3%3D97.3%25" class="tex" alt="\left(\frac{99}{100}\right)^3=97.3%"></td><td class="right">2.7%</td></th>
-<tr><td class="center">:</td><td class="center">:</td><td class="center">:</td></th>
-<tr><td>100 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E%7B100%7D%3D36.6%25" class="tex" alt="\left(\frac{99}{100}\right)^{100}=36.6%"></td><td class="right">63.4%</td></th>
-</table>
-<br />
-<p><strong>1% のガチャを 100 回引いて 1 度も当たらない人は36.6%</strong>います。</p>
-<p>当たらない人が意外に多いように感じませんか？</p>
-<p>確率 1% は「100 回引けば必ず 1 回当たる」を意味するのではなく、「平均すると100 回に 1 回は出る」ことを意味します。100 回引いて 2 回も 3 回も当たる人がいる一方で、36.6% の人は 1 つも当たらずに終わってしまいます。</p>
-<br />
-<p>では、100 回以降も引き続けたとき、当たらない人の割合はどのように変わっていくのでしょうか。</p>
-<p>グラフを描いてみました。</p>
-<center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20120517/20120517021601.png"></center>
-<p>グラフから面白い性質が読み取れます。</p>
-<ul><li>1% のガチャを70 回ほど引いたところで半数の人は 1 度は当たる</li><li>1% のガチャを 100 回引いても 36.6% の人は当たりが出ない</li><li>1% のガチャを 200 回引いても 13.4% の人は当たりが出ない</li><li>1% のガチャを 300 回引いても 4.9% の人は当たりが出ない</li></ul>
-<p>20 人に1人は 300 回引いても当たりが出ません。これは恐怖です。</p>
-<h1>確率を変えて見えてくる 36% の不思議</h1>
-<p>ここまで、1% のガチャで調べてきましたが、ガチャの確率をいろいろ変えて計算してみましょう。</p>
-<table>
-<tr><th>ケース</th><th>まったく当たらない確率</th><th>1 回以上当たる確率</th></tr>
-<tr><td>20% のガチャを 5 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B80%7D%7B100%7D%5Cright%29%5E5%3D32.8%25" class="tex" alt="\left(\frac{80}{100}\right)^5=32.8%"></td><td class="right">67.2%</td></tr>
-<tr><td>10% のガチャを 10 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B90%7D%7B100%7D%5Cright%29%5E%7B10%7D%3D34.9%25" class="tex" alt="\left(\frac{90}{100}\right)^{10}=34.9%"></td><td class="right">65.1%</td></tr>
-<tr><td>5% のガチャを 20 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B95%7D%7B100%7D%5Cright%29%5E%7B20%7D%3D35.8%25" class="tex" alt="\left(\frac{95}{100}\right)^{20}=35.8%"></td><td class="right">64.1%</td></tr>
-<tr><td>1% のガチャを 100 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99%7D%7B100%7D%5Cright%29%5E%7B100%7D%3D36.6%25" class="tex" alt="\left(\frac{99}{100}\right)^{100}=36.6%"></td><td class="right">63.4%</td></tr>
-<tr><td>0.5% のガチャを 200 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99.5%7D%7B100%7D%5Cright%29%5E%7B200%7D%3D36.7%25" class="tex" alt="\left(\frac{99.5}{100}\right)^{200}=36.7%"></td><td class="right">63.3%</td></tr>
-<tr><td>0.1% のガチャを 1000 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99.9%7D%7B100%7D%5Cright%29%5E%7B1000%7D%3D36.7%25" class="tex" alt="\left(\frac{99.9}{100}\right)^{1000}=36.7%"></td><td class="right">63.3%</td></tr>
-<tr><td>0.01% のガチャを 10000 回引いたとき</td><td class="center"><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%28%5Cfrac%7B99.99%7D%7B100%7D%5Cright%29%5E%7B10000%7D%3D36.8%25" class="tex" alt="\left(\frac{99.99}{100}\right)^{10000}=36.8%"></td><td class="right">63.2%</td></tr>
-</table>
-<p>あれ？　ガチャの確率が 1% 以下だと、</p>
-<ul><li>まったく当たらない確率: 36.X%</li><li>1 回以上当たる確率: 63.X%</li></ul>
-<p>とほとんど同じ値です。</p>
-<p>この不思議な性質は、パチンコをやる人には比較的知られている数字のようです。</p>
-<blockquote><p>この<strong>63%という数字はとても不思議な数字</strong>です。パチンコ台にはデジハネ（ハネデジと記載してい雑誌もあります）のように初当たり確率pが1/100前後の台から、エヴァンゲリオンのように1/400くらいの台まで様々な台がありますが、この数式で計算すると<strong>どんなスペックのパチンコ台でも1/p回転以内に初当たりが引ける確率は必ず63%</strong>になります。</p><cite><a href="http://pachitop.seesaa.net/article/36072620.html">パチンコのはまりと初当たり確率の関係:パチンコ、負けない立ち回りと確率の密接な関係</a></cite></blockquote>
-<p>「36% の謎」。気になりますよね。高校数学を使って解き明かしてみましょう。</p>
-<h2>36% の謎を解く (高校3年生向け)</h2>
-<p>ここからは高校 3 年生の知識が必要になるので、少し難しくなります。（数学が苦手な人は飛ばしてください）</p>
-<p>1% のガチャを 100 回引いて、一度も当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%281-%5Cfrac%7B1%7D%7B100%7D%5Cright%29%5E%7B100%7D" class="tex" alt="\left(1-\frac{1}{100}\right)^{100}"> です。</p>
-<p>0.1% のガチャを 1000 回引いて、1度も当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%281-%5Cfrac%7B1%7D%7B1000%7D%5Cright%29%5E%7B1000%7D" class="tex" alt="\left(1-\frac{1}{1000}\right)^{1000}"> です。</p>
-<p>これを一般化すると、次のようになります。</p>
-<blockquote><p>確率 1/n のガチャを n 回引く確率いて 1 度も当たらない確率は <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Cleft%281-%5Cfrac%7B1%7D%7Bn%7D%5Cright%29%5E%7Bn%7D" class="tex" alt="\left(1-\frac{1}{n}\right)^{n}"></p></blockquote>
-<p>n を大きくしていったときの、</p>
-<center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Clim_%7Bn%5Cright%5Cinfty%7D%5Cleft%281-%5Cfrac%7B1%7D%7Bn%7D%5Cright%29%5E%7Bn%7D" class="tex" alt="\lim_{n\right\infty}\left(1-\frac{1}{n}\right)^{n}"></center>
-<p>が求めたい値です。</p>
-<br />
-<p>ところで、指数関数 <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=e%5Ex" class="tex" alt="e^x"> を原点で微分すると <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Clim_%7Bt%5Cright0%7D%5Cfrac%7Be%5Et-1%7D%7Bt%7D%3D1" class="tex" alt="\lim_{t\right0}\frac{e^t-1}{t}=1"> となります。ここに <img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=t%3D%5Clog%5Cleft%281%252B%5Cfrac%7Ba%7D%7Bn%7D%5Cright%29" class="tex" alt="t=\log\left(1%2B\frac{a}{n}\right)"> を代入すると、</p>
-<center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Clim_%7Bn%5Cright%5Cinfty%7D%5Cleft%281%252B%5Cfrac%7Ba%7D%7Bn%7D%5Cright%29%5En%3De%5Ea" class="tex" alt="\lim_{n\right\infty}\left(1%2B\frac{a}{n}\right)^n=e^a"></center>
-<p>という式を得ます。</p>
-<p>この式に a = -1 を代入すると、</p>
-<center><img src="http://chart.apis.google.com/chart?cht=tx&chf=bg,s,00000000&chl=%5Clim_%7Bn%5Cright%5Cinfty%7D%5Cleft%281-%5Cfrac%7B1%7D%7Bn%7D%5Cright%29%5E%7Bn%7D%3D%5Cfrac%7B1%7D%7Be%7D%3D0.367879..." class="tex" alt="\lim_{n\right\infty}\left(1-\frac{1}{n}\right)^{n}=\frac{1}{e}=0.367879..."></center>
-<p>となります。</p>
-<br />
-<p>はい、以上で 36% の正体が分かりました。<strong>1 / e</strong> だったのです（e は自然対数の底 2.71828...)。</p>
-<p>こんなところで、自然対数が出てくるのが不思議ですね。</p>
-<p>同じ計算は複利計算にも応用できます。例えば、年利 1% で 100 年運用すると、資産はほぼ e 倍になります。</p>
-<h1>まとめ</h1>
-<p>「1% のガチャを 100 回引いても 36% の人は当たらない」ことが分かりました。</p>
-<p>確率を変えて計算したところ、「1/n の確率のガチャを n 回引いても 36% の人は当たらない」(n≧100)という性質があることが分かりました。</p>
-<p>この「36%」の罠は、パチンコにも存在します。パチンコとガチャが「36%」の罠でつながりました。</p>
-<p>一方は法律で 18 歳未満は禁止されていて、ギャンブルであると世間では認知されていますが、もう一方は「ゲーム」であり、年齢制限はありません。</p>
-<p>パチンコと似ているからといって、すぐに「賭博だ」「違法だ」とはなりません。「36%」の罠は、自然界や多くのゲームに潜んでいます。</p>
-<p>ただ、最初に紹介した、</p>
-<blockquote class="twitter-tweet" lang="ja"><p>モバゲー・GREEが確率明示しないのは、搾り取るためというよりは、クレーム対応減らすため。1％でSR、って書くと「100回引いたのに出ない。詐欺だ」。確率だから、って説明すると彼らはこう返す「だから、100回に1回出るんでしょ？」…さあ、どう返そうか。</p>&mdash; saintear/セインティアさん (@saintearRX) <a href="https://twitter.com/saintearRX/status/199049818738401280" data-datetime="2012-05-06T08:15:49+00:00">5月 6, 2012</a></blockquote>
-<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<p>というツイートは、ギャンブル慣れしていない大人や学生にギャンブル的なゲームを提供している状況を象徴しているように思えます。</p>
-<br />
-<p>※コンプガチャについても記事を書いていますので、興味のある方はどうぞ!!! → <a href="/ja/blog/2012/05/11/comp-gacha-probability/">コンプガチャの確率マジックを中学生にも分かるように説明するよ</a></p>
-<div class="seealso">
-<h1>あわせてどうぞ</h1>
-<ul><li><a href="/ja/blog/2012/05/11/comp-gacha-probability/">コンプガチャの確率マジックを中学生にも分かるように説明するよ</a></li><li><a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a></li><li><a href="/ja/blog/2012/03/06/inexpensive-moving/">段ボール15箱の引っ越し（東京→京都）が2万円以内になった節約術</a></li><li><a href="/ja/blog/2012/02/14/original-shachihata/">シヤチハタ印鑑をカスタマイズ注文してみた</a></li><li><a href="/ja/blog/2009/04/15/hokkaido/">北海道を落とすとどう跳ねるのか？</a></li></ul>
 </div>]]></description>
 		</item>
 

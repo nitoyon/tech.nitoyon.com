@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 03 Sep 2012 11:42:27 +0900</lastBuildDate>
+		<lastBuildDate>Thu, 20 Sep 2012 02:29:17 +0900</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -26,16 +26,20 @@
 			<description><![CDATA[<p>One of the annoyances of trying ruby is installing Ruby. IRBWEB let you try it on your browser!</p>
 
 <p>You can enter ruby expression and evaluate it.</p>
-<center><a href='http://tech.nitoyon.com/irb/'><img border='0' height='344' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090406/20090406011151.png' width='450' /><br />IRBWEB</a></center>
+
+<center><a href="http://tech.nitoyon.com/irb/"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090406/20090406011151.png" width="450" height="344" border="0"><br>IRBWEB</a></center>
+
+
 <p>It works completely in your browser, so you get the result so quickly.</p>
 
-<h1 id='requirements'>Requirements</h1>
+<h1>Requirements</h1>
 
 <p>The Silverlight 2.0 runtime plug-in required.</p>
 
-<h1 id='how_does_it_work'>How does it work?</h1>
+<h1>How does it work?</h1>
 
-<p>Silverlight supports DLR(Dynamic Language Runtime) which enables us to execute Ruby and Python on .NET application. IRBWEB is developped based on repl sample included in <a href='http://www.codeplex.com/sdlsdk'>Silverlight Dynamic Languages SDK</a> 0.5.0.</p>]]></description>
+<p>Silverlight supports DLR(Dynamic Language Runtime) which enables us to execute Ruby and Python on .NET application. IRBWEB is developped based on repl sample included in <a href="http://www.codeplex.com/sdlsdk">Silverlight Dynamic Languages SDK</a> 0.5.0.</p>
+]]></description>
 		</item>
 
 		<item>
@@ -43,125 +47,133 @@
 			<link>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</link>
 			<guid>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</guid>
 			<pubDate>Wed, 25 Mar 2009 00:00:00 +0900</pubDate>
-			<description><![CDATA[<center><img height='168' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png' width='398' /></center>
-<p>Processing example <a href='http://processing.org/learning/topics/firecube.html'>FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
+			<description><![CDATA[<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png" width="398" height="168"></center>
 
-<p>The result is&#8230;</p>
-<center><script src='http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js'> </script><noscript>(Flash Player 9  or later required)</noscript></center>
-<h1 id='performance_improvement'>Performance improvement</h1>
 
-<p><a href='http://processing.org/learning/topics/firecube.html'>Processing version</a> calculates every pixel color when</p>
+<p>Processing example <a href="http://processing.org/learning/topics/firecube.html">FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
+
+<p>The result is...</p>
+
+<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"> </script><noscript>(Flash Player 9  or later required)</noscript></center>
+
+
+<h1>Performance improvement</h1>
+
+<p><a href="http://processing.org/learning/topics/firecube.html">Processing version</a> calculates every pixel color when</p>
 
 <ul>
 <li>creating noise,</li>
-
 <li>combining values from adjacent pixels and</li>
-
 <li>converting color.</li>
 </ul>
+
 
 <p>So I implement it as follows:</p>
 
 <ul>
-<li>creating noise -&gt; <code>BitmapData.noise()</code></li>
-
-<li>combining values from adjacent pixels -&gt; <code>ConvolutionFilter</code></li>
-
-<li>converting color -&gt; <code>BitmapData.paletteMap()</code></li>
+<li>creating noise -> <code>BitmapData.noise()</code></li>
+<li>combining values from adjacent pixels -> <code>ConvolutionFilter</code></li>
+<li>converting color -> <code>BitmapData.paletteMap()</code></li>
 </ul>
 
-<h1 id='difficulty'>Difficulty</h1>
+
+<h1>Difficulty</h1>
 
 <p>HSV color space is not supported in AS3! I created a function called <code>HSVtoRGB</code>.</p>
 
-<p>Drawing a cube was a pain. So, I changed a cube to circle&#8230;</p>
+<p>Drawing a cube was a pain. So, I changed a cube to circle...</p>
 
 <p>Here is the code: (83 lines)</p>
-<div class='highlight'><pre><code class='actionscript'>// Processing FireCube (AS3 version) 
-// original source: http://processing.org/learning/topics/firecube.html
-package {
-import flash.display.*;
-import flash.filters.*;
-import flash.geom.*;
 
-public class FireCube extends Sprite{
-    private const WIDTH:int = 200;
-    private const HEIGHT:int = 150;
+<div class="highlight"><pre><code class="actionscript"><span class="c1">// Processing FireCube (AS3 version) </span>
+<span class="c1">// original source: http://processing.org/learning/topics/firecube.html</span>
+<span class="kd">package</span> <span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
 
-    public function FireCube(){
-        stage.align = &quot;TL&quot;;
-        stage.scaleMode = &quot;noScale&quot;;
-        scaleX = scaleY = 2;
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">FireCube</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="o">;</span>
 
-        // Create circle
-        var circle:Sprite = new Sprite();
-        circle.graphics.beginFill(0x808080);
-        circle.graphics.drawCircle(0, 0, 10);
-        circle.graphics.endFill();
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">FireCube</span><span class="p">(){</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="o">;</span>
 
-        // Create buffered image
-        var fire:BitmapData = new BitmapData(WIDTH, HEIGHT, false, 0);
-        var pg:BitmapData = fire.clone();
-        var noiseBmd:BitmapData = new BitmapData(WIDTH, 1);
+        <span class="c1">// Create circle</span>
+        <span class="k">var</span> <span class="nx">circle</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
 
-        var bmp:Bitmap = new Bitmap(pg);
-        addChild(bmp);
+        <span class="c1">// Create buffered image</span>
+        <span class="k">var</span> <span class="nx">fire</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pg</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="k">var</span> <span class="nx">noiseBmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
 
-        // Generate the palette
-        var r:Array = [], g:Array = [], b:Array = [];
-        for(var x:int = 0; x &lt; 256; x++) {
-            //Hue goes from 0 to 85: red to yellow
-            //Saturation is always the maximum: 255
-            //Lightness is 0..255 for x=0..128, and 255 for x=128..255
-            HSVtoRGB(x / 3, 1, Math.min(x * 3 / 255.0, 1), r, g, b);
-        }
+        <span class="k">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nb">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Bitmap</span><span class="p">(</span><span class="nx">pg</span><span class="p">);</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
 
-        // Use ConvolutionFilter to calculate for every pixel
-        var filter:ConvolutionFilter = new ConvolutionFilter(3, 3, [0, 0, 0, 16, 16, 16, 0, 16, 0], 65);
+        <span class="c1">// Generate the palette</span>
+        <span class="k">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">x</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="o">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//Hue goes from 0 to 85: red to yellow</span>
+            <span class="c1">//Saturation is always the maximum: 255</span>
+            <span class="c1">//Lightness is 0..255 for x=0..128, and 255 for x=128..255</span>
+            <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">x</span> <span class="sr">/ 3, 1, Math.min(x * 3 /</span> <span class="mf">255.0</span><span class="o">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">,</span> <span class="nx">r</span><span class="o">,</span> <span class="nx">g</span><span class="o">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">}</span>
 
-        // Prepare points and matrix
-        var matrix:Matrix = new Matrix();
-        var pt0:Point = new Point(0, HEIGHT - 1);
-        var pt1:Point = new Point(0, -1);
-        var pt2:Point = new Point(0, 1);
+        <span class="c1">// Use ConvolutionFilter to calculate for every pixel</span>
+        <span class="k">var</span> <span class="nx">filter</span><span class="o">:</span><span class="nx">ConvolutionFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ConvolutionFilter</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="p">[</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">,</span> <span class="mi">65</span><span class="p">);</span>
 
-        // Do loop
-        addEventListener(&quot;enterFrame&quot;, function(event:*):void{
-            // Randomize the bottom row of the fire buffer
-            noiseBmd.noise(Math.random() * 0xffffffff, 0, 190, 7, true);
-            fire.copyPixels(noiseBmd, noiseBmd.rect, pt0);
+        <span class="c1">// Prepare points and matrix</span>
+        <span class="k">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
+        <span class="k">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">HEIGHT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
 
-            // Display circle
-            matrix.tx = mouseX;
-            matrix.ty = mouseY;
-            fire.draw(circle, matrix);
+        <span class="c1">// Do loop</span>
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+            <span class="c1">// Randomize the bottom row of the fire buffer</span>
+            <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">noise</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mh">0xffffffff</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">190</span><span class="o">,</span> <span class="mi">7</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">noiseBmd</span><span class="o">,</span> <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="p">);</span>
 
-            // Add pixel values around current pixel
-            fire.applyFilter(fire, fire.rect, pt1, filter);
+            <span class="c1">// Display circle</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mouseX</span><span class="o">;</span>
+            <span class="nx">matrix</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">mouseY</span><span class="o">;</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">circle</span><span class="o">,</span> <span class="nx">matrix</span><span class="p">);</span>
 
-            // Output everything to screen using our palette colors
-            pg.paletteMap(fire, fire.rect, pt2, r, g, b);
-        });
-    }
+            <span class="c1">// Add pixel values around current pixel</span>
+            <span class="nx">fire</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">fire</span><span class="o">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt1</span><span class="o">,</span> <span class="nx">filter</span><span class="p">);</span>
 
-    // AS3 does not natively support HSV...  :-(
-    private function HSVtoRGB(h:int, s:Number, v:Number, r:Array, g:Array, b:Array):void {
-        if (h &lt; 60) {
-            r.push((v * 255) &lt;&lt; 16);
-            g.push((v * (1 - (1 - h / 60.0) * s) * 255) &lt;&lt; 8)
-            b.push(v * (1 - s) * 255);
-        } else if (h &lt; 120) {
-            r.push((v * (1 - (-h / 60.0 - 1) * s) * 255) &lt;&lt; 16);
-            g.push((v * 255) &lt;&lt; 8);
-            b.push(v * (1 - s) * 255);
-        } else {
-            throw Error(&#39;not implemented&#39;);
-        }
-    }
-}
-}
+            <span class="c1">// Output everything to screen using our palette colors</span>
+            <span class="nx">pg</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">fire</span><span class="o">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="o">,</span> <span class="nx">pt2</span><span class="o">,</span> <span class="nx">r</span><span class="o">,</span> <span class="nx">g</span><span class="o">,</span> <span class="nx">b</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="c1">// AS3 does not natively support HSV...  :-(</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">h</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">120</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
+            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;not implemented&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
-</div>]]></description>
+</div>
+
+
+
+]]></description>
 		</item>
 
 		<item>
@@ -169,220 +181,236 @@ public class FireCube extends Sprite{
 			<link>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</link>
 			<guid>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</guid>
 			<pubDate>Tue, 17 Feb 2009 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>I ported <a href='http://alteredqualia.com/visualization/evolve/'>Image evolution</a> to ActionScript 3.</p>
+			<description><![CDATA[<p>I ported <a href="http://alteredqualia.com/visualization/evolve/">Image evolution</a> to ActionScript 3.</p>
 
-<blockquote>
-<p>We start from random 50 polygons that are invisible. In each optimization step we randomly modify one parameter (like color components or polygon vertices) and check whether such new variant looks more like the original image. If it is, we keep it, and continue to mutate this one instead.</p>
-</blockquote>
+<blockquote><p>We start from random 50 polygons that are invisible. In each optimization step
+we randomly modify one parameter (like color components or polygon vertices)
+and check whether such new variant looks more like the original image.
+If it is, we keep it, and continue to mutate this one instead.</p></blockquote>
 
 <p>In my computer, the result was as follows.</p>
-<center><img height='378' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg' width='450' /></center>
-<p>It&#8217;s waste of CPU.., but very interesting.</p>
+
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg" width="450" height="378"></center>
+
+
+<p>It's waste of CPU.., but very interesting.</p>
 
 <p>Published SWF (CAUSION: TOO HEAVY CPU 60%~)</p>
-<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='420' width='450'>
-	<param name='src' value='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' />
-	<param name='play' value='true' />
-	<param name='loop' value='true' />
-	<param name='bgcolor' value='#ffffff' />
-	<param name='quality' value='high' />
-	<embed bgcolor='#ffffff' height='420' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' width='450'>
-	</embed>
-</object><noscript>(Flash Player 9 or above required)</noscript>
-<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href='http://alteredqualia.com/visualization/evolve/'>JavaScript version</a>. The original <a href='http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/'>C# version</a> is about 3 times faster than mine.</p>
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="450"
+    height="420" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
+    <param name="src" value="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf"/>
+    <param name="play" value="true"/>
+    <param name="loop" value="true"/>
+    <param name="bgcolor" value="#ffffff"/>
+    <param name="quality" value="high"/>
+    <embed src="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf" width="450" height="420" bgcolor="#ffffff" play="true" loop="true"
+    quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
+    </embed>
+</object>
+
+
+<p><noscript>(Flash Player 9 or above required)</noscript></p>
+
+<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href="http://alteredqualia.com/visualization/evolve/">JavaScript version</a>. The original <a href="http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/">C# version</a> is about 3 times faster than mine.</p>
 
 <p>Here is the code: (189lines)</p>
-<div class='highlight'><pre><code class='actionscript'>package{
-import flash.display.*;
-import flash.text.*;
-import flash.geom.*;
-import flash.filters.ColorMatrixFilter;
-import flash.utils.setInterval;
 
-[SWF(backgroundColor=&quot;#eeeeee&quot;)]
-public class Evolve extends Sprite{
-    [Embed(source=&#39;mona_lisa_crop.jpg&#39;)]
-    private var MonaLisa:Class;
-    private var imgWidth:int;
-    private var imgHeight:int;
+<div class="highlight"><pre><code class="actionscript"><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nb">ColorMatrixFilter</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nf">setInterval</span><span class="o">;</span>
 
-    private const POLYGONS:int = 50;
-    private var polygons:Array = [];
-    private var mutating:Boolean = false;
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#eeeeee&quot;</span><span class="p">)]</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">Evolve</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;mona_lisa_crop.jpg&#39;</span><span class="p">)]</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">MonaLisa</span><span class="o">:</span><span class="nb">Class</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">imgWidth</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">imgHeight</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
 
-    private var monotoneFilter:ColorMatrixFilter = new ColorMatrixFilter([
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-                0,     0,     0, 1, 0 ]);
-    private var pt0:Point = new Point(0, 0);
-    private var rect:Rectangle;
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POLYGONS</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">polygons</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">mutating</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
 
-    private var bestBmd:BitmapData;
-    private var testBmd:BitmapData;
-    private var inputBmd:BitmapData;
-    private var debugBmd:BitmapData;
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">monotoneFilter</span><span class="o">:</span><span class="nb">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">ColorMatrixFilter</span><span class="p">([</span>
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+                <span class="mi">0</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">0</span> <span class="p">]);</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nb">Rectangle</span><span class="o">;</span>
 
-    private var canvas:Sprite;
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">bestBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">testBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">inputBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">debugBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
 
-    private var score:uint;
-    private var scoreMax:uint;
-    private var mutations:uint = 0;
-    private var candidates:uint = 0;
-    private var totalTime:Number = 0;
-    private var time:Date;
-    private var scoreText:TextField;
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">;</span>
 
-    public function Evolve(){
-        stage.scaleMode = &quot;noScale&quot;;
-        stage.align = &quot;TL&quot;;
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">score</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">scoreMax</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">mutations</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">candidates</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">totalTime</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">time</span><span class="o">:</span><span class="nb">Date</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">scoreText</span><span class="o">:</span><span class="nb">TextField</span><span class="o">;</span>
 
-        // init image
-        var bmp:Bitmap = new MonaLisa();
-        inputBmd = bmp.bitmapData;
-        addChild(bmp);
-        imgWidth = bmp.width;
-        imgHeight = bmp.height;
-        rect = inputBmd.rect;
-        score = scoreMax = rect.width * rect.height * 255;
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">Evolve</span><span class="p">(){</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
 
-        // init buffer
-        bestBmd = inputBmd.clone(); bestBmd.fillRect(rect, 0x000000);
-        testBmd = inputBmd.clone(); testBmd.fillRect(rect, 0x000000);
-        debugBmd = inputBmd.clone();
-        addChild(new Bitmap(bestBmd)).x = bmp.width + 10;
+        <span class="c1">// init image</span>
+        <span class="k">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nb">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MonaLisa</span><span class="p">();</span>
+        <span class="nx">inputBmd</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+        <span class="nx">imgWidth</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span><span class="o">;</span>
+        <span class="nx">imgHeight</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span><span class="o">;</span>
+        <span class="nx">rect</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">rect</span><span class="o">;</span>
+        <span class="nx">score</span> <span class="o">=</span> <span class="nx">scoreMax</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="mi">255</span><span class="o">;</span>
 
-        // init data and canvas
-        canvas = new Sprite();
-        for(var i:int = 0; i &lt; POLYGONS; i++){
-            polygons[i] = new Polygon();
-            canvas.addChild(new Sprite());
-        }
-        drawTest();
-        testToBest();
+        <span class="c1">// init buffer</span>
+        <span class="nx">bestBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">bestBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">testBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">testBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">debugBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nb">Bitmap</span><span class="p">(</span><span class="nx">bestBmd</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="mi">10</span><span class="o">;</span>
 
-        // init ui
-        var tf:TextField = new TextField();
-        tf.text = &quot;click to start&quot;;
-        tf.y = bmp.height + 10;
-        tf.scaleX = tf.scaleY = 3;
-        addChild(tf);
-        stage.addEventListener(&quot;click&quot;, function(event:*):void{
-            mutating = !mutating;
-            time = (mutating ? new Date() : null);
-            tf.text = (mutating ? &quot;Now Simulating...&quot; : &quot;click to start&quot;);
-        });
-        scoreText = new TextField();
-        scoreText.autoSize = &quot;left&quot;;
-        scoreText.y = bmp.height + 60;
-        scoreText.scaleX = scoreText.scaleY = 3;
-        addChild(scoreText);
+        <span class="c1">// init data and canvas</span>
+        <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POLYGONS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Polygon</span><span class="p">();</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nb">Sprite</span><span class="p">());</span>
+        <span class="p">}</span>
+        <span class="nx">drawTest</span><span class="p">();</span>
+        <span class="nx">testToBest</span><span class="p">();</span>
 
-        // start timer
-        setInterval(update, 10);
-    }
+        <span class="c1">// init ui</span>
+        <span class="k">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nb">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">TextField</span><span class="p">();</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;click to start&quot;</span><span class="o">;</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="o">;</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+            <span class="nx">mutating</span> <span class="o">=</span> <span class="o">!</span><span class="nx">mutating</span><span class="o">;</span>
+            <span class="nx">time</span> <span class="o">=</span> <span class="p">(</span><span class="nx">mutating</span> <span class="o">?</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">()</span> <span class="o">:</span> <span class="kc">null</span><span class="p">);</span>
+            <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="p">(</span><span class="nx">mutating</span> <span class="o">?</span> <span class="s2">&quot;Now Simulating...&quot;</span> <span class="o">:</span> <span class="s2">&quot;click to start&quot;</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="nx">scoreText</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">TextField</span><span class="p">();</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="o">;</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">60</span><span class="o">;</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scoreText</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">scoreText</span><span class="p">);</span>
 
-    private function update():void{
-        if(!mutating) return;
-        var t:Date = new Date();
-        totalTime += (t.getTime() - time.getTime()) / 1000;
-        time = t;
+        <span class="c1">// start timer</span>
+        <span class="nf">setInterval</span><span class="p">(</span><span class="nx">update</span><span class="o">,</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="p">}</span>
 
-        for(var i:int = 0; i &lt; 10; i++) update1();
-        scoreText.text = (int((1 - score / scoreMax) * 10000) / 100)
-             + &quot;%\n&quot; + mutations + &quot; / &quot; + candidates + &quot;\n&quot;
-             + (int(totalTime * 10) / 10) + &quot;s&quot;;
-    }
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">update</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">mutating</span><span class="p">)</span> <span class="k">return</span><span class="o">;</span>
+        <span class="k">var</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Date</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
+        <span class="nx">totalTime</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">-</span> <span class="nx">time</span><span class="p">.</span><span class="nx">getTime</span><span class="p">())</span> <span class="o">/</span> <span class="mi">1000</span><span class="o">;</span>
+        <span class="nx">time</span> <span class="o">=</span> <span class="nx">t</span><span class="o">;</span>
 
-    private function update1():void{
-        var index:int = Math.random() * POLYGONS;
-        var backup:Polygon = polygons[index].clone();
-        polygons[index].mutate();
-        drawTest();
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">update1</span><span class="p">();</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">score</span> <span class="sr">/ scoreMax) * 10000) /</span> <span class="mi">100</span><span class="p">)</span>
+             <span class="o">+</span> <span class="s2">&quot;%\n&quot;</span> <span class="o">+</span> <span class="nx">mutations</span> <span class="o">+</span> <span class="s2">&quot; / &quot;</span> <span class="o">+</span> <span class="nx">candidates</span> <span class="o">+</span> <span class="s2">&quot;\n&quot;</span>
+             <span class="o">+</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nx">totalTime</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;s&quot;</span><span class="o">;</span>
+    <span class="p">}</span>
 
-        var diffBmd:BitmapData = testBmd.compare(inputBmd) as BitmapData;
-        diffBmd.applyFilter(diffBmd, rect, pt0, monotoneFilter);
-        var testScore:uint = 0;
-        for(var i:int = 0; i &lt; 0x100; i++){
-            testScore += diffBmd.threshold(diffBmd, rect, pt0, &quot;==&quot;, i, i, 0xff) * i;
-        }
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">update1</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">var</span> <span class="nx">index</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">POLYGONS</span><span class="o">;</span>
+        <span class="k">var</span> <span class="nx">backup</span><span class="o">:</span><span class="nx">Polygon</span> <span class="o">=</span> <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">mutate</span><span class="p">();</span>
+        <span class="nx">drawTest</span><span class="p">();</span>
 
-        if(score &gt; testScore){
-            score = testScore;
-            testToBest();
-            mutations++;
-        }else{
-            polygons[index] = backup;
-        }
-        candidates++;
-    }
+        <span class="k">var</span> <span class="nx">diffBmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="nx">testBmd</span><span class="p">.</span><span class="nx">compare</span><span class="p">(</span><span class="nx">inputBmd</span><span class="p">)</span> <span class="nx">as</span> <span class="nb">BitmapData</span><span class="o">;</span>
+        <span class="nx">diffBmd</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">diffBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="o">,</span> <span class="nx">monotoneFilter</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">testScore</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">testScore</span> <span class="o">+=</span> <span class="nx">diffBmd</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">diffBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="o">,</span> <span class="s2">&quot;==&quot;</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">*</span> <span class="nx">i</span><span class="o">;</span>
+        <span class="p">}</span>
 
-    private function drawTest():void{
-        canvas.graphics.clear();
-        for(var i:int = 0; i &lt; POLYGONS; i++){
-            polygons[i].draw(canvas, imgWidth, imgHeight);
-        }
+        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">testScore</span><span class="p">){</span>
+            <span class="nx">score</span> <span class="o">=</span> <span class="nx">testScore</span><span class="o">;</span>
+            <span class="nx">testToBest</span><span class="p">();</span>
+            <span class="nx">mutations</span><span class="o">++;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nx">backup</span><span class="o">;</span>
+        <span class="p">}</span>
+        <span class="nx">candidates</span><span class="o">++;</span>
+    <span class="p">}</span>
 
-        testBmd.fillRect(rect, 0x000000);
-        testBmd.draw(canvas);
-    }
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">drawTest</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POLYGONS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="o">,</span> <span class="nx">imgWidth</span><span class="o">,</span> <span class="nx">imgHeight</span><span class="p">);</span>
+        <span class="p">}</span>
 
-    private function testToBest():void{
-        bestBmd.copyPixels(testBmd, rect, pt0);
-    }
-}
-}
+        <span class="nx">testBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">testBmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+    <span class="p">}</span>
 
-import flash.display.*;
-import flash.geom.*;
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">testToBest</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">bestBmd</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">testBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
 
-class Polygon{
-    private const POINTS:int = 6;
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
 
-    public var points:Array = [];
-    public var color:uint;
-    public var alpha:Number;
+<span class="kd">class</span> <span class="nx">Polygon</span><span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POINTS</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="o">;</span>
 
-    public function Polygon(polygon:Polygon = null){
-        for(var i:int = 0; i &lt; POINTS; i++)
-            points[i] = (polygon ? polygon.points[i].clone() : new Point(Math.random(), Math.random()));
-        color = (polygon ? polygon.color : 0xffffff * Math.random());
-        alpha = (polygon ? polygon.alpha : .1);
-    }
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">color</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span><span class="o">;</span>
 
-    public function clone():Polygon{
-        return new Polygon(this);
-    }
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">Polygon</span><span class="p">(</span><span class="nx">polygon</span><span class="o">:</span><span class="nx">Polygon</span> <span class="o">=</span> <span class="kc">null</span><span class="p">){</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINTS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+            <span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">clone</span><span class="p">()</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()));</span>
+        <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">color</span> <span class="o">:</span> <span class="mh">0xffffff</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">());</span>
+        <span class="nx">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">:</span> <span class="p">.</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    public function mutate():void{
-        (Math.random() &lt; 0.5 ? mutateColor() : mutatePosition());
-    }
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">clone</span><span class="p">()</span><span class="o">:</span><span class="nx">Polygon</span><span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">Polygon</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    private function mutateColor():void{
-        switch(int(Math.random() * 4)){
-            case 0: color = (color &amp; 0x00ffff) + int(Math.random() * 255) * 0x010000; break;
-            case 1: color = (color &amp; 0xff00ff) + int(Math.random() * 255) * 0x000100; break;
-            case 2: color = (color &amp; 0xffff00) + int(Math.random() * 255) * 0x000001; break;
-            case 3: alpha = Math.random(); break;
-        }
-    }
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">mutate</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">?</span> <span class="nx">mutateColor</span><span class="p">()</span> <span class="o">:</span> <span class="nx">mutatePosition</span><span class="p">());</span>
+    <span class="p">}</span>
 
-    private function mutatePosition():void{
-        var p:int = Math.random() * POINTS;
-        if(Math.random() &lt; .5) points[p].x = Math.random();
-        else                   points[p].y = Math.random();
-    }
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">mutateColor</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">switch</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)){</span>
+            <span class="k">case</span> <span class="mi">0</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x00ffff</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x010000</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">1</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xff00ff</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x000100</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">2</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xffff00</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x000001</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">3</span><span class="o">:</span> <span class="nx">alpha</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span> <span class="k">break</span><span class="o">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
 
-    public function draw(canvas:Sprite, w:Number, h:Number):void{
-        canvas.graphics.beginFill(color, alpha);
-        canvas.graphics.moveTo(points[0].x * w, points[0].y * h);
-        for(var i:int = 1; i &lt; POINTS; i++)
-            canvas.graphics.lineTo(points[i].x * w, points[i].y * h);
-        canvas.graphics.endFill();
-    }
-}
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">mutatePosition</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">POINTS</span><span class="o">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="nx">points</span><span class="p">[</span><span class="nx">p</span><span class="p">].</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+        <span class="k">else</span>                   <span class="nx">points</span><span class="p">[</span><span class="nx">p</span><span class="p">].</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">,</span> <span class="nx">w</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">h</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="o">,</span> <span class="nx">alpha</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="o">,</span> <span class="nx">points</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINTS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="o">,</span> <span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
-</div>]]></description>
+</div>
+
+
+
+]]></description>
 		</item>
 
 		<item>
@@ -390,20 +418,26 @@ class Polygon{
 			<link>http://tech.nitoyon.com/en/blog/2008/06/26/color-illusion-generator-released/</link>
 			<guid>http://tech.nitoyon.com/en/blog/2008/06/26/color-illusion-generator-released/</guid>
 			<pubDate>Thu, 26 Jun 2008 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>I released a &#8217;<a href='http://tech.nitoyon.com/illusion1/'>Color Illusion Generator</a>&#8217;, which enables to create a illusion movie from an arbitrary image.</p>
+			<description><![CDATA[<p>I released a '<a href="http://tech.nitoyon.com/illusion1/">Color Illusion Generator</a>', which enables to create a illusion movie from an arbitrary image.</p>
 
 <p>(Example)</p>
-<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0' height='240' id='__illsion1_swf1214513797531' width='360'>
- <param name='movie' value='http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531' />
- <param name='bgcolor' value='#000000' />
- <param name='loop' value='false' />
- <param name='quality' value='high' />
- <param name='flashVars' value='url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg' />
- <embed bgcolor='#000000' flashVars='url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg' height='240' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?p1_prod_version=shockwaveflash' src='http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531' type='application/x-shockwave-flash' width='360' />
-</object><noscript>(Flash Player 9.0+ Required)</noscript>
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0" width="360" height="240" id="__illsion1_swf1214513797531">
+ <param name="movie" value="http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531"/>
+ <param name="bgcolor" value="#000000"/>
+ <param name="loop" value="false"/>
+ <param name="quality" value="high"/>
+ <param name="flashVars" value="url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg"/>
+ <embed src="http://tech.nitoyon.com/illusion1/Illusion.swf?1214513797531" width="360" height="240" bgcolor="#000000"   pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?p1_prod_version=shockwaveflash"   type="application/x-shockwave-flash" flashVars="url=http%3A%2F%2Ftech.nitoyon.com%2Fillusion1%2Fsample3.jpg"></embed>
+</object>
+
+
+<p><noscript>(Flash Player 9.0+ Required)</noscript></p>
+
 <p>You can embed the movie to your blog.</p>
 
-<p>Source code: <a href='http://tech.nitoyon.com/illusion1/Illusion.as'>Illusion.as</a></p>]]></description>
+<p>Source code: <a href="http://tech.nitoyon.com/illusion1/Illusion.as">Illusion.as</a></p>
+]]></description>
 		</item>
 
 		<item>
@@ -414,203 +448,215 @@ class Polygon{
 			<description><![CDATA[<p>I placed Google Earth control in Google Maps.</p>
 
 <p>It is impossible to get the image data by <code>BitmapData.draw()</code>, so I used a <code>DisplacementMapFilter</code>.</p>
-<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='400' width='420'>
-	<param name='src' value='http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf' />
-	<param name='play' value='true' />
-	<param name='loop' value='true' />
-	<param name='bgcolor' value='#000000' />
-	<param name='quality' value='high' />
-	<embed bgcolor='#000000' height='400' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf' width='420'>
-	</embed>
-</object><noscript>(Flash Player 9 or above required)</noscript>
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="420"
+    height="400" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
+    <param name="src" value="http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf"/>
+    <param name="play" value="true"/>
+    <param name="loop" value="true"/>
+    <param name="bgcolor" value="#000000"/>
+    <param name="quality" value="high"/>
+    <embed src="http://tech.nitoyon.com/misc/swf/GoogleEarthControl.swf" width="420" height="400" bgcolor="#000000" play="true" loop="true"
+    quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
+    </embed>
+</object>
+
+
+<p><noscript>(Flash Player 9 or above required)</noscript></p>
+
 <p>Here is the code(185 lines):</p>
-<div class='highlight'><pre><code class='actionscript'>package {
-    import flash.display.*;
-    import flash.geom.*;
-    import flash.events.*;
-    import flash.filters.DisplacementMapFilter;
-    import com.google.maps.*;
 
-    [SWF(backgroundColor=&quot;0x000000&quot;)]
-    public class GoogleEarthControl extends Sprite {
-        private const WIDTH:int = 400;
-        private const HEIGHT:int = 400;
-        private const VIEWDISTANCE:Number = 500;
-        private var map:Map;
-        private var mapContainer:Sprite;
-        private var bmd:BitmapData;
+<div class="highlight"><pre><code class="actionscript"><span class="kd">package</span> <span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">DisplacementMapFilter</span><span class="o">;</span>
+    <span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="o">*;</span>
 
-        public function GoogleEarthControl() {
-            stage.scaleMode = &quot;noScale&quot;;
-            stage.align = &quot;TL&quot;;
+    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">GoogleEarthControl</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">400</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">400</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">VIEWDISTANCE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">500</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="k">var</span> <span class="nx">map</span><span class="o">:</span><span class="nx">Map</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="k">var</span> <span class="nx">mapContainer</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="k">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
 
-            mapContainer = new Sprite();
-            addChild(mapContainer);
+        <span class="kd">public</span> <span class="kd">function</span> <span class="nx">GoogleEarthControl</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
 
-            map = new Map();
-            map.key = &quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;;
-            map.setSize(new Point(WIDTH, HEIGHT));
-            map.addEventListener(MapEvent.MAP_READY, function(event:*):void{
-                map.setCenter(new LatLng(35.003759, 135.769322), 10, MapType.SATELLITE_MAP_TYPE);
+            <span class="nx">mapContainer</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">mapContainer</span><span class="p">);</span>
 
-                var mapMask:Sprite = new Sprite();
-                mapMask.graphics.beginFill(0);
-                mapMask.graphics.drawRect(0, 0, WIDTH, HEIGHT);
-                mapMask.graphics.endFill();
-                mapContainer.mask = mapMask;
+            <span class="nx">map</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Map</span><span class="p">();</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="s2">&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class="o">;</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="p">));</span>
+            <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">MapEvent</span><span class="p">.</span><span class="nx">MAP_READY</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">map</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">(</span><span class="k">new</span> <span class="nx">LatLng</span><span class="p">(</span><span class="mf">35.003759</span><span class="o">,</span> <span class="mf">135.769322</span><span class="p">)</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="nx">MapType</span><span class="p">.</span><span class="nx">SATELLITE_MAP_TYPE</span><span class="p">);</span>
 
-                bmd = new BitmapData(WIDTH, HEIGHT);
+                <span class="k">var</span> <span class="nx">mapMask</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
+                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+                <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">mapMask</span><span class="o">;</span>
 
-                var s1:ScrollBar = new ScrollBar(50);
-                addChild(s1);
-                s1.rotation = -90
-                s1.x = WIDTH - 100; s1.y = 30;
-                s1.addEventListener(&quot;change&quot;, function(event:Event):void{
-                    updateValue(s1.value);
-                });
-                s1.dispatchEvent(new Event(&quot;change&quot;));
+                <span class="nx">bmd</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
 
-                var s2:ScrollBar = new ScrollBar(80);
-                addChild(s2);
-                s2.x = WIDTH - 10; s2.y = 50;
-                s2.addEventListener(&quot;change&quot;, function(event:Event):void{
-                    map.setZoom((100 - s2.value) / 100 * map.getMaxZoomLevel());
-                });
-                s2.dispatchEvent(new Event(&quot;change&quot;));
+                <span class="k">var</span> <span class="nx">s1</span><span class="o">:</span><span class="nx">ScrollBar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s1</span><span class="p">);</span>
+                <span class="nx">s1</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="o">-</span><span class="mi">90</span>
+                <span class="nx">s1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">100</span><span class="o">;</span> <span class="nx">s1</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">30</span><span class="o">;</span>
+                <span class="nx">s1</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                    <span class="nx">updateValue</span><span class="p">(</span><span class="nx">s1</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+                <span class="p">});</span>
+                <span class="nx">s1</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
 
-                var r:RotationControl = new RotationControl(-10);
-                addChild(r);
-                r.x = WIDTH - 60; r.y = 90;
-                r.addEventListener(&quot;change&quot;, function(event:Event):void{
-                    var matrix:Matrix = new Matrix();
-                    matrix.translate(-WIDTH / 2, -HEIGHT / 2);
-                    matrix.rotate(r.value * Math.PI / 180);
-                    matrix.translate(WIDTH / 2, HEIGHT / 2);
-                    map.transform.matrix = matrix;
-                });
-                r.dispatchEvent(new Event(&quot;change&quot;));
-            });
-            mapContainer.addChild(map);
-        }
+                <span class="k">var</span> <span class="nx">s2</span><span class="o">:</span><span class="nx">ScrollBar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="mi">80</span><span class="p">);</span>
+                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s2</span><span class="p">);</span>
+                <span class="nx">s2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">10</span><span class="o">;</span> <span class="nx">s2</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="o">;</span>
+                <span class="nx">s2</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                    <span class="nx">map</span><span class="p">.</span><span class="nx">setZoom</span><span class="p">((</span><span class="mi">100</span> <span class="o">-</span> <span class="nx">s2</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">*</span> <span class="nx">map</span><span class="p">.</span><span class="nx">getMaxZoomLevel</span><span class="p">());</span>
+                <span class="p">});</span>
+                <span class="nx">s2</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
 
-        private function updateValue(value:int):void{
-            var rad:Number = value / 100 * 60 * Math.PI / 180;
-            var p:Number = -Math.sin(rad) / VIEWDISTANCE;
+                <span class="k">var</span> <span class="nx">r</span><span class="o">:</span><span class="nx">RotationControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">RotationControl</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">);</span>
+                <span class="nx">addChild</span><span class="p">(</span><span class="nx">r</span><span class="p">);</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">60</span><span class="o">;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">90</span><span class="o">;</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                    <span class="k">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
+                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="o">-</span><span class="nx">WIDTH</span> <span class="sr">/ 2, -HEIGHT /</span> <span class="mi">2</span><span class="p">);</span>
+                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotate</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">value</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">);</span>
+                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="nx">WIDTH</span> <span class="sr">/ 2, HEIGHT /</span> <span class="mi">2</span><span class="p">);</span>
+                    <span class="nx">map</span><span class="p">.</span><span class="nx">transform</span><span class="p">.</span><span class="nx">matrix</span> <span class="o">=</span> <span class="nx">matrix</span><span class="o">;</span>
+                <span class="p">});</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+            <span class="p">});</span>
+            <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
+        <span class="p">}</span>
 
-            bmd.lock();
-            var HW:int = WIDTH / 2;
-            var HH:int = HEIGHT / 2;
-            for(var j:int = -HH; j &lt; HH; j++){
-                var pj:Number = 1 + j * p;
-                for(var i:int = -HW; i &lt; HW; i++){
-                    var _x:int = pj * i;
-                    var _y:int = pj * j / Math.cos(rad);
-                    bmd.setPixel(i + HW, j + HH, getColor((_x - i) * 1 + 0x80, (_y - j) * 1 + 0x80, 0));
-                }
-            }
-            bmd.unlock();
+        <span class="kd">private</span> <span class="kd">function</span> <span class="nx">updateValue</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+            <span class="k">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">value</span> <span class="sr">/ 100 * 60 * Math.PI /</span> <span class="mi">180</span><span class="o">;</span>
+            <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">/</span> <span class="nx">VIEWDISTANCE</span><span class="o">;</span>
 
-            mapContainer.filters = [new DisplacementMapFilter(bmd, new Point(0, 0), 1, 2, 256, 256, &quot;color&quot;)];
-        }
+            <span class="nx">bmd</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+            <span class="k">var</span> <span class="nx">HW</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
+            <span class="k">var</span> <span class="nx">HH</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">j</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">HH</span><span class="o">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">HH</span><span class="o">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">){</span>
+                <span class="k">var</span> <span class="nx">pj</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="nx">p</span><span class="o">;</span>
+                <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">HW</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">HW</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+                    <span class="k">var</span> <span class="nx">_x</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">pj</span> <span class="o">*</span> <span class="nx">i</span><span class="o">;</span>
+                    <span class="k">var</span> <span class="nx">_y</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">pj</span> <span class="o">*</span> <span class="nx">j</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
+                    <span class="nx">bmd</span><span class="p">.</span><span class="nx">setPixel</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">HW</span><span class="o">,</span> <span class="nx">j</span> <span class="o">+</span> <span class="nx">HH</span><span class="o">,</span> <span class="nx">getColor</span><span class="p">((</span><span class="nx">_x</span> <span class="o">-</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">+</span> <span class="mh">0x80</span><span class="o">,</span> <span class="p">(</span><span class="nx">_y</span> <span class="o">-</span> <span class="nx">j</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">+</span> <span class="mh">0x80</span><span class="o">,</span> <span class="mi">0</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="nx">bmd</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
 
-        private static function bounds(val:Number, min:Number = Number.POSITIVE_INFINITY, max:Number = Number.NEGATIVE_INFINITY):Number {
-            return Math.max(Math.min(val, max), min);
-        }
+            <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">DisplacementMapFilter</span><span class="p">(</span><span class="nx">bmd</span><span class="o">,</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">256</span><span class="o">,</span> <span class="mi">256</span><span class="o">,</span> <span class="s2">&quot;color&quot;</span><span class="p">)];</span>
+        <span class="p">}</span>
 
-        private static function getColor(r:int, g:int, b:int):uint {
-            return Math.floor(bounds(r, 0, 255)) * 0x10000
-                 + Math.floor(bounds(g, 0, 255)) * 0x100
-                 + Math.floor(bounds(b, 0, 255));
-        }
-    }
-}
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">function</span> <span class="nx">bounds</span><span class="p">(</span><span class="nx">val</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">min</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">.</span><span class="nx">POSITIVE_INFINITY</span><span class="o">,</span> <span class="nx">max</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">.</span><span class="nx">NEGATIVE_INFINITY</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">val</span><span class="o">,</span> <span class="nx">max</span><span class="p">)</span><span class="o">,</span> <span class="nx">min</span><span class="p">);</span>
+        <span class="p">}</span>
 
-import flash.display.Sprite;
-import flash.events.*;
-import flash.geom.Point;
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">function</span> <span class="nx">getColor</span><span class="p">(</span><span class="nx">r</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">int</span><span class="o">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nb">uint</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">r</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">*</span> <span class="mh">0x10000</span>
+                 <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">g</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">*</span> <span class="mh">0x100</span>
+                 <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">b</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">255</span><span class="p">));</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class ScrollBar extends Sprite {
-    public var value:int;
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nb">Point</span><span class="o">;</span>
 
-    public function ScrollBar(_value:int):void {
-        value = _value;
+<span class="kd">class</span> <span class="nx">ScrollBar</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">value</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
 
-        useHandCursor = buttonMode = true;
-        graphics.beginFill(0xffffff);
-        graphics.lineStyle(0);
-        graphics.drawRect(0, -2, 8, 112);
-        graphics.endFill();
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="nx">_value</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+        <span class="nx">value</span> <span class="o">=</span> <span class="nx">_value</span><span class="o">;</span>
 
-        var tab:Sprite = new Sprite();
-        tab.graphics.beginFill(0xffffff);
-        tab.graphics.lineStyle(0);
-        tab.graphics.drawRect(-8, 0, 24, 8);
-        tab.graphics.endFill();
-        tab.y = _value;
-        addChild(tab);
+        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="o">-</span><span class="mi">2</span><span class="o">,</span> <span class="mi">8</span><span class="o">,</span> <span class="mi">112</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
 
-        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
-            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
-            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
-            mouseMoveHandler(event);
-        });
+        <span class="k">var</span> <span class="nx">tab</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">24</span><span class="o">,</span> <span class="mi">8</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">_value</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tab</span><span class="p">);</span>
 
-        var mouseMoveHandler:Function = function(event:MouseEvent):void {
-            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
-            tab.y = Math.min(Math.max(0, p.y), 100);
-        }
-        var mouseUpHandler:Function = function(event:MouseEvent):void {
-            value = tab.y;
-            dispatchEvent(new Event(&quot;change&quot;));
-            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
-            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
-        }
-    }
-}
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="o">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="o">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+            <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
+        <span class="p">});</span>
 
-class RotationControl extends Sprite {
-    public var value:int = 0;
+        <span class="k">var</span> <span class="nx">mouseMoveHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="o">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">));</span>
+            <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span><span class="o">,</span> <span class="mi">100</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">var</span> <span class="nx">mouseUpHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span><span class="o">;</span>
+            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="o">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="o">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-    public function RotationControl(_value:int):void {
-        value = _value;
+<span class="kd">class</span> <span class="nx">RotationControl</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">value</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
 
-        useHandCursor = buttonMode = true;
-        graphics.beginFill(0xffffff);
-        graphics.lineStyle(0);
-        graphics.drawCircle(0, 0, 40);
-        graphics.drawCircle(0, 0, 32);
-        graphics.endFill();
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">RotationControl</span><span class="p">(</span><span class="nx">_value</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+        <span class="nx">value</span> <span class="o">=</span> <span class="nx">_value</span><span class="o">;</span>
 
-        var tab:Sprite = new Sprite();
-        tab.graphics.beginFill(0xffffff);
-        tab.graphics.lineStyle(0);
-        tab.graphics.drawRect(-44, -8, 16, 16);
-        tab.graphics.endFill();
-        tab.rotation = _value + 90;
-        addChild(tab);
+        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">40</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">32</span><span class="p">);</span>
+        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
 
-        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
-            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
-            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
-            mouseMoveHandler(event);
-        });
+        <span class="k">var</span> <span class="nx">tab</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">44</span><span class="o">,</span> <span class="o">-</span><span class="mi">8</span><span class="o">,</span> <span class="mi">16</span><span class="o">,</span> <span class="mi">16</span><span class="p">);</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">_value</span> <span class="o">+</span> <span class="mi">90</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tab</span><span class="p">);</span>
 
-        var mouseMoveHandler:Function = function(event:MouseEvent):void {
-            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
-            tab.rotation = p.x == 0 ? 90 : Math.atan(p.y / p.x) / Math.PI * 180 + (p.x &gt; 0 ? 180 : 0);
-            value = tab.rotation - 90;
-            dispatchEvent(new Event(&quot;change&quot;));
-        }
-        var mouseUpHandler:Function = function(event:MouseEvent):void {
-            value = tab.rotation - 90;
-            dispatchEvent(new Event(&quot;change&quot;));
-            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
-            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
-        }
-    }
-}
+        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="o">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="o">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+            <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="k">var</span> <span class="nx">mouseMoveHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="o">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">));</span>
+            <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">90</span> <span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="sr">/ p.x) /</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">+</span> <span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">180</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">-</span> <span class="mi">90</span><span class="o">;</span>
+            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="k">var</span> <span class="nx">mouseUpHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">-</span> <span class="mi">90</span><span class="o">;</span>
+            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="o">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="o">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
-</div>]]></description>
+</div>
+
+
+
+]]></description>
 		</item>
 
 	</channel>

@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2012/09/04/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"},
 	{url: "/ja/blog/2012/08/27/hatena-blog/", title: "暫定で「はてなブログ」に移転した"},
 	{url: "/ja/blog/2012/07/31/disqus-comment-import/", title: "DISQUS へのコメントのインポートが意外に面倒"},
 	{url: "/ja/blog/2012/06/27/english-blog-renewal/", title: "英語ブログを新調した話と移転計画"},
-	{url: "/ja/blog/2012/05/24/stereoscopic-maps/", title: "飛び出る Google マップを作ってみた"},
-	{url: "/ja/blog/2012/05/17/gacha-probability/", title: "コンプガチャだけじゃない!?　ガチャに潜む確率の罠"}
+	{url: "/ja/blog/2012/05/24/stereoscopic-maps/", title: "飛び出る Google マップを作ってみた"}
 ];
 
 Site.archives.months = [
-  "201208"
+  "201209"
+, "201208"
 , "201207"
 , "201206"
 , "201205"

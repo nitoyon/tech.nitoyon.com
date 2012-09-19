@@ -13,7 +13,7 @@
 	<meta property="og:title" content="50 polygons Mona Lisa in AS3"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="I ported Image evolution to ActionScript 3.We start from random 50 polygons that are invisible. In each optimization step we randomly modify one parameter (like color components or polygon vertices) and check whether such new variant looks more like the..."/>
+	<meta property="og:description" content="I ported Image evolution to ActionScript 3.We start from random 50 polygons that are invisible. In each optimization stepwe randomly modify one parameter (like color components or polygon vertices)and check whether such new variant looks more like the original image.If..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="TECH-NI Blog"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -56,220 +56,236 @@
 <div class="entry">
 <div class="entry-body">
 
-<p>I ported <a href='http://alteredqualia.com/visualization/evolve/'>Image evolution</a> to ActionScript 3.</p>
+<p>I ported <a href="http://alteredqualia.com/visualization/evolve/">Image evolution</a> to ActionScript 3.</p>
 
-<blockquote>
-<p>We start from random 50 polygons that are invisible. In each optimization step we randomly modify one parameter (like color components or polygon vertices) and check whether such new variant looks more like the original image. If it is, we keep it, and continue to mutate this one instead.</p>
-</blockquote>
+<blockquote><p>We start from random 50 polygons that are invisible. In each optimization step
+we randomly modify one parameter (like color components or polygon vertices)
+and check whether such new variant looks more like the original image.
+If it is, we keep it, and continue to mutate this one instead.</p></blockquote>
 
 <p>In my computer, the result was as follows.</p>
-<center><img height='378' src='http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg' width='450' /></center>
-<p>It&#8217;s waste of CPU.., but very interesting.</p>
+
+<center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg" width="450" height="378"></center>
+
+
+<p>It's waste of CPU.., but very interesting.</p>
 
 <p>Published SWF (CAUSION: TOO HEAVY CPU 60%~)</p>
-<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' codebase='http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0' height='420' width='450'>
-	<param name='src' value='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' />
-	<param name='play' value='true' />
-	<param name='loop' value='true' />
-	<param name='bgcolor' value='#ffffff' />
-	<param name='quality' value='high' />
-	<embed bgcolor='#ffffff' height='420' loop='true' play='true' pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' quality='high' src='http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf' width='450'>
-	</embed>
-</object><noscript>(Flash Player 9 or above required)</noscript>
-<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href='http://alteredqualia.com/visualization/evolve/'>JavaScript version</a>. The original <a href='http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/'>C# version</a> is about 3 times faster than mine.</p>
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="450"
+    height="420" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
+    <param name="src" value="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf"/>
+    <param name="play" value="true"/>
+    <param name="loop" value="true"/>
+    <param name="bgcolor" value="#ffffff"/>
+    <param name="quality" value="high"/>
+    <embed src="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf" width="450" height="420" bgcolor="#ffffff" play="true" loop="true"
+    quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
+    </embed>
+</object>
+
+
+<p><noscript>(Flash Player 9 or above required)</noscript></p>
+
+<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href="http://alteredqualia.com/visualization/evolve/">JavaScript version</a>. The original <a href="http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/">C# version</a> is about 3 times faster than mine.</p>
 
 <p>Here is the code: (189lines)</p>
-<div class='highlight'><pre><code class='actionscript'><span class='kd'>package</span><span class='p'>{</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>display</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>text</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>geom</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>filters</span><span class='p'>.</span><span class='nb'>ColorMatrixFilter</span><span class='o'>;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>utils</span><span class='p'>.</span><span class='nf'>setInterval</span><span class='o'>;</span>
 
-<span class='p'>[</span><span class='nx'>SWF</span><span class='p'>(</span><span class='nx'>backgroundColor</span><span class='o'>=</span><span class='s2'>&quot;#eeeeee&quot;</span><span class='p'>)]</span>
-<span class='kd'>public</span> <span class='kd'>class</span> <span class='nx'>Evolve</span> <span class='kd'>extends</span> <span class='nb'>Sprite</span><span class='p'>{</span>
-    <span class='p'>[</span><span class='nx'>Embed</span><span class='p'>(</span><span class='nx'>source</span><span class='o'>=</span><span class='s1'>&#39;mona_lisa_crop.jpg&#39;</span><span class='p'>)]</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>MonaLisa</span><span class='o'>:</span><span class='nb'>Class</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>imgWidth</span><span class='o'>:</span><span class='nb'>int</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>imgHeight</span><span class='o'>:</span><span class='nb'>int</span><span class='o'>;</span>
+<div class="highlight"><pre><code class="actionscript"><span class="kd">package</span><span class="p">{</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nb">ColorMatrixFilter</span><span class="o">;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nf">setInterval</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>POLYGONS</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>50</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>polygons</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[];</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>mutating</span><span class='o'>:</span><span class='nb'>Boolean</span> <span class='o'>=</span> <span class='kc'>false</span><span class='o'>;</span>
+<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#eeeeee&quot;</span><span class="p">)]</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nx">Evolve</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;mona_lisa_crop.jpg&#39;</span><span class="p">)]</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">MonaLisa</span><span class="o">:</span><span class="nb">Class</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">imgWidth</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">imgHeight</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>monotoneFilter</span><span class='o'>:</span><span class='nb'>ColorMatrixFilter</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>ColorMatrixFilter</span><span class='p'>([</span>
-            <span class='mi'>1</span> <span class='sr'>/ 3, 1 /</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>1</span> <span class='o'>/</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> 
-            <span class='mi'>1</span> <span class='sr'>/ 3, 1 /</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>1</span> <span class='o'>/</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> 
-            <span class='mi'>1</span> <span class='sr'>/ 3, 1 /</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>1</span> <span class='o'>/</span> <span class='mi'>3</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='o'>,</span> 
-                <span class='mi'>0</span><span class='o'>,</span>     <span class='mi'>0</span><span class='o'>,</span>     <span class='mi'>0</span><span class='o'>,</span> <span class='mi'>1</span><span class='o'>,</span> <span class='mi'>0</span> <span class='p'>]);</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>pt0</span><span class='o'>:</span><span class='nb'>Point</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='mi'>0</span><span class='o'>,</span> <span class='mi'>0</span><span class='p'>);</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>rect</span><span class='o'>:</span><span class='nb'>Rectangle</span><span class='o'>;</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POLYGONS</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">polygons</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">mutating</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>bestBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>testBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>inputBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>debugBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span><span class='o'>;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">monotoneFilter</span><span class="o">:</span><span class="nb">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">ColorMatrixFilter</span><span class="p">([</span>
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+            <span class="mi">1</span> <span class="sr">/ 3, 1 /</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> 
+                <span class="mi">0</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">0</span> <span class="p">]);</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nb">Rectangle</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>canvas</span><span class='o'>:</span><span class='nb'>Sprite</span><span class='o'>;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">bestBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">testBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">inputBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">debugBmd</span><span class="o">:</span><span class="nb">BitmapData</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>score</span><span class='o'>:</span><span class='nb'>uint</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>scoreMax</span><span class='o'>:</span><span class='nb'>uint</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>mutations</span><span class='o'>:</span><span class='nb'>uint</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>candidates</span><span class='o'>:</span><span class='nb'>uint</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>totalTime</span><span class='o'>:</span><span class='nb'>Number</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>time</span><span class='o'>:</span><span class='nb'>Date</span><span class='o'>;</span>
-    <span class='kd'>private</span> <span class='k'>var</span> <span class='nx'>scoreText</span><span class='o'>:</span><span class='nb'>TextField</span><span class='o'>;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">;</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>Evolve</span><span class='p'>(){</span>
-        <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>scaleMode</span> <span class='o'>=</span> <span class='s2'>&quot;noScale&quot;</span><span class='o'>;</span>
-        <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>align</span> <span class='o'>=</span> <span class='s2'>&quot;TL&quot;</span><span class='o'>;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">score</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">scoreMax</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">mutations</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">candidates</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">totalTime</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">time</span><span class="o">:</span><span class="nb">Date</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nx">scoreText</span><span class="o">:</span><span class="nb">TextField</span><span class="o">;</span>
 
-        <span class='c1'>// init image</span>
-        <span class='k'>var</span> <span class='nx'>bmp</span><span class='o'>:</span><span class='nb'>Bitmap</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nx'>MonaLisa</span><span class='p'>();</span>
-        <span class='nx'>inputBmd</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>bitmapData</span><span class='o'>;</span>
-        <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>bmp</span><span class='p'>);</span>
-        <span class='nx'>imgWidth</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>width</span><span class='o'>;</span>
-        <span class='nx'>imgHeight</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>height</span><span class='o'>;</span>
-        <span class='nx'>rect</span> <span class='o'>=</span> <span class='nx'>inputBmd</span><span class='p'>.</span><span class='nx'>rect</span><span class='o'>;</span>
-        <span class='nx'>score</span> <span class='o'>=</span> <span class='nx'>scoreMax</span> <span class='o'>=</span> <span class='nx'>rect</span><span class='p'>.</span><span class='nx'>width</span> <span class='o'>*</span> <span class='nx'>rect</span><span class='p'>.</span><span class='nx'>height</span> <span class='o'>*</span> <span class='mi'>255</span><span class='o'>;</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">Evolve</span><span class="p">(){</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
 
-        <span class='c1'>// init buffer</span>
-        <span class='nx'>bestBmd</span> <span class='o'>=</span> <span class='nx'>inputBmd</span><span class='p'>.</span><span class='nx'>clone</span><span class='p'>();</span> <span class='nx'>bestBmd</span><span class='p'>.</span><span class='nx'>fillRect</span><span class='p'>(</span><span class='nx'>rect</span><span class='o'>,</span> <span class='mh'>0x000000</span><span class='p'>);</span>
-        <span class='nx'>testBmd</span> <span class='o'>=</span> <span class='nx'>inputBmd</span><span class='p'>.</span><span class='nx'>clone</span><span class='p'>();</span> <span class='nx'>testBmd</span><span class='p'>.</span><span class='nx'>fillRect</span><span class='p'>(</span><span class='nx'>rect</span><span class='o'>,</span> <span class='mh'>0x000000</span><span class='p'>);</span>
-        <span class='nx'>debugBmd</span> <span class='o'>=</span> <span class='nx'>inputBmd</span><span class='p'>.</span><span class='nx'>clone</span><span class='p'>();</span>
-        <span class='nx'>addChild</span><span class='p'>(</span><span class='k'>new</span> <span class='nb'>Bitmap</span><span class='p'>(</span><span class='nx'>bestBmd</span><span class='p'>)).</span><span class='nx'>x</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>width</span> <span class='o'>+</span> <span class='mi'>10</span><span class='o'>;</span>
+        <span class="c1">// init image</span>
+        <span class="k">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nb">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MonaLisa</span><span class="p">();</span>
+        <span class="nx">inputBmd</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+        <span class="nx">imgWidth</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span><span class="o">;</span>
+        <span class="nx">imgHeight</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span><span class="o">;</span>
+        <span class="nx">rect</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">rect</span><span class="o">;</span>
+        <span class="nx">score</span> <span class="o">=</span> <span class="nx">scoreMax</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="mi">255</span><span class="o">;</span>
 
-        <span class='c1'>// init data and canvas</span>
-        <span class='nx'>canvas</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Sprite</span><span class='p'>();</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='nx'>POLYGONS</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>){</span>
-            <span class='nx'>polygons</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>]</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nx'>Polygon</span><span class='p'>();</span>
-            <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>addChild</span><span class='p'>(</span><span class='k'>new</span> <span class='nb'>Sprite</span><span class='p'>());</span>
-        <span class='p'>}</span>
-        <span class='nx'>drawTest</span><span class='p'>();</span>
-        <span class='nx'>testToBest</span><span class='p'>();</span>
+        <span class="c1">// init buffer</span>
+        <span class="nx">bestBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">bestBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">testBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">testBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">debugBmd</span> <span class="o">=</span> <span class="nx">inputBmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nb">Bitmap</span><span class="p">(</span><span class="nx">bestBmd</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="mi">10</span><span class="o">;</span>
 
-        <span class='c1'>// init ui</span>
-        <span class='k'>var</span> <span class='nx'>tf</span><span class='o'>:</span><span class='nb'>TextField</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>TextField</span><span class='p'>();</span>
-        <span class='nx'>tf</span><span class='p'>.</span><span class='nx'>text</span> <span class='o'>=</span> <span class='s2'>&quot;click to start&quot;</span><span class='o'>;</span>
-        <span class='nx'>tf</span><span class='p'>.</span><span class='nx'>y</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>height</span> <span class='o'>+</span> <span class='mi'>10</span><span class='o'>;</span>
-        <span class='nx'>tf</span><span class='p'>.</span><span class='nx'>scaleX</span> <span class='o'>=</span> <span class='nx'>tf</span><span class='p'>.</span><span class='nx'>scaleY</span> <span class='o'>=</span> <span class='mi'>3</span><span class='o'>;</span>
-        <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>tf</span><span class='p'>);</span>
-        <span class='nx'>stage</span><span class='p'>.</span><span class='nx'>addEventListener</span><span class='p'>(</span><span class='s2'>&quot;click&quot;</span><span class='o'>,</span> <span class='kd'>function</span><span class='p'>(</span><span class='nx'>event</span><span class='o'>:*</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-            <span class='nx'>mutating</span> <span class='o'>=</span> <span class='o'>!</span><span class='nx'>mutating</span><span class='o'>;</span>
-            <span class='nx'>time</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>mutating</span> <span class='o'>?</span> <span class='k'>new</span> <span class='nb'>Date</span><span class='p'>()</span> <span class='o'>:</span> <span class='kc'>null</span><span class='p'>);</span>
-            <span class='nx'>tf</span><span class='p'>.</span><span class='nx'>text</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>mutating</span> <span class='o'>?</span> <span class='s2'>&quot;Now Simulating...&quot;</span> <span class='o'>:</span> <span class='s2'>&quot;click to start&quot;</span><span class='p'>);</span>
-        <span class='p'>});</span>
-        <span class='nx'>scoreText</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>TextField</span><span class='p'>();</span>
-        <span class='nx'>scoreText</span><span class='p'>.</span><span class='nx'>autoSize</span> <span class='o'>=</span> <span class='s2'>&quot;left&quot;</span><span class='o'>;</span>
-        <span class='nx'>scoreText</span><span class='p'>.</span><span class='nx'>y</span> <span class='o'>=</span> <span class='nx'>bmp</span><span class='p'>.</span><span class='nx'>height</span> <span class='o'>+</span> <span class='mi'>60</span><span class='o'>;</span>
-        <span class='nx'>scoreText</span><span class='p'>.</span><span class='nx'>scaleX</span> <span class='o'>=</span> <span class='nx'>scoreText</span><span class='p'>.</span><span class='nx'>scaleY</span> <span class='o'>=</span> <span class='mi'>3</span><span class='o'>;</span>
-        <span class='nx'>addChild</span><span class='p'>(</span><span class='nx'>scoreText</span><span class='p'>);</span>
+        <span class="c1">// init data and canvas</span>
+        <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POLYGONS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Polygon</span><span class="p">();</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nb">Sprite</span><span class="p">());</span>
+        <span class="p">}</span>
+        <span class="nx">drawTest</span><span class="p">();</span>
+        <span class="nx">testToBest</span><span class="p">();</span>
 
-        <span class='c1'>// start timer</span>
-        <span class='nf'>setInterval</span><span class='p'>(</span><span class='nx'>update</span><span class='o'>,</span> <span class='mi'>10</span><span class='p'>);</span>
-    <span class='p'>}</span>
+        <span class="c1">// init ui</span>
+        <span class="k">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nb">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">TextField</span><span class="p">();</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;click to start&quot;</span><span class="o">;</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="o">;</span>
+        <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+            <span class="nx">mutating</span> <span class="o">=</span> <span class="o">!</span><span class="nx">mutating</span><span class="o">;</span>
+            <span class="nx">time</span> <span class="o">=</span> <span class="p">(</span><span class="nx">mutating</span> <span class="o">?</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">()</span> <span class="o">:</span> <span class="kc">null</span><span class="p">);</span>
+            <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="p">(</span><span class="nx">mutating</span> <span class="o">?</span> <span class="s2">&quot;Now Simulating...&quot;</span> <span class="o">:</span> <span class="s2">&quot;click to start&quot;</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="nx">scoreText</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">TextField</span><span class="p">();</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="o">;</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">60</span><span class="o">;</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scoreText</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
+        <span class="nx">addChild</span><span class="p">(</span><span class="nx">scoreText</span><span class="p">);</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>update</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='k'>if</span><span class='p'>(</span><span class='o'>!</span><span class='nx'>mutating</span><span class='p'>)</span> <span class='k'>return</span><span class='o'>;</span>
-        <span class='k'>var</span> <span class='nx'>t</span><span class='o'>:</span><span class='nb'>Date</span> <span class='o'>=</span> <span class='k'>new</span> <span class='nb'>Date</span><span class='p'>();</span>
-        <span class='nx'>totalTime</span> <span class='o'>+=</span> <span class='p'>(</span><span class='nx'>t</span><span class='p'>.</span><span class='nx'>getTime</span><span class='p'>()</span> <span class='o'>-</span> <span class='nx'>time</span><span class='p'>.</span><span class='nx'>getTime</span><span class='p'>())</span> <span class='o'>/</span> <span class='mi'>1000</span><span class='o'>;</span>
-        <span class='nx'>time</span> <span class='o'>=</span> <span class='nx'>t</span><span class='o'>;</span>
+        <span class="c1">// start timer</span>
+        <span class="nf">setInterval</span><span class="p">(</span><span class="nx">update</span><span class="o">,</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="p">}</span>
 
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='mi'>10</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>)</span> <span class='nx'>update1</span><span class='p'>();</span>
-        <span class='nx'>scoreText</span><span class='p'>.</span><span class='nx'>text</span> <span class='o'>=</span> <span class='p'>(</span><span class='nb'>int</span><span class='p'>((</span><span class='mi'>1</span> <span class='o'>-</span> <span class='nx'>score</span> <span class='sr'>/ scoreMax) * 10000) /</span> <span class='mi'>100</span><span class='p'>)</span>
-             <span class='o'>+</span> <span class='s2'>&quot;%\n&quot;</span> <span class='o'>+</span> <span class='nx'>mutations</span> <span class='o'>+</span> <span class='s2'>&quot; / &quot;</span> <span class='o'>+</span> <span class='nx'>candidates</span> <span class='o'>+</span> <span class='s2'>&quot;\n&quot;</span>
-             <span class='o'>+</span> <span class='p'>(</span><span class='nb'>int</span><span class='p'>(</span><span class='nx'>totalTime</span> <span class='o'>*</span> <span class='mi'>10</span><span class='p'>)</span> <span class='o'>/</span> <span class='mi'>10</span><span class='p'>)</span> <span class='o'>+</span> <span class='s2'>&quot;s&quot;</span><span class='o'>;</span>
-    <span class='p'>}</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">update</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">mutating</span><span class="p">)</span> <span class="k">return</span><span class="o">;</span>
+        <span class="k">var</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Date</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
+        <span class="nx">totalTime</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">-</span> <span class="nx">time</span><span class="p">.</span><span class="nx">getTime</span><span class="p">())</span> <span class="o">/</span> <span class="mi">1000</span><span class="o">;</span>
+        <span class="nx">time</span> <span class="o">=</span> <span class="nx">t</span><span class="o">;</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>update1</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='k'>var</span> <span class='nx'>index</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='nx'>POLYGONS</span><span class='o'>;</span>
-        <span class='k'>var</span> <span class='nx'>backup</span><span class='o'>:</span><span class='nx'>Polygon</span> <span class='o'>=</span> <span class='nx'>polygons</span><span class='p'>[</span><span class='nx'>index</span><span class='p'>].</span><span class='nx'>clone</span><span class='p'>();</span>
-        <span class='nx'>polygons</span><span class='p'>[</span><span class='nx'>index</span><span class='p'>].</span><span class='nx'>mutate</span><span class='p'>();</span>
-        <span class='nx'>drawTest</span><span class='p'>();</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">update1</span><span class="p">();</span>
+        <span class="nx">scoreText</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">score</span> <span class="sr">/ scoreMax) * 10000) /</span> <span class="mi">100</span><span class="p">)</span>
+             <span class="o">+</span> <span class="s2">&quot;%\n&quot;</span> <span class="o">+</span> <span class="nx">mutations</span> <span class="o">+</span> <span class="s2">&quot; / &quot;</span> <span class="o">+</span> <span class="nx">candidates</span> <span class="o">+</span> <span class="s2">&quot;\n&quot;</span>
+             <span class="o">+</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nx">totalTime</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;s&quot;</span><span class="o">;</span>
+    <span class="p">}</span>
 
-        <span class='k'>var</span> <span class='nx'>diffBmd</span><span class='o'>:</span><span class='nb'>BitmapData</span> <span class='o'>=</span> <span class='nx'>testBmd</span><span class='p'>.</span><span class='nx'>compare</span><span class='p'>(</span><span class='nx'>inputBmd</span><span class='p'>)</span> <span class='nx'>as</span> <span class='nb'>BitmapData</span><span class='o'>;</span>
-        <span class='nx'>diffBmd</span><span class='p'>.</span><span class='nx'>applyFilter</span><span class='p'>(</span><span class='nx'>diffBmd</span><span class='o'>,</span> <span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt0</span><span class='o'>,</span> <span class='nx'>monotoneFilter</span><span class='p'>);</span>
-        <span class='k'>var</span> <span class='nx'>testScore</span><span class='o'>:</span><span class='nb'>uint</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='mh'>0x100</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>){</span>
-            <span class='nx'>testScore</span> <span class='o'>+=</span> <span class='nx'>diffBmd</span><span class='p'>.</span><span class='nx'>threshold</span><span class='p'>(</span><span class='nx'>diffBmd</span><span class='o'>,</span> <span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt0</span><span class='o'>,</span> <span class='s2'>&quot;==&quot;</span><span class='o'>,</span> <span class='nx'>i</span><span class='o'>,</span> <span class='nx'>i</span><span class='o'>,</span> <span class='mh'>0xff</span><span class='p'>)</span> <span class='o'>*</span> <span class='nx'>i</span><span class='o'>;</span>
-        <span class='p'>}</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">update1</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">var</span> <span class="nx">index</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">POLYGONS</span><span class="o">;</span>
+        <span class="k">var</span> <span class="nx">backup</span><span class="o">:</span><span class="nx">Polygon</span> <span class="o">=</span> <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">clone</span><span class="p">();</span>
+        <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">mutate</span><span class="p">();</span>
+        <span class="nx">drawTest</span><span class="p">();</span>
 
-        <span class='k'>if</span><span class='p'>(</span><span class='nx'>score</span> <span class='o'>&gt;</span> <span class='nx'>testScore</span><span class='p'>){</span>
-            <span class='nx'>score</span> <span class='o'>=</span> <span class='nx'>testScore</span><span class='o'>;</span>
-            <span class='nx'>testToBest</span><span class='p'>();</span>
-            <span class='nx'>mutations</span><span class='o'>++;</span>
-        <span class='p'>}</span><span class='k'>else</span><span class='p'>{</span>
-            <span class='nx'>polygons</span><span class='p'>[</span><span class='nx'>index</span><span class='p'>]</span> <span class='o'>=</span> <span class='nx'>backup</span><span class='o'>;</span>
-        <span class='p'>}</span>
-        <span class='nx'>candidates</span><span class='o'>++;</span>
-    <span class='p'>}</span>
+        <span class="k">var</span> <span class="nx">diffBmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="nx">testBmd</span><span class="p">.</span><span class="nx">compare</span><span class="p">(</span><span class="nx">inputBmd</span><span class="p">)</span> <span class="nx">as</span> <span class="nb">BitmapData</span><span class="o">;</span>
+        <span class="nx">diffBmd</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">diffBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="o">,</span> <span class="nx">monotoneFilter</span><span class="p">);</span>
+        <span class="k">var</span> <span class="nx">testScore</span><span class="o">:</span><span class="nb">uint</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">testScore</span> <span class="o">+=</span> <span class="nx">diffBmd</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">diffBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="o">,</span> <span class="s2">&quot;==&quot;</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="mh">0xff</span><span class="p">)</span> <span class="o">*</span> <span class="nx">i</span><span class="o">;</span>
+        <span class="p">}</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>drawTest</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>clear</span><span class='p'>();</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='nx'>POLYGONS</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>){</span>
-            <span class='nx'>polygons</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>].</span><span class='nx'>draw</span><span class='p'>(</span><span class='nx'>canvas</span><span class='o'>,</span> <span class='nx'>imgWidth</span><span class='o'>,</span> <span class='nx'>imgHeight</span><span class='p'>);</span>
-        <span class='p'>}</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">testScore</span><span class="p">){</span>
+            <span class="nx">score</span> <span class="o">=</span> <span class="nx">testScore</span><span class="o">;</span>
+            <span class="nx">testToBest</span><span class="p">();</span>
+            <span class="nx">mutations</span><span class="o">++;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nx">backup</span><span class="o">;</span>
+        <span class="p">}</span>
+        <span class="nx">candidates</span><span class="o">++;</span>
+    <span class="p">}</span>
 
-        <span class='nx'>testBmd</span><span class='p'>.</span><span class='nx'>fillRect</span><span class='p'>(</span><span class='nx'>rect</span><span class='o'>,</span> <span class='mh'>0x000000</span><span class='p'>);</span>
-        <span class='nx'>testBmd</span><span class='p'>.</span><span class='nx'>draw</span><span class='p'>(</span><span class='nx'>canvas</span><span class='p'>);</span>
-    <span class='p'>}</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">drawTest</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POLYGONS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">polygons</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="o">,</span> <span class="nx">imgWidth</span><span class="o">,</span> <span class="nx">imgHeight</span><span class="p">);</span>
+        <span class="p">}</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>testToBest</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='nx'>bestBmd</span><span class='p'>.</span><span class='nx'>copyPixels</span><span class='p'>(</span><span class='nx'>testBmd</span><span class='o'>,</span> <span class='nx'>rect</span><span class='o'>,</span> <span class='nx'>pt0</span><span class='p'>);</span>
-    <span class='p'>}</span>
-<span class='p'>}</span>
-<span class='p'>}</span>
+        <span class="nx">testBmd</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">rect</span><span class="o">,</span> <span class="mh">0x000000</span><span class="p">);</span>
+        <span class="nx">testBmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+    <span class="p">}</span>
 
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>display</span><span class='p'>.</span><span class='o'>*;</span>
-<span class='kd'>import</span> <span class='nx'>flash</span><span class='p'>.</span><span class='nx'>geom</span><span class='p'>.</span><span class='o'>*;</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">testToBest</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">bestBmd</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">testBmd</span><span class="o">,</span> <span class="nx">rect</span><span class="o">,</span> <span class="nx">pt0</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
 
-<span class='kd'>class</span> <span class='nx'>Polygon</span><span class='p'>{</span>
-    <span class='kd'>private</span> <span class='kd'>const</span> <span class='nx'>POINTS</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>6</span><span class='o'>;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
+<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
 
-    <span class='kd'>public</span> <span class='k'>var</span> <span class='nx'>points</span><span class='o'>:</span><span class='nb'>Array</span> <span class='o'>=</span> <span class='p'>[];</span>
-    <span class='kd'>public</span> <span class='k'>var</span> <span class='nx'>color</span><span class='o'>:</span><span class='nb'>uint</span><span class='o'>;</span>
-    <span class='kd'>public</span> <span class='k'>var</span> <span class='nx'>alpha</span><span class='o'>:</span><span class='nb'>Number</span><span class='o'>;</span>
+<span class="kd">class</span> <span class="nx">Polygon</span><span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POINTS</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="o">;</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>Polygon</span><span class='p'>(</span><span class='nx'>polygon</span><span class='o'>:</span><span class='nx'>Polygon</span> <span class='o'>=</span> <span class='kc'>null</span><span class='p'>){</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>0</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='nx'>POINTS</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>)</span>
-            <span class='nx'>points</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>]</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>polygon</span> <span class='o'>?</span> <span class='nx'>polygon</span><span class='p'>.</span><span class='nx'>points</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>].</span><span class='nx'>clone</span><span class='p'>()</span> <span class='o'>:</span> <span class='k'>new</span> <span class='nb'>Point</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span><span class='o'>,</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()));</span>
-        <span class='nx'>color</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>polygon</span> <span class='o'>?</span> <span class='nx'>polygon</span><span class='p'>.</span><span class='nx'>color</span> <span class='o'>:</span> <span class='mh'>0xffffff</span> <span class='o'>*</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>());</span>
-        <span class='nx'>alpha</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>polygon</span> <span class='o'>?</span> <span class='nx'>polygon</span><span class='p'>.</span><span class='nx'>alpha</span> <span class='o'>:</span> <span class='p'>.</span><span class='mi'>1</span><span class='p'>);</span>
-    <span class='p'>}</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">color</span><span class="o">:</span><span class="nb">uint</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span><span class="o">;</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>clone</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>Polygon</span><span class='p'>{</span>
-        <span class='k'>return</span> <span class='k'>new</span> <span class='nx'>Polygon</span><span class='p'>(</span><span class='k'>this</span><span class='p'>);</span>
-    <span class='p'>}</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">Polygon</span><span class="p">(</span><span class="nx">polygon</span><span class="o">:</span><span class="nx">Polygon</span> <span class="o">=</span> <span class="kc">null</span><span class="p">){</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINTS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+            <span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">clone</span><span class="p">()</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()));</span>
+        <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">color</span> <span class="o">:</span> <span class="mh">0xffffff</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">());</span>
+        <span class="nx">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="nx">polygon</span> <span class="o">?</span> <span class="nx">polygon</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">:</span> <span class="p">.</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>mutate</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>&lt;</span> <span class='mf'>0.5</span> <span class='o'>?</span> <span class='nx'>mutateColor</span><span class='p'>()</span> <span class='o'>:</span> <span class='nx'>mutatePosition</span><span class='p'>());</span>
-    <span class='p'>}</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">clone</span><span class="p">()</span><span class="o">:</span><span class="nx">Polygon</span><span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">Polygon</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>mutateColor</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='k'>switch</span><span class='p'>(</span><span class='nb'>int</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='mi'>4</span><span class='p'>)){</span>
-            <span class='k'>case</span> <span class='mi'>0</span><span class='o'>:</span> <span class='nx'>color</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>color</span> <span class='o'>&amp;</span> <span class='mh'>0x00ffff</span><span class='p'>)</span> <span class='o'>+</span> <span class='nb'>int</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>*</span> <span class='mh'>0x010000</span><span class='o'>;</span> <span class='k'>break</span><span class='o'>;</span>
-            <span class='k'>case</span> <span class='mi'>1</span><span class='o'>:</span> <span class='nx'>color</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>color</span> <span class='o'>&amp;</span> <span class='mh'>0xff00ff</span><span class='p'>)</span> <span class='o'>+</span> <span class='nb'>int</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>*</span> <span class='mh'>0x000100</span><span class='o'>;</span> <span class='k'>break</span><span class='o'>;</span>
-            <span class='k'>case</span> <span class='mi'>2</span><span class='o'>:</span> <span class='nx'>color</span> <span class='o'>=</span> <span class='p'>(</span><span class='nx'>color</span> <span class='o'>&amp;</span> <span class='mh'>0xffff00</span><span class='p'>)</span> <span class='o'>+</span> <span class='nb'>int</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='mi'>255</span><span class='p'>)</span> <span class='o'>*</span> <span class='mh'>0x000001</span><span class='o'>;</span> <span class='k'>break</span><span class='o'>;</span>
-            <span class='k'>case</span> <span class='mi'>3</span><span class='o'>:</span> <span class='nx'>alpha</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>();</span> <span class='k'>break</span><span class='o'>;</span>
-        <span class='p'>}</span>
-    <span class='p'>}</span>
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">mutate</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">?</span> <span class="nx">mutateColor</span><span class="p">()</span> <span class="o">:</span> <span class="nx">mutatePosition</span><span class="p">());</span>
+    <span class="p">}</span>
 
-    <span class='kd'>private</span> <span class='kd'>function</span> <span class='nx'>mutatePosition</span><span class='p'>()</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='k'>var</span> <span class='nx'>p</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>*</span> <span class='nx'>POINTS</span><span class='o'>;</span>
-        <span class='k'>if</span><span class='p'>(</span><span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>()</span> <span class='o'>&lt;</span> <span class='p'>.</span><span class='mi'>5</span><span class='p'>)</span> <span class='nx'>points</span><span class='p'>[</span><span class='nx'>p</span><span class='p'>].</span><span class='nx'>x</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>();</span>
-        <span class='k'>else</span>                   <span class='nx'>points</span><span class='p'>[</span><span class='nx'>p</span><span class='p'>].</span><span class='nx'>y</span> <span class='o'>=</span> <span class='nb'>Math</span><span class='p'>.</span><span class='nx'>random</span><span class='p'>();</span>
-    <span class='p'>}</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">mutateColor</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">switch</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)){</span>
+            <span class="k">case</span> <span class="mi">0</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x00ffff</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x010000</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">1</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xff00ff</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x000100</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">2</span><span class="o">:</span> <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xffff00</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x000001</span><span class="o">;</span> <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="mi">3</span><span class="o">:</span> <span class="nx">alpha</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span> <span class="k">break</span><span class="o">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
 
-    <span class='kd'>public</span> <span class='kd'>function</span> <span class='nx'>draw</span><span class='p'>(</span><span class='nx'>canvas</span><span class='o'>:</span><span class='nb'>Sprite</span><span class='o'>,</span> <span class='nx'>w</span><span class='o'>:</span><span class='nb'>Number</span><span class='o'>,</span> <span class='nx'>h</span><span class='o'>:</span><span class='nb'>Number</span><span class='p'>)</span><span class='o'>:</span><span class='nx'>void</span><span class='p'>{</span>
-        <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>beginFill</span><span class='p'>(</span><span class='nx'>color</span><span class='o'>,</span> <span class='nx'>alpha</span><span class='p'>);</span>
-        <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>moveTo</span><span class='p'>(</span><span class='nx'>points</span><span class='p'>[</span><span class='mi'>0</span><span class='p'>].</span><span class='nx'>x</span> <span class='o'>*</span> <span class='nx'>w</span><span class='o'>,</span> <span class='nx'>points</span><span class='p'>[</span><span class='mi'>0</span><span class='p'>].</span><span class='nx'>y</span> <span class='o'>*</span> <span class='nx'>h</span><span class='p'>);</span>
-        <span class='k'>for</span><span class='p'>(</span><span class='k'>var</span> <span class='nx'>i</span><span class='o'>:</span><span class='nb'>int</span> <span class='o'>=</span> <span class='mi'>1</span><span class='o'>;</span> <span class='nx'>i</span> <span class='o'>&lt;</span> <span class='nx'>POINTS</span><span class='o'>;</span> <span class='nx'>i</span><span class='o'>++</span><span class='p'>)</span>
-            <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>lineTo</span><span class='p'>(</span><span class='nx'>points</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>].</span><span class='nx'>x</span> <span class='o'>*</span> <span class='nx'>w</span><span class='o'>,</span> <span class='nx'>points</span><span class='p'>[</span><span class='nx'>i</span><span class='p'>].</span><span class='nx'>y</span> <span class='o'>*</span> <span class='nx'>h</span><span class='p'>);</span>
-        <span class='nx'>canvas</span><span class='p'>.</span><span class='nx'>graphics</span><span class='p'>.</span><span class='nx'>endFill</span><span class='p'>();</span>
-    <span class='p'>}</span>
-<span class='p'>}</span>
+    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">mutatePosition</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">POINTS</span><span class="o">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="nx">points</span><span class="p">[</span><span class="nx">p</span><span class="p">].</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+        <span class="k">else</span>                   <span class="nx">points</span><span class="p">[</span><span class="nx">p</span><span class="p">].</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">,</span> <span class="nx">w</span><span class="o">:</span><span class="nb">Number</span><span class="o">,</span> <span class="nx">h</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="o">,</span> <span class="nx">alpha</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="o">,</span> <span class="nx">points</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINTS</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="o">,</span> <span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">);</span>
+        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
+
+
+
+
 
 </div>
 
