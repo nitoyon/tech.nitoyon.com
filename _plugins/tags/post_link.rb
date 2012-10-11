@@ -10,6 +10,9 @@
 #     {% post_link 2012-01-02-article-name %}
 #     => <a href="/2012/01/02/article-name.html">Article Title</a>
 #
+#     {% post_link 2012-01-02-article-name, here %}
+#     => <a href="/2012/01/02/article-name.html">here</a>
+#
 # License
 # -------
 #
@@ -22,13 +25,18 @@ require 'jekyll/tags/post_url'
 module Jekyll
 
   class PostLinkTag < Liquid::Tag
-    def initialize(tag_name, url, tokens)
+    def initialize(tag_name, markup, tokens)
       super
-      @url = url.strip
+      params = markup.split(',')
+      @url = params[0].strip
       begin
         @post = PostComparer.new(@url)
       rescue
         @post = nil
+      end
+
+      if params.size >= 2
+        @title = params[1].strip
       end
     end
 
@@ -37,7 +45,8 @@ module Jekyll
 
       site.posts.each do |p|
         if p.url == @url || p == @post
-          return %(<a href="#{p.url}">#{CGI.escapeHTML(p.data['title'])}</a>)
+          title = @title.nil? || @title.empty? ? p.data['title'] : @title
+          return %(<a href="#{p.url}">#{CGI.escapeHTML(title)}</a>)
         end
       end
       %(<a href="#{@url}">#{CGI.escapeHTML(@url)}</a>)
