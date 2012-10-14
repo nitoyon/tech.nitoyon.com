@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 20 Sep 2012 02:38:41 +0900</lastBuildDate>
+		<lastBuildDate>Mon, 15 Oct 2012 01:02:28 +0900</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,123 @@
 
 
 
+
+		<item>
+			<title>静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</title>
+			<link>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</guid>
+			<pubDate>Mon, 15 Oct 2012 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>「<a href="/ja/about/">ABOUT</a>」のページをリニューアルしました。</p>
+
+<p>１つ前のデザインのままだったものを、現在のデザインに沿って作りなおして、ついでに文章やレイアウトなども整えました。</p>
+
+<center><a href=" /ja/about/ "><img src="http://farm9.staticflickr.com/8476/8086011433_ab8bb44953.jpg" width="500" height="410"></a></center>
+
+
+<h1>公開したものの問題発生</h1>
+
+<p>意気揚々と公開してみたのですが、１つ問題が見つかりました。</p>
+
+<p>ページを公開したあと、本番環境を表示するとデザインが崩れていました。そのあと、ページをリロードすると期待通りの結果になりました。</p>
+
+<p>原因は <strong>CSS がキャッシュされていた</strong> ことでした。</p>
+
+<p>たとえページが更新されていたとしても、JavaScript や CSS は古いキャッシュを使い続けてしまうことがあります。</p>
+
+<p>で、この問題に対処しようとしたのですが、「静的生成」「生成結果を GitHub で管理」「キャッシュ問題への対策」の 3 つのいいとこ取りをしようとすると、意外に複雑でした。</p>
+
+<p>その話をいまからします。</p>
+
+<h1>キャッシュ問題の一般的な解決策</h1>
+
+<p>よく見る解決索は、JS や CSS の URL の最後に、URL パラメーターとしてタイムスタンプを入れておく方法です。</p>
+
+<div class="highlight"><pre><code class="html"><span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;/stylesheets/foo.css?1348129300&quot;</span> <span class="err">...</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;/javascripts/bar.js?1282104010&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre>
+</div>
+
+
+<p>このようにすると、次のような効果が期待できます。</p>
+
+<ul>
+<li>JavaScript や CSS が更新されたとき:
+
+<ul>
+<li>タイムスタンプが変更されていれば、必ずサーバーに取りに行く。</li>
+</ul>
+</li>
+<li>JavaScript や CSS が更新されないとき:
+
+<ul>
+<li>タイムスタンプが同じなので、キャッシュを使い続ける。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>このサイトでも、同じ方法を使うことにしました。ただ、Jekyll で静的にサイト生成しているので、サーバー側で動的にタイムスタンプを埋め込むことはできません。</p>
+
+<p>となれば、タイムスタンプを埋め込んだ状態で Jekyll で HTML を生成すれば万事解決しそうです。</p>
+
+<p>しかし、もう一点、悩みどころがあります。</p>
+
+<h1>GitHub 上に生成結果の HTML をコミットしている</h1>
+
+<p><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> でも書きましたが、このサイトでは Jekyll でビルドした生成結果を GitHub 上に <a href="https://github.com/nitoyon/tech.nitoyon.com/tree/html">html ブランチ</a>としてコミットしています。</p>
+
+<p>その理由は次の通りです。</p>
+
+<ul>
+<li> 生成結果の HTML についても差分を管理したい。
+
+<ul>
+<li> 何か修正をしたときに変な差分が発生していないかを <code>git diff</code> で確認できる。</li>
+<li> 任意の時点のサイトの生成結果を (再ビルドを行うことなく) 知ることができる。</li>
+</ul>
+</li>
+<li> サーバー側では html ブランチに追従するだけでデプロイが完了する。
+
+<ul>
+<li> サーバー側にビルド環境を整えなくてよい。</li>
+<li> 生成処理はけっこう重いので、(格安レンタルサーバーでは) 時間がかかるプロセスが殺される可能性がある。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>さて、前述の方法で「キャッシュ問題」に対処するには、JavaScript や CSS を更新するたびに、HTML を書き換えることになります。</p>
+
+<p>たとえば、「JavaScript の更新」をしたとすると、そのスクリプトを利用する「すべての HTML を更新」することになります。このサイトに限っていえば、数百ある過去記事のすべての HTML を更新することになります。</p>
+
+<p>JavaScript を書き換えるたびに、レポジトリ上で数百のファイルが更新されます。</p>
+
+<p>これは美しくありません。</p>
+
+<h1>そこでアクロバティックに解決</h1>
+
+<p>最初は SSI を使おうかとも思ったのですが、「Jekyll の開発サーバー上での表示が困難」「静的生成という大原則が崩れる」ことを理由にパスしました。</p>
+
+<p>いろいろ悩んだ結果、デプロイ時の処理を次のように変更することを思いつきました。</p>
+
+<ol>
+<li>html ブランチを <code>git pull</code> する (※いままではこの処理のみだった)。</li>
+<li>全部の HTML について、JavaScript・CSS の URL に URL パラメータを付与する。</li>
+</ol>
+
+
+<p>この付与処理を実現するのが、次のスクリプトです。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/update_js_css_url.rb">update_js_css_url.rb</a></li>
+</ul>
+
+
+<p>だいぶアクロバティックですが、静的生成の大原則を守りつつ、生成結果のレポジトリ上の diff が大きくなりすぎないように工夫してみました。</p>
+
+<p>しばらくはこれでやってみようと思います。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>俺の最強ブログ システムが火を噴くぜ</title>
@@ -278,7 +395,7 @@
 			<link>http://tech.nitoyon.com/ja/blog/2012/08/27/hatena-blog/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/08/27/hatena-blog/</guid>
 			<pubDate>Mon, 27 Aug 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><a href="http://d.hatena.ne.jp/nitoyon/20120627/english_blog_renewal">以前</a>、「はてなブログは使う気ないよー」みたいなことを書いたにも関わらず、はてなブログに引っ越してみました。</p>
+			<description><![CDATA[<p><a href="/ja/blog/2012/06/27/english-blog-renewal/">以前</a>、「はてなブログは使う気ないよー」みたいなことを書いたにも関わらず、はてなブログに引っ越してみました。</p>
 <p>これに従って、URL は <a href="http://d.hatena.ne.jp/nitoyon/">http://d.hatena.ne.jp/nitoyon/</a> から <a href="http://tech2.nitoyon.com/">http://tech2.nitoyon.com/</a> に変更になりました。旧 URL へのアクセスはすべて自動的にリダイレクトされます。</p>
 <p>(追記) 現在は <a href="http://tech.nitoyon.com">http://tech.nitoyon.com</a> に移転が完了しています</p>
 <h1>今回の移転の理由</h1>
@@ -386,49 +503,13 @@
 <p>せっかく英語ブログも新調したので、このブログも <a href="http://tech.nitoyon.com/ja/blog/">http://tech.nitoyon.com/ja/blog/</a> あたりに移動させようと準備している。</p>
 <a name="seemore"></a>
 <p>理由としては色々あるんだけど、ざっと挙げると・・・</p>
-<ul><li>CSS3 でブログのデザインを<a href="http://d.hatena.ne.jp/nitoyon/20120313/newdesign2012">新しくした</a>のに、はてなダイアリーは <code>DOCTYPE</code> が互換モードになっている。つまり、IE9 で CSS3 が有効にならない。</li><li>はてなブログも気にはなるんだけど、<ul><li>もう一回最初から進化に付き合う気にはなれない。システムの制約で新しいことを試せないのが悲しい。</li><li>スマートフォン版のデザインをカスタマイズできない。 いま流行のレスポンシブ Web デザインをやってみたい。</li><li>AdSense の位置をいろいろ試してみたい。コピペできない文章のすぐ下に AdSense 置いたら普段の倍ぐらいの RPM（収益/PV）になって驚いた。そのあたりのノウハウも身につけてみたい。</li></ul></li></ul>
+<ul><li>CSS3 でブログのデザインを<a href="/ja/blog/2012/03/13/newdesign2012/">新しくした</a>のに、はてなダイアリーは <code>DOCTYPE</code> が互換モードになっている。つまり、IE9 で CSS3 が有効にならない。</li><li>はてなブログも気にはなるんだけど、<ul><li>もう一回最初から進化に付き合う気にはなれない。システムの制約で新しいことを試せないのが悲しい。</li><li>スマートフォン版のデザインをカスタマイズできない。 いま流行のレスポンシブ Web デザインをやってみたい。</li><li>AdSense の位置をいろいろ試してみたい。コピペできない文章のすぐ下に AdSense 置いたら普段の倍ぐらいの RPM（収益/PV）になって驚いた。そのあたりのノウハウも身につけてみたい。</li></ul></li></ul>
 <p>どうせ移転するなら過去の記事も全部移動させたい。しかし、数百件の過去記事を手で Markdown に変換するのは嫌だ。そこで、Ruby で「はてな記法」を扱える hparser を組み込もうとしている。ただ、自分が使ってる記法がサポートされていないものがあったので、hparser 本体にも手を入れたりして、なかなかの大作業になっている。</p>
 <p>やっかいなのが twitter 記法と amazon 記法。この 2 つについては Web サービスへのリクエストが必要になるので、リクエスト結果をキャッシュする仕組みもほしくなる。</p>
 <p>また、Jekyll で数百の記事をパブリッシュすると完了までに時間がかかりすぎるので、ここにも何らかのキャッシュが必要になる。コメントの扱いも難しい。静的コンテンツなので facebook なり DISQUS を使うことになるんだろうか。このあたりの外部サービスによって変化する空気感も気になる。</p>
 <br />
 <p>以上のように、最近、はてなダイアリーの劣化コピーを作りにいそしんでいる。こうやって一つ一つ作業をこなしていると、はてなダイアリーがいかに便利だったかをあらためて実感することにもなる。</p>
 <p>奮闘中の様子は <a href="https://github.com/nitoyon/tech.nitoyon.com">https://github.com/nitoyon/tech.nitoyon.com</a> を見れば分かるようになっているので、興味がある人はウォッチしてみてほしい。いまは楽しんで作っているけど、途中で飽きて、しれっとはてなダイアリーで書き続けているかもしれない・・・。</p>]]></description>
-		</item>
-
-		<item>
-			<title>飛び出る Google マップを作ってみた</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/05/24/stereoscopic-maps/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/05/24/stereoscopic-maps/</guid>
-			<pubDate>Thu, 24 May 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>あまり知られていないけど、Google マップには <a href="http://support.google.com/maps/bin/answer.py?hl=ja&answer=1630790">MapsGL</a> というのがあって一部の建物が 3D 表示になったりする。</p>
-<p>といっても Google Earth のように角度を変えて表示したりはできないんだけど、地図をスクロールすると高い建物の傾き具合が変化する。この表示方法のことを、Google では「parallax (視差効果)」と<a href="http://google-latlong.blogspot.jp/2012/04/see-3d-buildings-in-whole-new-way-with.html">呼んでいる</a>ようだ。</p>
-<p>「視差」という言葉で思い出すのは<strong>立体視</strong>。</p>
-<p>MapsGL の視差効果を使えば、立体視を作れそう！</p>
-<p>試しに作ってみた。</p>
-<a name="seemore"></a>
-<h1>飛び出る東京都庁</h1>
-<p>どうせなら高いビルを立体視したい。思いついたのは西新宿のオフィス街。</p>
-<p>その中でもひときわ目立つ <a href="http://maps.google.com/maps?hl=en&ll=35.689098,139.69359&spn=0.003438,0.008256&t=v&z=18&vector=1">東京都庁</a>で試してみた。</p>
-<h2>平行法</h2>
-<center><a href="http://f.hatena.ne.jp/nitoyon/20120524021445"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20120524/20120524021445.png"></a></center>
-<h2>交差法</h2>
-<center><a href="http://f.hatena.ne.jp/nitoyon/20120524021446"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20120524/20120524021446.png"></a></center>
-<h1>飛び出るビッグベン</h1>
-<p>お次は、ロンドンの <a href="http://maps.google.com/maps?hl=en&ll=51.49996,-0.124205&spn=0.004091,0.005493&t=v&z=18&vector=1">ビッグ・ベン</a>。複雑な建物の構造が再現されているので、なかなかいい立体感だ。</p>
-<h2>平行法</h2>
-<center><a href="http://f.hatena.ne.jp/nitoyon/20120524021442"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20120524/20120524021442.png"></a></center>
-<h2>交差法</h2>
-<center><a href="http://f.hatena.ne.jp/nitoyon/20120524021443"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20120524/20120524021443.png"></a></center>
-<h1>浮き上がりましたか？</h1>
-<p>それなりに立体にみえて面白い。本当はもっといっぱい作りたかったけど、2 個で力尽きた。</p>
-<p>作る手順はこんな感じ。</p>
-<ol><li>MapsGL の地図で適当な建物を探す。</li><li>画面をキャプチャする。</li><li>キーボードで左右どちらかに少しずらす。</li><li>もう一枚キャプチャする。</li><li>2 つの画像を横に並べる。</li></ol>
-<p>ただ、手作業でやるのは面倒だ。</p>
-<p>MapGL 版の Google マップが API から使えるようになったら、「Google マップ 立体視ビューワー」のようなものを作って自動化してみたいところ。ただ、MapsGL は WebGL 技術を利用していて、WebGL は Internet Explorer では利用できないという状況から、MapsGL が今後、どういう運命をたどっていくか、先行き不透明ではある。</p>
-<div class="seealso">
-<h1>あわせてどうぞ</h1>
-<ul><li><a href="/ja/blog/2012/02/28/why-google-still-uses-flash/">Google がまだ Flash を使っているサービスでみる脱 Flash の難しさ</a></li><li><a href="/ja/blog/2011/09/07/end-of-maps-api-for-flash/">Google Maps API for Flash が廃止、3年でサポート打ち切り</a></li><li><a href="/ja/blog/2011/04/26/messages-for-japan-design/">Messages for Japan に見る Google UI デザインの変化</a></li><li><a href="/ja/blog/2011/02/28/diorama-google-maps/">Google Maps をジオラマ風にしてみた</a></li><li><a href="http://tech.nitoyon.com/javascript/application/racing/1/">Google Maps で鈴鹿サーキット試走</a></li></ul>
-</div>]]></description>
 		</item>
 
 	</channel>

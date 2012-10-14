@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2012/10/15/static-site-js-css-cache/", title: "静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ"},
 	{url: "/ja/blog/2012/09/20/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"},
 	{url: "/ja/blog/2012/08/27/hatena-blog/", title: "暫定で「はてなブログ」に移転した"},
 	{url: "/ja/blog/2012/07/31/disqus-comment-import/", title: "DISQUS へのコメントのインポートが意外に面倒"},
-	{url: "/ja/blog/2012/06/27/english-blog-renewal/", title: "英語ブログを新調した話と移転計画"},
-	{url: "/ja/blog/2012/05/24/stereoscopic-maps/", title: "飛び出る Google マップを作ってみた"}
+	{url: "/ja/blog/2012/06/27/english-blog-renewal/", title: "英語ブログを新調した話と移転計画"}
 ];
 
 Site.archives.months = [
-  "201209"
+  "201210"
+, "201209"
 , "201208"
 , "201207"
 , "201206"
