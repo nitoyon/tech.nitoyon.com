@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="世の中には SWF を動画に変換するツールがいくつかある。これらのツールは、SWF を再生しておいて、次々と画面をキャプチャしていって、最後に動画に変換する、というものがほとんどのようだ。変換の再現性は高い一方、どうしてもコマ落ちが発生してしまう。ActionScript のみで作成した SWF をコマ落ちせずに動画に変換するテクニックを解説する。前提条件は、ソースコードが手元にあり、Flash IDE を利用していないこと、ActionScript の知識があること。wonderfl の作品を動画にする、と説明するとイメージが沸きやすいかもしれない。enterFrame だけで描画する..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2012年10月18日</h2>
+<h1>ActionScript のみで作った SWF をコマ落ちせずに動画にする手法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-lang="ja" data-size="horizontal" data-text="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>世の中には SWF を動画に変換するツールがいくつかある。</p>
+
+<p>これらのツールは、SWF を再生しておいて、次々と画面をキャプチャしていって、最後に動画に変換する、というものがほとんどのようだ。変換の再現性は高い一方、どうしてもコマ落ちが発生してしまう。</p>
+
+<p>ActionScript のみで作成した SWF を<strong>コマ落ちせずに動画に変換する</strong>テクニックを解説する。前提条件は、ソースコードが手元にあり、Flash IDE を利用していないこと、ActionScript の知識があること。</p>
+
+<p><a href="http://wonderfl.net/">wonderfl</a> の作品を動画にする、と説明するとイメージが沸きやすいかもしれない。</p>
+
+<h1>enterFrame だけで描画するパターン</h1>
+
+<p>比較的簡単に変換できるのが、<code>enterFrame</code> イベントが発生するごとに描画するパターンのときである。</p>
+
+<h2>変換例</h2>
+
+<p>試しに、過去に wonderfl に投稿した <a href="http://wonderfl.net/c/mnwo/">キラキラ3D Typography</a> を動画に変換してみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/2tm9okNtkOg" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885010">https://gist.github.com/3885010</a> に上げている。</p>
+
+<p>肝は <code>PngOutput</code> という自作クラスだ。<code>enterFrame</code> のイベントごとに、<code>PngOutput.output()</code> メソッドを呼んで、表示している内容を png ファイルで書き出している。</p>
+
+<div class="highlight"><pre><code class="actionscript">    <span class="c1">// ループ処理</span>
+    <span class="nx">PngOutput</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">stage</span><span class="p">);</span>
+    <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="c1">// ここで描画処理をしている</span>
+
+        <span class="nx">PngOutput</span><span class="p">.</span><span class="nx">output</span><span class="p">();</span>
+        <span class="nx">counter</span><span class="o">++;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">counter</span> <span class="o">%</span> <span class="mi">120</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="nx">f</span> <span class="o">=</span> <span class="o">!</span><span class="nx">f</span><span class="o">;</span> <span class="p">}</span>
+    <span class="p">});</span>
+</code></pre>
+</div>
+
+
+<p>画像のサイズは <code>stage</code> のサイズを利用しているので、<code>SWF</code> メタタグやコンパイルオプションでサイズを指定できる。</p>
+
+<p>ファイルを扱うために、AIR アプリとして実行している。<code>amxmlc</code> でビルドして、<code>adl app.xml</code> で画像出力を開始してくれるようになっている。出力先のパスは <code>PngOutput</code> クラスに直接書いてあるので、適切に変更して利用してほしい。</p>
+
+<p>よくあるキャプチャして動画にするツールとは違って、コマ落ちは発生しない。というのも、<strong>1 フレームずつ、順番に「描画＋画像に変換」を実行している</strong>からだ。変換中は、ゆっくり 1 フレームずつ再生しながら画像出力しているが、できあがった画像をつなぎ合わせればコマ落ちが発生しない動画になっている。ソースコードが手中にあるからこそできる技である。</p>
+
+<p>連番画像ファイルから動画への変換は AviUtil を使った。先頭の画像をドロップして、エンコードすればいいだけなのでお手軽だった。たいがいの動画変換ソフトが連番画像ファイルに対応しているだろうから、慣れているものを使って変換すればよいだろう。</p>
+
+<h1>タイマーを参照するパターン</h1>
+
+<p>さて、もう少し厄介なのが、各フレームでタイマーを参照するパターンの作品だ。そのようなコードを意識して書いていなかったとしても、トゥイーン系ライブラリでは内部的にタイマー系の関数を利用している。</p>
+
+<p>このパターンの作品を、1つ目と同じように <code>enterFrame</code> で 1 フレームずつ画像出力していると、早送りの動画が出来上がってしまう。というのも、描画して画像を出力している間に、<code>1 / frameRate</code> 以上の時間が経過してしまうので、飛び飛びの画像しか出力できないのだ。</p>
+
+<p>これを防ぐためには、トゥイーン ライブラリで利用しているタイマー系の関数を置き換えて騙すしかない。</p>
+
+<h2>変換例</h2>
+
+<p>過去に wonderfl に投稿した <a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> を動画にしてみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/nI-u_XPbCTw" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885404">https://gist.github.com/3885404</a> に上げている。</p>
+
+<p><a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> は Tweener を使ってアニメーションしている。Tweener は、ライブラリの内部で <code>flash.utils.getTimer()</code> を使って、時間管理を実施している。この部分を書き換えて、自前で定義した <code>getTimer()</code> 関数を呼ぶようにした。</p>
+
+<p><code>enterFrame</code> で 1 フレームごとに画像を出力する点は以前のものと変わらない。ただ、画像を 1 枚出力するごとに、自前の <code>getTimer()</code> が返す値が <code>1 / frameRate</code> だけ増えるように細工している。結果、出力した秒数に応じた位置で Tweener のアニメーションが停止するようになる。よって、コマ落ちが発生しない。</p>
+
+<p>フレームレートは <code>stage.frameRate</code> を利用しているので、コンパイルオプションや <code>SWF</code> メタタグでカスタマイズすれば、デフォルト以外のフレームレートでも出力できる。</p>
+
+<p>自前の <code>getTimer()</code> をトップレベルのパッケージとして定義しているが、これは <code>flash.utils.getTimer()</code> を利用するライブラリを一緒にビルドしようとしたときに、ビルドエラーにさせるためである。<code>flash.utils.getTimer()</code> を利用している箇所を grep して見つけ出してもいいんだけど、コンパイラに見つけさせよう、という魂胆である。</p>
+
+<h1>まとめ</h1>
+
+<p>ActionScript のソースが手元にあるときに、コマ落ちなく動画に変換する方法を説明した。</p>
+
+<p>今回は簡単なソースコードで説明したが、<code>setInterval()</code> を使ってるようなケースではさらに複雑になる。マウスインタラクションがあったり、外部 SWF をロードしていると太刀打ちできなくもなる。</p>
+
+<p>応用事例になるが、リアルタイムではとてもじゃないけど再生できないような劇重 Flash を作成したとしても、この方法を使って動画に変換はできる。パーティクルをいくつ配置しようが、ポリゴンをいくつ配置しようが、HD 画質にしようが、動画にしてしまえばコマ落ちの心配はない。Flash Player では得られない高画質な動画を作ることもできるだろう。</p>
+
+<p>ここで紹介した 2 つの作品は、<a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a> で解説してもらっているので、興味がある人はそちらもどうぞ。</p>
+
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098"><img src="http://ecx.images-amazon.com/images/I/51d7HQjkhbL._SL160_.jpg" class="hatena-asin-detail-image" alt="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜" title="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 池田泰延</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> ワークスコーポレーション</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2011-06-08</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4862671098">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-lang="ja" data-size="horizontal" data-text="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2012/10/15/static-site-js-css-cache/" rel="previous">静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 15 Oct 2012 01:27:51 +0900</lastBuildDate>
+		<lastBuildDate>Thu, 18 Oct 2012 00:58:49 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,112 @@
 
 
 
+
+		<item>
+			<title>ActionScript のみで作った SWF をコマ落ちせずに動画にする手法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/</guid>
+			<pubDate>Thu, 18 Oct 2012 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>世の中には SWF を動画に変換するツールがいくつかある。</p>
+
+<p>これらのツールは、SWF を再生しておいて、次々と画面をキャプチャしていって、最後に動画に変換する、というものがほとんどのようだ。変換の再現性は高い一方、どうしてもコマ落ちが発生してしまう。</p>
+
+<p>ActionScript のみで作成した SWF を<strong>コマ落ちせずに動画に変換する</strong>テクニックを解説する。前提条件は、ソースコードが手元にあり、Flash IDE を利用していないこと、ActionScript の知識があること。</p>
+
+<p><a href="http://wonderfl.net/">wonderfl</a> の作品を動画にする、と説明するとイメージが沸きやすいかもしれない。</p>
+
+<h1>enterFrame だけで描画するパターン</h1>
+
+<p>比較的簡単に変換できるのが、<code>enterFrame</code> イベントが発生するごとに描画するパターンのときである。</p>
+
+<h2>変換例</h2>
+
+<p>試しに、過去に wonderfl に投稿した <a href="http://wonderfl.net/c/mnwo/">キラキラ3D Typography</a> を動画に変換してみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/2tm9okNtkOg" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885010">https://gist.github.com/3885010</a> に上げている。</p>
+
+<p>肝は <code>PngOutput</code> という自作クラスだ。<code>enterFrame</code> のイベントごとに、<code>PngOutput.output()</code> メソッドを呼んで、表示している内容を png ファイルで書き出している。</p>
+
+<div class="highlight"><pre><code class="actionscript">    <span class="c1">// ループ処理</span>
+    <span class="nx">PngOutput</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">stage</span><span class="p">);</span>
+    <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+        <span class="c1">// ここで描画処理をしている</span>
+
+        <span class="nx">PngOutput</span><span class="p">.</span><span class="nx">output</span><span class="p">();</span>
+        <span class="nx">counter</span><span class="o">++;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">counter</span> <span class="o">%</span> <span class="mi">120</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="nx">f</span> <span class="o">=</span> <span class="o">!</span><span class="nx">f</span><span class="o">;</span> <span class="p">}</span>
+    <span class="p">});</span>
+</code></pre>
+</div>
+
+
+<p>画像のサイズは <code>stage</code> のサイズを利用しているので、<code>SWF</code> メタタグやコンパイルオプションでサイズを指定できる。</p>
+
+<p>ファイルを扱うために、AIR アプリとして実行している。<code>amxmlc</code> でビルドして、<code>adl app.xml</code> で画像出力を開始してくれるようになっている。出力先のパスは <code>PngOutput</code> クラスに直接書いてあるので、適切に変更して利用してほしい。</p>
+
+<p>よくあるキャプチャして動画にするツールとは違って、コマ落ちは発生しない。というのも、<strong>1 フレームずつ、順番に「描画＋画像に変換」を実行している</strong>からだ。変換中は、ゆっくり 1 フレームずつ再生しながら画像出力しているが、できあがった画像をつなぎ合わせればコマ落ちが発生しない動画になっている。ソースコードが手中にあるからこそできる技である。</p>
+
+<p>連番画像ファイルから動画への変換は AviUtil を使った。先頭の画像をドロップして、エンコードすればいいだけなのでお手軽だった。たいがいの動画変換ソフトが連番画像ファイルに対応しているだろうから、慣れているものを使って変換すればよいだろう。</p>
+
+<h1>タイマーを参照するパターン</h1>
+
+<p>さて、もう少し厄介なのが、各フレームでタイマーを参照するパターンの作品だ。そのようなコードを意識して書いていなかったとしても、トゥイーン系ライブラリでは内部的にタイマー系の関数を利用している。</p>
+
+<p>このパターンの作品を、1つ目と同じように <code>enterFrame</code> で 1 フレームずつ画像出力していると、早送りの動画が出来上がってしまう。というのも、描画して画像を出力している間に、<code>1 / frameRate</code> 以上の時間が経過してしまうので、飛び飛びの画像しか出力できないのだ。</p>
+
+<p>これを防ぐためには、トゥイーン ライブラリで利用しているタイマー系の関数を置き換えて騙すしかない。</p>
+
+<h2>変換例</h2>
+
+<p>過去に wonderfl に投稿した <a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> を動画にしてみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/nI-u_XPbCTw" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885404">https://gist.github.com/3885404</a> に上げている。</p>
+
+<p><a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> は Tweener を使ってアニメーションしている。Tweener は、ライブラリの内部で <code>flash.utils.getTimer()</code> を使って、時間管理を実施している。この部分を書き換えて、自前で定義した <code>getTimer()</code> 関数を呼ぶようにした。</p>
+
+<p><code>enterFrame</code> で 1 フレームごとに画像を出力する点は以前のものと変わらない。ただ、画像を 1 枚出力するごとに、自前の <code>getTimer()</code> が返す値が <code>1 / frameRate</code> だけ増えるように細工している。結果、出力した秒数に応じた位置で Tweener のアニメーションが停止するようになる。よって、コマ落ちが発生しない。</p>
+
+<p>フレームレートは <code>stage.frameRate</code> を利用しているので、コンパイルオプションや <code>SWF</code> メタタグでカスタマイズすれば、デフォルト以外のフレームレートでも出力できる。</p>
+
+<p>自前の <code>getTimer()</code> をトップレベルのパッケージとして定義しているが、これは <code>flash.utils.getTimer()</code> を利用するライブラリを一緒にビルドしようとしたときに、ビルドエラーにさせるためである。<code>flash.utils.getTimer()</code> を利用している箇所を grep して見つけ出してもいいんだけど、コンパイラに見つけさせよう、という魂胆である。</p>
+
+<h1>まとめ</h1>
+
+<p>ActionScript のソースが手元にあるときに、コマ落ちなく動画に変換する方法を説明した。</p>
+
+<p>今回は簡単なソースコードで説明したが、<code>setInterval()</code> を使ってるようなケースではさらに複雑になる。マウスインタラクションがあったり、外部 SWF をロードしていると太刀打ちできなくもなる。</p>
+
+<p>応用事例になるが、リアルタイムではとてもじゃないけど再生できないような劇重 Flash を作成したとしても、この方法を使って動画に変換はできる。パーティクルをいくつ配置しようが、ポリゴンをいくつ配置しようが、HD 画質にしようが、動画にしてしまえばコマ落ちの心配はない。Flash Player では得られない高画質な動画を作ることもできるだろう。</p>
+
+<p>ここで紹介した 2 つの作品は、<a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a> で解説してもらっているので、興味がある人はそちらもどうぞ。</p>
+
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098"><img src="http://ecx.images-amazon.com/images/I/51d7HQjkhbL._SL160_.jpg" class="hatena-asin-detail-image" alt="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜" title="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a></p>
+    <ul>
+      <li><span class="hatena-asin-detail-label">作者:</span> 池田泰延</li>
+      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> ワークスコーポレーション</li>
+      <li><span class="hatena-asin-detail-label">発売日:</span> 2011-06-08</li>
+      <li><span class="hatena-asin-detail-label">メディア:</span> 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4862671098">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+
+]]></description>
+		</item>
 
 		<item>
 			<title>静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</title>
@@ -487,29 +593,6 @@
 <p>これを回避するために、ID の手前に a とか b とかをつけてアップロードを繰り返した。なんと面倒なことであるか。</p>
 <h1>まとめ</h1>
 <p>DISQUS のインポートは用意周到に。締め切りのあるケースではやりたくない作業である。</p>]]></description>
-		</item>
-
-		<item>
-			<title>英語ブログを新調した話と移転計画</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/06/27/english-blog-renewal/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/06/27/english-blog-renewal/</guid>
-			<pubDate>Wed, 27 Jun 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>放置していた<a href="http://tech.nitoyon.com/en/blog/">英語ブログ</a>をこのブログと同じデザインに統一した。</p>
-<p>英語ブログ、以前は MovableType を使ってたんだけど、いろいろ面倒になったので Jekyll で作り直した。Jekyll は Github Pages に使われている静的コンテンツ ジェネレータ。Ruby で作られていて、コードはシンプル、プラグイン機構もあるので、カスタマイズしやすい。</p>
-<p>Jekyll については次のページが分かりやすかった。</p>
-<ul><li><a href="http://mattn.kaoriya.net/software/lang/ruby/20090409185248.htm">Big Sky :: Jekyllで始める簡単ブログ</a></li></ul>
-<p>ソースコードは <a href="https://github.com/nitoyon/tech.nitoyon.com">https://github.com/nitoyon/tech.nitoyon.com</a> で公開している。</p>
-<h1>このブログも移動させようと準備中</h1>
-<p>せっかく英語ブログも新調したので、このブログも <a href="http://tech.nitoyon.com/ja/blog/">http://tech.nitoyon.com/ja/blog/</a> あたりに移動させようと準備している。</p>
-<a name="seemore"></a>
-<p>理由としては色々あるんだけど、ざっと挙げると・・・</p>
-<ul><li>CSS3 でブログのデザインを<a href="/ja/blog/2012/03/13/newdesign2012/">新しくした</a>のに、はてなダイアリーは <code>DOCTYPE</code> が互換モードになっている。つまり、IE9 で CSS3 が有効にならない。</li><li>はてなブログも気にはなるんだけど、<ul><li>もう一回最初から進化に付き合う気にはなれない。システムの制約で新しいことを試せないのが悲しい。</li><li>スマートフォン版のデザインをカスタマイズできない。 いま流行のレスポンシブ Web デザインをやってみたい。</li><li>AdSense の位置をいろいろ試してみたい。コピペできない文章のすぐ下に AdSense 置いたら普段の倍ぐらいの RPM（収益/PV）になって驚いた。そのあたりのノウハウも身につけてみたい。</li></ul></li></ul>
-<p>どうせ移転するなら過去の記事も全部移動させたい。しかし、数百件の過去記事を手で Markdown に変換するのは嫌だ。そこで、Ruby で「はてな記法」を扱える hparser を組み込もうとしている。ただ、自分が使ってる記法がサポートされていないものがあったので、hparser 本体にも手を入れたりして、なかなかの大作業になっている。</p>
-<p>やっかいなのが twitter 記法と amazon 記法。この 2 つについては Web サービスへのリクエストが必要になるので、リクエスト結果をキャッシュする仕組みもほしくなる。</p>
-<p>また、Jekyll で数百の記事をパブリッシュすると完了までに時間がかかりすぎるので、ここにも何らかのキャッシュが必要になる。コメントの扱いも難しい。静的コンテンツなので facebook なり DISQUS を使うことになるんだろうか。このあたりの外部サービスによって変化する空気感も気になる。</p>
-<br />
-<p>以上のように、最近、はてなダイアリーの劣化コピーを作りにいそしんでいる。こうやって一つ一つ作業をこなしていると、はてなダイアリーがいかに便利だったかをあらためて実感することにもなる。</p>
-<p>奮闘中の様子は <a href="https://github.com/nitoyon/tech.nitoyon.com">https://github.com/nitoyon/tech.nitoyon.com</a> を見れば分かるようになっているので、興味がある人はウォッチしてみてほしい。いまは楽しんで作っているけど、途中で飽きて、しれっとはてなダイアリーで書き続けているかもしれない・・・。</p>]]></description>
 		</item>
 
 	</channel>
