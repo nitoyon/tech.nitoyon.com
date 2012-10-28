@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Ruby の Liquid でテンプレートに値を渡すパターン４つ - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Ruby の Liquid でテンプレートに値を渡すパターン４つ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。Hash を渡すパターンまずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。require &amp;#39;liquid&amp;#39;template = Liquid::Template.parse(&amp;quot;hi {{name}}&amp;quot;)puts template.render( &amp;#39;name&amp;#39; =&amp;gt; &amp;#39;nitoyon&amp;#39; ) # =&amp;gt; hi nitoyon分かりやすい。そのまま。to..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="http://tech.nitoyon.com/about.html">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li><li class="contact"><a href="/contact.html">CONTACT</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2012年10月29日</h2>
+<h1>Ruby の Liquid でテンプレートに値を渡すパターン４つ</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby の Liquid でテンプレートに値を渡すパターン４つ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/" data-lang="ja" data-size="horizontal" data-text="Ruby の Liquid でテンプレートに値を渡すパターン４つ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。</p>
+
+<h1>Hash を渡すパターン</h1>
+
+<p>まずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nitoyon&#39;</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+</code></pre>
+</div>
+
+
+<p>分かりやすい。そのまま。</p>
+
+<h1>to_liquid を実装するパターン</h1>
+
+<p>自分で作ったクラスのインスタンスを Liquid に渡したい場合もあるだろう。この場合、<code>to_liquid</code> メソッドを実装してやる必要がある。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+
+<span class="k">class</span> <span class="nc">Person</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">to_liquid</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="vi">@name</span> <span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+</code></pre>
+</div>
+
+
+<p>Liquid の処理としては、オブジェクトを参照するときには、あらかじめ <code>to_liquid</code> メソッドを呼ぶ仕組みになっているようだ。実際に、Liquid を <code>require</code> すると、裏側では <code>liquid/extensions.rb</code> によって <code>String#to_liquid</code> などのメソッドが定義されている。</p>
+
+<p>もし、<code>to_liquid</code> を定義していないと、</p>
+
+<pre><code>hi Liquid error: undefined method `to_liquid' for 
+#&lt;Person:0x46a400 @name="nitoyon"&gt;
+</code></pre>
+
+<p>のようなエラーになってしまう。</p>
+
+<p><code>to_liquid</code> を独自実装するパターンを使うと、テンプレート側から <code>Person</code> のメソッドを呼ぶことはできない。それをやりたいなら、次に説明する <code>Liquid::Drop</code> を使うとよい。</p>
+
+<h1>Drop を使うパターン</h1>
+
+<p><code>Liquid::Drop</code> を継承してやることで、テンプレート側からメソッドを呼べるようになる。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+  <span class="kp">attr_accessor</span> <span class="ss">:name</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="nf">NAME</span>
+    <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi nitoyon</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi NITOYON</span>
+</code></pre>
+</div>
+
+
+<p>これはとても便利だが、いくつか注意すべき点がある。</p>
+
+<p>まず、引数付きのメソッドを呼ぶことはできない。引数に対処したかったら、テンプレートから <code>name_param1_param2</code> のようにして参照しておいて、後述の <code>before_method</code> でがんばってパースしろ、というポリシーのようだ。</p>
+
+<p>もう１つ。別ライブラリが提供するオブジェクトを Liquid に渡したいことがある。このとき、<code>Liquid::Drop</code> を継承させるのは不可能だ。かといって、<code>to_liquid</code> で内部構造をいちいちハッシュに変換するのも面倒だ。</p>
+
+<p>そんなケースに対処するために Drop 化させるクラス <code>ToDrop</code> を作ってみたので、次のパターンとして紹介する。</p>
+
+<h1>Drop 化させるパターン</h1>
+
+<p>gem かなんかで、こんなクラスが提供されているものと仮定する。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
+  <span class="k">class</span> <span class="nc">Person</span>
+    <span class="kp">attr_accessor</span> <span class="ss">:name</span>
+    <span class="k">def</span> <span class="nf">initialize</span>
+      <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+    <span class="k">end</span>
+    <span class="k">def</span> <span class="nf">NAME</span>
+      <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+
+<p>外部ライブラリーのクラスなのでいじりたくないけど、このクラスのインスタンスをテンプレートに渡して、 <code>name</code> や <code>NAME</code> メソッドを叩きたいものとする。</p>
+
+<p>そういうときは、次のような <code>ToDrop</code> クラスを使えばよい。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="vi">@obj</span> <span class="o">=</span> <span class="n">obj</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="nf">before_method</span><span class="p">(</span><span class="nb">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">method</span> <span class="o">&amp;&amp;</span> <span class="nb">method</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="o">&amp;&amp;</span> <span class="vi">@obj</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">public_method_defined?</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
+      <span class="vi">@obj</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+
+<p>使い方は簡単。<code>to_liquid</code> で <code>ToDrop.new(self)</code> を返す処理を実装してやるだけだ。これだけで期待の動作となっている。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
+  <span class="k">class</span> <span class="nc">Person</span>
+    <span class="k">def</span> <span class="nf">to_liquid</span>
+      <span class="no">ToDrop</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi nitoyon</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi NITOYON</span>
+</code></pre>
+</div>
+
+
+<p><code>ToDrop</code> は今回、わたしが作成した魔法のクラスで、任意のオブジェクトを <code>Liquid::Drop</code> を継承したときと同じ動作にしてくれる。</p>
+
+<p><code>ToLiquid</code> クラスでは <code>Liquid::Drop.before_method</code> メソッドを実装している。このメソッドは <code>Liquid::Drop</code> を継承したクラスで未実装なメソッド名が渡されたときに呼ばれるメソッドだ (<code>Drop</code> のメソッドミッシングのような役割を担っている)。このメソッドで、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶんでいる。</p>
+
+<p>言葉で説明しても分かりにくいのだけど、<code>Liquid::Drop</code> クラスのソース <a href="https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb">drop.rb</a> と見比べてもらうとイメージは沸きやすいと思う。<code>Liquid::Drop</code> 自体が特殊な処理をしているわけではなく、<code>alias :[] :invoke_drop</code> とすることで、<code>[]</code> を使った参照をメソッド呼び出しに置き換えているのが興味深い。</p>
+
+<h1>まとめ</h1>
+
+<p>Liquid に値を渡すためのパターンを 4 つ紹介した。<code>Liquid::Drop</code> を継承すればテンプレート側からメソッドを呼べるし、継承関係に手が出しにくいときには拙作の <code>ToDrop</code> クラスを使えば便利だよ、という話をした。</p>
+
+</section>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby の Liquid でテンプレートに値を渡すパターン４つ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/" data-lang="ja" data-size="horizontal" data-text="Ruby の Liquid でテンプレートに値を渡すパターン４つ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="post-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2012/10/18/as3-to-movie/" rel="previous">ActionScript のみで作った SWF をコマ落ちせずに動画にする手法</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+	<div id="profile" class="column">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。twitter は @nitoyon。</p>
+		<p class="seemore"><a href="/about.html">詳細</a></p>
+	</div>
+
+	<div id="recententries" class="column">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
