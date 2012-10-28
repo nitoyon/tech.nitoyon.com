@@ -9,12 +9,12 @@
 # 
 # (example)
 #     $ ruby update_js_css_url.rb path/to/site/dir
-#     <script src="/foo/bar.js"> ¢ª <script src="/foo/bar.js?1234567890">
-#     <link href="/foo/baz.css"> ¢ª <link href="/foo/baz.css?1234567890">
+#     <script src="/foo/bar.js"> â†’ <script src="/foo/bar.js?1234567890">
+#     <link href="/foo/baz.css"> â†’ <link href="/foo/baz.css?1234567890">
 #
 #     $ ruby update_js_css_url.rb -d path/to/site/dir
-#     <script src="/foo/bar.js?1234567890"> ¢ª <script src="/foo/bar.js">
-#     <link href="/foo/baz.css?1234567890"> ¢ª <link href="/foo/baz.css">
+#     <script src="/foo/bar.js?1234567890"> â†’ <script src="/foo/bar.js">
+#     <link href="/foo/baz.css?1234567890"> â†’ <link href="/foo/baz.css">
 #
 #     $ ruby update_js_css_url.rb path/to/site/dir path/to/site/dir/tmp
 #
@@ -34,18 +34,21 @@ def update_timestamp(dir, file, delete_time)
   puts "parsing #{file}..."
 
   open(file) { |f| s = f.read }
+  new_mtime = File::mtime(file)
   s2 = s.gsub(%r!<((?:link|script)[^>]+(?:src|href))="(/[^/][^"]+\.(?:js|css))(?:\?\d+)?"!) { |m|
     count += 1
     if delete_time
       %(<#{$1}="#{$2}")
     else
-      time = File::mtime(dir + $2).to_i
-      %(<#{$1}="#{$2}?#{time}")
+      time = File::mtime(dir + $2)
+      new_mtime = time if new_mtime < time
+      %(<#{$1}="#{$2}?#{time.to_i}")
     end
   }
 
   if s != s2
     open(file, 'w') { |f| f.write(s2) }
+    File::utime(new_mtime, new_mtime, file)
     puts "wrote #{file} (replaced #{count})"
   else
     puts "skipped #{file}"
