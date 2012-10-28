@@ -6,6 +6,8 @@ lang: ja
 ---
 今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。
 
+Liquid のバージョンは 2.3.0 で確認しているが、執筆時点で最新の 2.4.1 でも変わってないようにみえる。
+
 
 Hash を渡すパターン
 ===================
@@ -109,7 +111,7 @@ end
 
 外部ライブラリーのクラスなのでいじりたくないけど、このクラスのインスタンスをテンプレートに渡して、 `name` や `NAME` メソッドを叩きたいものとする。
 
-そういうときは、次のような `ToDrop` クラスを使えばよい。
+そういうときは、次のような `ToDrop` クラスを定義しておけばよい。
 
 {% highlight ruby %}
 class ToDrop < Liquid::Drop
@@ -142,11 +144,11 @@ template = Liquid::Template.parse("hi {%raw%}{{person.NAME}}{%endraw%}")
 puts template.render({'person' => Foo::Person.new }) # => hi NITOYON
 {% endhighlight %}
 
-`ToDrop` は今回、わたしが作成した魔法のクラスで、任意のオブジェクトを `Liquid::Drop` を継承したときと同じ動作にしてくれる。
+この `ToDrop` が今回、わたしが作成した魔法のクラスで、任意のオブジェクトを `Liquid::Drop` を継承したときと同じ動作にしてくれる。
 
-`ToLiquid` クラスでは `Liquid::Drop.before_method` メソッドを実装している。このメソッドは `Liquid::Drop` を継承したクラスで未実装なメソッド名が渡されたときに呼ばれるメソッドだ (`Drop` のメソッドミッシングのような役割を担っている)。このメソッドで、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶんでいる。
+`ToLiquid` クラスでは `Liquid::Drop#before_method` メソッドを実装している。このメソッドは `Drop` のメソッドミッシングのような役割を担っている。`ToDrop#before_method` では、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶよう実装している。
 
-言葉で説明しても分かりにくいのだけど、`Liquid::Drop` クラスのソース [drop.rb](https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb) と見比べてもらうとイメージは沸きやすいと思う。`Liquid::Drop` 自体が特殊な処理をしているわけではなく、`alias :[] :invoke_drop` とすることで、`[]` を使った参照をメソッド呼び出しに置き換えているのが興味深い。
+言葉で説明しても分かりにくいのだけど、`Liquid::Drop` クラスのソース [drop.rb](https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb) と見比べてもらうとイメージは沸きやすいと思う。`Liquid::Drop` のソースをよく見ると Liquid と密接に関わっているわけではなく、`alias :[] :invoke_drop` とすることで、`[]` を使った参照をメソッド呼び出しに置き換えているだけ、というヘルパークラスなのが興味深い。
 
 
 まとめ
