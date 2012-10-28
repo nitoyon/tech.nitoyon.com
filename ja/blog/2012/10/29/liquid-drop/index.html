@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Ruby の Liquid でテンプレートに値を渡すパターン４つ"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。Hash を渡すパターンまずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。require &amp;#39;liquid&amp;#39;template = Liquid::Template.parse(&amp;quot;hi {{name}}&amp;quot;)puts template.render( &amp;#39;name&amp;#39; =&amp;gt; &amp;#39;nitoyon&amp;#39; ) # =&amp;gt; hi nitoyon分かりやすい。そのまま。to..."/>
+	<meta property="og:description" content="今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。Liquid のバージョンは 2.3.0 で確認しているが、執筆時点で最新の 2.4.1 でも変わってないようにみえる。Hash を渡すパターンまずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。require &amp;#39;liquid&amp;#39;template = Liquid::Template.parse(&amp;quot;hi {{name}}&amp;quot;)puts template.render( &amp;#39;name&amp;#39..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -57,6 +57,8 @@
 <div class="entry-body">
 <section>
 <p>今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。</p>
+
+<p>Liquid のバージョンは 2.3.0 で確認しているが、執筆時点で最新の 2.4.1 でも変わってないようにみえる。</p>
 
 <h1>Hash を渡すパターン</h1>
 
@@ -158,7 +160,7 @@
 
 <p>外部ライブラリーのクラスなのでいじりたくないけど、このクラスのインスタンスをテンプレートに渡して、 <code>name</code> や <code>NAME</code> メソッドを叩きたいものとする。</p>
 
-<p>そういうときは、次のような <code>ToDrop</code> クラスを使えばよい。</p>
+<p>そういうときは、次のような <code>ToDrop</code> クラスを定義しておけばよい。</p>
 
 <div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
   <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
@@ -193,11 +195,11 @@
 </div>
 
 
-<p><code>ToDrop</code> は今回、わたしが作成した魔法のクラスで、任意のオブジェクトを <code>Liquid::Drop</code> を継承したときと同じ動作にしてくれる。</p>
+<p>この <code>ToDrop</code> が今回、わたしが作成した魔法のクラスで、任意のオブジェクトを <code>Liquid::Drop</code> を継承したときと同じ動作にしてくれる。</p>
 
-<p><code>ToLiquid</code> クラスでは <code>Liquid::Drop.before_method</code> メソッドを実装している。このメソッドは <code>Liquid::Drop</code> を継承したクラスで未実装なメソッド名が渡されたときに呼ばれるメソッドだ (<code>Drop</code> のメソッドミッシングのような役割を担っている)。このメソッドで、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶんでいる。</p>
+<p><code>ToLiquid</code> クラスでは <code>Liquid::Drop#before_method</code> メソッドを実装している。このメソッドは <code>Drop</code> のメソッドミッシングのような役割を担っている。<code>ToDrop#before_method</code> では、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶよう実装している。</p>
 
-<p>言葉で説明しても分かりにくいのだけど、<code>Liquid::Drop</code> クラスのソース <a href="https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb">drop.rb</a> と見比べてもらうとイメージは沸きやすいと思う。<code>Liquid::Drop</code> 自体が特殊な処理をしているわけではなく、<code>alias :[] :invoke_drop</code> とすることで、<code>[]</code> を使った参照をメソッド呼び出しに置き換えているのが興味深い。</p>
+<p>言葉で説明しても分かりにくいのだけど、<code>Liquid::Drop</code> クラスのソース <a href="https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb">drop.rb</a> と見比べてもらうとイメージは沸きやすいと思う。<code>Liquid::Drop</code> のソースをよく見ると Liquid と密接に関わっているわけではなく、<code>alias :[] :invoke_drop</code> とすることで、<code>[]</code> を使った参照をメソッド呼び出しに置き換えているだけ、というヘルパークラスなのが興味深い。</p>
 
 <h1>まとめ</h1>
 
