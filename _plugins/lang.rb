@@ -13,6 +13,9 @@ module Jekyll
       super site, base, '', name
       self.data["lang"] = lang
       self.data['permalink'] = "/#{lang}/#{name}"
+
+      # clear url cache (quick hack...)
+      @url = nil
     end
   end
   
@@ -27,6 +30,7 @@ module Jekyll
       base = File.join(self.source, '_lang')
       return unless File.exists?(base)
       entries = Dir.chdir(base) { filter_entries(Dir['**/*']) }
+      payload = site_payload
 
       # process each entries and languages
       entries.each do |f|
@@ -38,7 +42,7 @@ module Jekyll
           page = LanguagePage.new(self, base, f, lang)
 
           # Render if post yaml is modified (set by post_yaml_cache plugin)
-          self.render_page_if_yaml_modified page
+          self.render_if_modified(page, payload)
           self.pages << page
         end
       end

@@ -10,43 +10,23 @@
 
 module Jekyll
   class Post
-    attr_accessor :skipped
+    attr_accessor :skipped, :yaml_modified, :modified
 
-    alias :render_ext_orig :render unless self.instance_methods.include?(:render_ext_orig)
-    def render(layouts, site_payload, force=false)
-      src_mtime = File::mtime(File.join(@base, @name))
-      dst_path = self.destination(@site.dest)
-      dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
-
-      if !force && dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
-        self.skipped = true
-      else
-        puts "rendering #{self.name}"
-        self.render_ext_orig(layouts, site_payload)
-        self.skipped = false
-        puts "rendered"
-      end
+    def source
+      File.join(@base, @name)
     end
   end
 
   class Page
-    attr_accessor :skipped
+    attr_accessor :skipped, :yaml_modified, :modified
 
-    alias :render_ext_orig :render unless self.instance_methods.include?(:render_ext_orig)
-    def render(layouts, site_payload, force=false)
-      src_path = File.join(@base, @dir, @name)
-      src_mtime = File::mtime(File.join(@base, @dir, @name)) if FileTest.exists?(src_path)
-      dst_path = self.destination(@site.dest)
-      dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
-
-      if !force && src_mtime && dst_mtime && src_mtime <= dst_mtime && @site.is_modified_only
-        self.skipped = true
-      else
-        puts "rendering #{File.join(@dir, @name)}"
-        self.render_ext_orig(layouts, site_payload)
-        self.skipped = false
-      end
+    def source
+      File.join(@base, @dir, @name)
     end
+  end
+
+  class Layout
+    attr_accessor :yaml_modified
   end
 
   class Site
@@ -172,6 +152,67 @@ module Jekyll
       pp obsolete_files
 
       FileUtils.rm_rf(obsolete_files.to_a)
+    end
+
+    # Render the site to the destination.
+    #
+    # Returns nothing.
+    def render
+      payload = site_payload
+      self.posts.each do |post|
+        post.skipped = true
+        self.render_if_modified(post, payload)
+      end
+
+      self.pages.each do |page|
+        page.skipped = true
+        self.render_if_modified(page, payload)
+      end
+
+      self.categories.values.map { |ps| ps.sort! { |a, b| b <=> a } }
+      self.tags.values.map { |ps| ps.sort! { |a, b| b <=> a } }
+    rescue Errno::ENOENT => e
+      # ignore missing layout dir
+    end
+
+    def render_if_modified(page, payload)
+      begin
+        page.skipped = !self.check_render(page)
+      rescue Exception => e
+        puts "Failed to check render #{page.destination('/')}: #{e}"
+        page.skipped = false
+      end
+      page.render(self.layouts, payload) unless page.skipped
+    end
+
+    def check_render(page)
+      unless self.is_modified_only
+        true
+      else
+        default_update_policy = self.config['default_update_policy']
+        @template_cache ||= {}
+
+        if page.data.has_key?("update_policy")
+          update_policy = page.data["update_policy"]
+        elsif page.class == Page && default_update_policy && default_update_policy['page']
+          update_policy = default_update_policy['page']
+        elsif page.class == Post && default_update_policy && default_update_policy['post']
+          update_policy = default_update_policy['post']
+        else
+          update_policy = "{% if page.raw.modified %}1{% endif %}"
+        end
+
+        unless @template_cache.has_key? update_policy
+          @template_cache[update_policy] = Liquid::Template.parse(update_policy)
+        end
+        template = @template_cache[update_policy]
+
+        update = template.render(
+          { "page" => page }.deep_merge(site_payload), 
+          { :filters => [Jekyll::Filters], :registers => { :site => self } })
+        puts "#{page.destination('/')} updated: #{update.strip}" unless update.strip.empty?
+        !update.strip.empty?
+      end
     end
 
     # Write static files, pages, and posts.

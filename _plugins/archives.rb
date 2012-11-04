@@ -63,6 +63,7 @@ module Jekyll
       self.data["title"] = title
       self.data["posts"] = posts.reverse
       self.data["lang"] = lang;
+      self.data["update_policy"] = "{% for post in page.posts %}{% if post.raw.yaml_modified %}1{% endif %}{%endfor%}"
     end
   end
   
@@ -82,15 +83,16 @@ module Jekyll
     # Generate yearly and monthly archive page of lang
     def generate_archives_for_lang(lang)
       years, months = Archive.archives(self.categories[lang])
-      
+      payload = site_payload
+
       months.each do |year, m|
         page = Archive.new(self, self.source, years[year], lang, year)
-        render_page_if_yaml_modified(page)
+        self.render_if_modified(page, payload)
         self.pages << page
 
         m.each do |month, d|
           page = Archive.new(self, self.source, months[year][month], lang, year, month)
-          render_page_if_yaml_modified(page)
+          self.render_if_modified(page, payload)
           self.pages << page
         end
       end

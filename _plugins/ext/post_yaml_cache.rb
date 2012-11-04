@@ -15,15 +15,6 @@ module Jekyll
       @yaml_modified = @yaml_cache.content_modified
       @yaml_cache.save
     end
-
-    def render_page_if_yaml_modified(page)
-      if @yaml_modified || !(self.config['server'] && self.config['auto'])
-        page.render(self.layouts, site_payload, true)
-        page.skipped = false
-      else
-        page.skipped = true
-      end
-    end
   end
 
   module Convertible
@@ -34,12 +25,13 @@ module Jekyll
     #
     # Returns nothing.
     def read_yaml(base, name)
-      self.content = File.read(File.join(base, name))
+      source = File.join(base, name)
+      self.content = File.read(source)
 
       begin
         if self.content =~ /^(---\s*\n.*?\n?)^(---\s*$\n?)/m
           self.content = $POSTMATCH
-          self.data = site.yaml_cache.get(File.join(base, name), $1)
+          self.yaml_modified, self.data = site.yaml_cache.get(File.join(base, name), $1)
         end
       rescue => e
         puts "YAML Exception reading #{name}: #{e.message}"
@@ -47,6 +39,15 @@ module Jekyll
       end
 
       self.data ||= {}
+
+      # Update self.modified
+      if self.class.public_method_defined?(:modified)
+        src_mtime = Time.at(0)
+        src_mtime = File::mtime(source) if FileTest.exists?(source)
+        dst_path = self.destination(self.site.dest)
+        dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
+        self.modified = dst_mtime && src_mtime > dst_mtime
+      end
     end
   end
 
@@ -66,12 +67,11 @@ module Jekyll
       key = path[@site.source.length..-1]
 
       if self.has_cache?(key, path)
-        self.get_content(key)
+        [false, self.get_content(key)]
       else
         content = YAML.load(yaml)
         puts "parsed yaml #{key}..."
         self.set_content(key, path, content)
-        content
       end
     end
 
@@ -89,12 +89,15 @@ module Jekyll
       old_content = @cache[key]['content'] if @cache.has_key?(key)
 
       @file_modified = true
-      @content_modified |= YAML.dump(old_content) != YAML.dump(content)
+      modified = YAML.dump(old_content) != YAML.dump(content)
+      @content_modified |= modified
 
       @cache[key] = {
         'content' => content,
         'modified' => File.mtime(path)
       }
+      puts "yaml set #{modified}"
+      [modified, content]
     end
 
     def load
