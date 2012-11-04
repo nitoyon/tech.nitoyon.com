@@ -40,14 +40,12 @@ module Jekyll
         choices = Dir['**/*'].reject { |x| File.symlink?(x) }
         if choices.include?(@file)
           source = File.read(@file).gsub(/##(\d+)##/) {
-            puts $1
             if $1.to_i <= @params.length
               @params[$1.to_i - 1]
             else
               "(param #{$1} not found)"
             end
           }
-          puts source
           partial = Liquid::Template.parse(source)
           context.stack do
             partial.render(context)
