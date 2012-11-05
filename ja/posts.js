@@ -12,7 +12,7 @@ var Site = {
 
 
 Site.archives.posts = [
-	{url: "/ja/blog/2012/11/06/flickr-auto-update/", title: "Flickr の Set に写真を日々追加する Ruby スクリプトを作った"},
+	{url: "/ja/blog/2012/11/06/flickr-auto-update/", title: "Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った"},
 	{url: "/ja/blog/2012/10/29/liquid-drop/", title: "Ruby の Liquid でテンプレートに値を渡すパターン４つ"},
 	{url: "/ja/blog/2012/10/18/as3-to-movie/", title: "ActionScript のみで作った SWF をコマ落ちせずに動画にする手法"},
 	{url: "/ja/blog/2012/10/15/static-site-js-css-cache/", title: "静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ"},

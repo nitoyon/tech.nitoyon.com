@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 06 Nov 2012 00:45:56 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 06 Nov 2012 00:55:24 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -19,7 +19,7 @@
 
 
 		<item>
-			<title>Flickr の Set に写真を日々追加する Ruby スクリプトを作った</title>
+			<title>Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った</title>
 			<link>http://tech.nitoyon.com/ja/blog/2012/11/06/flickr-auto-update/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/11/06/flickr-auto-update/</guid>
 			<pubDate>Tue, 06 Nov 2012 00:00:00 +0900</pubDate>
@@ -160,9 +160,11 @@
 
 <h2>使い方</h2>
 
-<p>たとえば、2012年11月06日に公開したい写真を <code>2012-11-06</code> という Set に入れておきます。</p>
+<p>あらかじめ、写真をプライベートでアップロードしておきます。</p>
 
-<p>その上で、シェルから</p>
+<p>たとえば、2012年11月06日に公開したい写真は、<code>2012-11-06</code> という Set に入れておきます。</p>
+
+<p>その状態で、シェルから</p>
 
 <div class="highlight"><pre><code class="bash"><span class="nv">$ </span>ruby update_flickr.rb <span class="o">[</span>set_id<span class="o">]</span>
 </code></pre>
@@ -216,7 +218,155 @@
 			<link>http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/10/29/liquid-drop/</guid>
 			<pubDate>Mon, 29 Oct 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[Liquid error: wrong number of arguments (3 for 2)]]></description>
+			<description><![CDATA[<p>今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。</p>
+
+<p>Liquid のバージョンは 2.3.0 で確認しているが、執筆時点で最新の 2.4.1 でも変わってないようにみえる。</p>
+
+<h1>Hash を渡すパターン</h1>
+
+<p>まずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nitoyon&#39;</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+</code></pre>
+</div>
+
+
+<p>分かりやすい。そのまま。</p>
+
+<h1>to_liquid を実装するパターン</h1>
+
+<p>自分で作ったクラスのインスタンスを Liquid に渡したい場合もあるだろう。この場合、<code>to_liquid</code> メソッドを実装してやる必要がある。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+
+<span class="k">class</span> <span class="nc">Person</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">to_liquid</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="vi">@name</span> <span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+</code></pre>
+</div>
+
+
+<p>Liquid の処理としては、オブジェクトを参照するときには、あらかじめ <code>to_liquid</code> メソッドを呼ぶ仕組みになっているようだ。実際に、Liquid を <code>require</code> すると、裏側では <code>liquid/extensions.rb</code> によって <code>String#to_liquid</code> などのメソッドが定義されている。</p>
+
+<p>もし、<code>to_liquid</code> を定義していないと、</p>
+
+<pre><code>hi Liquid error: undefined method `to_liquid' for 
+#&lt;Person:0x46a400 @name="nitoyon"&gt;
+</code></pre>
+
+<p>のようなエラーになってしまう。</p>
+
+<p><code>to_liquid</code> を独自実装するパターンを使うと、テンプレート側から <code>Person</code> のメソッドを呼ぶことはできない。それをやりたいなら、次に説明する <code>Liquid::Drop</code> を使うとよい。</p>
+
+<h1>Drop を使うパターン</h1>
+
+<p><code>Liquid::Drop</code> を継承してやることで、テンプレート側からメソッドを呼べるようになる。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+  <span class="kp">attr_accessor</span> <span class="ss">:name</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="nf">NAME</span>
+    <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi nitoyon</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi NITOYON</span>
+</code></pre>
+</div>
+
+
+<p>これはとても便利だが、いくつか注意すべき点がある。</p>
+
+<p>まず、引数付きのメソッドを呼ぶことはできない。引数に対処したかったら、テンプレートから <code>name_param1_param2</code> のようにして参照しておいて、後述の <code>before_method</code> でがんばってパースしろ、というポリシーのようだ。</p>
+
+<p>もう１つ。別ライブラリが提供するオブジェクトを Liquid に渡したいことがある。このとき、<code>Liquid::Drop</code> を継承させるのは不可能だ。かといって、<code>to_liquid</code> で内部構造をいちいちハッシュに変換するのも面倒だ。</p>
+
+<p>そんなケースに対処するために Drop 化させるクラス <code>ToDrop</code> を作ってみたので、次のパターンとして紹介する。</p>
+
+<h1>Drop 化させるパターン</h1>
+
+<p>gem かなんかで、こんなクラスが提供されているものと仮定する。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
+  <span class="k">class</span> <span class="nc">Person</span>
+    <span class="kp">attr_accessor</span> <span class="ss">:name</span>
+    <span class="k">def</span> <span class="nf">initialize</span>
+      <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
+    <span class="k">end</span>
+    <span class="k">def</span> <span class="nf">NAME</span>
+      <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+
+<p>外部ライブラリーのクラスなのでいじりたくないけど、このクラスのインスタンスをテンプレートに渡して、 <code>name</code> や <code>NAME</code> メソッドを叩きたいものとする。</p>
+
+<p>そういうときは、次のような <code>ToDrop</code> クラスを定義しておけばよい。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="vi">@obj</span> <span class="o">=</span> <span class="n">obj</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="nf">before_method</span><span class="p">(</span><span class="nb">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">method</span> <span class="o">&amp;&amp;</span> <span class="nb">method</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="o">&amp;&amp;</span> <span class="vi">@obj</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">public_method_defined?</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
+      <span class="vi">@obj</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+
+<p>使い方は簡単。<code>to_liquid</code> で <code>ToDrop.new(self)</code> を返す処理を実装してやるだけだ。これだけで期待の動作となっている。</p>
+
+<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
+  <span class="k">class</span> <span class="nc">Person</span>
+    <span class="k">def</span> <span class="nf">to_liquid</span>
+      <span class="no">ToDrop</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi nitoyon</span>
+
+<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi NITOYON</span>
+</code></pre>
+</div>
+
+
+<p>この <code>ToDrop</code> が今回、わたしが作成した魔法のクラスで、任意のオブジェクトを <code>Liquid::Drop</code> を継承したときと同じ動作にしてくれる。</p>
+
+<p><code>ToLiquid</code> クラスでは <code>Liquid::Drop#before_method</code> メソッドを実装している。このメソッドは <code>Drop</code> のメソッドミッシングのような役割を担っている。<code>ToDrop#before_method</code> では、ラップ対象のオブジェクトに public メソッドがあるかどうか調べて、あるならばそれを呼ぶよう実装している。</p>
+
+<p>言葉で説明しても分かりにくいのだけど、<code>Liquid::Drop</code> クラスのソース <a href="https://github.com/Shopify/liquid/blob/master/lib/liquid/drop.rb">drop.rb</a> と見比べてもらうとイメージは沸きやすいと思う。<code>Liquid::Drop</code> のソースをよく見ると Liquid と密接に関わっているわけではなく、<code>alias :[] :invoke_drop</code> とすることで、<code>[]</code> を使った参照をメソッド呼び出しに置き換えているだけ、というヘルパークラスなのが興味深い。</p>
+
+<h1>まとめ</h1>
+
+<p>Liquid に値を渡すためのパターンを 4 つ紹介した。<code>Liquid::Drop</code> を継承すればテンプレート側からメソッドを呼べるし、継承関係に手が出しにくいときには拙作の <code>ToDrop</code> クラスを使えば便利だよ、という話をした。</p>
+]]></description>
 		</item>
 
 		<item>
