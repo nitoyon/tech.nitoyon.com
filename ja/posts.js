@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2012/11/06/flickr-auto-update/", title: "Flickr の Set に写真を日々追加する Ruby スクリプトを作った"},
 	{url: "/ja/blog/2012/10/29/liquid-drop/", title: "Ruby の Liquid でテンプレートに値を渡すパターン４つ"},
 	{url: "/ja/blog/2012/10/18/as3-to-movie/", title: "ActionScript のみで作った SWF をコマ落ちせずに動画にする手法"},
 	{url: "/ja/blog/2012/10/15/static-site-js-css-cache/", title: "静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ"},
-	{url: "/ja/blog/2012/09/20/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"},
-	{url: "/ja/blog/2012/08/27/hatena-blog/", title: "暫定で「はてなブログ」に移転した"}
+	{url: "/ja/blog/2012/09/20/moved-completed/", title: "俺の最強ブログ システムが火を噴くぜ"}
 ];
 
 Site.archives.months = [
-  "201210"
+  "201211"
+, "201210"
 , "201209"
 , "201208"
 , "201207"
