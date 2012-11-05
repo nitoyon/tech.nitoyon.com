@@ -26,7 +26,7 @@ module Jekyll
   end
 
   class Layout
-    attr_accessor :yaml_modified
+    attr_accessor :yaml_modified, :modified
   end
 
   class Site

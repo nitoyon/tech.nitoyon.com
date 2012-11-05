@@ -12,7 +12,6 @@ module Jekyll
       self.read_layouts
       self.read_directories
 
-      @yaml_modified = @yaml_cache.content_modified
       @yaml_cache.save
     end
   end
@@ -26,78 +25,92 @@ module Jekyll
     # Returns nothing.
     def read_yaml(base, name)
       source = File.join(base, name)
-      self.content = File.read(source)
 
       begin
-        if self.content =~ /^(---\s*\n.*?\n?)^(---\s*$\n?)/m
-          self.content = $POSTMATCH
-          self.yaml_modified, self.data = site.yaml_cache.get(File.join(base, name), $1)
-        end
+        ret = site.yaml_cache.get(source)
+
+        self.content = ret[:content]
+        self.data = ret[:yaml]
+        self.modified = ret[:modified]
+        self.yaml_modified = ret[:yaml_modified]
       rescue => e
         puts "YAML Exception reading #{name}: #{e.message}"
         raise e
       end
 
       self.data ||= {}
-
-      # Update self.modified
-      if self.class.public_method_defined?(:modified)
-        src_mtime = Time.at(0)
-        src_mtime = File::mtime(source) if FileTest.exists?(source)
-        dst_path = self.destination(self.site.dest)
-        dst_mtime = File::mtime(dst_path) if FileTest.exists?(dst_path)
-        self.modified = dst_mtime && src_mtime > dst_mtime
-      end
     end
   end
 
+  # cache yaml format
+  # { key => { 'modified' => Time,    # file modified time
+  #            'yaml'     => { },     # yaml cache
+  #            'content'  => "...",   # content cache
+  #          },
+  # }
   class YamlCache
-    attr_accessor :content_modified
-
     def initialize(site)
       @site = site
       @cache_path = File.join(@site.source, '_caches/posts.yml')
       @cache = nil
       @file_modified = false
-      @content_modified = false
+    end
+
+    def ret_hash(yaml, content, yaml_modified, content_modified)
+      { :modified         => yaml_modified || content_modified,
+        :yaml_modified    => yaml_modified,
+        :content_modified => content_modified,
+        :yaml             => Marshal.load(Marshal.dump(yaml)),
+        :content          => content,
+      }
     end
   
-    def get(path, yaml)
+    # Get cache or create cache
+    #
+    # Returns the Hash representation of the cache data.
+    def get(path)
       self.load if @cache.nil?
       key = path[@site.source.length..-1]
+      mtime = File.mtime(path)
 
-      if self.has_cache?(key, path)
-        [false, self.get_content(key)]
+      if @cache.has_key?(key) && mtime == @cache[key]['modified']
+        # file is not modified
+        ret_hash(@cache[key]['yaml'], @cache[key]['content'], false, false)
       else
-        content = YAML.load(yaml)
         puts "parsed yaml #{key}..."
-        self.set_content(key, path, content)
+        self.set_content(key, path, mtime)
       end
     end
 
-    def has_cache?(key, path)
-      @cache.has_key?(key) &&
-        File.mtime(path) == @cache[key]['modified']
-    end
+    def set_content(key, path, mtime)
+      # get current data
+      content = File.read(path)
+      if content =~ /^(---\s*\n.*?\n?)^(---\s*$\n?)/m
+        content = $POSTMATCH
+        yaml = YAML.load($1)
+      end
 
-    def get_content(key)
-      # deep copy
-      Marshal.load(Marshal.dump(@cache[key]['content']))
-    end
+      # get cache
+      if @cache.has_key?(key)
+        old_yaml = @cache[key]['yaml']
+        old_content = @cache[key]['content']
+      end
 
-    def set_content(key, path, content)
-      old_content = @cache[key]['content'] if @cache.has_key?(key)
+      # check updated
+      yaml_modified = YAML.dump(old_yaml) != YAML.dump(yaml)
+      content_modified = old_content != content
+      modified = yaml_modified || content_modified
+      @file_modified |= modified
 
-      @file_modified = true
-      modified = YAML.dump(old_content) != YAML.dump(content)
-      @content_modified |= modified
-
+      # set cache
       @cache[key] = {
         'content' => content,
-        'modified' => File.mtime(path)
+        'yaml' => yaml,
+        'modified' => mtime,
       }
-      puts "yaml set #{modified}"
-      [modified, content]
+      puts "modify cache: yaml=#{yaml_modified}, content=#{content_modified}" if modified
+
+      ret_hash(yaml, content, yaml_modified, content_modified)
     end
 
     def load

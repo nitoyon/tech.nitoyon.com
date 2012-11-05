@@ -13,9 +13,6 @@ module Jekyll
       super site, base, '', name
       self.data["lang"] = lang
       self.data['permalink'] = "/#{lang}/#{name}"
-
-      # clear url cache (quick hack...)
-      @url = nil
     end
   end
   
