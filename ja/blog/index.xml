@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 06 Nov 2012 00:55:24 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 06 Nov 2012 23:42:53 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -35,125 +35,125 @@
 
 <p>ということで、Flickr の API とにらめっこしながら作ってみました。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;flickraw&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;date&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;set&#39;</span>
+<div class="highlight"><pre><code class="ruby">require &#39;flickraw&#39;
+require &#39;date&#39;
+require &#39;set&#39;
 
-<span class="c1"># load conf and set API key and access token</span>
-<span class="c1"># (ex)</span>
-<span class="c1"># { &quot;api_key&quot;: &quot;xxxxxxx&quot;,</span>
-<span class="c1">#  &quot;shared_secret&quot;: &quot;xxxxx&quot;,</span>
-<span class="c1">#  &quot;access_token&quot;: &quot;xxxxxxx&quot;,</span>
-<span class="c1">#  &quot;access_secret&quot;: &quot;xxxxxx&quot;</span>
-<span class="c1"># }</span>
-<span class="n">conf</span> <span class="o">=</span> <span class="kp">nil</span>
-<span class="nb">open</span><span class="p">(</span><span class="s1">&#39;flickr.conf&#39;</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
-  <span class="n">conf</span> <span class="o">=</span> <span class="no">JSON</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-<span class="p">}</span>
+# load conf and set API key and access token
+# (ex)
+# { &quot;api_key&quot;: &quot;xxxxxxx&quot;,
+#  &quot;shared_secret&quot;: &quot;xxxxx&quot;,
+#  &quot;access_token&quot;: &quot;xxxxxxx&quot;,
+#  &quot;access_secret&quot;: &quot;xxxxxx&quot;
+# }
+conf = nil
+open(&#39;flickr.conf&#39;) { |f|
+  conf = JSON.load(f)
+}
 
-<span class="no">FlickRaw</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;api_key&#39;</span><span class="o">]</span>
-<span class="no">FlickRaw</span><span class="o">.</span><span class="n">shared_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;shared_secret&#39;</span><span class="o">]</span>
-<span class="n">flickr</span><span class="o">.</span><span class="n">access_token</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;access_token&#39;</span><span class="o">]</span>
-<span class="n">flickr</span><span class="o">.</span><span class="n">access_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;access_secret&#39;</span><span class="o">]</span>
-
-
-<span class="k">def</span> <span class="nf">get_set_id_by_name</span><span class="p">(</span><span class="n">set_name</span><span class="p">)</span>
-  <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">getList</span>
-  <span class="k">for</span> <span class="n">set</span> <span class="k">in</span> <span class="n">res</span>
-    <span class="k">if</span> <span class="n">set</span><span class="o">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">set_name</span>
-      <span class="k">return</span> <span class="n">set</span><span class="o">.</span><span class="n">id</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-  <span class="kp">nil</span>
-<span class="k">end</span>
-
-<span class="k">def</span> <span class="nf">get_photos_in_a_set</span><span class="p">(</span><span class="n">photoset_id</span><span class="p">)</span>
-  <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
-  <span class="n">pages</span> <span class="o">=</span> <span class="mi">1</span>
-  <span class="n">photo_ids</span> <span class="o">=</span> <span class="o">[]</span>
-  <span class="k">while</span> <span class="n">page</span> <span class="o">&lt;=</span> <span class="n">pages</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">getPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">photoset_id</span><span class="o">.</span><span class="n">to_s</span><span class="p">,</span>
-                                     <span class="ss">:page</span> <span class="o">=&gt;</span> <span class="n">page</span><span class="o">.</span><span class="n">to_s</span>
-    <span class="n">photo_ids</span><span class="o">.</span><span class="n">concat</span> <span class="n">res</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">photo</span><span class="o">|</span> <span class="n">photo</span><span class="o">.</span><span class="n">id</span> <span class="p">}</span>
-
-    <span class="n">page</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">to_i</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">pages</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pages</span><span class="o">.</span><span class="n">to_i</span>
-  <span class="k">end</span>
-  <span class="p">{</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-    <span class="ss">:primary</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> 
-    <span class="ss">:photo</span> <span class="o">=&gt;</span> <span class="n">photo_ids</span> <span class="p">}</span>
-<span class="k">end</span>
-
-<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">str</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">str</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">end</span>
+FlickRaw.api_key = conf[&#39;api_key&#39;]
+FlickRaw.shared_secret = conf[&#39;shared_secret&#39;]
+flickr.access_token = conf[&#39;access_token&#39;]
+flickr.access_secret = conf[&#39;access_secret&#39;]
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">cur_set_id</span><span class="p">)</span>
-  <span class="c1"># get set &#39;YYYY-MM-DD&#39;</span>
-  <span class="n">new_set_name</span> <span class="o">=</span> <span class="no">Date</span><span class="o">::</span><span class="n">today</span><span class="o">.</span><span class="n">to_s</span>
-  <span class="n">new_set_id</span> <span class="o">=</span> <span class="n">get_set_id_by_name</span><span class="p">(</span><span class="n">new_set_name</span><span class="p">)</span>
-  <span class="k">if</span> <span class="n">new_set_id</span><span class="o">.</span><span class="n">nil?</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
-    <span class="nb">exit</span>
-  <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> found: </span><span class="si">#{</span><span class="n">new_set_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+def get_set_id_by_name(set_name)
+  res = flickr.photosets.getList
+  for set in res
+    if set.title == set_name
+      return set.id
+    end
+  end
+  nil
+end
 
-  <span class="c1"># Get set information</span>
-  <span class="n">cur_set</span> <span class="o">=</span> <span class="n">get_photos_in_a_set</span><span class="p">(</span><span class="n">cur_set_id</span><span class="p">)</span>
-  <span class="n">new_set</span> <span class="o">=</span> <span class="n">get_photos_in_a_set</span><span class="p">(</span><span class="n">new_set_id</span><span class="p">)</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;current set has </span><span class="si">#{</span><span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span><span class="si">}</span><span class="s2"> photos&quot;</span><span class="p">)</span>
-  <span class="k">if</span> <span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;no photo&quot;</span><span class="p">)</span>
-    <span class="nb">exit</span>
-  <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;add </span><span class="si">#{</span><span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span><span class="si">}</span><span class="s2"> photo(s) to it&quot;</span><span class="p">)</span>
+def get_photos_in_a_set(photoset_id)
+  page = 1
+  pages = 1
+  photo_ids = []
+  while page &lt;= pages
+    res = flickr.photosets.getPhotos :photoset_id =&gt; photoset_id.to_s,
+                                     :page =&gt; page.to_s
+    photo_ids.concat res.photo.map { |photo| photo.id }
 
-  <span class="c1"># Create new photo_ids</span>
-  <span class="n">cur_photos_set</span> <span class="o">=</span> <span class="no">Set</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">]</span><span class="p">)</span>
-  <span class="n">photos</span> <span class="o">=</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">dup</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;current photos: </span><span class="si">#{</span><span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-  <span class="n">modified</span> <span class="o">=</span> <span class="kp">false</span>
-  <span class="k">for</span> <span class="n">photo</span> <span class="k">in</span> <span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">]</span>
-    <span class="k">if</span> <span class="n">cur_photos_set</span><span class="o">.</span><span class="n">include?</span> <span class="n">photo</span>
-      <span class="n">log</span><span class="p">(</span><span class="s2">&quot;skip photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">else</span>
-      <span class="n">log</span><span class="p">(</span><span class="s2">&quot;add photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-      <span class="n">photos</span><span class="o">.</span><span class="n">unshift</span><span class="p">(</span><span class="n">photo</span><span class="p">)</span> 
-      <span class="n">modified</span> <span class="o">=</span> <span class="kp">true</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;new photos: </span><span class="si">#{</span><span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    page = res.page.to_i + 1
+    pages = res.pages.to_i
+  end
+  { :id =&gt; res.id,
+    :primary =&gt; res.primary, 
+    :photo =&gt; photo_ids }
+end
 
-  <span class="k">if</span> <span class="n">modified</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhotos start&quot;</span><span class="p">)</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">editPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">,</span>
-                                      <span class="ss">:primary_photo_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:primary</span><span class="o">]</span><span class="p">,</span>
-                                      <span class="ss">:photo_ids</span> <span class="o">=&gt;</span> <span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhotos finished&quot;</span><span class="p">)</span>
-  <span class="k">else</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhots skipped&quot;</span><span class="p">)</span>
-  <span class="k">end</span>
-
-  <span class="c1"># delete set</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;delete photoset start&quot;</span><span class="p">)</span>
-  <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">delete</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">new_set_id</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;delete photoset finished&quot;</span><span class="p">)</span>
-<span class="k">end</span>
+def log(str)
+  puts &quot;#{Time.now} #{str}&quot;
+end
 
 
-<span class="k">if</span> <span class="no">ARGV</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mi">1</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set_id not specified&quot;</span><span class="p">)</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;ruby flickr_update.rb [set_id]&quot;</span><span class="p">)</span>
-  <span class="nb">exit</span>
-<span class="k">end</span>
+def main(cur_set_id)
+  # get set &#39;YYYY-MM-DD&#39;
+  new_set_name = Date::today.to_s
+  new_set_id = get_set_id_by_name(new_set_name)
+  if new_set_id.nil?
+    log(&quot;set #{new_set_name} not found&quot;)
+    exit
+  end
+  log(&quot;set #{new_set_name} found: #{new_set_id}&quot;)
 
-<span class="k">begin</span>
-  <span class="n">main</span><span class="p">(</span><span class="no">ARGV</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="p">)</span>
-<span class="k">rescue</span> <span class="no">SystemExit</span>
-<span class="k">rescue</span> <span class="no">Exception</span> <span class="o">=&gt;</span> <span class="n">e</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;exception </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="se">\n</span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">backtrace</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">end</span>
+  # Get set information
+  cur_set = get_photos_in_a_set(cur_set_id)
+  new_set = get_photos_in_a_set(new_set_id)
+  log(&quot;current set has #{cur_set[:photo].length} photos&quot;)
+  if new_set[:photo].length == 0
+    log(&quot;no photo&quot;)
+    exit
+  end
+  log(&quot;add #{new_set[:photo].length} photo(s) to it&quot;)
+
+  # Create new photo_ids
+  cur_photos_set = Set.new(cur_set[:photo])
+  photos = cur_set[:photo].dup
+  log(&quot;current photos: #{photos.join(&#39;,&#39;)}&quot;)
+  modified = false
+  for photo in new_set[:photo]
+    if cur_photos_set.include? photo
+      log(&quot;skip photo #{photo}&quot;)
+    else
+      log(&quot;add photo #{photo}&quot;)
+      photos.unshift(photo) 
+      modified = true
+    end
+  end
+  log(&quot;new photos: #{photos.join(&#39;,&#39;)}&quot;)
+
+  if modified
+    log(&quot;editPhotos start&quot;)
+    res = flickr.photosets.editPhotos :photoset_id =&gt; cur_set[:id],
+                                      :primary_photo_id =&gt; cur_set[:primary],
+                                      :photo_ids =&gt; photos.join(&quot;,&quot;)
+    log(&quot;editPhotos finished&quot;)
+  else
+    log(&quot;editPhots skipped&quot;)
+  end
+
+  # delete set
+  log(&quot;delete photoset start&quot;)
+  flickr.photosets.delete :photoset_id =&gt; new_set_id
+  log(&quot;delete photoset finished&quot;)
+end
+
+
+if ARGV.length &lt; 1
+  log(&quot;set_id not specified&quot;)
+  log(&quot;ruby flickr_update.rb [set_id]&quot;)
+  exit
+end
+
+begin
+  main(ARGV[0])
+rescue SystemExit
+rescue Exception =&gt; e
+  log(&quot;exception #{e.inspect}\n#{e.backtrace.join(&quot;\n&quot;)}&quot;)
+end
 </code></pre>
 </div>
 
@@ -166,7 +166,7 @@
 
 <p>その状態で、シェルから</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>ruby update_flickr.rb <span class="o">[</span>set_id<span class="o">]</span>
+<div class="highlight"><pre><code class="bash">$ ruby update_flickr.rb [set_id]
 </code></pre>
 </div>
 
@@ -197,9 +197,9 @@
     <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Adobe-Photoshop-Lightroom-Windows-Macintosh%E7%89%88/dp/B007E921HU%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB007E921HU">Adobe Photoshop Lightroom 4 Windows/Macintosh版 特別提供版</a></p>
     <ul>
 
-      <li><span class="hatena-asin-detail-label">出版社/メーカー:</span> アドビシステムズ</li>
-      <li><span class="hatena-asin-detail-label">発売日:</span> 2012-03-16</li>
-      <li><span class="hatena-asin-detail-label">メディア:</span> DVD-ROM</li>
+      <li>出版社/メーカー: アドビシステムズ</li>
+      <li>発売日: 2012-03-16</li>
+      <li>メディア: DVD-ROM</li>
       <li><a href="http://www.amazon.co.jp/review/product/B007E921HU%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3DB007E921HU">Amazon のレビューを見る</a></li>
     </ul>
   </div>
@@ -226,10 +226,10 @@
 
 <p>まずは、Liquid のサイトにも載ってる一番単純なハッシュを渡すパターン。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+<div class="highlight"><pre><code class="ruby">require &#39;liquid&#39;
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{name}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nitoyon&#39;</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+template = Liquid::Template.parse(&quot;hi {{name}}&quot;)
+puts template.render( &#39;name&#39; =&gt; &#39;nitoyon&#39; ) # =&gt; hi nitoyon
 </code></pre>
 </div>
 
@@ -240,20 +240,20 @@
 
 <p>自分で作ったクラスのインスタンスを Liquid に渡したい場合もあるだろう。この場合、<code>to_liquid</code> メソッドを実装してやる必要がある。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
+<div class="highlight"><pre><code class="ruby">require &#39;liquid&#39;
 
-<span class="k">class</span> <span class="nc">Person</span>
-  <span class="k">def</span> <span class="nf">initialize</span>
-    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
-  <span class="k">end</span>
+class Person
+  def initialize
+    @name = &quot;nitoyon&quot;
+  end
 
-  <span class="k">def</span> <span class="nf">to_liquid</span>
-    <span class="p">{</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="vi">@name</span> <span class="p">}</span>
-  <span class="k">end</span>
-<span class="k">end</span>
+  def to_liquid
+    { &#39;name&#39; =&gt; @name }
+  end
+end
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
+template = Liquid::Template.parse(&quot;hi {{person.name}}&quot;)
+puts template.render( &#39;person&#39; =&gt; Person.new ) # =&gt; hi nitoyon
 </code></pre>
 </div>
 
@@ -274,21 +274,21 @@
 
 <p><code>Liquid::Drop</code> を継承してやることで、テンプレート側からメソッドを呼べるようになる。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
-  <span class="kp">attr_accessor</span> <span class="ss">:name</span>
-  <span class="k">def</span> <span class="nf">initialize</span>
-    <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
-  <span class="k">end</span>
-  <span class="k">def</span> <span class="nf">NAME</span>
-    <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
-  <span class="k">end</span>
-<span class="k">end</span>
+<div class="highlight"><pre><code class="ruby">class Person &lt; Liquid::Drop
+  attr_accessor :name
+  def initialize
+    @name = &quot;nitoyon&quot;
+  end
+  def NAME
+    @name.upcase
+  end
+end
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi nitoyon</span>
+template = Liquid::Template.parse(&quot;hi {{person.name}}&quot;)
+puts template.render({&#39;person&#39; =&gt; Person.new })  # =&gt; hi nitoyon
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi NITOYON</span>
+template = Liquid::Template.parse(&quot;hi {{person.NAME}}&quot;)
+puts template.render({&#39;person&#39; =&gt; Person.new })  # =&gt; hi NITOYON
 </code></pre>
 </div>
 
@@ -305,17 +305,17 @@
 
 <p>gem かなんかで、こんなクラスが提供されているものと仮定する。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
-  <span class="k">class</span> <span class="nc">Person</span>
-    <span class="kp">attr_accessor</span> <span class="ss">:name</span>
-    <span class="k">def</span> <span class="nf">initialize</span>
-      <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
-    <span class="k">end</span>
-    <span class="k">def</span> <span class="nf">NAME</span>
-      <span class="vi">@name</span><span class="o">.</span><span class="n">upcase</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-<span class="k">end</span>
+<div class="highlight"><pre><code class="ruby">module Foo
+  class Person
+    attr_accessor :name
+    def initialize
+      @name = &quot;nitoyon&quot;
+    end
+    def NAME
+      @name.upcase
+    end
+  end
+end
 </code></pre>
 </div>
 
@@ -324,35 +324,35 @@
 
 <p>そういうときは、次のような <code>ToDrop</code> クラスを定義しておけばよい。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
-  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-    <span class="vi">@obj</span> <span class="o">=</span> <span class="n">obj</span>
-  <span class="k">end</span>
-  <span class="k">def</span> <span class="nf">before_method</span><span class="p">(</span><span class="nb">method</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">method</span> <span class="o">&amp;&amp;</span> <span class="nb">method</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="o">&amp;&amp;</span> <span class="vi">@obj</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">public_method_defined?</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
-      <span class="vi">@obj</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">method</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">to_sym</span><span class="p">)</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-<span class="k">end</span>
+<div class="highlight"><pre><code class="ruby">class ToDrop &lt; Liquid::Drop
+  def initialize(obj)
+    @obj = obj
+  end
+  def before_method(method)
+    if method &amp;&amp; method != &#39;&#39; &amp;&amp; @obj.class.public_method_defined?(method.to_s.to_sym)
+      @obj.send(method.to_s.to_sym)
+    end
+  end
+end
 </code></pre>
 </div>
 
 
 <p>使い方は簡単。<code>to_liquid</code> で <code>ToDrop.new(self)</code> を返す処理を実装してやるだけだ。これだけで期待の動作となっている。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">module</span> <span class="nn">Foo</span>
-  <span class="k">class</span> <span class="nc">Person</span>
-    <span class="k">def</span> <span class="nf">to_liquid</span>
-      <span class="no">ToDrop</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-<span class="k">end</span>
+<div class="highlight"><pre><code class="ruby">module Foo
+  class Person
+    def to_liquid
+      ToDrop.new(self)
+    end
+  end
+end
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi nitoyon</span>
+template = Liquid::Template.parse(&quot;hi {{person.name}}&quot;)
+puts template.render({&#39;person&#39; =&gt; Foo::Person.new }) # =&gt; hi nitoyon
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi NITOYON</span>
+template = Liquid::Template.parse(&quot;hi {{person.NAME}}&quot;)
+puts template.render({&#39;person&#39; =&gt; Foo::Person.new }) # =&gt; hi NITOYON
 </code></pre>
 </div>
 
@@ -374,7 +374,105 @@
 			<link>http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/</guid>
 			<pubDate>Thu, 18 Oct 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[Liquid error: wrong number of arguments (3 for 2)]]></description>
+			<description><![CDATA[<p>世の中には SWF を動画に変換するツールがいくつかある。</p>
+
+<p>これらのツールは、SWF を再生しておいて、次々と画面をキャプチャしていって、最後に動画に変換する、というものがほとんどのようだ。変換の再現性は高い一方、どうしてもコマ落ちが発生してしまう。</p>
+
+<p>これではちょっと悲しいので、ActionScript のみで作成した SWF に限って使える<strong>コマ落ちせずに動画に変換する</strong>テクニックを解説する。前提条件は、ソースコードが手元にあり、Flash IDE を利用していないこと、ActionScript の知識があること。</p>
+
+<p><a href="http://wonderfl.net/">wonderfl</a> の作品を動画にする、と説明するとイメージが沸きやすいかもしれない。</p>
+
+<h1>enterFrame だけで描画するパターン</h1>
+
+<p>比較的簡単に変換できるのが、<code>enterFrame</code> イベントが発生するごとに描画するパターンのときである。</p>
+
+<h2>変換例</h2>
+
+<p>試しに、過去に wonderfl に投稿した <a href="http://wonderfl.net/c/mnwo/">キラキラ3D Typography</a> を動画に変換してみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/2tm9okNtkOg" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885010">https://gist.github.com/3885010</a> に上げている。</p>
+
+<p>肝は <code>PngOutput</code> という自作クラスだ。<code>enterFrame</code> のイベントごとに、<code>PngOutput.output()</code> メソッドを呼んで、表示している内容を png ファイルで書き出している。</p>
+
+<div class="highlight"><pre><code class="actionscript">    // ループ処理
+    PngOutput.init(stage);
+    addEventListener(&quot;enterFrame&quot;, function(event:Event):void{
+        // ここで描画処理をしている
+
+        PngOutput.output();
+        counter++;
+        if (counter % 120 == 0) { f = !f; }
+    });
+</code></pre>
+</div>
+
+
+<p>画像のサイズは <code>stage</code> のサイズを利用しているので、<code>SWF</code> メタタグやコンパイルオプションでサイズを指定できる。</p>
+
+<p>ファイルを扱うために、AIR アプリとして実行している。<code>amxmlc</code> でビルドして、<code>adl app.xml</code> で画像出力を開始してくれるようになっている。出力先のパスは <code>PngOutput</code> クラスに直接書いてあるので、適切に変更して利用してほしい。</p>
+
+<p>よくあるキャプチャして動画にするツールとは違って、コマ落ちは発生しない。というのも、<strong>1 フレームずつ、順番に「描画＋画像に変換」を実行している</strong>からだ。変換中は、ゆっくり 1 フレームずつ再生しながら画像出力しているが、できあがった画像をつなぎ合わせればコマ落ちが発生しない動画になっている。ソースコードが手中にあるからこそできる技である。</p>
+
+<p>連番画像ファイルから動画への変換は AviUtil を使った。先頭の画像をドロップして、エンコードすればいいだけなのでお手軽だった。たいがいの動画変換ソフトが連番画像ファイルに対応しているだろうから、慣れているものを使って変換すればよいだろう。</p>
+
+<h1>タイマーを参照するパターン</h1>
+
+<p>さて、もう少し厄介なのが、各フレームでタイマーを参照するパターンの作品だ。そのようなコードを意識して書いていなかったとしても、トゥイーン系ライブラリでは内部的にタイマー系の関数を利用している。</p>
+
+<p>このパターンの作品を、1つ目と同じように <code>enterFrame</code> で 1 フレームずつ画像出力していると、早送りの動画が出来上がってしまう。というのも、描画して画像を出力している間に、<code>1 / frameRate</code> 以上の時間が経過してしまうので、飛び飛びの画像しか出力できないのだ。</p>
+
+<p>これを防ぐためには、トゥイーン ライブラリで利用しているタイマー系の関数を置き換えて騙すしかない。</p>
+
+<h2>変換例</h2>
+
+<p>過去に wonderfl に投稿した <a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> を動画にしてみた。</p>
+
+<iframe width="560" height="315" src="http://www.youtube.com/embed/nI-u_XPbCTw" frameborder="0" allowfullscreen></iframe>
+
+
+<h2>ソースコードについて</h2>
+
+<p>ソースは <a href="https://gist.github.com/3885404">https://gist.github.com/3885404</a> に上げている。</p>
+
+<p><a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> は Tweener を使ってアニメーションしている。Tweener は、ライブラリの内部で <code>flash.utils.getTimer()</code> を使って、時間管理を実施している。この部分を書き換えて、自前で定義した <code>getTimer()</code> 関数を呼ぶようにした。</p>
+
+<p><code>enterFrame</code> で 1 フレームごとに画像を出力する点は以前のものと変わらない。ただ、画像を 1 枚出力するごとに、自前の <code>getTimer()</code> が返す値が <code>1 / frameRate</code> だけ増えるように細工している。結果、出力した秒数に応じた位置で Tweener のアニメーションが停止するようになる。よって、コマ落ちが発生しない。</p>
+
+<p>フレームレートは <code>stage.frameRate</code> を利用しているので、コンパイルオプションや <code>SWF</code> メタタグでカスタマイズすれば、デフォルト以外のフレームレートでも出力できる。</p>
+
+<p>自前の <code>getTimer()</code> をトップレベルのパッケージとして定義しているが、これは <code>flash.utils.getTimer()</code> を利用するライブラリを一緒にビルドしようとしたときに、ビルドエラーにさせるためである。<code>flash.utils.getTimer()</code> を利用している箇所を grep して見つけ出してもいいんだけど、コンパイラに見つけさせよう、という魂胆である。</p>
+
+<h1>まとめ</h1>
+
+<p>ActionScript のソースが手元にあるときに、コマ落ちなく動画に変換する方法を説明した。</p>
+
+<p>今回は簡単なソースコードで説明したが、<code>setInterval()</code> を使ってるようなケースではさらに複雑になる。マウスインタラクションがあったり、外部 SWF をロードしていると太刀打ちできなくもなる。</p>
+
+<p>応用事例になるが、リアルタイムではとてもじゃないけど再生できないような劇重 Flash を作成したとしても、この方法を使って動画に変換はできる。パーティクルをいくつ配置しようが、ポリゴンをいくつ配置しようが、HD 画質にしようが、動画にしてしまえばコマ落ちの心配はない。Flash Player では得られない高画質な動画を作ることもできるだろう。</p>
+
+<p>ここで紹介した 2 つの作品は、<a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a> で解説してもらっているので、興味がある人はそちらもどうぞ。</p>
+
+<div class="hatena-asin-detail">
+  <a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098"><img src="http://ecx.images-amazon.com/images/I/51d7HQjkhbL._SL160_.jpg" class="hatena-asin-detail-image" alt="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜" title="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜"></a>
+  <div class="hatena-asin-detail-info">
+    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a></p>
+    <ul>
+      <li>作者: 池田泰延</li>
+      <li>出版社/メーカー: ワークスコーポレーション</li>
+      <li>発売日: 2011-06-08</li>
+      <li>メディア: 単行本</li>
+      <li><a href="http://www.amazon.co.jp/review/product/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3D4862671098">Amazon のレビューを見る</a></li>
+    </ul>
+  </div>
+  <div class="hatena-asin-detail-foot"></div>
+</div>
+
+]]></description>
 		</item>
 
 		<item>
@@ -382,7 +480,116 @@
 			<link>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</guid>
 			<pubDate>Mon, 15 Oct 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[Liquid error: wrong number of arguments (3 for 2)]]></description>
+			<description><![CDATA[<p>「<a href="/ja/about/">ABOUT</a>」のページをリニューアルしました。</p>
+
+<p>１つ前のデザインのままだったものを、現在のデザインに沿って作りなおして、ついでに文章やレイアウトなども整えました。</p>
+
+<center><a href=" /ja/about/ "><img src="http://farm9.staticflickr.com/8476/8086011433_ab8bb44953.jpg" width="500" height="410"></a></center>
+
+
+<h1>公開したものの問題発生</h1>
+
+<p>意気揚々と公開してみたのですが、１つ問題が見つかりました。</p>
+
+<p>ページを公開したあと、本番環境を表示するとデザインが崩れていました。そのあと、ページをリロードすると期待通りの結果になりました。</p>
+
+<p>原因は <strong>CSS がキャッシュされていた</strong> ことでした。</p>
+
+<p>たとえページが更新されていたとしても、JavaScript や CSS は古いキャッシュを使い続けてしまうことがあります。</p>
+
+<p>で、この問題に対処しようとしたのですが、「静的生成」「生成結果を GitHub で管理」「キャッシュ問題への対策」の 3 つのいいとこ取りをしようとすると、意外に複雑でした。</p>
+
+<p>その話をいまからします。</p>
+
+<h1>キャッシュ問題の一般的な解決策</h1>
+
+<p>よく見る解決索は、JS や CSS の URL の最後に、URL パラメーターとしてタイムスタンプを入れておく方法です。</p>
+
+<div class="highlight"><pre><code class="html">&lt;link href=&quot;/stylesheets/foo.css?1348129300&quot; ... /&gt;
+&lt;script src=&quot;/javascripts/bar.js?1282104010&quot;&gt;&lt;/script&gt;
+</code></pre>
+</div>
+
+
+<p>このようにすると、次のような効果が期待できます。</p>
+
+<ul>
+<li>JavaScript や CSS が更新されたとき:
+
+<ul>
+<li>タイムスタンプが変更されていれば、必ずサーバーに取りに行く。</li>
+</ul>
+</li>
+<li>JavaScript や CSS が更新されないとき:
+
+<ul>
+<li>タイムスタンプが同じなので、キャッシュを使い続ける。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>このサイトでも、同じ方法を使うことにしました。ただ、Jekyll で静的にサイト生成しているので、サーバー側で動的にタイムスタンプを埋め込むことはできません。</p>
+
+<p>となれば、タイムスタンプを埋め込んだ状態で Jekyll で HTML を生成すれば万事解決しそうです。</p>
+
+<p>しかし、もう一点、悩みどころがあります。</p>
+
+<h1>GitHub 上に生成結果の HTML をコミットしている</h1>
+
+<p><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> でも書きましたが、このサイトでは Jekyll でビルドした生成結果を GitHub 上に <a href="https://github.com/nitoyon/tech.nitoyon.com/tree/html">html ブランチ</a>としてコミットしています。</p>
+
+<p>その理由は次の通りです。</p>
+
+<ul>
+<li> 生成結果の HTML についても差分を管理したい。
+
+<ul>
+<li> 何か修正をしたときに変な差分が発生していないかを <code>git diff</code> で確認できる。</li>
+<li> 任意の時点のサイトの生成結果を (再ビルドを行うことなく) 知ることができる。</li>
+</ul>
+</li>
+<li> サーバー側では html ブランチに追従するだけでデプロイが完了する。
+
+<ul>
+<li> サーバー側にビルド環境を整えなくてよい。</li>
+<li> 生成処理はけっこう重いので、(格安レンタルサーバーでは) 時間がかかるプロセスが殺される可能性がある。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>さて、前述の方法で「キャッシュ問題」に対処するには、JavaScript や CSS を更新するたびに、HTML を書き換えることになります。</p>
+
+<p>たとえば、「JavaScript の更新」をしたとすると、そのスクリプトを利用する「すべての HTML を更新」することになります。このサイトに限っていえば、数百ある過去記事のすべての HTML が一緒に更新されます。</p>
+
+<p>論理的には「JavaScript を 1 回書き換えた」だけなのに、レポジトリ上で数百の HTML ファイルが一緒にコミットされます。HTML の更新履歴に「JavaScript を更新」といった記述が並ぶことになります。</p>
+
+<p>これは美しくありません。</p>
+
+<h1>そこでアクロバティックに解決</h1>
+
+<p>最初は SSI を使おうかとも思ったのですが、「Jekyll の開発サーバー上での表示が困難」「静的生成という大原則が崩れる」ことを理由にパスしました。</p>
+
+<p>いろいろ悩んだ結果、デプロイ時の処理を次のように変更することを思いつきました。</p>
+
+<ol>
+<li>html ブランチを <code>git pull</code> する (※いままではこの処理のみだった)。</li>
+<li>全部の HTML について、JavaScript・CSS の URL に URL パラメータを付与する。</li>
+</ol>
+
+
+<p>この付与処理を実現するのが、次のスクリプトです。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/update_js_css_url.rb">update_js_css_url.rb</a></li>
+</ul>
+
+
+<p>だいぶアクロバティックですが、静的生成の大原則を守りつつ、生成結果のレポジトリ上の diff が大きくなりすぎないように工夫してみました。</p>
+
+<p>しばらくはこれでやってみようと思います。</p>
+]]></description>
 		</item>
 
 		<item>
@@ -390,7 +597,254 @@
 			<link>http://tech.nitoyon.com/ja/blog/2012/09/20/moved-completed/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/09/20/moved-completed/</guid>
 			<pubDate>Thu, 20 Sep 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[Liquid error: wrong number of arguments (3 for 2)]]></description>
+			<description><![CDATA[<p>ブログを「はてなダイアリー」から、自分のサーバーに移転しました。</p>
+
+<p>せっかく移転するなら、<strong>2012 年の流行を取り入れた挑戦的なブログにしてみたい！</strong>と思い、構想から半年、ついにこの日を迎えることができました。</p>
+
+<p>せっかくなので、凝ったところを自慢させてください。</p>
+
+<h1>これが俺史上最強のブログ システムだ</h1>
+
+<ul>
+<li>ブログ システムとして Jekyll を採用</li>
+<li>Jekyll のプラグインを自作 (はてな記法対応、英語ブログとの統合)</li>
+<li>履歴管理は GitHub を利用、<code>git push</code> で自動でデプロイ</li>
+<li>コメント欄には DISQUS を採用、旧ブログへのコメントはインポート済み</li>
+<li>HTML5 マークアップ、CSS3、レスポンシブ Web デザインでのモバイル対応</li>
+</ul>
+
+
+<p>盛りだくさんですね。</p>
+
+<p>詳しく説明していきます。</p>
+
+<h1>ブログ システムとして Jekyll を採用</h1>
+
+<p>最近では WordPress を選ぶのが普通でしょう。WordPress は使ったことありませんが、過去に MovableType で疲弊した苦い経験があります。</p>
+
+<h2>大規模なブログ システムの悪夢</h2>
+
+<p>WordPress や MovableType などの大規模なブログ システムは、管理インターフェースが充実していたり、HTML がしっかり組んであったり、一見カスタマイズしやすいように見えます。しかし、万人の要望にこたえようとするあまり、システムは複雑であり、気軽にはカスタマイズしにくい状態です。</p>
+
+<p>ちょっとしたデザインの修正をしようとしても、元々の HTML の構造を把握するところから始めなければなりません。HTML を書き換えようにも、既存のテンプレートを読んで理解しなければ手をだせません。何らかの動作を変えようとすると、独自プラグインの作り方であったり、場合によっては、本体のソースの海に潜り込んでいく必要が出てきます。</p>
+
+<p>たとえ満足のいくカスタマイズができたとしても、何か別の改造をしようとするとまた同じような手順で<strong>独自のお作法</strong>を調べなきゃいけません。凝って調べている間はそれでもいいのですが、少し間が空くと、また最初から学習しなければなりません。</p>
+
+<p>結局、触らぬ神に祟りなし状態の塩漬けブログになってしまいました。</p>
+
+<p>そんな折、GitHub Pages でホスティングしているブログをいくつか見かけるようになってきました。
+一番最初に気づいたのが <a href="http://hozumi.github.com/2012/03/datomic-ja.html">Clojureの作者が作ったデータベースサービス Datomic.com が凄い</a> という記事でした。
+この GitHub Pages を裏で支えているのが <strong>Jekyll という「静的サイト生成ツール」</strong>です。</p>
+
+<h2>そこで超絶シンプルな Jekyll です</h2>
+
+<p><a href="https://github.com/mojombo/jekyll">Jekyll</a> は Ruby で書かれていて、ソースは 2,000 行足らずの 50KB ほどと、超絶シンプルです。GitHub Pages での実績があり、Markdown で書ける、プラグインも作れる、シンタックス ハイライトもできる、と意外に盛りだくさんです。</p>
+
+<p><code>jekyll --server --auto</code> として起動しておくと、ブラウザーから確認するための Web サーバーが起動して、テキスト エディターで記事を保存するたびに変換した結果を再生成してくれます。面倒な Web の管理インターフェースは必要ありません。</p>
+
+<p>軽量すぎるので。自分で肉付けしていかなければなりませんが、でっぷり太ったシステムをダイエットさせるよりかは気楽です。</p>
+
+<p>あぁ、なんと、プログラマー フレンドリーなんでしょう。</p>
+
+<p>弱点といえば、毎回すべての記事を生成するので、記事の数が増えてくると HTML 生成に時間がかかってしまう点でしょうか。これを改善するために、生成を高速化したり、変更点のあった記事のみを更新するプラグインを書いています。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/post_yaml_cache.rb">YAML キャッシュ プラグイン</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/site_ext.rb">site_ext プラグイン</a></li>
+</ul>
+
+
+<p>元々のソースがシンプルなので、ちょっとした改善が簡単に試せるのがうれしいところです。</p>
+
+<h2>静的サイトでも何とかなる</h2>
+
+<p>さきほど、Jekyll は「静的サイト生成ツール」だといいました。</p>
+
+<p>「静的サイト」では PHP も Perl も Ruby も動いていません。HTML や CSS をアップロードして終わり、という潔い世界です。</p>
+
+<p>いまどき、CGI なしでサイト運営できるのか、と思う人もいるかもしれません。</p>
+
+<p>「今だからこそ」可能なのです。</p>
+
+<p>CGI が必要になるケースは何があるでしょうか。</p>
+
+<ul>
+<li>コメント欄: Facebook や DISQUS などの外部サービスがある。</li>
+<li>Twitter や Facebook への対応: 特定の HTML を追加するだけ。</li>
+<li>Twitter での評判や関連エントリーの表示: そういう外部サービスがある。</li>
+<li>アクセス解析: Google Analytics に任せれば十分。</li>
+<li>トラックバック: もはや過去の遺産。 (その気になれば外部サービスがある)</li>
+</ul>
+
+
+<p>ほら、何とかなりますよね。</p>
+
+<p>インターネット初期の静的な HTML が主流の時代から、ブログ システムや CMS を使った動的なサイト生成の時代を経て、いま再び、動的な部分を外部サービスに任せれば静的なコンテンツでいける時代になったのです。</p>
+
+<h1>プラグインを使って Jekyll をカスタマイズ</h1>
+
+<p>軽量な Jekyll さんは、そのまま使うには不完全なところもあります。でも、プラグインの仕組みがあるので大丈夫。</p>
+
+<p>公式 Wiki の <a href="https://github.com/mojombo/jekyll/wiki/Plugins">Plugins</a> には、他の人が作ったプラグインがあります。これらを参考にしつつ、足りない分は自作しました。</p>
+
+<p>作ったプラグインを紹介します。</p>
+
+<h2>はてな記法で記事を書けるように</h2>
+
+<p>せっかく移転するので、過去の記事も引っさげて移転したいと考えました。</p>
+
+<p>「はてなダイアリー」では 500 件以上の記事を書いてきました。500 件の記事を手作業で Markdown に書き換えるのは苦行です。</p>
+
+<p>そこで、「はてな記法」から記事を生成するプラグインを作りました。「はてな記法」の変換処理には、「はてな記法」パーサーの <a href="https://github.com/hotchpotch/hparser/">hparser</a> を使っています。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/converters/hatena.rb">はてな記法コンバーター for Jekyll</a></li>
+</ul>
+
+
+<p>しかし、いざやってみると、hparser には未実装の記法や細かいバグが大量にありました。仕方がないので、本家に沿った出力になるように、hparser にも<a href="https://github.com/hotchpotch/hparser/pull/1">大幅に手を入れました</a>。hparser への修正は GitHub 上で pull リクエストを出して取り込んでもらっています (RubyForge には反映されていないかも)。</p>
+
+<p>あわせて、はてなダイアリーの記事を取り込むために、簡単なスクリプトを書きました。はてなダイアリーの「エクスポート機能」が出力する「はてなの日記データ形式」を入力として。エントリーごとにテキスト ファイルに出力します。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/convert_hatena_to_jekyll_posts.rb">はてなダイアリー → Jekyll インポート スクリプト convert_hatena_to_jekyll_posts.rb</a></li>
+</ul>
+
+
+<h2>Twitter や Amazon の埋め込み</h2>
+
+<p>ツイートや Amazon の商品埋め込みについては、hparser のレベルではなく、Jekyll プラグインとして実装しました。というのも、はてな記法だけでなく、Markdown で記事を書くときにも、これらの埋め込み機能を使いたかったからです。</p>
+
+<p>各種 API のドキュメントに従いつつ、実装していきました。Ruby のいい練習課題になりました…。API を叩いた結果はキャッシュしているので、初回以外は高速に動作します。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/tags/tweet.rb">tweet プラグイン for Jekyll</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/tags/amazon.rb">Amazon プラグイン for Jekyll</a></li>
+</ul>
+
+
+<h2>複数ブログにも対応!!</h2>
+
+<p><a href="/en/blog/">英語ブログ</a> と同じテンプレートを使いたかったので、複数ブログを実現するプラグインを実装しました。</p>
+
+<p>といっても、Jekyll に元々ある「カテゴリー機能」と「カテゴリーごとに別の URL に出力する機能」を流用しています。記事ごとに設定した「言語名」が、内部的にはカテゴリーとして扱われるようになっています。カテゴリーが使えなくなることを少しためらったのですが、タグ機能もあるのでそちらで十分代用できます。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/ext/post_multilang_by_category.rb">post_multilang_by_category プラグイン</a></li>
+</ul>
+
+
+<p>テンプレートで言語によって違う表示をしたいケースに対応するために、国際化プラグインっぽいものを作りました。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/filters/locale_filter.rb">locale_filter プラグイン</a></li>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_locales/ja.yml">日本語のロケールファイル ja.yml</a></li>
+</ul>
+
+
+<h1>GitHub を積極利用</h1>
+
+<p>先ほどからいくつかのプラグインやスクリプトのリンクを貼っていますが、これらはすべて GitHub で公開しています。公開しているのはプラグインだけでなく、記事のテキスト ファイル、画像、HTML テンプレート、JavaScript など、<strong>サイト生成に必要なものはすべて GitHub で公開</strong>しています。</p>
+
+<p>つまり、GitHub からクローンして、ビルド環境を整えれば、誰でもこのブログを生成できます。</p>
+
+<p>コピー ブログを作られる怖さはありますが、ソースを公開してなくてもコピーする人はコピーするでしょう。それよりも、オープンにすることで、データ紛失の恐怖から解放されます。</p>
+
+<h2>編集履歴を公開するということ</h2>
+
+<p>もう 1 つの副作用として、<strong>記事の編集履歴が丸見えになる</strong>ことが挙げられるでしょう。たとえば、ある記事の編集履歴はこうなります。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2012-07-31-disqus-comment-import.htn">2012-07-31-disqus-comment-import.htn の編集履歴</a></li>
+</ul>
+
+
+<p>ちょっとした誤字の修正さえも万人に公開されてしまうので、恥ずかしい面はあります。</p>
+
+<p>しかし、メリットも多いと考えています。</p>
+
+<p>ブログの記事をこっそりと書き換えると、不信感を招きます。最悪のケースでは炎上してしまうかもしれません。かといって、追記や補足のたびに「○月○日追記」のように書くと、逆に、初めて見る人は読みにくくなります。2 回目に見る人に誠実になるために、初見の人に不便を強いるのは何か違います。</p>
+
+<p>そこで、GitHub の履歴です。履歴を公開していることを言い訳にすれば、思い切って記事を書き換えやすくなる気がします。将来的には、それぞれの記事ページから「編集履歴」として GitHub のページへのリンクを貼ることも検討しています。</p>
+
+<h2>GitHub から自動デプロイ</h2>
+
+<p>GitHub の <a href="http://help.github.com/post-receive-hooks/">Post-Receive Hooks</a> を使えば、<code>git push</code> したタイミングで特定の URL を叩くことができます。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/viver/20110402/p1">Webサイトをgithubで管理してpush時に自動的に同期する方法 - 古橋貞之の日記 </a></li>
+</ul>
+
+
+<p>この機能を利用して、push 時にサーバーの CGI を叩かれて、<code>git pull</code> で GitHub からデータを取得するようにしました。これだけで、簡単なデプロイ システムのできあがりです。</p>
+
+<p>サーバーは <a href="http://www.sakura.ne.jp/rentalserver/standard/">さくらのレンタルサーバー スタンダード</a> を使っていますが、CGI が使える環境なら、どこでも同じようなことはできます。</p>
+
+<p><a href="https://github.com/nitoyon/tech.nitoyon.com">git レポジトリ</a> 上には 2 つのブランチを作成しています。</p>
+
+<ul>
+<li><code>master</code> ブランチ: ソースやプラグインを置く</li>
+<li><code>html</code> ブランチ: 生成結果の HTML や CSS を置く (Jekeyll の出力ディレクトリー)</li>
+</ul>
+
+
+<p>先ほどの自作 CGI では、<code>git push</code> 通知を受けとると、<code>html</code> ブランチを pull しでいます。ブランチの構成についてはいろいろ悩んだのですが、次のサイトを参考にしつつ、いまはこの形にしています。</p>
+
+<ul>
+<li><a href="http://tokkono.cute.coocan.jp/blog/slow/index.php/programming/github-pages-workflow/">実践GitHub Pages運用のユースケースとワークフローの詳細 | ゆっくりと…</a></li>
+</ul>
+
+
+<h1>コメント欄は DISQUS を利用</h1>
+
+<p>コメント欄として Facebook の利用も検討はしたのですが、過去のコメントをインポートができないこと、コメント欄が殺伐としにくいことを理由に敬遠しました。</p>
+
+<p>そこで目をつけたのが DISQUS です。最近、いろんなところで見かけるようになってきました。有名どころでは <a href="http://jp.techcrunch.com/">TechChrunch Japan</a> が採用しています。</p>
+
+<p>DISQUS はコメントのインポートにも対応しています。しかし、これが意外に苦労して、いまも少し苦労しました。詳しくは <a href="/ja/blog/2012/07/31/disqus-comment-import/">DISQUS へのコメントのインポートが意外に面倒</a> の記事に書いてあるので、こちらをご覧ください。</p>
+
+<h1>HTML5、CSS3、レスポンシブ Web デザイン...</h1>
+
+<p>クライアント サイドの技術でも、最新の流行を取り入れてみました。</p>
+
+<h2>HTML5 マークアップ</h2>
+
+<p>今回、HTML を自由に書けるようになったので、HTML5 マークアップにチャレンジしてみました。<code>&lt;article&gt;</code> などのタグを使っています。</p>
+
+<p>IE8 以下に対応するために <a href="http://code.google.com/p/html5shiv/">html5shiv</a> を使っています。HTML5 的なアウトラインがそれっぽくなるようにも気を使いましたが、完全に自己満足な気がしています。</p>
+
+<h2>Compass で楽々 CSS3</h2>
+
+<p>CSS の生成には Compass を使っています。Compass は Scss にライブラリの皮をかぶせたものになっています。
+詳しくは過去記事の <a href="/ja/blog/2012/03/13/newdesign2012/">ブログのデザインを新しくしてみた</a> をご覧ください。</p>
+
+<p>Scss 3.2 を使うことで、Media クエリーにも簡単に対応できるようになりました。興味がある人は <a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/stylesheets/screen.scss">このサイトの screen.scss</a> を見てください。Scss は深入りすればかなり詳しいことができそうですが、あまり大した機能は使っていません。</p>
+
+<p>Jekyll で Compass を使えるように、compass プラグインを作成しました。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_plugins/converters/compass.rb">compass プラグイン</a></li>
+</ul>
+
+
+<h2>レスポンシブ Web デザインに挑戦</h2>
+
+<p>ちまたに解説が溢れているので特に書くことはありませんが、レスポンシブ Web デザインでスマートフォン対応しました。</p>
+
+<p><code>480px</code> 以下ではスマホ向けのデザインになるようにしています。</p>
+
+<p>もう 1 つの分岐点として <code>45em</code> を設定しています。画面幅が <code>45em</code> 以下なら画面にフィットするようにして、画面幅が <code>45em</code> を超えると固定幅になります。<code>max-width</code> でも対処できるのですが、画面幅に応じて、より細かいカスタマイズができるので、便利だと思いました。</p>
+
+<p>「既存のサイトをデザインそのままでレスポンシブ化するのはよくない」といわれていますが、いまのデザインがスマホ向け表示を意識したものだったので、比較的簡単に対応できました。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>移転しました。</li>
+<li>新生てっく煮ブログをよろしく。</li>
+</ul>
+
+]]></description>
 		</item>
 
 	</channel>
