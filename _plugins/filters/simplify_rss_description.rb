@@ -8,7 +8,7 @@ module Jekyll
     #
     # Returns the simplified String.
     def simplify_rss_description(input)
-      input.gsub(/<span class='([^']+)'>([^<]*)<\/span>/) {$2}
+      input.gsub(/<span class="([^"]+)">([^<]*)<\/span>/) {$2}
     end
   end
 end

@@ -61,7 +61,7 @@ module Jekyll
 
     def content_force_layout
       unless @layouted
-        self.render(self.site.layouts, self.site.site_payload, true)
+        self.render(self.site.layouts, self.site.site_payload)
       end
       self.content
     end
