@@ -58,7 +58,7 @@ _gaq.push(['_trackPageview']);
 
 	if (location.href.match(/\/blog\/[0-9]{4}\/[0-9]{2}\/[0-9]{2}\/[^\/]+/)) {
 		add('//platform.twitter.com/widgets.js', 'twitter-wjs');
-		add('//connect.facebook.net/' + (Site.lang == "ja" ? "ja_JP" : "en_US") + '/all.js#xfbml=1', 'facebook-jssdk');
+		add('//connect.facebook.net/' + (Site.lang == "ja" ? "ja_JP" : "en_US") + '/all.js#xfbml=1&appId=306142992832693', 'facebook-jssdk');
 		if (Site.lang == "ja") {
 			add('http://b.st-hatena.com/js/bookmark_button.js', 'b_hatena_js');
 		}
