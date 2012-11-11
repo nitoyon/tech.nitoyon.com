@@ -37,22 +37,22 @@
 # * site_ext plugin
 
 module Jekyll
+  class ToDrop < Liquid::Drop
+    def initialize(obj)
+      @obj = obj
+    end
+    def before_method(method)
+      if method && method != '' && @obj.class.public_method_defined?(method.to_s.to_sym)
+        @obj.send(method.to_s.to_sym)
+      end
+    end
+  end
+
   class Post
     alias :to_liquid_orig :to_liquid unless self.instance_methods.include?(:to_liquid_orig)
     attr_accessor :original_content, :rendered_content
 
-    class ToDrop < Liquid::Drop
-      def initialize(obj)
-        @obj = obj
-      end
-      def before_method(method)
-        if method && method != '' && @obj.class.public_method_defined?(method.to_s.to_sym)
-          @obj.send(method.to_s.to_sym)
-        end
-      end
-    end
-
-    # returns 'lang' attribute in YAML header.
+    # add 'raw' attribute
     def to_liquid
       self.to_liquid_orig.deep_merge({
         "raw" => ToDrop.new(self)
@@ -64,6 +64,17 @@ module Jekyll
         self.render(self.site.layouts, self.site.site_payload)
       end
       self.content
+    end
+  end
+
+  class Page
+    alias :to_liquid_orig :to_liquid unless self.instance_methods.include?(:to_liquid_orig)
+
+    # add 'raw' attribute
+    def to_liquid
+      self.to_liquid_orig.deep_merge({
+        "raw" => ToDrop.new(self)
+      })
     end
   end
 
