@@ -178,7 +178,7 @@ GitHub の [Post-Receive Hooks](http://help.github.com/post-receive-hooks/) を�
 
 * [Webサイトをgithubで管理してpush時に自動的に同期する方法 - 古橋貞之の日記 ](http://d.hatena.ne.jp/viver/20110402/p1)
 
-この機能を利用して、push 時にサーバーの CGI を叩かれて、`git pull` で GitHub からデータを取得するようにしました。これだけで、簡単なデプロイ システムのできあがりです。
+この機能を利用して、push 時にサーバーの CGI を叩いて、`git pull` で GitHub からデータを取得するようにしました。これだけで、簡単なデプロイ システムのできあがりです。
 
 サーバーは [さくらのレンタルサーバー スタンダード](http://www.sakura.ne.jp/rentalserver/standard/) を使っていますが、CGI が使える環境なら、どこでも同じようなことはできます。
 
