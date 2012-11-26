@@ -21,25 +21,37 @@ module Jekyll
     end
 
     def next
+      if @has_next_cache
+        return @next_cache
+      end
+
       category = self.site.categories[self.lang]
       pos = category.index(self)
 
       if pos && pos < category.length-1
-        category[pos+1]
+        @next_cache = category[pos+1]
       else
-        nil
+        @next_cache = nil
       end
+      @has_next_cache = true
+      @next_cache
     end
 
     def previous
+      if @has_previous_cache
+        return @previous_cache
+      end
+
       category = self.site.categories[self.lang]
       pos = category.index(self)
 
       if pos && pos > 0
-        category[pos-1]
+        @previous_cache = category[pos-1]
       else
-        nil
+        @previous_cache = nil
       end
+      @has_previous_cache = true
+      @previous_cache
     end
   end
 end
