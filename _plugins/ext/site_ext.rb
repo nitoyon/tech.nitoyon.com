@@ -202,6 +202,20 @@ module Jekyll
           update_policy = "{% if page.raw.modified %}1{% endif %}"
         end
 
+        # performance improvement (skip Liquid rendering)
+        if update_policy == "{% if page.raw.modified %}1{% endif %}"
+          return page.modified
+        elsif update_policy == "{% if page.raw.modified or page.previous.raw.yaml_modified or page.next.raw.yaml_modified %}1{% endif %}"
+          return (page.modified || 
+                  page.previous && page.previous.yaml_modified || 
+                  page.next && page.next.yaml_modified)
+        elsif update_policy == "{% for post in page.posts %}{% if post.raw.yaml_modified %}1{% endif %}{%endfor%}"
+          for post in page.data["posts"]
+            return true if post.yaml_modified
+          end
+          return false
+        end
+
         unless @template_cache.has_key? update_policy
           @template_cache[update_policy] = Liquid::Template.parse(update_policy)
         end
