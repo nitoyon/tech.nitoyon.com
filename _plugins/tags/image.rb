@@ -1,5 +1,5 @@
-# Post Link Plugin for Jekyll
-# ===========================
+# Flickr Image Plugin for Jekyll
+# ==============================
 #
 # How to use
 # ----------
@@ -10,6 +10,22 @@
 # Example:
 #     {% image http://farm9.staticflickr.com/8476/8086011433_ab8bb44953.jpg, 985, 807 %}
 #     => <center><img src="..." width="500" height=""></center>
+#
+# Bookmarklet
+# -----------
+# Embed original size. Open photo page in flickr and use this bookmarklet.
+#
+#     javascript:(function(){var d=document;prompt('',d.getElementById("share-op
+#     tions-embed-textarea-o").value.replace(/.*src="([^"]+).*/,"{% image $1, ")+
+#     d.getElementById("share-options-embed-textarea-o").value.replace(/.*width=
+#     "(\d+)" height="(\d+)".*/,'$1, $2 %}'))})()
+#
+# Embed resized size. Open photo page in flickr and use this bookmarklet.
+#
+#     javascript:(function(){var d=document;prompt('',d.getElementById("share-op
+#     tions-embed-textarea").value.replace(/.*src="([^"]+).*/,"{% image $1, ")+
+#     d.getElementById("share-options-embed-textarea-o").value.replace(/.*width=
+#     "(\d+)" height="(\d+)".*/,'$1, $2 %}'))})()
 #
 # License
 # -------
@@ -33,18 +49,23 @@ module Jekyll
     end
 
     def render(context)
+      img = ""
       if @url.nil?
-        "(invalid parameter #{@markup})"
+        return "(invalid parameter #{@markup})"
+      elsif @url =~ /_o\.(jpg|png)/
+        img = %(<img src="#{@url}" width="#{@original_width}" height="#{@original_height}">)
       else
         l = [@original_width, @original_height].max
         w = (500.0 * @original_width / l).round
         h = (500.0 * @original_height / l).round
 
-        if @link_to.nil?
-          %(<center><img src="#{@url}" width="#{w}" height="#{h}"></center>)
-        else
-          %(<center><a href="#{@link_to}"><img src="#{@url}" width="#{w}" height="#{h}"></a></center>)
-        end
+        img = %(<img src="#{@url}" width="#{w}" height="#{h}">)
+      end
+
+      if @link_to.nil?
+        %(<center>#{img}</center>)
+      else
+        %(<center><a href="#{@link_to}">#{img}</a></center>)
       end
     end
   end
