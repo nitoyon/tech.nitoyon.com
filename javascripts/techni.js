@@ -8,34 +8,59 @@ $(function(){
 			.appendTo(ul);
 	}
 
-	var list = $("ul#archive_month_list").remove("li");
-	list.children().remove();
-	var year_li;
-	var year = 0;
-	var month_en = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	var month_ja = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月" ];
-	var path = "/" + Site.lang + "/blog/";
-	var is_en = (Site.lang == "en");
-	for (i = Site.archives.months.length - 1; i >= 0; i--) {
-		var ys = Site.archives.months[i].substr(0, 4),
-		    ms = Site.archives.months[i].substr(4);
-		var y = parseInt(ys, 10),
-		    m = parseInt(ms, 10);
-		if (y != year) {
-			year_li = $("<li>").appendTo(list);
-			$("<a>")
-				.attr("href", path + ys + "/")
-				.addClass("year")
-				.text(ys + (is_en ? ": " : "年: "))
-				.appendTo(year_li);
+	function get_year_month_list() {
+		var ret = [];
+		var year = 0;
+		for (var i = Site.archives.months.length - 1; i >= 0; i--) {
+			var ys = Site.archives.months[i].substr(0, 4),
+			    ms = Site.archives.months[i].substr(4);
+			var y = parseInt(ys, 10),
+			    m = parseInt(ms, 10);
+			if (y != year) {
+				ret[y] = [];
+			}
+			ret[y].push(m);
 			year = y;
 		}
-		$("<span>").addClass("delimiter").text(" | ").appendTo(year_li);
+		return ret;
+	}
+
+	var list = $("ul#archive_month_list");
+	list.children().remove();
+	var is_en = (Site.lang == "en");
+	var month_str = is_en ?
+		["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] :
+		["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月" ];
+	var path = "/" + Site.lang + "/blog/";
+
+	var ym_list = get_year_month_list();
+	for (var year in ym_list) {
+		var year_li = $("<li>").addClass("year").prependTo(list);
 		$("<a>")
-			.attr("href", path + ys + "/" + ms + "/")
-			.addClass("month")
-			.text(is_en ? month_en[m - 1] : month_ja[m - 1])
+			.attr("href", path + year + "/")
+			.addClass("year")
+			.text(year + (is_en ? ": " : "年: "))
 			.appendTo(year_li);
+
+		var m = 0;
+		var ul = $("<ul>").addClass("monthes").appendTo(year_li);
+		for (var month = 1; month <= 12; month++) {
+			var ms = (month < 10 ? "0" + month : month);
+			var month_li = $("<li>").appendTo(ul);
+			if (ym_list[year][m] == month) {
+				$("<a>")
+					.attr("href", path + year + "/" + ms + "/")
+					.addClass("month")
+					.text(month_str[month - 1])
+					.appendTo(month_li);
+				m++;
+			} else {
+				$("<span>")
+					.addClass("month")
+					.text(month_str[month - 1])
+					.appendTo(month_li);
+			}
+		}
 	}
 });
 
