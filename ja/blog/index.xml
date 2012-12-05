@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 28 Nov 2012 01:10:25 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 06 Dec 2012 00:22:34 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,28 @@
 
 
 
+
+		<item>
+			<title>iPhone では &lt;IFRAME&gt; 内のテキストをコピーできない</title>
+			<link>http://tech.nitoyon.com/ja/blog/2012/12/06/iphone-iframe/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2012/12/06/iphone-iframe/</guid>
+			<pubDate>Thu, 06 Dec 2012 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>いまさらだけど、<a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a> が iPhone 対応できていなかったので調べてみた。</p>
+
+<p>「対応できていない」というのは、iPhone では、長押しして選択したら「コピー」のメニューは出るんだけども、「コピー」を選んでも、クリップボードには入らない、という状態だった。「コピーすると別の文字になる」ことを楽しんでもらうコンテンツなのに、クリップボードに入らないのでは面白さがまったく伝わらない。</p>
+
+<p>ということで、原因を調べようと条件を変えて試してみると、表題の通り、「iPhone では <code>&lt;IFRAME&gt;</code> の中身をコピーできない」ことが分かった (iPhone 3GS で試験)。コピーできるようにする方法があるのかもしれないけど、いろいろと検索してみたのだけど、このことで悩んでる人はいなかったようなので分からなかった。</p>
+
+<p>実験用に従来の <code>&lt;IFRAME&gt;</code> 版の「コピペできない文章」を貼り付けておくので、iPhone の人は実験してみてほしい。</p>
+
+<iframe src="/misc/js/uncopyable/" width="100%" height="500"></iframe>
+
+
+<p>本家の <a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a> のほうは、<code>&lt;IFRAME&gt;</code> を使わない形に修正したので、現在は iPhone でも楽しめるようになったはずである。</p>
+
+<p>そもそも、<code>&lt;IFRAME&gt;</code> を使っていたのは、はてなダイアリーだと、スマホでアクセスすると CSS が適用されない touch 版に飛ばされるからで、これを回避するために Google ガジェットで逃げていたのが原因だった。<code>&lt;IFRAME&gt;</code> でも Android では楽しめていたので、一定の成果はあったと思う。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>「いいね！」ボタンは XFBML 版を設置して Facebook に最適化すべき</title>
@@ -625,123 +647,6 @@ puts template.render({&#39;person&#39; =&gt; Foo::Person.new }) # =&gt; hi NITOY
   <div class="hatena-asin-detail-foot"></div>
 </div>
 
-]]></description>
-		</item>
-
-		<item>
-			<title>静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/10/15/static-site-js-css-cache/</guid>
-			<pubDate>Mon, 15 Oct 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>「<a href="/ja/about/">ABOUT</a>」のページをリニューアルしました。</p>
-
-<p>１つ前のデザインのままだったものを、現在のデザインに沿って作りなおして、ついでに文章やレイアウトなども整えました。</p>
-
-<center><a href=" /ja/about/ "><img src="http://farm9.staticflickr.com/8476/8086011433_ab8bb44953.jpg" width="500" height="410"></a></center>
-
-
-<h1>公開したものの問題発生</h1>
-
-<p>意気揚々と公開してみたのですが、１つ問題が見つかりました。</p>
-
-<p>ページを公開したあと、本番環境を表示するとデザインが崩れていました。そのあと、ページをリロードすると期待通りの結果になりました。</p>
-
-<p>原因は <strong>CSS がキャッシュされていた</strong> ことでした。</p>
-
-<p>たとえページが更新されていたとしても、JavaScript や CSS は古いキャッシュを使い続けてしまうことがあります。</p>
-
-<p>で、この問題に対処しようとしたのですが、「静的生成」「生成結果を GitHub で管理」「キャッシュ問題への対策」の 3 つのいいとこ取りをしようとすると、意外に複雑でした。</p>
-
-<p>その話をいまからします。</p>
-
-<h1>キャッシュ問題の一般的な解決策</h1>
-
-<p>よく見る解決索は、JS や CSS の URL の最後に、URL パラメーターとしてタイムスタンプを入れておく方法です。</p>
-
-<div class="highlight"><pre><code class="html">&lt;link href=&quot;/stylesheets/foo.css?1348129300&quot; ... /&gt;
-&lt;script src=&quot;/javascripts/bar.js?1282104010&quot;&gt;&lt;/script&gt;
-</code></pre>
-</div>
-
-
-<p>このようにすると、次のような効果が期待できます。</p>
-
-<ul>
-<li>JavaScript や CSS が更新されたとき:
-
-<ul>
-<li>タイムスタンプが変更されていれば、必ずサーバーに取りに行く。</li>
-</ul>
-</li>
-<li>JavaScript や CSS が更新されないとき:
-
-<ul>
-<li>タイムスタンプが同じなので、キャッシュを使い続ける。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>このサイトでも、同じ方法を使うことにしました。ただ、Jekyll で静的にサイト生成しているので、サーバー側で動的にタイムスタンプを埋め込むことはできません。</p>
-
-<p>となれば、タイムスタンプを埋め込んだ状態で Jekyll で HTML を生成すれば万事解決しそうです。</p>
-
-<p>しかし、もう一点、悩みどころがあります。</p>
-
-<h1>GitHub 上に生成結果の HTML をコミットしている</h1>
-
-<p><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> でも書きましたが、このサイトでは Jekyll でビルドした生成結果を GitHub 上に <a href="https://github.com/nitoyon/tech.nitoyon.com/tree/html">html ブランチ</a>としてコミットしています。</p>
-
-<p>その理由は次の通りです。</p>
-
-<ul>
-<li> 生成結果の HTML についても差分を管理したい。
-
-<ul>
-<li> 何か修正をしたときに変な差分が発生していないかを <code>git diff</code> で確認できる。</li>
-<li> 任意の時点のサイトの生成結果を (再ビルドを行うことなく) 知ることができる。</li>
-</ul>
-</li>
-<li> サーバー側では html ブランチに追従するだけでデプロイが完了する。
-
-<ul>
-<li> サーバー側にビルド環境を整えなくてよい。</li>
-<li> 生成処理はけっこう重いので、(格安レンタルサーバーでは) 時間がかかるプロセスが殺される可能性がある。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>さて、前述の方法で「キャッシュ問題」に対処するには、JavaScript や CSS を更新するたびに、HTML を書き換えることになります。</p>
-
-<p>たとえば、「JavaScript の更新」をしたとすると、そのスクリプトを利用する「すべての HTML を更新」することになります。このサイトに限っていえば、数百ある過去記事のすべての HTML が一緒に更新されます。</p>
-
-<p>論理的には「JavaScript を 1 回書き換えた」だけなのに、レポジトリ上で数百の HTML ファイルが一緒にコミットされます。HTML の更新履歴に「JavaScript を更新」といった記述が並ぶことになります。</p>
-
-<p>これは美しくありません。</p>
-
-<h1>そこでアクロバティックに解決</h1>
-
-<p>最初は SSI を使おうかとも思ったのですが、「Jekyll の開発サーバー上での表示が困難」「静的生成という大原則が崩れる」ことを理由にパスしました。</p>
-
-<p>いろいろ悩んだ結果、デプロイ時の処理を次のように変更することを思いつきました。</p>
-
-<ol>
-<li>html ブランチを <code>git pull</code> する (※いままではこの処理のみだった)。</li>
-<li>全部の HTML について、JavaScript・CSS の URL に URL パラメータを付与する。</li>
-</ol>
-
-
-<p>この付与処理を実現するのが、次のスクリプトです。</p>
-
-<ul>
-<li><a href="https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/update_js_css_url.rb">update_js_css_url.rb</a></li>
-</ul>
-
-
-<p>だいぶアクロバティックですが、静的生成の大原則を守りつつ、生成結果のレポジトリ上の diff が大きくなりすぎないように工夫してみました。</p>
-
-<p>しばらくはこれでやってみようと思います。</p>
 ]]></description>
 		</item>
 
