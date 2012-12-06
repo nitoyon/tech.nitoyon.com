@@ -56,8 +56,8 @@ module Jekyll
       @file_modified = false
     end
 
-    def ret_hash(yaml, content, yaml_modified, content_modified)
-      { :modified         => yaml_modified || content_modified,
+    def ret_hash(yaml, content, yaml_modified, content_modified, updated)
+      { :modified         => updated || yaml_modified || content_modified,
         :yaml_modified    => yaml_modified,
         :content_modified => content_modified,
         :yaml             => Marshal.load(Marshal.dump(yaml)),
@@ -75,7 +75,7 @@ module Jekyll
 
       if @cache.has_key?(key) && mtime == @cache[key]['modified']
         # file is not modified
-        ret_hash(@cache[key]['yaml'], @cache[key]['content'], false, false)
+        ret_hash(@cache[key]['yaml'], @cache[key]['content'], false, false, false)
       else
         puts "parsed yaml #{key}..."
         self.set_content(key, path, mtime)
@@ -110,7 +110,7 @@ module Jekyll
       }
       puts "modify cache: yaml=#{yaml_modified}, content=#{content_modified}" if modified
 
-      ret_hash(yaml, content, yaml_modified, content_modified)
+      ret_hash(yaml, content, yaml_modified, content_modified, true)
     end
 
     def load
