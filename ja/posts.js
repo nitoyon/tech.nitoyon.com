@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2012/12/21/text-hatena-js-github/", title: "text-hatena.js を GitHub に移動した"},
 	{url: "/ja/blog/2012/12/10/lightroom-5.1ch-mts/", title: "Lightroom 4 では 5.1ch の動画は音なしになっちゃう話"},
 	{url: "/ja/blog/2012/12/06/iphone-iframe/", title: "iPhone では <IFRAME> 内のテキストをコピーできない"},
 	{url: "/ja/blog/2012/11/28/xfbml-like/", title: "「いいね！」ボタンは XFBML 版を設置して Facebook に最適化すべき"},
-	{url: "/ja/blog/2012/11/06/flickr-auto-update/", title: "Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った"},
-	{url: "/ja/blog/2012/10/29/liquid-drop/", title: "Ruby の Liquid でテンプレートに値を渡すパターン４つ"}
+	{url: "/ja/blog/2012/11/06/flickr-auto-update/", title: "Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った"}
 ];
 
 Site.archives.months = [
