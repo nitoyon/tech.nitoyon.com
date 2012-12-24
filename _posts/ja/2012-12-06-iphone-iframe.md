@@ -1,6 +1,6 @@
 ---
 layout: post
-title: iPhone では <IFRAME> 内のテキストをコピーできない
+title: iPhone 3GS では <IFRAME> 内のテキストをコピーできない
 tags: iPhone
 lang: ja
 ---
