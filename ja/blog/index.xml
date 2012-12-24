@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 21 Dec 2012 01:48:02 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 25 Dec 2012 01:48:52 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -19,6 +19,86 @@
 
 
 		<item>
+			<title>Jekyll の 0.12.0 でシンタックス ハイライトが便利になった</title>
+			<link>http://tech.nitoyon.com/ja/blog/2012/12/25/jekyll-0-12-0/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2012/12/25/jekyll-0-12-0/</guid>
+			<pubDate>Tue, 25 Dec 2012 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>※ これは <a href="https://www.google.co.jp/search?q=%E3%81%9D%E3%82%93%E3%81%AA%E3%82%82%E3%81%AE%E3%81%AF%E3%81%AA%E3%81%84">Jekyll アドベントカレンダー</a> の 25 日目の記事です</p>
+
+<p>このブログの生成にも利用している Jekyll が約 1 年ぶりにバージョン アップして 0.12.0 になった。<a href="http://rubygems.org/gems/jekyll">RubyGems</a> に公開されているので、<code>gem update</code> で更新できるはず。</p>
+
+<p>この記事では、0.12.0 で個人的に注目している「シンタックス ハイライトに関する改善点」を 2 つ紹介する。</p>
+
+<p>Jekyll の良さについては、<a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> で記事にしているので、知らない人はそちらからどうぞ。</p>
+
+<h1>Redcarpet 2 のサポート</h1>
+
+<p>まず 1 つ目は Redcarpet 2 のサポート。</p>
+
+<p>Redcarpet は GitHub の中の人によって開発されている Markdown パーサーて、<a href="http://github.github.com/github-flavored-markdown/">GitHub Flavored Markdown</a> が使えるのが大きな特徴。</p>
+
+<p>これまでも Jekyll では Redcarpet をサポートしていたが、Redcarpet 2 で外部 API が変わったので、Jekyll からは利用できない状態になっていた。</p>
+
+<p>今回、Jekyll 0.12.0 で Redcarpet 2 の API に対応した。個人的には <code>```</code> での Fenced code blocks が使えるようになったのがうれしい。</p>
+
+<p>たとえば、</p>
+<div class="highlight"><pre><code class="text">```ruby
+def fib(n);
+    n &lt;= 1 ? n : fib(n-1)+fib(n-2)
+end
+print fib(10)
+```
+</code></pre></div>
+<p>と書くと</p>
+<div class="highlight"><pre><code class="ruby">def fib(n);
+    n &lt;= 1 ? n : fib(n-1)+fib(n-2)
+end
+print fib(10)
+</code></pre></div>
+<p>となる。</p>
+
+<p>これまでは「<code>{% highlight ruby %}</code> と <code>{% endhighlight %}</code> で囲う」という面倒な書き方をしなきゃならなかった。どうしても <code>```</code> を使いたいときは <a href="http://mattn.kaoriya.net/software/lang/ruby/20121011184445.htm">Big Sky :: Jekyll で GitHub みたいな Triple Backtick を使う。</a> のように、独自にプラグインを作るハックもあるにはあった。</p>
+
+<p>ちなみに、Redcarpet を利用するには、<code>_config.yml</code> に次のように書くのを忘れずに。</p>
+<div class="highlight"><pre><code class="yaml">markdown:    redcarpet
+</code></pre></div>
+<h1>シンタックス ハイライトの高速化</h1>
+
+<p>2 つ目は速度の話。</p>
+
+<p>Jekyll はシンタックス ハイライトに pygments を使っている。Ruby で動く Jekyll から、Python で動く pygments を利用するには、何らかの工夫が必要になる。</p>
+
+<p>Jekyll 0.11.2 までは <a href="https://github.com/github/albino">Albino</a> を使っていた。Albino はハイライトするたびに、Python のプロセスを実行して結果を取得していた。ハイライトするコード 1 つごとに Python が 1 プロセス立ち上がっていたので、当然、遅かった。</p>
+
+<p>そこで、Jekyll 0.12.0 では <a href="https://github.com/tmm1/pygments.rb">pygments.rb</a> が利用されるようになった。pygments.rb は高速化のための工夫がほどこされている。</p>
+
+<p>pygments.rb には 0.2 系と 0.3 系があって、それぞれ別の高速化手法が使われていて面白い。</p>
+
+<h2>pygments.rb 0.2 は RubyPython で無理やり</h2>
+
+<p>0.2 では、<a href="http://rubypython.rubyforge.org/">rubypython</a> という Ruby 上で Python インタプリターを動かすライブラリーを使っている。<a href="https://github.com/ffi/ffi">FFI</a> で動的ライブラリーを読み込んでがんばっているようだ。</p>
+
+<p>導入にはビルド環境が必要なので面倒だけど、劇的に高速化された。同一プロセス内で完結するので、プロセス起動のオーバーヘッドが 0 になる。</p>
+
+<p>と、そこまではよかったのだけど、Ruby ごと落ちることがある。再現性はない。うまくいくこともあるし、落ちることもある。自分の環境が Windows だから不安定なのかと思いきや、Jekyll の Issue にも<a href="https://github.com/mojombo/jekyll/pull/667">上がっている</a> ので、RubyPython か FFI の問題なのだろう。</p>
+
+<h2>pygments.rb 0.3 は Python を使いまわす</h2>
+
+<p>0.2 の「Ruby 上で Python」作戦は不安定だったため、0.3 では純粋な Python を呼び出す方式に戻った。ただ、毎回呼び出すのではなく、プロセスを使いまわすようにした。</p>
+
+<p>0.3 でハイライト処理を開始すると、Ruby と pygments を媒介する Python スクリプト <code>mentos.py</code> が立ち上がる。Ruby からは標準入出力を使って <code>mentos.py</code> に処理依頼をして、ハイライト結果を受け取る。複数回ハイライトを実行しても、同じプロセスを使いまわす。</p>
+
+<p>純粋な Python が動くので、プロセスが死ぬような心配もない。0.2 のころに比べれば少しだけオーバーヘッドはある印象だが、Albino に比べれば十分速い。プロセス内に取り込むという暴挙に出て手に負えなくなったものが、ひとたび我に返って、実用に耐える速さと安定性を手に入れた。</p>
+
+<p>ただし、最新の pygments 0.3.3 は Windows では動かない。<code>/dev/null</code> が見つからないとか、いろいろエラーになったので、動くようにして <a href="https://github.com/tmm1/pygments.rb/pull/55">pull request</a> を出しておいた。取り込まれるといいな。</p>
+
+<h1>まとめ</h1>
+
+<p>Jekyll 0.12.0 の個人的にうれしいところをざっと紹介した。その他の変更点は <a href="https://github.com/mojombo/jekyll/blob/master/History.txt">History.txt</a> を見れば載っているので、気になる人はぜひ。</p>
+]]></description>
+		</item>
+
+		<item>
 			<title>text-hatena.js を GitHub に移動した</title>
 			<link>http://tech.nitoyon.com/ja/blog/2012/12/21/text-hatena-js-github/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/12/21/text-hatena-js-github/</guid>
@@ -27,16 +107,13 @@
 
 <blockquote class="twitter-tweet" lang="ja"><p>@<a href="https://twitter.com/nitoyon">nitoyon</a> さん、2005年くらいのtext-hatena.js をGitHub等に公開は可能でしょうか？ <a href="http://t.co/Z6zylivM" title="http://tech.nitoyon.com/javascript/application/texthatena/download.html">tech.nitoyon.com/javascript/app…</a></p>&mdash; テラまこさん (@teramako) <a href="https://twitter.com/teramako/status/280642151715594240" data-datetime="2012-12-17T11:54:37+00:00">12月 17, 2012</a></blockquote>
 
-
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
 
 <p>というツッコミを受けたので GitHub で公開してみました。</p>
 
 <ul>
 <li><a href="https://github.com/nitoyon/text-hatena.js">nitoyon / text-hatena.js - GitHub</a></li>
 </ul>
-
 
 <p>いま text-hatena.js のコードを読み返すと、グローバルな名前空間を汚染してたり、Object.extend() を定義してたりと、いろいろ酷い。</p>
 
@@ -63,7 +140,6 @@
 <li>無名関数でグローバル変数を汚さないようにしつつ、node.js でも動くように</li>
 <li>Grunt でファイルを監視して lint &amp; QUnit</li>
 </ul>
-
 
 <p>特に Grunt を組み込んだことで、ファイルを変更するたびに自動で lint して単体試験が走るのが便利だ。設定を少し変えれば、コード結合や minify もできちゃう。可能性を感じる。</p>
 
@@ -97,15 +173,16 @@
   <div class="hatena-asin-detail-foot"></div>
 </div>
 
-
 <p>デフォルト設定 (AVCHD 1440i、5.1ch) で動画を撮って、Lightroom に取り込んでみたところ、「音声が再生されない」という問題に出会った。Windows Media Player では音がでるので、ファイル自体には問題がなさそうだ。Lightroom は AVCHD に対応しているので、Lightroom でも再生できるはずなのだが・・・。</p>
 
 <h1>問題は 5.1ch の音声にあった</h1>
 
 <p>調べてみると <a href="http://feedback.photoshop.com/photoshop_family/topics/no_sound_audio_when_playing_mts_video">Lightroom: No sound/audio when playing mts video</a> という公式フォーラムの文章が出てきた。Adobe の中の人からの回答がでていて、ざっくり訳すと次のようになる。</p>
 
-<blockquote><p>Lightroom はライセンス上の制限から、ドルビー デジタル オーディオの 2ch 以下にのみ対応している。
-そのため、ドルビー デジタル オーディオ 5.1ch のファイルを再生すると音なしになるのは、期待通りの動作である。</p></blockquote>
+<blockquote>
+<p>Lightroom はライセンス上の制限から、ドルビー デジタル オーディオの 2ch 以下にのみ対応している。
+そのため、ドルビー デジタル オーディオ 5.1ch のファイルを再生すると音なしになるのは、期待通りの動作である。</p>
+</blockquote>
 
 <p>ためしに 2ch で録音してみると、Lightroom でも再生できた (Lightroom 4.2 で試験)。</p>
 
@@ -116,10 +193,8 @@
 <p>既に、5.1ch で撮っちゃったビデオがある場合は、2ch にダウンコンバートするしかない。各 OS ごとに色んなソフトがあるのだろうけど、ここではクロスプラットフォームな ffmpeg でステレオ音声に変換する方法を紹介しておく。</p>
 
 <p>コマンドラインから次のように実行すればよい。</p>
-
-<pre><code>ffmpeg -i input.mts -vcodec copy -acodec ac3 -ac 2 output.mts
-</code></pre>
-
+<div class="highlight"><pre><code class="text">ffmpeg -i input.mts -vcodec copy -acodec ac3 -ac 2 output.mts
+</code></pre></div>
 <p>この方法で変換して、Lightroom でも音声つきで再生＆編集できることを確認している。</p>
 
 <p>上のコマンドについて簡単に解説しておく。</p>
@@ -129,7 +204,6 @@
 <li>元々の音声のコーデックが AC-3 (ドルビーデジタル) ということを前提として <code>-acodec ac3</code> と指定している。</li>
 <li><code>-ac 2</code> で出力のチャンネル数が <code>2</code> (ステレオ) になるように指定している。</li>
 </ul>
-
 
 <p>おしまい。</p>
 
@@ -147,12 +221,11 @@
   </div>
   <div class="hatena-asin-detail-foot"></div>
 </div>
-
 ]]></description>
 		</item>
 
 		<item>
-			<title>iPhone では &lt;IFRAME&gt; 内のテキストをコピーできない</title>
+			<title>iPhone 3GS では &lt;IFRAME&gt; 内のテキストをコピーできない</title>
 			<link>http://tech.nitoyon.com/ja/blog/2012/12/06/iphone-iframe/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2012/12/06/iphone-iframe/</guid>
 			<pubDate>Thu, 06 Dec 2012 00:00:00 +0900</pubDate>
@@ -165,7 +238,6 @@
 <p>実験用に従来の <code>&lt;IFRAME&gt;</code> 版の「コピペできない文章」を貼り付けておくので、iPhone の人は実験してみてほしい。</p>
 
 <iframe src="/misc/js/uncopyable/" width="100%" height="500"></iframe>
-
 
 <p>本家の <a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a> のほうは、<code>&lt;IFRAME&gt;</code> を使わない形に修正したので、現在は iPhone でも楽しめるようになったはずである。</p>
 
@@ -192,13 +264,11 @@
 
 <p>押した状態になって終わりです。</p>
 
-<center><img src="http://farm9.staticflickr.com/8062/8221298498_d8a512177f_o.png" width="512" height="108"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8062/8221298498_d8a512177f_o.png" width="512" height="108"></center></p>
 
 <p>「いいね！」を押した時点では、自分のタイムラインはこうなっています。</p>
 
-<center><img src="http://farm9.staticflickr.com/8343/8220217893_6cc999af73.jpg" width="500" height="233"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8343/8220217893_6cc999af73.jpg" width="500" height="233"></center></p>
 
 <p>右側の最近のアクティビティが増えています。もうちょっと下にある「いいね！」一覧も増えますが、あまり目立ってません。</p>
 
@@ -206,13 +276,11 @@
 
 <p>押した状態になるところまでは同じだけど、<strong>コメント入力用のポップアップ</strong>が出てきます。</p>
 
-<center><img src="http://farm9.staticflickr.com/8490/8220218239_9dac837d8b_o.png" width="500" height="268"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8490/8220218239_9dac837d8b_o.png" width="500" height="268"></center></p>
 
 <p>コメントを入力して投稿してみると、タイムラインはこうなります。</p>
 
-<center><img src="http://farm9.staticflickr.com/8341/8220217817_3e24175903.jpg" width="500" height="323"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8341/8220217817_3e24175903.jpg" width="500" height="323"></center></p>
 
 <p>通常の投稿としてタイムラインに表示されましたね。</p>
 
@@ -224,9 +292,13 @@
 
 <p>Facebook の<a href="https://developers.facebook.com/docs/reference/plugins/like/">開発者向けドキュメント</a>には</p>
 
-<blockquote><p>If users do add a comment, the story published back to Facebook is given more prominence.</p>
+<blockquote>
+<p>If users do add a comment, the story published back to Facebook is given more prominence.</p>
 
-<blockquote><p>もしユーザーがコメントしたら、コメント内容は Facebook に反映されて、さらに目立つようになります。</p></blockquote></blockquote>
+<blockquote>
+<p>もしユーザーがコメントしたら、コメント内容は Facebook に反映されて、さらに目立つようになります。</p>
+</blockquote>
+</blockquote>
 
 <p>と書いてあります (日本訳は私によるもの)。</p>
 
@@ -239,7 +311,6 @@
 <li>「いいね！」した人の仲のよさ</li>
 <li>コメントの有無</li>
 </ul>
-
 
 <p>が関係しているように思います。</p>
 
@@ -269,16 +340,14 @@
 
 <ul>
 <li>IFRAME 版 → <code>&lt;iframe&gt;</code> タグ</li>
-<li>XFBML 版 → <code>&lt;div class="fb-like"&gt;</code> か <code>&lt;fb:like&gt;</code></li>
+<li>XFBML 版 → <code>&lt;div class=&quot;fb-like&quot;&gt;</code> か <code>&lt;fb:like&gt;</code></li>
 </ul>
-
 
 <p>となっています。</p>
 
 <p>たとえば、はてなダイアリーのソースを見てみると…</p>
 
-<center><img src="http://farm9.staticflickr.com/8197/8221298276_f6975f6316_o.png" width="558" height="191"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8197/8221298276_f6975f6316_o.png" width="558" height="191"></center></p>
 
 <p>はい、IFRAME 版ですね。</p>
 
@@ -293,15 +362,13 @@
 <ol>
 <li>[URL to like] に URL を入力する。</li>
 <li>[Send Button] のチェックを外す。</li>
-<li>[Layout style] を [button_count] か [box_count] に設定する。</li>
+<li>[Layout style] を [button<em>count] か [box</em>count] に設定する。</li>
 <li>[Get Code] をクリックする。</li>
 </ol>
 
-
 <p>これで設置するためのコードが表示されます。</p>
 
-<center><img src="http://farm9.staticflickr.com/8490/8224358818_e5c1111096.jpg" width="500" height="366"></center>
-
+<p><center><img src="http://farm9.staticflickr.com/8490/8224358818_e5c1111096.jpg" width="500" height="366"></center></p>
 
 <p>コードには「HTML5」「XFBML」「IFRAME」「URL」の４種類がありますが、「HTML5」「XFBML」が XFBML 版です (ややこしいですね…)。</p>
 
@@ -317,207 +384,11 @@
 
 <div class="fb-like-box" data-href="http://www.facebook.com/TechNiBlogJa" data-width="310" data-show-faces="true" data-stream="false" data-header="true"></div>
 
-
 <h2>補足</h2>
 
 <p>本文中では触れませんでしたが、IFRAME 版でもポップアップを表示するケースはあります。スタンダード スタイル (「いいね！」した人のアイコンを表示する大きいモード) のときです。ただ、個別の記事に対して大きい「いいね！」ボタンを設置しているケースはほとんど見たことないので、本文中での説明は省略しました。</p>
 
 <p>また、XFBML 版でも、親タグで <code>overflow: hidden</code> にしてると、コメントのポップアップは表示されません。このブログでは、<code>float</code> でソーシャルボタンを横に並べて、Compass の <code>clearfix</code> ミックスインで <code>float</code> 解除していたのですが、この、<code>clearfix</code> ミックスインには <code>overflow: hidden</code> が含まれていたので、しばらく悩まされました。結局、<code>pie-clearfix</code> ミックスインを使って回避しました。皆様もお気をつけください。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/11/06/flickr-auto-update/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/11/06/flickr-auto-update/</guid>
-			<pubDate>Tue, 06 Nov 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>身内向けの写真ブログを Flickr を使ってやってます。</p>
-
-<p>非公開で写真をアップロードして、Set の Guest Pass 機能と組み合わせて、URL を知ってる人だけが Set の写真を見られる、という形で運営してます。</p>
-
-<p>さて、Set に写真を追加していけば更新できるわけですが、毎回 Flickr を開いて作業するのが面倒になってきました。Set 内の写真が増えてくると、UI がもっさりしてくるのも嫌でした。</p>
-
-<p>となれば、Flickr の API を使って、スクリプトで自動処理したくなるのがプログラマ心情でございます。</p>
-
-<h1>さっそく作った</h1>
-
-<p>ということで、Flickr の API とにらめっこしながら作ってみました。</p>
-
-<div class="highlight"><pre><code class="ruby">require &#39;flickraw&#39;
-require &#39;date&#39;
-require &#39;set&#39;
-
-# load conf and set API key and access token
-# (ex)
-# { &quot;api_key&quot;: &quot;xxxxxxx&quot;,
-#  &quot;shared_secret&quot;: &quot;xxxxx&quot;,
-#  &quot;access_token&quot;: &quot;xxxxxxx&quot;,
-#  &quot;access_secret&quot;: &quot;xxxxxx&quot;
-# }
-conf = nil
-open(&#39;flickr.conf&#39;) { |f|
-  conf = JSON.load(f)
-}
-
-FlickRaw.api_key = conf[&#39;api_key&#39;]
-FlickRaw.shared_secret = conf[&#39;shared_secret&#39;]
-flickr.access_token = conf[&#39;access_token&#39;]
-flickr.access_secret = conf[&#39;access_secret&#39;]
-
-
-def get_set_id_by_name(set_name)
-  res = flickr.photosets.getList
-  for set in res
-    if set.title == set_name
-      return set.id
-    end
-  end
-  nil
-end
-
-def get_photos_in_a_set(photoset_id)
-  page = 1
-  pages = 1
-  photo_ids = []
-  while page &lt;= pages
-    res = flickr.photosets.getPhotos :photoset_id =&gt; photoset_id.to_s,
-                                     :page =&gt; page.to_s
-    photo_ids.concat res.photo.map { |photo| photo.id }
-
-    page = res.page.to_i + 1
-    pages = res.pages.to_i
-  end
-  { :id =&gt; res.id,
-    :primary =&gt; res.primary, 
-    :photo =&gt; photo_ids }
-end
-
-def log(str)
-  puts &quot;#{Time.now} #{str}&quot;
-end
-
-
-def main(cur_set_id)
-  # get set &#39;YYYY-MM-DD&#39;
-  new_set_name = Date::today.to_s
-  new_set_id = get_set_id_by_name(new_set_name)
-  if new_set_id.nil?
-    log(&quot;set #{new_set_name} not found&quot;)
-    exit
-  end
-  log(&quot;set #{new_set_name} found: #{new_set_id}&quot;)
-
-  # Get set information
-  cur_set = get_photos_in_a_set(cur_set_id)
-  new_set = get_photos_in_a_set(new_set_id)
-  log(&quot;current set has #{cur_set[:photo].length} photos&quot;)
-  if new_set[:photo].length == 0
-    log(&quot;no photo&quot;)
-    exit
-  end
-  log(&quot;add #{new_set[:photo].length} photo(s) to it&quot;)
-
-  # Create new photo_ids
-  cur_photos_set = Set.new(cur_set[:photo])
-  photos = cur_set[:photo].dup
-  log(&quot;current photos: #{photos.join(&#39;,&#39;)}&quot;)
-  modified = false
-  for photo in new_set[:photo]
-    if cur_photos_set.include? photo
-      log(&quot;skip photo #{photo}&quot;)
-    else
-      log(&quot;add photo #{photo}&quot;)
-      photos.unshift(photo) 
-      modified = true
-    end
-  end
-  log(&quot;new photos: #{photos.join(&#39;,&#39;)}&quot;)
-
-  if modified
-    log(&quot;editPhotos start&quot;)
-    res = flickr.photosets.editPhotos :photoset_id =&gt; cur_set[:id],
-                                      :primary_photo_id =&gt; cur_set[:primary],
-                                      :photo_ids =&gt; photos.join(&quot;,&quot;)
-    log(&quot;editPhotos finished&quot;)
-  else
-    log(&quot;editPhots skipped&quot;)
-  end
-
-  # delete set
-  log(&quot;delete photoset start&quot;)
-  flickr.photosets.delete :photoset_id =&gt; new_set_id
-  log(&quot;delete photoset finished&quot;)
-end
-
-
-if ARGV.length &lt; 1
-  log(&quot;set_id not specified&quot;)
-  log(&quot;ruby flickr_update.rb [set_id]&quot;)
-  exit
-end
-
-begin
-  main(ARGV[0])
-rescue SystemExit
-rescue Exception =&gt; e
-  log(&quot;exception #{e.inspect}\n#{e.backtrace.join(&quot;\n&quot;)}&quot;)
-end
-</code></pre>
-</div>
-
-
-<h2>使い方</h2>
-
-<p>あらかじめ、写真をプライベートでアップロードしておきます。</p>
-
-<p>たとえば、2012年11月06日に公開したい写真は、<code>2012-11-06</code> という Set に入れておきます。</p>
-
-<p>その状態で、シェルから</p>
-
-<div class="highlight"><pre><code class="bash">$ ruby update_flickr.rb [set_id]
-</code></pre>
-</div>
-
-
-<p>のように実行してやると、<code>2012-11-06</code> というセット内の写真を列挙して、コマンドライン引数で指定した <code>[set_id]</code> のセットの先頭に追加してくれます。作業が完了すれば <code>2012-11-06</code> というセットは消えます。</p>
-
-<p>あとは、この処理を cron に突っ込んで、一日一回実行するようにしておけば自動化完了です。めでたし。</p>
-
-<h2>ライブラリは FlickRaw を利用</h2>
-
-<p>Flickr API を叩くためのライブラリは、<a href="https://github.com/hanklords/flickraw/">FlickRaw</a> を使ってます。</p>
-
-<p><code>access_token</code> と <code>access_secret</code> は公式のドキュメントに書いてある通りにやれば取得できました。</p>
-
-<p>そのあとは、Flickr の API のドキュメントを眺めながら書くだけでした。<a href="http://www.flickr.com/services/api/explore/flickr.photos.getRecent">Flickr Api Explorer</a> を使えば、ブラウザー上で API の動作試験ができるのが楽でした。</p>
-
-<h1>Flickr への公開は Lightroom で</h1>
-
-<p>ちなみに、写真の現像から Flickr での公開までは、Lightroom を使ってます。</p>
-
-<p>Lightroom にデフォルトでついてくる Flickr の公開サービス機能を使えば、Lightroom の上で Flickr にアップロードが完了します。</p>
-
-<p>Lightroom の Tips としては、Flickr を [対象コレクション] に指定しておけば、[B] キーでアップロードするかどうかを選択できて楽です。</p>
-
-<div class="hatena-asin-detail">
-  <a href="http://www.amazon.co.jp/Adobe-Photoshop-Lightroom-Windows-Macintosh%E7%89%88/dp/B007E921HU%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB007E921HU"><img src="http://ecx.images-amazon.com/images/I/51QMvYSTH7L._SL160_.jpg" class="hatena-asin-detail-image" alt="Adobe Photoshop Lightroom 4 Windows/Macintosh版 特別提供版" title="Adobe Photoshop Lightroom 4 Windows/Macintosh版 特別提供版"></a>
-  <div class="hatena-asin-detail-info">
-    <p class="hatena-asin-detail-title"><a href="http://www.amazon.co.jp/Adobe-Photoshop-Lightroom-Windows-Macintosh%E7%89%88/dp/B007E921HU%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB007E921HU">Adobe Photoshop Lightroom 4 Windows/Macintosh版 特別提供版</a></p>
-    <ul>
-
-      <li>出版社/メーカー: アドビシステムズ</li>
-      <li>発売日: 2012-03-16</li>
-      <li>メディア: DVD-ROM</li>
-      <li><a href="http://www.amazon.co.jp/review/product/B007E921HU%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D5143%26creativeASIN%3DB007E921HU">Amazon のレビューを見る</a></li>
-    </ul>
-  </div>
-  <div class="hatena-asin-detail-foot"></div>
-</div>
-
-
-<h1>まとめ</h1>
-
-<p>自動化万歳、API を公開してるサービス万歳。</p>
 ]]></description>
 		</item>
 
