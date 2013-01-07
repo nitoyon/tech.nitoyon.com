@@ -66,11 +66,9 @@
 
 <div class="highlight"><pre><code class="ruby"><span class="nb">require</span> <span class="s1">&#39;liquid&#39;</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{name}}&quot;</span><span class="p">)</span>
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{name}}&quot;</span><span class="p">)</span>
 <span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nitoyon&#39;</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
-</code></pre>
-</div>
-
+</code></pre></div>
 
 <p>分かりやすい。そのまま。</p>
 
@@ -90,21 +88,17 @@
   <span class="k">end</span>
 <span class="k">end</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
 <span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span> <span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">)</span> <span class="c1"># =&gt; hi nitoyon</span>
-</code></pre>
-</div>
+</code></pre></div>
 
-
-<p>Liquid の処理としては、オブジェクトを参照するときには、あらかじめ <code>to_liquid</code> メソッドを呼ぶ仕組みになっているようだ。実際に、Liquid を <code>require</code> すると、裏側では <code>liquid/extensions.rb</code> によって <code>String#to_liquid</code> などのメソッドが定義されている。</p>
-
-<p>もし、<code>to_liquid</code> を定義していないと、</p>
-
-<pre><code>hi Liquid error: undefined method `to_liquid' for 
-#&lt;Person:0x46a400 @name="nitoyon"&gt;
-</code></pre>
-
+<p>Liquid はオブジェクトを表示するときには、必ず <code>to_liquid</code> メソッドを呼んでいる。<code>to_liquid</code> メソッドが定義されていない状態で表示しようとすると、</p>
+<div class="highlight"><pre><code class="text">hi Liquid error: undefined method `to_liquid&#39; for 
+#&lt;Person:0x46a400 @name=&quot;nitoyon&quot;&gt;
+</code></pre></div>
 <p>のようなエラーになってしまう。</p>
+
+<p>この制約は <code>String</code> についても例外ではない。Liquid を <code>require</code> すると、裏側では <code>liquid/extensions.rb</code> によって <code>String#to_liquid</code> や <code>Hash#to_liquid</code> などのメソッドが定義されている。</p>
 
 <p><code>to_liquid</code> を独自実装するパターンを使うと、テンプレート側から <code>Person</code> のメソッドを呼ぶことはできない。それをやりたいなら、次に説明する <code>Liquid::Drop</code> を使うとよい。</p>
 
@@ -112,7 +106,7 @@
 
 <p><code>Liquid::Drop</code> を継承してやることで、テンプレート側からメソッドを呼べるようになる。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Drop</span>
   <span class="kp">attr_accessor</span> <span class="ss">:name</span>
   <span class="k">def</span> <span class="nf">initialize</span>
     <span class="vi">@name</span> <span class="o">=</span> <span class="s2">&quot;nitoyon&quot;</span>
@@ -122,14 +116,12 @@
   <span class="k">end</span>
 <span class="k">end</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
 <span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi nitoyon</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
 <span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span>  <span class="c1"># =&gt; hi NITOYON</span>
-</code></pre>
-</div>
-
+</code></pre></div>
 
 <p>これはとても便利だが、いくつか注意すべき点がある。</p>
 
@@ -154,15 +146,13 @@
     <span class="k">end</span>
   <span class="k">end</span>
 <span class="k">end</span>
-</code></pre>
-</div>
-
+</code></pre></div>
 
 <p>外部ライブラリーのクラスなのでいじりたくないけど、このクラスのインスタンスをテンプレートに渡して、 <code>name</code> や <code>NAME</code> メソッドを叩きたいものとする。</p>
 
 <p>そういうときは、次のような <code>ToDrop</code> クラスを定義しておけばよい。</p>
 
-<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Drop</span>
+<div class="highlight"><pre><code class="ruby"><span class="k">class</span> <span class="nc">ToDrop</span> <span class="o">&lt;</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Drop</span>
   <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
     <span class="vi">@obj</span> <span class="o">=</span> <span class="n">obj</span>
   <span class="k">end</span>
@@ -172,9 +162,7 @@
     <span class="k">end</span>
   <span class="k">end</span>
 <span class="k">end</span>
-</code></pre>
-</div>
-
+</code></pre></div>
 
 <p>使い方は簡単。<code>to_liquid</code> で <code>ToDrop.new(self)</code> を返す処理を実装してやるだけだ。これだけで期待の動作となっている。</p>
 
@@ -186,14 +174,12 @@
   <span class="k">end</span>
 <span class="k">end</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi nitoyon</span>
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.name}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="ss">Foo</span><span class="p">:</span><span class="ss">:Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi nitoyon</span>
 
-<span class="n">template</span> <span class="o">=</span> <span class="no">Liquid</span><span class="o">::</span><span class="no">Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
-<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="no">Foo</span><span class="o">::</span><span class="no">Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi NITOYON</span>
-</code></pre>
-</div>
-
+<span class="n">template</span> <span class="o">=</span> <span class="ss">Liquid</span><span class="p">:</span><span class="ss">:Template</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;hi {{person.NAME}}&quot;</span><span class="p">)</span>
+<span class="nb">puts</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">({</span><span class="s1">&#39;person&#39;</span> <span class="o">=&gt;</span> <span class="ss">Foo</span><span class="p">:</span><span class="ss">:Person</span><span class="o">.</span><span class="n">new</span> <span class="p">})</span> <span class="c1"># =&gt; hi NITOYON</span>
+</code></pre></div>
 
 <p>この <code>ToDrop</code> が今回、わたしが作成した魔法のクラスで、任意のオブジェクトを <code>Liquid::Drop</code> を継承したときと同じ動作にしてくれる。</p>
 
@@ -248,6 +234,8 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div>
 
 </div>
+
+
 
 <div id="pager-bottom">
 	
