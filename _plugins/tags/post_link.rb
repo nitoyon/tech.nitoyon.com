@@ -28,12 +28,9 @@ module Jekyll
     def initialize(tag_name, markup, tokens)
       super
       params = markup.split(',')
+      return if params[0].nil?
+
       @url = params[0].strip
-      begin
-        @post = PostComparer.new(@url)
-      rescue
-        @post = nil
-      end
 
       if params.size >= 2
         @title = params[1].strip
@@ -43,13 +40,25 @@ module Jekyll
     def render(context)
       site = context.registers[:site]
 
+      url = @url
+      if url.nil?
+        raise "no param and post is not defined" unless context['post']
+        url = context['post']
+      end
+
+      begin
+        post = PostComparer.new(url)
+      rescue
+        post = nil
+      end
+
       site.posts.each do |p|
-        if p.url == @url || p == @post
+        if p.url == url || p == post
           title = @title.nil? || @title.empty? ? p.data['title'] : @title
           return %(<a href="#{p.url}">#{CGI.escapeHTML(title)}</a>)
         end
       end
-      %(<a href="#{@url}">#{CGI.escapeHTML(@url)}</a>)
+      %(<a href="#{url}">#{CGI.escapeHTML(url)}</a>)
     end
   end
 end
