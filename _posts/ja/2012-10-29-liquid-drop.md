@@ -46,14 +46,14 @@ template = Liquid::Template.parse("hi {%raw%}{{person.name}}{%endraw%}")
 puts template.render( 'person' => Person.new ) # => hi nitoyon
 {% endhighlight %}
 
-Liquid の処理としては、オブジェクトを参照するときには、あらかじめ `to_liquid` メソッドを呼ぶ仕組みになっているようだ。実際に、Liquid を `require` すると、裏側では `liquid/extensions.rb` によって `String#to_liquid` などのメソッドが定義されている。
-
-もし、`to_liquid` を定義していないと、
+Liquid はオブジェクトを表示するときには、必ず `to_liquid` メソッドを呼んでいる。`to_liquid` メソッドが定義されていない状態で表示しようとすると、
 
     hi Liquid error: undefined method `to_liquid' for 
     #<Person:0x46a400 @name="nitoyon">
 
 のようなエラーになってしまう。
+
+この制約は `String` についても例外ではない。Liquid を `require` すると、裏側では `liquid/extensions.rb` によって `String#to_liquid` や `Hash#to_liquid` などのメソッドが定義されている。
 
 `to_liquid` を独自実装するパターンを使うと、テンプレート側から `Person` のメソッドを呼ぶことはできない。それをやりたいなら、次に説明する `Liquid::Drop` を使うとよい。
 
