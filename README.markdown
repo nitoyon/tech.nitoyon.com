@@ -9,11 +9,13 @@ tech-ni source code
 Initialize
 ----------
 
-    $ git clone git@github.com:nitoyon/tech.nitoyon.com.git
-    $ git submodule init
-    $ git submodule update
+    $ git clone https://github.com/nitoyon/tech.nitoyon.com.git
+    $ cd tech.nitoyon.com
+    $ git new-workdir . _site
     $ cd _site
     $ git checkout html
+
+(ref) [git-new-workdir](https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir), [git-new-workdir-win](https://github.com/dansmith65/git/blob/master/contrib/workdir/git-new-workdir-win)
 
 
 How to Build
