@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/01/11/github-clone-http/", title: "GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速"},
 	{url: "/ja/blog/2013/01/08/nenga/", title: "うちの年賀状2013"},
 	{url: "/ja/blog/2012/12/25/jekyll-0-12-0/", title: "Jekyll の 0.12.0 でシンタックス ハイライトが便利になった"},
 	{url: "/ja/blog/2012/12/21/text-hatena-js-github/", title: "text-hatena.js を GitHub に移動した"},
-	{url: "/ja/blog/2012/12/10/lightroom-5.1ch-mts/", title: "Lightroom 4 では 5.1ch の動画は音なしになっちゃう話"},
-	{url: "/ja/blog/2012/12/06/iphone-iframe/", title: "iPhone 3GS では <IFRAME> 内のテキストをコピーできない"}
+	{url: "/ja/blog/2012/12/10/lightroom-5.1ch-mts/", title: "Lightroom 4 では 5.1ch の動画は音なしになっちゃう話"}
 ];
 
 Site.archives.months = [

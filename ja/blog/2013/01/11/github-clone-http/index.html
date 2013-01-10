@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/01/11/github-clone-http/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="GitHub には clone するための URL として [HTTP]、[SSH]、[Git Read-Only] の 3 つが用意されている。いままで、SSH に慣れているという理由だけで [SSH] を利用していたのだけど、「SSH は転送速度が遅い」という問題がある。SSH だとこんなに遅い…さっき、[SSH] で clone してみたら 20～60 KiB/s 程度の速度しか出なかった。$ git clone git@github.com:nitoyon/tech.nitoyon.com.gitCloning into &amp;#39;tech.nitoyon.com&amp;#39;......"/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2013年01月11日</h2>
+<h1>GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/01/11/github-clone-http/" class="hatena-bookmark-button" data-hatena-bookmark-title="GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/01/11/github-clone-http/" data-lang="ja" data-size="horizontal" data-text="GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><center><img src="http://farm9.staticflickr.com/8082/8367926710_8530642335_o.png" width="571" height="221"></center></p>
+
+<p>GitHub には clone するための URL として [HTTP]、[SSH]、[Git Read-Only] の 3 つが用意されている。</p>
+
+<p>いままで、SSH に慣れているという理由だけで [SSH] を利用していたのだけど、「<strong>SSH は転送速度が遅い</strong>」という問題がある。</p>
+
+<h1>SSH だとこんなに遅い…</h1>
+
+<p>さっき、[SSH] で clone してみたら 20～60 KiB/s 程度の速度しか出なかった。</p>
+<div class="highlight"><pre><code class="text">$ git clone git@github.com:nitoyon/tech.nitoyon.com.git
+Cloning into &#39;tech.nitoyon.com&#39;...
+remote: Counting objects: 8856, done.
+remote: Compressing objects: 100% (2125/2125), done.
+remote: Total 8856 (delta 3251), reused 8731 (delta 3126)
+Receiving objects: 100% (8856/8856), 7.04 MiB | 26 KiB/s, done.
+Resolving deltas: 100% (3251/3251), done.
+</code></pre></div>
+<p>↑最終的に <code>26 KiB/s</code> しか出ていない。</p>
+
+<p>これでは、巨大なリポジトリを clone すると、長大な時間を要することになる。</p>
+
+<h1>HTTP は高速！</h1>
+
+<p>そんなときは、 [HTTP] で clone すればよい。</p>
+
+<p>さっき試したら、300～600 KiB/s 出た。</p>
+<div class="highlight"><pre><code class="text">$ git clone https://github.com/nitoyon/tech.nitoyon.com.git
+Cloning into &#39;tech.nitoyon.com&#39;...
+remote: Counting objects: 8856, done.
+remote: Compressing objects: 100% (2125/2125), done.
+remote: Total 8856 (delta 3251), reused 8731 (delta 3126)
+Receiving objects: 100% (8856/8856), 7.04 MiB | 604 KiB/s, done.
+Resolving deltas: 100% (3251/3251), done.
+</code></pre></div>
+<p>↑<code>604 KiB/s</code> も出ている</p>
+
+<p>[Git Read-Only] も試してみたが、こちらも [SSH] と同程度の速度しか出なかった。</p>
+
+<p>つまり、[HTTP] が最強！　他の 10 倍速い。</p>
+
+<h1>push が面倒なら clone 後に SSH にすればよい</h1>
+
+<p>[SSH] で clone したときのメリットは、push のときには ssh-agent なり pageant なりが、パスフレーズの入力を代行してくれる点にある。<code>git push</code> と入力するだけで push を開始できてお手軽だ。</p>
+
+<p>一方、[HTTP] で clone してしまうと、push するたびにユーザー名とパスワードを要求されて面倒だ。<a href="https://help.github.com/articles/set-up-git#platform-windows">credential helper</a> を導入すればキャッシュしてくれるらしいが、これも面倒だ。</p>
+
+<p>それが理由で、いままで [SSH] でちんたら clone していた。</p>
+
+<p>けども、よく考えたら [HTTP] で clone したあとでも、[SSH] で push するように設定を変更できる。</p>
+<div class="highlight"><pre><code class="text">$ git remote set-url origin git@github.com:user/repo.git
+</code></pre></div>
+<p><code>git remote</code> で <code>origin</code> の URL を変えるだけ。この手順は <a href="https://help.github.com/articles/why-is-git-always-asking-for-my-password">GitHub のヘルプ</a>にも書いてある。</p>
+
+<p>これ以降の push / pull は [SSH] でやるようになる。[HTTP] に比べて転送速度は遅いけど、1度 clone したあとなら、差分のみの送受信なので、あまり速度は気にしなくてもよいはずだ。(もし大量に送受信する必要が出たなら、同じようにして再度 [HTTP] に切り替えてもよいだろう)</p>
+
+<h1>まとめ</h1>
+
+<p>[HTTP] で clone して、快適な GitHub 生活を。</p>
+
+</section>
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/01/11/github-clone-http/" class="hatena-bookmark-button" data-hatena-bookmark-title="GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/01/11/github-clone-http/" data-lang="ja" data-size="horizontal" data-text="GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2012/12/21/text-hatena-js-github/">text-hatena.js を GitHub に移動した</a></li>
+
+<li><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a></li>
+
+<li><a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li>
+
+<li><a href="/ja/blog/2012/02/21/msysgit-utf8/">msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</a></li>
+
+<li><a href="/ja/blog/2008/01/07/pageant-security/">pageant.exe の仕組みと危険性</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/01/08/nenga/" rel="previous">うちの年賀状2013</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
