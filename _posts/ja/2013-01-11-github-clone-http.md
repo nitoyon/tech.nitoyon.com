@@ -80,6 +80,20 @@ $ git remote set-url origin git@github.com:user/repo.git
 
 これ以降の push / pull は [SSH] でやるようになる。[HTTP] に比べて転送速度は遅いけど、1度 clone したあとなら、差分のみの送受信なので、あまり速度は気にしなくてもよいはずだ。(もし大量に送受信する必要が出たなら、同じようにして再度 [HTTP] に切り替えてもよいだろう)
 
+
+(追記) SSH も設定を変えれば速くなる
+===================================
+
+`~/.ssh/config` に次の設定をすれば、SSH でも十分速くなるようです。
+
+```
+Host github.com
+  Compression yes
+  Ciphers arcfour256
+```
+
+はてなブックマークで id:y-kawaz さんに[指摘していだきました](http://b.hatena.ne.jp/y-kawaz/20130111#bookmark-127926818)。ありがとうございます。
+
 まとめ
 ======
 
