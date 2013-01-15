@@ -56,9 +56,13 @@ Resolving deltas: 100% (3251/3251), done.
 
 ↑`604 KiB/s` も出ている
 
-[Git Read-Only] も試してみたが、こちらも [SSH] と同程度の速度しか出なかった。
+[Git Read-Only] も試してみたら、こちらは 1 MiB/s ぐらいでたので一番高速だった。
 
-つまり、[HTTP] が最強！　他の 10 倍速い。
+<s>つまり、[HTTP] が最強！　他の 10 倍速い。</s>
+
+つまり、速さは [Git Read-Only] > [HTTP] >> [SSH] となった。
+
+(訂正) 当初、[HTTP] が最強としていましたが、再度調べてみたところ、[Git Read-Only] が最強でした。お詫びして訂正します。
 
 
 push が面倒なら clone 後に SSH にすればよい
@@ -68,9 +72,11 @@ push が面倒なら clone 後に SSH にすればよい
 
 一方、[HTTP] で clone してしまうと、push するたびにユーザー名とパスワードを要求されて面倒だ。[credential helper](https://help.github.com/articles/set-up-git#platform-windows) を導入すればキャッシュしてくれるらしいが、これも面倒だ。
 
+[Git Read-Only] だと Read-Only という名前の通り、push できない。
+
 それが理由で、いままで [SSH] でちんたら clone していた。
 
-けども、よく考えたら [HTTP] で clone したあとでも、[SSH] で push するように設定を変更できる。
+けども、よく考えたら [HTTP] や [Git Read-Only] で clone したあとでも、[SSH] で push するように設定を変更できる。
 
 ```
 $ git remote set-url origin git@github.com:user/repo.git
@@ -97,4 +103,10 @@ Host github.com
 まとめ
 ======
 
-[HTTP] で clone して、快適な GitHub 生活を。
+次のような戦略が考えられる。
+
+* push する必要がないなら [Git Read-Only] で clone すると高速。
+* [SSH] の clone は `~/.ssh/config` を設定すると速度が劇的に改善する。
+* clone したあとに、`git remote set-url` で URL を変更すれば、push するプロトコルを変更できる
+
+快適な GitHub 生活を。
