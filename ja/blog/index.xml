@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 11 Jan 2013 12:49:53 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 15 Jan 2013 22:10:09 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -59,9 +59,13 @@ Resolving deltas: 100% (3251/3251), done.
 </code></pre></div>
 <p>↑<code>604 KiB/s</code> も出ている</p>
 
-<p>[Git Read-Only] も試してみたが、こちらも [SSH] と同程度の速度しか出なかった。</p>
+<p>[Git Read-Only] も試してみたら、こちらは 1 MiB/s ぐらいでたので一番高速だった。</p>
 
-<p>つまり、[HTTP] が最強！　他の 10 倍速い。</p>
+<p><s>つまり、[HTTP] が最強！　他の 10 倍速い。</s></p>
+
+<p>つまり、速さは [Git Read-Only] &gt; [HTTP] &gt;&gt; [SSH] となった。</p>
+
+<p>(訂正) 当初、[HTTP] が最強としていましたが、再度調べてみたところ、[Git Read-Only] が最強でした。お詫びして訂正します。</p>
 
 <h1>push が面倒なら clone 後に SSH にすればよい</h1>
 
@@ -69,9 +73,11 @@ Resolving deltas: 100% (3251/3251), done.
 
 <p>一方、[HTTP] で clone してしまうと、push するたびにユーザー名とパスワードを要求されて面倒だ。<a href="https://help.github.com/articles/set-up-git#platform-windows">credential helper</a> を導入すればキャッシュしてくれるらしいが、これも面倒だ。</p>
 
+<p>[Git Read-Only] だと Read-Only という名前の通り、push できない。</p>
+
 <p>それが理由で、いままで [SSH] でちんたら clone していた。</p>
 
-<p>けども、よく考えたら [HTTP] で clone したあとでも、[SSH] で push するように設定を変更できる。</p>
+<p>けども、よく考えたら [HTTP] や [Git Read-Only] で clone したあとでも、[SSH] で push するように設定を変更できる。</p>
 <div class="highlight"><pre><code class="text">$ git remote set-url origin git@github.com:user/repo.git
 </code></pre></div>
 <p><code>git remote</code> で <code>origin</code> の URL を変えるだけ。この手順は <a href="https://help.github.com/articles/why-is-git-always-asking-for-my-password">GitHub のヘルプ</a>にも書いてある。</p>
@@ -89,7 +95,15 @@ Resolving deltas: 100% (3251/3251), done.
 
 <h1>まとめ</h1>
 
-<p>[HTTP] で clone して、快適な GitHub 生活を。</p>
+<p>次のような戦略が考えられる。</p>
+
+<ul>
+<li>push する必要がないなら [Git Read-Only] で clone すると高速。</li>
+<li>[SSH] の clone は <code>~/.ssh/config</code> を設定すると速度が劇的に改善する。</li>
+<li>clone したあとに、<code>git remote set-url</code> で URL を変更すれば、push するプロトコルを変更できる</li>
+</ul>
+
+<p>快適な GitHub 生活を。</p>
 ]]></description>
 		</item>
 
