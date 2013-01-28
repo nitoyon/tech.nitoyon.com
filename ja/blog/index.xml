@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 25 Jan 2013 01:51:45 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 29 Jan 2013 02:51:53 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,159 @@
 
 
 
+
+		<item>
+			<title>jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/</guid>
+			<pubDate>Tue, 29 Jan 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>jQuery 1.9 がリリースされました。1.9 の新機能の中ではあまり注目されていませんが、<strong>ソースマップに対応</strong>したのが地味に便利そうです。</p>
+
+<p>というのも、圧縮版の jquery.min.js を使っていると</p>
+
+<ul>
+<li>何か問題が起きたときにスタックトレースを眺めても jQuery の部分が意味不明</li>
+<li>デバッガーで jQuery のソースにステップインしても意味不明</li>
+</ul>
+
+<p>といった理由で、開発中には非圧縮の jquery.js を使うことが多かったわけです。</p>
+
+<p>それが、1.9 からはソースマップに対応したので<strong>圧縮版のままでのデバッグが簡単</strong>になってます。</p>
+
+<h1>超簡単な使い方</h1>
+
+<p>ソースマップに対応したブラウザーは現時点では Google Chrome のみなので、Google Chrome の手順を説明します。</p>
+
+<p>(Firefox はソースマップへの対応を<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=771597">計画中</a>らしい)</p>
+
+<h2>事前準備を忘れずに</h2>
+
+<p>Google Chrome で [デベロッパー ツール] を開きます。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8466/8423335379_7fdbcbf661.jpg" width="500" height="454"></center></p>
+
+<p>右下の設定ボタンを押して、[Enable source maps] をチェックします。</p>
+
+<p>下準備はこれだけ。簡単ですね！</p>
+
+<h2>早速使ってみよう</h2>
+
+<p>本家の <a href="http://jquery.com/">jquery.com</a> は早速 1.9.0 の圧縮版を使っていました。ということで、ここで実験してみます。</p>
+
+<p>まず、<a href="http://jquery.com/">http://jquery.com/</a> に行って、[デベロッパー ツール] を開いてみます。</p>
+
+<p>[Sources] タブから <code>main.js</code> を選択して、最初の <code>on()</code> 関数のコールバックにブレークポイントを仕込んでみます。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8225/8423335179_d4bc25f945.jpg" width="500" height="263"></center></p>
+
+<p>サイトの下のほうにある「CDN」の右側が <code>.cdn input</code> なので、ここをクリックすると…</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8368/8423335345_e11a941f99.jpg" width="500" height="240"></center></p>
+
+<p>はい、ブレークしますね。ここで注目すべきは右側の [Call Stack]。よく見ると…</p>
+
+<ul>
+<li>(anonymous function) main.js:7</li>
+<li>st.event.dispatch jquery.js:3045</li>
+<li>st.event.add.y.handle jquery.js:2721</li>
+</ul>
+
+<p>jQuery の関数名と、行数が書いてありますね。<strong>jquery.min.js しかロードしてないページなのに、jquery.js の情報が表示</strong>されています！</p>
+
+<p>ためしに <code>st.event.dispatch jquery.js:3045</code> をダブルクリックすると…</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8469/8423335301_af26ed3b0e.jpg" width="500" height="257"></center></p>
+
+<p>jquery.js がロードされて、該当する場所を表示できました。圧縮前の jquery.js なので、当然、コメントも残っています。</p>
+
+<p>これはすごい！</p>
+
+<p>jQuery 1.9 では jquery.min.js を利用しててもデバッグでは困らないのです。</p>
+
+<p>ところで、これ、どういう仕組みで動いてるか気になりませんか？　気になる人は続きをお読みください。</p>
+
+<h1>ソースマップとは何ぞや</h1>
+
+<p>jQuery 1.9 からの jquery.min.js には、最後の行に次のようなコメントがあります。</p>
+<div class="highlight"><pre><code class="javascript">/*! jQuery v1.9.0 (省略) */(function(e,t){/* 省略 */})(window);
+//@ sourceMappingURL=jquery.min.map
+</code></pre></div>
+<p><code>@ sourceMappingURL=jquery.min.map</code> に注目。ソースマップの URL が書いてあります。Google Chrome はこの部分を見て、ソースマップを読み込んでいたわけですね。</p>
+
+<p>となると、気になるのが <code>jquery.min.map</code> の中身。Google CDN には jquery.min.js と同じディレクトリーに <a href="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map"><code>jquery.min.map</code></a> が設置してあります。</p>
+
+<p>整形して表示してみるとこうなります。</p>
+<div class="highlight"><pre><code class="javascript">{
+    &quot;version&quot;: 3,
+    &quot;file&quot;: &quot;jquery.min.js&quot;,
+    &quot;sources&quot;: [&quot;jquery.js&quot;],
+    &quot;names&quot;: [&quot;window&quot;,&quot;undefined&quot;,&quot;isArraylike&quot;, /* 省略 */],
+    &quot;mappings&quot;: &quot;CAaA,SAAWA,EAAQC,GACnB,(省略)&quot;
+}
+</code></pre></div>
+<p><code>jquery.js</code> と書いてありますね。これを見て Google Chrome は <code>jquery.js</code> に行き着いたようです。<code>sources</code> が複数指定できることから、ソースマップは、複数のソースを結合して圧縮した場合にも対応できそうなフォーマットだと推測できます。</p>
+
+<p>問題は <code>mappings</code> なのですが、これは「圧縮後の○列目の文字は、ソース△△の××行目の××列目にありますよ」という情報を BASE64 VLQ で圧縮したものだそうです。</p>
+
+<p>詳しくは <a href="http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/">Introduction to JavaScript Source Maps - HTML5 Rocks</a> に書いてあるので、さらに興味がある人は参照してみてください。</p>
+
+<h1>CDN を使わない場合</h1>
+
+<p>いい忘れていましたが、Google CDN を使わないで自分のサーバーで jquery.min.js をホスティングする場合は、少し追加の手順が必要になります。</p>
+
+<p>jquery.min.js をアップロードする場所に jquery.min.map と jquery.js を置くだけです。簡単ですね。</p>
+
+<p><code>jquery.min.map</code> は jquery の公式サイトでは公開されてないけど、</p>
+
+<ul>
+<li><a href="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map">http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map</a></li>
+</ul>
+
+<p>に置いてあるので、1.9.0 以降のバージョンがリリースされても URL の 1.9.0 の部分を置き換えれば取得できそうです。</p>
+
+<h1>ソースマップを活用しよう</h1>
+
+<p>さて、便利便利なソースマップなので、自分のプロジェクトでも活用してみたいですよね。</p>
+
+<p>ソースマップは JavaScript の圧縮はもちろん、<strong>CoffeeScript/HaXe/TypeScript/JSX</strong> などの JavaScript を生成する言語でも出力できるようです。</p>
+
+<p>さらに、CSS 生成で有名な <strong>SASS/LESS</strong> でも活用できるようです。</p>
+
+<p>夢が広がったので、ソースマップの出力方法を調べてみました。</p>
+
+<h2>JavaScript の圧縮</h2>
+
+<p>jQuery が利用している圧縮ツールは <a href="https://github.com/mishoo/UglifyJS2">UglifyJS</a> です。コマンドライン引数に <code>--source-map</code> を指定すると、ソースマップを吐けるようです。</p>
+
+<p>もう１つの主流な圧縮ツール <a href="https://developers.google.com/closure/compiler/">Closure compiler</a> では <code>--create_source_map ./foo.min.map --source_map_format=V3</code> と指定する模様。</p>
+
+<h2>JavaScript を生成する色々</h2>
+
+<p>ぐぐって調べて引っかかった結果をまとめておく。</p>
+
+<ul>
+<li>CoffeeScript: <code>coffee</code> コマンドに <code>--source-map</code> をつけるだけ。</li>
+<li>HaXe: <code>haxe</code> コマンドに <code>--debug</code> をつけるだけ。</li>
+<li>TypeScript: <code>tcs</code> コマンドに <code>-sourcemap</code> をつけるだけ。</li>
+<li>JSX: <code>--enable-source-map</code> らしい。</li>
+</ul>
+
+<h2>SASS/LESS</h2>
+
+<p>JavaScript よりも、もう少し複雑そう。詳しくはリンク先を。</p>
+
+<ul>
+<li>SASS: <a href="http://bricss.net/post/33788072565/using-sass-source-maps-in-webkit-inspector">Bricss - Using Sass source maps in WebKit Inspector</a></li>
+<li>LESS: <a href="http://robdodson.me/blog/2012/12/28/debug-less-with-chrome-developer-tools/">Debug LESS with Chrome Developer Tools - Rob Dodson talks internets</a></li>
+</ul>
+
+<p>リンク先を見る限り、<code>@media -sass-debug-info</code> という独自の情報を出力して、それを Google Chrome 側で解釈する模様。</p>
+
+<h1>まとめ</h1>
+
+<p>ソースマップがあれば、圧縮したソースでの開発も怖くない！　え？　Google Chrome 以外のブラウザーで困ったら？　そのときは今まで通り・・・。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>はてなブックマークの入れ替わり激しくない人気エントリーを見る方法</title>
@@ -300,57 +453,6 @@ print fib(10)
 <h1>まとめ</h1>
 
 <p>Jekyll 0.12.0 の個人的にうれしいところをざっと紹介した。その他の変更点は <a href="https://github.com/mojombo/jekyll/blob/master/History.txt">History.txt</a> を見れば載っているので、気になる人はぜひ。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>text-hatena.js を GitHub に移動した</title>
-			<link>http://tech.nitoyon.com/ja/blog/2012/12/21/text-hatena-js-github/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2012/12/21/text-hatena-js-github/</guid>
-			<pubDate>Fri, 21 Dec 2012 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>2005 年ごろに作成して放置していた <a href="http://tech.nitoyon.com/javascript/application/texthatena/download.html">text-hatena.js</a> について、twitter で</p>
-
-<blockquote class="twitter-tweet" lang="ja"><p>@<a href="https://twitter.com/nitoyon">nitoyon</a> さん、2005年くらいのtext-hatena.js をGitHub等に公開は可能でしょうか？ <a href="http://t.co/Z6zylivM" title="http://tech.nitoyon.com/javascript/application/texthatena/download.html">tech.nitoyon.com/javascript/app…</a></p>&mdash; テラまこさん (@teramako) <a href="https://twitter.com/teramako/status/280642151715594240" data-datetime="2012-12-17T11:54:37+00:00">12月 17, 2012</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>というツッコミを受けたので GitHub で公開してみました。</p>
-
-<ul>
-<li><a href="https://github.com/nitoyon/text-hatena.js">nitoyon / text-hatena.js - GitHub</a></li>
-</ul>
-
-<p>いま text-hatena.js のコードを読み返すと、グローバルな名前空間を汚染してたり、Object.extend() を定義してたりと、いろいろ酷い。</p>
-
-<p>当時は今に比べると JavaScript の知識も浅かったが、浅いなりに prototype.js のコードを読んだり、真似したりして勉強していたことを思い出した。</p>
-
-<h1>2005 年の話</h1>
-
-<p>text-hatena.js を公開した 2005 年といえば Web 2.0 だとか Ajax という言葉がバズっていて、ちょうどはてなブックマークが登場したあたりでもあった。</p>
-
-<p>はてなブックマークは今よりも遥かに技術者寄りで、ホットエントリーには 2ch まとめや NAVER まとめの姿はなく、Ajax や JavaScript の話であふれていた。それらの記事を目を輝かせながら読み漁っていた。</p>
-
-<p>自分もホットエントリーの仲間に入りたくて作ったものの 1 つが text-hatena.js だった。</p>
-
-<p>公開当時にそこそこ話題になったのもうれしかったが、その後に層々たる人がプレゼン資料やブラウザー拡張に活用してくれたのがうれしかった。もしかしたら、自分が作ったものの中で、一番、人の役に立ってるのかもしれない。</p>
-
-<h1>2012 年の話</h1>
-
-<p>せっかく GitHub に公開するのだから、ついでに 2012 年っぽく書き直してみることにした。</p>
-
-<p>実践したのは次の 3 つ。</p>
-
-<ul>
-<li>QUnit で単体試験を定義</li>
-<li>無名関数でグローバル変数を汚さないようにしつつ、node.js でも動くように</li>
-<li>Grunt でファイルを監視して lint &amp; QUnit</li>
-</ul>
-
-<p>特に Grunt を組み込んだことで、ファイルを変更するたびに自動で lint して単体試験が走るのが便利だ。設定を少し変えれば、コード結合や minify もできちゃう。可能性を感じる。</p>
-
-<p>考えてみると、jQuery や node.js は 2005 年当時は存在すらしていなかった。Google Chrome はもちろん Firebug もなかった。</p>
-
-<p>prototype.js が全盛の時代にちまちまブラウザーで動作試験していたコードが、7 年のときを経て、現代の技術を活用して効率的に開発できるようになったわけで、隔世の感で胸が熱くなる。</p>
 ]]></description>
 		</item>
 

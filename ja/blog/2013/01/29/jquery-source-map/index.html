@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="jQuery 1.9 がリリースされました。1.9 の新機能の中ではあまり注目されていませんが、ソースマップに対応したのが地味に便利そうです。というのも、圧縮版の jquery.min.js を使っていると何か問題が起きたときにスタックトレースを眺めても jQuery の部分が意味不明デバッガーで jQuery のソースにステップインしても意味不明といった理由で、開発中には非圧縮の jquery.js を使うことが多かったわけです。それが、1.9 からはソースマップに対応したので圧縮版のままでのデバッグが簡単になってます。超簡単な使い方ソースマップに対応したブラウザーは現時点では Goo..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2013年01月29日</h2>
+<h1>jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/" data-lang="ja" data-size="horizontal" data-text="jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>jQuery 1.9 がリリースされました。1.9 の新機能の中ではあまり注目されていませんが、<strong>ソースマップに対応</strong>したのが地味に便利そうです。</p>
+
+<p>というのも、圧縮版の jquery.min.js を使っていると</p>
+
+<ul>
+<li>何か問題が起きたときにスタックトレースを眺めても jQuery の部分が意味不明</li>
+<li>デバッガーで jQuery のソースにステップインしても意味不明</li>
+</ul>
+
+<p>といった理由で、開発中には非圧縮の jquery.js を使うことが多かったわけです。</p>
+
+<p>それが、1.9 からはソースマップに対応したので<strong>圧縮版のままでのデバッグが簡単</strong>になってます。</p>
+
+<h1>超簡単な使い方</h1>
+
+<p>ソースマップに対応したブラウザーは現時点では Google Chrome のみなので、Google Chrome の手順を説明します。</p>
+
+<p>(Firefox はソースマップへの対応を<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=771597">計画中</a>らしい)</p>
+
+<h2>事前準備を忘れずに</h2>
+
+<p>Google Chrome で [デベロッパー ツール] を開きます。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8466/8423335379_7fdbcbf661.jpg" width="500" height="454"></center></p>
+
+<p>右下の設定ボタンを押して、[Enable source maps] をチェックします。</p>
+
+<p>下準備はこれだけ。簡単ですね！</p>
+
+<h2>早速使ってみよう</h2>
+
+<p>本家の <a href="http://jquery.com/">jquery.com</a> は早速 1.9.0 の圧縮版を使っていました。ということで、ここで実験してみます。</p>
+
+<p>まず、<a href="http://jquery.com/">http://jquery.com/</a> に行って、[デベロッパー ツール] を開いてみます。</p>
+
+<p>[Sources] タブから <code>main.js</code> を選択して、最初の <code>on()</code> 関数のコールバックにブレークポイントを仕込んでみます。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8225/8423335179_d4bc25f945.jpg" width="500" height="263"></center></p>
+
+<p>サイトの下のほうにある「CDN」の右側が <code>.cdn input</code> なので、ここをクリックすると…</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8368/8423335345_e11a941f99.jpg" width="500" height="240"></center></p>
+
+<p>はい、ブレークしますね。ここで注目すべきは右側の [Call Stack]。よく見ると…</p>
+
+<ul>
+<li>(anonymous function) main.js:7</li>
+<li>st.event.dispatch jquery.js:3045</li>
+<li>st.event.add.y.handle jquery.js:2721</li>
+</ul>
+
+<p>jQuery の関数名と、行数が書いてありますね。<strong>jquery.min.js しかロードしてないページなのに、jquery.js の情報が表示</strong>されています！</p>
+
+<p>ためしに <code>st.event.dispatch jquery.js:3045</code> をダブルクリックすると…</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8469/8423335301_af26ed3b0e.jpg" width="500" height="257"></center></p>
+
+<p>jquery.js がロードされて、該当する場所を表示できました。圧縮前の jquery.js なので、当然、コメントも残っています。</p>
+
+<p>これはすごい！</p>
+
+<p>jQuery 1.9 では jquery.min.js を利用しててもデバッグでは困らないのです。</p>
+
+<p>ところで、これ、どういう仕組みで動いてるか気になりませんか？　気になる人は続きをお読みください。</p>
+
+<h1>ソースマップとは何ぞや</h1>
+
+<p>jQuery 1.9 からの jquery.min.js には、最後の行に次のようなコメントがあります。</p>
+<div class="highlight"><pre><code class="javascript"><span class="cm">/*! jQuery v1.9.0 (省略) */</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span><span class="nx">t</span><span class="p">){</span><span class="cm">/* 省略 */</span><span class="p">})(</span><span class="nb">window</span><span class="p">);</span>
+<span class="c1">//@ sourceMappingURL=jquery.min.map</span>
+</code></pre></div>
+<p><code>@ sourceMappingURL=jquery.min.map</code> に注目。ソースマップの URL が書いてあります。Google Chrome はこの部分を見て、ソースマップを読み込んでいたわけですね。</p>
+
+<p>となると、気になるのが <code>jquery.min.map</code> の中身。Google CDN には jquery.min.js と同じディレクトリーに <a href="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map"><code>jquery.min.map</code></a> が設置してあります。</p>
+
+<p>整形して表示してみるとこうなります。</p>
+<div class="highlight"><pre><code class="javascript"><span class="p">{</span>
+    <span class="s2">&quot;version&quot;</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;file&quot;</span><span class="o">:</span> <span class="s2">&quot;jquery.min.js&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sources&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;jquery.js&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;names&quot;</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">,</span><span class="s2">&quot;undefined&quot;</span><span class="p">,</span><span class="s2">&quot;isArraylike&quot;</span><span class="p">,</span> <span class="cm">/* 省略 */</span><span class="p">],</span>
+    <span class="s2">&quot;mappings&quot;</span><span class="o">:</span> <span class="s2">&quot;CAaA,SAAWA,EAAQC,GACnB,(省略)&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>jquery.js</code> と書いてありますね。これを見て Google Chrome は <code>jquery.js</code> に行き着いたようです。<code>sources</code> が複数指定できることから、ソースマップは、複数のソースを結合して圧縮した場合にも対応できそうなフォーマットだと推測できます。</p>
+
+<p>問題は <code>mappings</code> なのですが、これは「圧縮後の○列目の文字は、ソース△△の××行目の××列目にありますよ」という情報を BASE64 VLQ で圧縮したものだそうです。</p>
+
+<p>詳しくは <a href="http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/">Introduction to JavaScript Source Maps - HTML5 Rocks</a> に書いてあるので、さらに興味がある人は参照してみてください。</p>
+
+<h1>CDN を使わない場合</h1>
+
+<p>いい忘れていましたが、Google CDN を使わないで自分のサーバーで jquery.min.js をホスティングする場合は、少し追加の手順が必要になります。</p>
+
+<p>jquery.min.js をアップロードする場所に jquery.min.map と jquery.js を置くだけです。簡単ですね。</p>
+
+<p><code>jquery.min.map</code> は jquery の公式サイトでは公開されてないけど、</p>
+
+<ul>
+<li><a href="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map">http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.map</a></li>
+</ul>
+
+<p>に置いてあるので、1.9.0 以降のバージョンがリリースされても URL の 1.9.0 の部分を置き換えれば取得できそうです。</p>
+
+<h1>ソースマップを活用しよう</h1>
+
+<p>さて、便利便利なソースマップなので、自分のプロジェクトでも活用してみたいですよね。</p>
+
+<p>ソースマップは JavaScript の圧縮はもちろん、<strong>CoffeeScript/HaXe/TypeScript/JSX</strong> などの JavaScript を生成する言語でも出力できるようです。</p>
+
+<p>さらに、CSS 生成で有名な <strong>SASS/LESS</strong> でも活用できるようです。</p>
+
+<p>夢が広がったので、ソースマップの出力方法を調べてみました。</p>
+
+<h2>JavaScript の圧縮</h2>
+
+<p>jQuery が利用している圧縮ツールは <a href="https://github.com/mishoo/UglifyJS2">UglifyJS</a> です。コマンドライン引数に <code>--source-map</code> を指定すると、ソースマップを吐けるようです。</p>
+
+<p>もう１つの主流な圧縮ツール <a href="https://developers.google.com/closure/compiler/">Closure compiler</a> では <code>--create_source_map ./foo.min.map --source_map_format=V3</code> と指定する模様。</p>
+
+<h2>JavaScript を生成する色々</h2>
+
+<p>ぐぐって調べて引っかかった結果をまとめておく。</p>
+
+<ul>
+<li>CoffeeScript: <code>coffee</code> コマンドに <code>--source-map</code> をつけるだけ。</li>
+<li>HaXe: <code>haxe</code> コマンドに <code>--debug</code> をつけるだけ。</li>
+<li>TypeScript: <code>tcs</code> コマンドに <code>-sourcemap</code> をつけるだけ。</li>
+<li>JSX: <code>--enable-source-map</code> らしい。</li>
+</ul>
+
+<h2>SASS/LESS</h2>
+
+<p>JavaScript よりも、もう少し複雑そう。詳しくはリンク先を。</p>
+
+<ul>
+<li>SASS: <a href="http://bricss.net/post/33788072565/using-sass-source-maps-in-webkit-inspector">Bricss - Using Sass source maps in WebKit Inspector</a></li>
+<li>LESS: <a href="http://robdodson.me/blog/2012/12/28/debug-less-with-chrome-developer-tools/">Debug LESS with Chrome Developer Tools - Rob Dodson talks internets</a></li>
+</ul>
+
+<p>リンク先を見る限り、<code>@media -sass-debug-info</code> という独自の情報を出力して、それを Google Chrome 側で解釈する模様。</p>
+
+<h1>まとめ</h1>
+
+<p>ソースマップがあれば、圧縮したソースでの開発も怖くない！　え？　Google Chrome 以外のブラウザーで困ったら？　そのときは今まで通り・・・。</p>
+
+</section>
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/01/29/jquery-source-map/" data-lang="ja" data-size="horizontal" data-text="jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2008/12/11/jquery-fast-css/">jQuery を高速に使う CSS セレクタの書き方</a></li>
+
+<li><a href="/ja/blog/2011/03/24/jQuery-extend-mania/">jQuery.extend マニアックス</a></li>
+
+<li><a href="/ja/blog/2008/11/21/jquery-array/">jQuery の配列系のメソッドをメモしとこ</a></li>
+
+<li><a href="/ja/blog/2008/01/15/jquery-event/">jQuery の bind, unbind の裏側</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/01/25/old-hotentry/" rel="previous">はてなブックマークの入れ替わり激しくない人気エントリーを見る方法</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
