@@ -149,7 +149,7 @@ JavaScript を生成する色々
 
 ぐぐって調べて引っかかった結果をまとめておく。
 
-  * CoffeeScript: `coffee` コマンドに `--source-map` をつけるだけ。
+  * CoffeeScript: CoffeeScriptRedux を使えば `coffee` コマンドに `--source-map` をつけて吐くことができるようです。
   * HaXe: `haxe` コマンドに `--debug` をつけるだけ。
   * TypeScript: `tcs` コマンドに `-sourcemap` をつけるだけ。
   * JSX: `--enable-source-map` らしい。
