@@ -7,7 +7,7 @@ require 'cgi'
 def get_accept_languages
   # see RFC 2616
   # (ex) ja,en-US;q=0.8,en;q=0.6
-  accept_langs = CGI.new.accept_language.split(/,\s*/)
+  accept_langs = (CGI.new.accept_language || '').split(/,\s*/)
 
   # { 'ja' => 1, 'en-US' => 0.8, ...}
   lang_pri = accept_langs.inject({}) { |hash, lang|
