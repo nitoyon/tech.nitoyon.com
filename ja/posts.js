@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/02/14/text-size-adjust/", title: "-webkit-text-size-adjust: none を絶対に設定してはいけない理由"},
 	{url: "/ja/blog/2013/01/29/jquery-source-map/", title: "jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話"},
 	{url: "/ja/blog/2013/01/25/old-hotentry/", title: "はてなブックマークの入れ替わり激しくない人気エントリーを見る方法"},
 	{url: "/ja/blog/2013/01/11/github-clone-http/", title: "GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速"},
-	{url: "/ja/blog/2013/01/08/nenga/", title: "うちの年賀状2013"},
-	{url: "/ja/blog/2012/12/25/jekyll-0-12-0/", title: "Jekyll の 0.12.0 でシンタックス ハイライトが便利になった"}
+	{url: "/ja/blog/2013/01/08/nenga/", title: "うちの年賀状2013"}
 ];
 
 Site.archives.months = [
-  "201301"
+  "201302"
+, "201301"
 , "201212"
 , "201211"
 , "201210"
