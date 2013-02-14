@@ -174,5 +174,5 @@ body {
 長くなったが、強引に３行でまとめる。
 
   * WebKit はこのバグを治してほしい。
-  * 対処療法にはなるけど `-webkit-text-size-adjust: none` はダメ。`100%` と書け。
+  * 対症療法にはなるけど `-webkit-text-size-adjust: none` はダメ。`100%` と書け。
   * バグを回避するための [Webkit-Text-Size-Adjust Remover](https://chrome.google.com/webstore/detail/webkit-text-size-adjust-r/jgfjnnljbpgajihjcajeiabjomhmjhec) のような拡張もあるので、拡大できないサイトがあって困ってるなら入れるとよい。
