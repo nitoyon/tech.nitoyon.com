@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 13 Feb 2013 23:59:25 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 15 Feb 2013 01:40:44 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,191 @@
 
 
 
+
+		<item>
+			<title>これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/02/15/viewport/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/02/15/viewport/</guid>
+			<pubDate>Fri, 15 Feb 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>スマートフォン向けの Web サイトを作るとき、viewport の設定次第で使い勝手が大幅に変わる。</p>
+
+<p>最近はレスポンシブ Web デザインが流行してるけども、その大前提として viewport の設定パターンを抑えておくのは重要だろう。</p>
+
+<p>この記事では、viewport の設定によって、見た目・使い勝手がどう変わるかを解説する。</p>
+
+<h1>パターン1: 何も考えずに HTML を書く</h1>
+
+<p>まずは、viewport を指定せずに、単純な HTML をスマートフォンで表示してみる。</p>
+<div class="highlight"><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;img src=&quot;/images/logo-ja.png&quot;&gt;
+&lt;p&gt;色んな素材がごった煮になった様子をお椀で表現しています。
+湯気が&lt;strong&gt;「てっく」&lt;/strong&gt;に見えるのが隠し味になっています。
+「てっく煮」の右肩の「+4」 を「と、よん」と読むことで、
+ドメイン名の tech.nitoyon.com と等しくなります。&lt;/p&gt;
+&lt;/body&gt;
+</code></pre></div>
+<h2>表示結果</h2>
+
+<p>iPhone 3GS (iOS 5.1.1) で表示してみた (<a href="./no-viewport.html">デモ ページ</a>)。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8225/8472828815_ce69aec918.jpg" width="500" height="306"></center></p>
+
+<p>スマホ対応していないサイトを表示した状態だ。</p>
+
+<p>スマホートフォンは PC 向けのサイトを表示するときには、「横幅 980px 向けにデザインされている」という前提で描画する。結果として、文字が小さくなる。</p>
+
+<p>どれぐらい小さくなるか、iPhone を例に調べてみよう。iPhone のそれぞれの世代で、横幅 980px のページがどれぐらい縮小されて表示されるかを計算してみた。</p>
+
+<table><thead>
+<tr>
+<th>世代</th>
+<th>解像度</th>
+<th align="right">縦向き</th>
+<th align="right">横向き</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>iPhone 1～3</td>
+<td>320px × 480px</td>
+<td align="right">32.7%</td>
+<td align="right">49.0%</td>
+</tr>
+<tr>
+<td>iPhone 4</td>
+<td>640px × 960px</td>
+<td align="right">65.3%</td>
+<td align="right">98.0%</td>
+</tr>
+<tr>
+<td>iPhone 5</td>
+<td>640px × 1,136px</td>
+<td align="right">65.3%</td>
+<td align="right">116.0%</td>
+</tr>
+</tbody></table>
+
+<p>iPhone 4 以降の縦向き (Portrate mode) で 980px の PC 向けサイトは 2/3 に縮小して表示される。Retina ディスプレイで 2/3 のなので、文字はかなり小さくなる。ピンチ操作で拡大しないと読めない人も多いだろう。</p>
+
+<h2>採用例</h2>
+
+<p>このパターンでもデザインを工夫すれば、スマートフォンやタブレットでも見やすくなる。その代表格が Apple である。</p>
+
+<p>ここでは詳しく触れないが、<a href="http://www.pxt.jp/ja/diary/article/257/index.html">pxt | 考察：Appleはスマホサイトを作らない。</a> に分かりやすく書いてあるので、興味がある人は読んでみるとよいだろう。</p>
+
+<h1>パターン2: viewport でデバイスの横幅を指定する</h1>
+
+<p>「スマホ向けにデザインしているよ」と主張するには <code>&lt;head&gt;</code> タグの中に <code>viewport</code> を 1 行追加すればよい。</p>
+<div class="highlight"><pre><code class="html">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width&quot;&gt;
+</code></pre></div>
+<p><code>width=device-width</code> というのは「デバイスの横幅で描画してください」という意味である。</p>
+
+<p>一昔前は iPhone 前提で <code>width=320px</code> と指定すれば十分だったが、解像度がまちまちな Android やタブレット端末が登場したため、<code>width=device-width</code> と指定するのが新常識になった。</p>
+
+<h2>表示結果</h2>
+
+<p>表示するとこうなる (<a href="./scalable-viewport.html">デモ ページ</a>)。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8101/8473918432_eddb076e37.jpg" width="500" height="306"></center></p>
+
+<p>横向きにしたときには、縦向きのときの画面を引き伸ばして表示しようとするので、かなり拡大された印象になる (iPhone 4 までで 1.5 倍、iPhone 5 では 1.7 倍)。</p>
+
+<p>字が大きくなって読みやすくなるが、画面内の情報量が少なくなる。</p>
+
+<h2>採用例</h2>
+
+<p>あまり見たことがないが、たとえば、<a href="http://b.hatena.ne.jp/touch">はてなブックマーク スマートフォン版</a> のソースを見ると、</p>
+<div class="highlight"><pre><code class="html">&lt;meta content=&quot;width=320, minimum-scale=0.5&quot; name=&quot;viewport&quot; /&gt;
+</code></pre></div>
+<p>となっている。<code>320px</code> とあるので、旧世代の指定のままだ。現実問題として、Nexus 7 で閲覧すると <code>320px</code> だと信じて描画するので、フォントがでかすぎて見づらい。</p>
+
+<h1>パターン3: 回転してもサイズを変えたくないパターン</h1>
+
+<p>スマートフォンのネイティブ アプリの動作をみていると、横向き (Landscape mode) にしたときには１行に表示する文字の数が増えるものが多い。</p>
+
+<p>例えば、iPhone 3GS 標準のメモ アプリがそうである。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8524/8472918769_f183e967df.jpg" width="500" height="306"></center></p>
+
+<p>Web においても同様に「横向きのときは一行の文字数を増やしたり、追加の情報を表示したりしたい」という欲求がでてくる。</p>
+
+<p>そのような場合は、<code>viewport</code> を次のように書きなおせばよい。</p>
+<div class="highlight"><pre><code class="html">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0&quot;&gt;
+</code></pre></div>
+<p>あわせて CSS に次のように指定しておく。</p>
+<div class="highlight"><pre><code class="css">body {
+  -webkit-text-size-adjust: 100%;
+}
+</code></pre></div>
+<p>(理由は <a href="/ja/blog/2013/02/14/text-size-adjust/">-webkit-text-size-adjust: none を絶対に設定してはいけない理由</a> を参照)</p>
+
+<h2>表示結果</h2>
+
+<p>横方向のときには次のようになる (<a href="./unscalable-viewport.html">デモ ページ</a>)。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8523/8473918482_552250ded9.jpg" width="500" height="306"></center></p>
+
+<p>メモ アプリの利用イメージに近くなった。</p>
+
+<p>ただし、この指定にしてしまうと、<strong>ピンチによる拡大・縮小ができない</strong>という大きな弱点がある。</p>
+
+<h2>採用例</h2>
+
+<p>数多くの大手サイトがこの方式を採用している。Google も Yahoo! Japan も twitter も facebook も全部これである。</p>
+
+<p>「ピンチできない」という大きな欠点はあるものの、端末の縦横方向を変えたときに画面内の情報量を減らしたくないないので、このパターンを採用せざるをえないのだろう。</p>
+
+<p>向きを変えたときに横幅が変わりつつピンチも使えるような手段が提供されるのが理想なのだが、現在のところ、そのような指定をする方法はない。</p>
+
+<h2>補足</h2>
+
+<p><code>viewport</code> で指定してるのは長ったらしい値は、次のようになっている。</p>
+<div class="highlight"><pre><code class="text">width         = device-width
+initial-scale = 1.0
+minimum-scale = 1.0
+maximum-scale = 1.0
+user-scalable = 0
+</code></pre></div>
+<p>この設定により、iPhone と Android でページの表示倍率が <code>1.0</code> 固定にして、ページのピンチができないようにしている。</p>
+
+<p>その結果、ページの表示倍率が変わる余地をなくしている。表示倍率が変えられない状態になってはじめて、WebKit は仕方なくページの横幅を変えてくれるようだ。</p>
+
+<h1>まとめ</h1>
+
+<p>以上の内容を表でまとめる。</p>
+
+<table><thead>
+<tr>
+<th align="center">番号</th>
+<th>選ぶポイント</th>
+<th>弱点</th>
+<th>例</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="center">1</td>
+<td>PC 向けのサイトをスマホで見ても、十分に見やすいとき。</td>
+<td>初期状態の文字が小さい。</td>
+<td>Apple</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td>スマホに対応しつつ、ピンチを許可したいとき。</td>
+<td>横向きにしたときに極端に拡大される。</td>
+<td>まれ</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td>他の人と同じようにスマホに対応したいとき。</td>
+<td>ピンチで拡大・縮小できない。</td>
+<td>多数</td>
+</tr>
+</tbody></table>
+]]></description>
+		</item>
 
 		<item>
 			<title>-webkit-text-size-adjust: none を絶対に設定してはいけない理由</title>
@@ -39,6 +224,7 @@
 
 <p>次のような HTML をスマートフォンで表示してみる。</p>
 <div class="highlight"><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;head&gt;
 &lt;meta charset=&quot;utf-8&quot;&gt;
 &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0&quot;&gt;
 &lt;/head&gt;
@@ -160,7 +346,7 @@
 
 <ul>
 <li>WebKit はこのバグを治してほしい。</li>
-<li>対処療法にはなるけど <code>-webkit-text-size-adjust: none</code> はダメ。<code>100%</code> と書け。</li>
+<li>対症療法にはなるけど <code>-webkit-text-size-adjust: none</code> はダメ。<code>100%</code> と書け。</li>
 <li>バグを回避するための <a href="https://chrome.google.com/webstore/detail/webkit-text-size-adjust-r/jgfjnnljbpgajihjcajeiabjomhmjhec">Webkit-Text-Size-Adjust Remover</a> のような拡張もあるので、拡大できないサイトがあって困ってるなら入れるとよい。</li>
 </ul>
 ]]></description>
@@ -500,27 +686,6 @@ Resolving deltas: 100% (3251/3251), done.
 </ul>
 
 <p>快適な GitHub 生活を。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>うちの年賀状2013</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/01/08/nenga/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/01/08/nenga/</guid>
-			<pubDate>Tue, 08 Jan 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>毎年恒例で、一年の最初のエントリは我が家の年賀状でのご挨拶です。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8327/8357146769_ddc6a148bd.jpg" width="357" height="500"></center></p>
-
-<p>今年は映画ポスター風の実写で作成してみました。</p>
-
-<h1>twitter アイコン</h1>
-
-<p>毎年、twitter のアイコンを年賀状から抜粋しているのですが、自分の実写の顔をそのまま twitter のアイコンにするのは抵抗があったので、12 年前に描いた年賀状を使うことにしました。12 年間、データが残っていたのが驚き。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8083/8357161789_f84bd3d726_o.jpg" width="612" height="612"></center></p>
-
-<p>今年もよろしくおねがいします。</p>
 ]]></description>
 		</item>
 
