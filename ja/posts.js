@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/02/19/node-source-map/", title: "Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法"},
 	{url: "/ja/blog/2013/02/15/viewport/", title: "これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ"},
 	{url: "/ja/blog/2013/02/14/text-size-adjust/", title: "-webkit-text-size-adjust: none を絶対に設定してはいけない理由"},
 	{url: "/ja/blog/2013/01/29/jquery-source-map/", title: "jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話"},
-	{url: "/ja/blog/2013/01/25/old-hotentry/", title: "はてなブックマークの入れ替わり激しくない人気エントリーを見る方法"},
-	{url: "/ja/blog/2013/01/11/github-clone-http/", title: "GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速"}
+	{url: "/ja/blog/2013/01/25/old-hotentry/", title: "はてなブックマークの入れ替わり激しくない人気エントリーを見る方法"}
 ];
 
 Site.archives.months = [
