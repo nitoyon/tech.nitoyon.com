@@ -165,6 +165,8 @@ JavaScript よりも、もう少し複雑そう。詳しくはリンク先を。
 
 リンク先を見る限り、`@media -sass-debug-info` という独自の情報を出力して、それを Google Chrome 側で解釈する模様。
 
+(追記) 日本語の解説記事も出ていました。[CSSの常識が変わる！「Compass」、基礎から応用まで！ | 株式会社LIG](http://liginc.co.jp/designer/archives/11623#a46) の「ブラウザでsassを検証する方法」にあります。
+
 
 まとめ
 ======
