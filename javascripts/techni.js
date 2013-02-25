@@ -1,4 +1,7 @@
+(function(){
 $(function(){
+  showAlternateLangIfNecessary();
+
 	var ul = $("ul#recententries_list");
 	ul.children().remove();
 	for (var i = 0; i < Site.archives.posts.length; i++) {
@@ -63,6 +66,17 @@ $(function(){
 		}
 	}
 });
+
+function showAlternateLangIfNecessary(){
+	var lang = navigator.browserLanguage || navigator.language || navigator.userLanguage;
+	if (!lang) return;
+	lang = lang.substr(0, 2);
+	if(lang == "en" || lang == "ja") {
+  	console.log("#alternate-" + lang + "-notice");
+  	$("#alternate-" + lang + "-notice").show();
+  }
+}
+})();
 
 var _gaq = window._gaq || [];
 _gaq.push(['_setAccount', 'UA-1616138-1']);
