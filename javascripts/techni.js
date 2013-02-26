@@ -68,13 +68,9 @@ $(function(){
 });
 
 function showAlternateLangIfNecessary(){
-	var lang = navigator.browserLanguage || navigator.language || navigator.userLanguage;
-	if (!lang) return;
-	lang = lang.substr(0, 2);
-	if(lang == "en" || lang == "ja") {
-  	console.log("#alternate-" + lang + "-notice");
-  	$("#alternate-" + lang + "-notice").show();
-  }
+	var lang = navigator.browserLanguage || navigator.language || navigator.userLanguage || "en";
+	lang = (lang.substr(0, 2) == "ja" ? "ja" : "en");
+	$("#alternate-" + lang + "-notice").show();
 }
 })();
 

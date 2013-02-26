@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Web 開発してると、ソースを編集して、ブラウザーをリロードして、という作業の繰り返しになりがちだ。ソースを編集したら、自動でブラウザーをリロードしてくれるような夢のツールがあれば便利そうだ。この分野では CodeKit や LiveReload などが有名なんだけど、もれなく有料だったり GUI だったりする。そこで、LiveReload のオープンソースな部分を参考にしつつ、コマンドラインで使える LiveReloadX というものを作ってみた。特長はこんなところ。Node.js を使ってるので Windows/Mac/Linux 問わずに動かせる開発環境のブラウザーだけでなくスマー..."/>
+	<meta property="og:image" content="http://farm9.staticflickr.com/8243/8510507292_4af6b77d5f_o.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2013/02/27/livereloadx/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2013/02/27/livereloadx/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2013/02/27/livereloadx/</span>.</a>
+</div>
+
+<article>
+<header>
+<hgroup>
+<h2>2013年02月27日</h2>
+<h1>ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/" class="hatena-bookmark-button" data-hatena-bookmark-title="ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/" data-lang="ja" data-size="horizontal" data-text="ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p><center><img src="http://farm9.staticflickr.com/8100/8509399251_7056f91a11.jpg" width="500" height="294"></center></p>
+
+<p>Web 開発してると、ソースを編集して、ブラウザーをリロードして、という作業の繰り返しになりがちだ。ソースを編集したら、自動でブラウザーをリロードしてくれるような夢のツールがあれば便利そうだ。</p>
+
+<p>この分野では <a href="http://incident57.com/codekit/">CodeKit</a> や <a href="http://livereload.com/">LiveReload</a> などが有名なんだけど、もれなく有料だったり GUI だったりする。そこで、<a href="http://livereload.com/">LiveReload</a> のオープンソースな部分を参考にしつつ、コマンドラインで使える <a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> というものを作ってみた。</p>
+
+<p>特長はこんなところ。</p>
+
+<ul>
+<li>Node.js を使ってるので Windows/Mac/Linux 問わずに動かせる</li>
+<li>開発環境のブラウザーだけでなくスマートフォンのブラウザーもリロードできる</li>
+<li>無料</li>
+</ul>
+
+<h1>インストール方法</h1>
+
+<p>インストールは超簡単！</p>
+
+<ol>
+<li><a href="http://nodejs.org/">Node.js</a> をインストールする。</li>
+<li>コマンドラインで <code>npm install -g livereloadx</code> を実行する。</li>
+</ol>
+
+<h1>動作原理</h1>
+
+<p><center><img src="http://farm9.staticflickr.com/8099/8509399561_17e6288376.jpg" width="500" height="159"></center></p>
+
+<p>インストールしたら <code>livereloadx</code> コマンドが動くようになる。ただ、それだけではブラウザーはリロードしてくれないので、ちょいと動作原理を説明しておく。</p>
+
+<ol>
+<li>コマンドラインで <code>livereloadx path/to/dir</code> を実行すると、LiveReloadX が開始して、次のような処理をする。
+
+<ul>
+<li>フォルダー <code>path/to/dir</code> の監視を開始する。</li>
+<li>ポート <code>35729</code> で Web サーバーとして動き始める。この Web サーバーは <code>livereload.js</code> を公開しつつ、WebSocket サーバーとしても動く。</li>
+</ul></li>
+<li>ブラウザーで <code>livereload.js</code> を読み込むと、LiveReloadX サーバーに WebSocket で接続しにいく。</li>
+<li><code>path/to/dir</code> 配下のファイルを更新したら、LiveReloadX サーバーはブラウザーに WebSocket で通知を出す。通知を受け取ったブラウザーは再読込する。</li>
+</ol>
+
+<p>ということで、ブラウザーに <code>livereload.js</code> を読み込ませる方法が重要になってくる。</p>
+
+<h1>livereload.js の読み込ませ方</h1>
+
+<p>4 通りあるので、好きなやつを選ぶことになる。</p>
+
+<ul>
+<li>手動で追加する</li>
+<li>ブラウザー拡張をインストールする (PC 版 Safari・Chrome・Firefox のみ).</li>
+<li>static モードで実行する</li>
+<li>proxy モードで実行する</li>
+</ul>
+
+<p>前半の 2 つは LiveReload で提供されてる手段で、後半の 2 つはオリジナルだ。</p>
+
+<h2>手動で追加する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8506/8509400159_435002302f.jpg" width="500" height="254"></center></p>
+
+<p>既存の HTML ファイルに次の <code>&lt;script&gt;</code> タグ (JavaScript スニペット) を追加する。それだけ。</p>
+<div class="highlight"><pre><code class="html"><span class="nt">&lt;script&gt;</span><span class="nb">document</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;&lt;script src=&quot;http://&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">location</span><span class="p">.</span><span class="nx">host</span> <span class="o">||</span> <span class="s1">&#39;localhost&#39;</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span>
+<span class="s1">&#39;:35729/livereload.js?snipver=2&quot;&gt;&lt;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;script&gt;&#39;</span><span class="p">)</span><span class="nt">&lt;/script&gt;</span>
+</code></pre></div>
+<p>静的な HTML ファイルで開発してる場合とか、動的 HTML だけどテンプレートを編集するだけで済む場合は、この手順が楽だろう。</p>
+
+<h2>ブラウザー拡張をインストールする</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8252/8509400245_25dbf28c7f.jpg" width="500" height="260"></center></p>
+
+<p>ソースはいじりたくないよ、という場合は <a href="http://feedback.livereload.com/knowledgebase/articles/86242-how-do-i-install-and-use-the-browser-extensions-">How do I install and use the browser extensions? – LiveReload Help &amp; Support</a> からブラウザー拡張を導入するとよい。ただし、対応するブラウザーは PC 版 Safari・Chrome・Firefox のみに限られる。</p>
+
+<p>拡張の LiveReload ツールバーのボタンを押すと、<code>livereload.js</code> が表示中のページに動的に挿入されるようになる。</p>
+
+<h2>static モードで実行する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8240/8509400365_6086b6644a.jpg" width="500" height="156"></center></p>
+
+<p>静的なサイトのときには、これが便利かもしれない。<code>-s</code> か <code>--static</code> オプションつきで実行する。</p>
+<div class="highlight"><pre><code class="bash">livereloadx -s <span class="o">[</span>-p 35729<span class="o">]</span> <span class="o">[</span>path/to/dir<span class="o">]</span>
+</code></pre></div>
+<p>static モードでは<strong>静的 Web サーバー</strong>として動作する。</p>
+
+<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると <code>path/to/dir/foo/index.html</code> からファイルを読み取って返してくれる。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
+
+<h2>proxy モードで実行する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8089/8510508898_7c8e065387.jpg" width="500" height="156"></center></p>
+
+<p>HTML をいじりたくないし、ブラウザー拡張も入れたくないし、静的サイトでもないときは、この方法が便利だろう。<code>-y http://example.com/</code> か <code>--proxy http://example.com/</code> オプションをつけて実行する。</p>
+<div class="highlight"><pre><code class="text">$ livereloadx -y http://example.com/ [-p 35729] [-l] [path/to/dir]
+</code></pre></div>
+<p>proxy モードでは<strong>リバース プロキシー</strong>として動作する。</p>
+
+<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると、裏側で <code>http://example.com/foo/</code> からデータを取ってきてクライアントに返す。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
+
+<p>さらに、<code>-l</code> か <code>--prefer-local</code> フラグをつけて起動すると、最初にローカルのファイルがあるか確認して、あればそっちを返すようになる。稼働中の本番環境のうち、一部の JavaScript とか CSS だけを手元に持ってきて編集しながら検証できて便利だ。</p>
+
+<h1>まとめ</h1>
+
+<p>LiveReloadX を紹介した。Node.js の勉強がてら作っていたのだけど、なかなか便利なツールになったのではないかと思う。</p>
+
+<p>ソースは <a href="https://github.com/nitoyon/livereloadx">nitoyon/livereloadx - GitHub</a>  にあるので、Star や Pull Request してもらえると、とてもうれしい。</p>
+
+</section>
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/" class="hatena-bookmark-button" data-hatena-bookmark-title="ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/" data-lang="ja" data-size="horizontal" data-text="ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/02/19/node-source-map/">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a></li>
+
+<li><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a></li>
+
+<li><a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a></li>
+
+<li><a href="/ja/blog/2012/03/06/inexpensive-moving/">段ボール15箱の引っ越し（東京→京都）が2万円以内になった節約術</a></li>
+
+<li><a href="/ja/blog/2009/04/15/hokkaido/">北海道を落とすとどう跳ねるのか？</a></li>
+
+<li><a href="/ja/blog/2007/09/14/how-to-install-rascut/">ActionScript やるなら入れとけ。rascut 導入と使い方。</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/02/19/node-source-map/" rel="previous">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 26 Feb 2013 01:46:46 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 27 Feb 2013 01:15:20 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,116 @@
 
 
 
+
+		<item>
+			<title>ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/</guid>
+			<pubDate>Wed, 27 Feb 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p><center><img src="http://farm9.staticflickr.com/8100/8509399251_7056f91a11.jpg" width="500" height="294"></center></p>
+
+<p>Web 開発してると、ソースを編集して、ブラウザーをリロードして、という作業の繰り返しになりがちだ。ソースを編集したら、自動でブラウザーをリロードしてくれるような夢のツールがあれば便利そうだ。</p>
+
+<p>この分野では <a href="http://incident57.com/codekit/">CodeKit</a> や <a href="http://livereload.com/">LiveReload</a> などが有名なんだけど、もれなく有料だったり GUI だったりする。そこで、<a href="http://livereload.com/">LiveReload</a> のオープンソースな部分を参考にしつつ、コマンドラインで使える <a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> というものを作ってみた。</p>
+
+<p>特長はこんなところ。</p>
+
+<ul>
+<li>Node.js を使ってるので Windows/Mac/Linux 問わずに動かせる</li>
+<li>開発環境のブラウザーだけでなくスマートフォンのブラウザーもリロードできる</li>
+<li>無料</li>
+</ul>
+
+<h1>インストール方法</h1>
+
+<p>インストールは超簡単！</p>
+
+<ol>
+<li><a href="http://nodejs.org/">Node.js</a> をインストールする。</li>
+<li>コマンドラインで <code>npm install -g livereloadx</code> を実行する。</li>
+</ol>
+
+<h1>動作原理</h1>
+
+<p><center><img src="http://farm9.staticflickr.com/8099/8509399561_17e6288376.jpg" width="500" height="159"></center></p>
+
+<p>インストールしたら <code>livereloadx</code> コマンドが動くようになる。ただ、それだけではブラウザーはリロードしてくれないので、ちょいと動作原理を説明しておく。</p>
+
+<ol>
+<li>コマンドラインで <code>livereloadx path/to/dir</code> を実行すると、LiveReloadX が開始して、次のような処理をする。
+
+<ul>
+<li>フォルダー <code>path/to/dir</code> の監視を開始する。</li>
+<li>ポート <code>35729</code> で Web サーバーとして動き始める。この Web サーバーは <code>livereload.js</code> を公開しつつ、WebSocket サーバーとしても動く。</li>
+</ul></li>
+<li>ブラウザーで <code>livereload.js</code> を読み込むと、LiveReloadX サーバーに WebSocket で接続しにいく。</li>
+<li><code>path/to/dir</code> 配下のファイルを更新したら、LiveReloadX サーバーはブラウザーに WebSocket で通知を出す。通知を受け取ったブラウザーは再読込する。</li>
+</ol>
+
+<p>ということで、ブラウザーに <code>livereload.js</code> を読み込ませる方法が重要になってくる。</p>
+
+<h1>livereload.js の読み込ませ方</h1>
+
+<p>4 通りあるので、好きなやつを選ぶことになる。</p>
+
+<ul>
+<li>手動で追加する</li>
+<li>ブラウザー拡張をインストールする (PC 版 Safari・Chrome・Firefox のみ).</li>
+<li>static モードで実行する</li>
+<li>proxy モードで実行する</li>
+</ul>
+
+<p>前半の 2 つは LiveReload で提供されてる手段で、後半の 2 つはオリジナルだ。</p>
+
+<h2>手動で追加する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8506/8509400159_435002302f.jpg" width="500" height="254"></center></p>
+
+<p>既存の HTML ファイルに次の <code>&lt;script&gt;</code> タグ (JavaScript スニペット) を追加する。それだけ。</p>
+<div class="highlight"><pre><code class="html">&lt;script&gt;document.write(&#39;&lt;script src=&quot;http://&#39; + (location.host || &#39;localhost&#39;).split(&#39;:&#39;)[0] +
+&#39;:35729/livereload.js?snipver=2&quot;&gt;&lt;/&#39; + &#39;script&gt;&#39;)&lt;/script&gt;
+</code></pre></div>
+<p>静的な HTML ファイルで開発してる場合とか、動的 HTML だけどテンプレートを編集するだけで済む場合は、この手順が楽だろう。</p>
+
+<h2>ブラウザー拡張をインストールする</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8252/8509400245_25dbf28c7f.jpg" width="500" height="260"></center></p>
+
+<p>ソースはいじりたくないよ、という場合は <a href="http://feedback.livereload.com/knowledgebase/articles/86242-how-do-i-install-and-use-the-browser-extensions-">How do I install and use the browser extensions? – LiveReload Help &amp; Support</a> からブラウザー拡張を導入するとよい。ただし、対応するブラウザーは PC 版 Safari・Chrome・Firefox のみに限られる。</p>
+
+<p>拡張の LiveReload ツールバーのボタンを押すと、<code>livereload.js</code> が表示中のページに動的に挿入されるようになる。</p>
+
+<h2>static モードで実行する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8240/8509400365_6086b6644a.jpg" width="500" height="156"></center></p>
+
+<p>静的なサイトのときには、これが便利かもしれない。<code>-s</code> か <code>--static</code> オプションつきで実行する。</p>
+<div class="highlight"><pre><code class="bash">livereloadx -s [-p 35729] [path/to/dir]
+</code></pre></div>
+<p>static モードでは<strong>静的 Web サーバー</strong>として動作する。</p>
+
+<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると <code>path/to/dir/foo/index.html</code> からファイルを読み取って返してくれる。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
+
+<h2>proxy モードで実行する</h2>
+
+<p><center><img src="http://farm9.staticflickr.com/8089/8510508898_7c8e065387.jpg" width="500" height="156"></center></p>
+
+<p>HTML をいじりたくないし、ブラウザー拡張も入れたくないし、静的サイトでもないときは、この方法が便利だろう。<code>-y http://example.com/</code> か <code>--proxy http://example.com/</code> オプションをつけて実行する。</p>
+<div class="highlight"><pre><code class="text">$ livereloadx -y http://example.com/ [-p 35729] [-l] [path/to/dir]
+</code></pre></div>
+<p>proxy モードでは<strong>リバース プロキシー</strong>として動作する。</p>
+
+<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると、裏側で <code>http://example.com/foo/</code> からデータを取ってきてクライアントに返す。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
+
+<p>さらに、<code>-l</code> か <code>--prefer-local</code> フラグをつけて起動すると、最初にローカルのファイルがあるか確認して、あればそっちを返すようになる。稼働中の本番環境のうち、一部の JavaScript とか CSS だけを手元に持ってきて編集しながら検証できて便利だ。</p>
+
+<h1>まとめ</h1>
+
+<p>LiveReloadX を紹介した。Node.js の勉強がてら作っていたのだけど、なかなか便利なツールになったのではないかと思う。</p>
+
+<p>ソースは <a href="https://github.com/nitoyon/livereloadx">nitoyon/livereloadx - GitHub</a>  にあるので、Star や Pull Request してもらえると、とてもうれしい。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</title>
@@ -601,101 +711,6 @@ user-scalable = no
 <h1>まとめ</h1>
 
 <p>ソースマップがあれば、圧縮したソースでの開発も怖くない！　え？　Google Chrome 以外のブラウザーで困ったら？　そのときは今まで通り・・・。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>はてなブックマークの入れ替わり激しくない人気エントリーを見る方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/01/25/old-hotentry/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/01/25/old-hotentry/</guid>
-			<pubDate>Fri, 25 Jan 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><a href="http://b.hatena.ne.jp/">はてなブックマーク</a>のトップページがリニューアルして、新しいデザインへの不満が一通り<a href="http://www.itmedia.co.jp/news/articles/1301/09/news089.html">出つくした</a>感があるけど、<strong>人気エントリーのアルゴリズムが改善された</strong>件について触れてる人をあまり見ない。</p>
-
-<h1>人気エントリーの入れ替わりが激しくなった</h1>
-
-<p>いままでは人気エントリーはキャッチーなやつで固定化されていたんだけど、今回の改善で、人気エントリーの入れ替わりが激しくなった。</p>
-
-<p>公式にもアナウンスはされていて、<a href="http://hatena.g.hatena.ne.jp/hatenabookmark/20130108/1357641152">トップページとカテゴリページをリニューアルしました - はてなブックマーク日記</a> によると</p>
-
-<blockquote>
-<p>滞留や偏りをなくすためにアルゴリズムを変更いたしました。一定時間でコンテンツが入れ替わるよう更新性を高めています。その日にしかチェックできない、新鮮なエントリーが楽しめるようになりました。人気エントリーのアルゴリズムは、今後も継続的に改善してまいります。</p>
-</blockquote>
-
-<p>とある。</p>
-
-<h2>いままでは「ブックマーク数」至上主義だった</h2>
-
-<p>いままでの人気エントリーのアルゴリズムはきわめて単純だった。</p>
-
-<p>「時間当たりのブックマーク数が多い順」。</p>
-
-<p>単純で分かりやすいが弊害もある。人気を集めてトップページに掲載されると、それを見てブックマークする人が出てくるので、人気のある記事は半永久的にブックマークを集め続けられた。</p>
-
-<p>キャッチーな記事は数日間トップページに居座り続けていたし、そうじゃなくても、「○○の××個まとめ」といった似たような記事ばかりトップページに載っていた。</p>
-
-<p>結果、「すごく人気を集める記事」と「そこそこ需要はあるはずなのに人目に触れずに消えていく記事」に二分されていた。</p>
-
-<h2>「鮮度」が重視されるようになった</h2>
-
-<p>このような問題を改善するために、今回、「時間あたりのブックマーク数」だけでなく「情報の鮮度」が重視されるようになったようだ。しばらく人気エントリーに居座っていると、たとえブックマークを集めていてもランキングが落ちていく。</p>
-
-<p>そのおかげで、以前よりもエントリーの入れ替わりが激しくなり、タイムリーに話題になっている記事が分かるようになった。いままでは人目に触れずに消えていったような記事がトップページでピックアップされやすくなった。</p>
-
-<p>少し極端な例をあげてみる。これはとある日の、はてブトップページ。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8045/8410686001_b50affeacb.jpg" width="500" height="404"></center></p>
-
-<p>1 位が「55 users」、2 位が「42 users」。短い時間にブックマークを集めれば、50 users ほどでも 1 位になれるのだ。</p>
-
-<p>(ただし、これでは極端すぎると判断したのか 1 週間後に<a href="http://hatena.g.hatena.ne.jp/hatenabookmark/20130116/1358333640">スコアリングが補正</a>されている。現在では 100～200 users ぐらい集めないと 1 位にはならないような印象がある)</p>
-
-<h1>以前の計算方法で人気エントリーを見たい！</h1>
-
-<p>さて、タイムリーな話題が分かるようになったのはいいけど、みんながみんな、四六時中、はてなブックマークを見ているわけではない。</p>
-
-<p>タイムリーな記事ではなく、今日話題になっている記事を知りたい、という人も多いはずだ。</p>
-
-<h2>日別ランキングがあるじゃないか</h2>
-
-<p>実は、以前の人気エントリーに相当するようなページがある。</p>
-
-<p>それが <a href="http://b.hatena.ne.jp/hotentry/daily">http://b.hatena.ne.jp/hotentry/daily</a> だ。<code>daily</code> という URL の通り、その 1 日の人気エントリーがブックマーク数順に並んでいるようだ。</p>
-
-<p><a href="http://b.hatena.ne.jp/hotentry/daily"><center><img src="http://farm9.staticflickr.com/8468/8410686199_3366103bc6.jpg" width="500" height="418"></center></a></p>
-
-<p>上位にブックマーク数の多いエントリーが並んでいる。昔の人気エントリーのアルゴリズムと完全に同じではないんだけど、かなり近い印象がある。懐かしい・・・。</p>
-
-<p>一番下までスクロールすると、過去の日付にさかのぼるリンクもある。前日・前々日あたりの人気のエントリーが気になるなら、そちらもチェックするとよいだろう。</p>
-
-<h2>週間・月間ランキングもあるよ</h2>
-
-<p>さらに少し長いスパンでの人気エントリーを探したい場合は、</p>
-
-<ul>
-<li><a href="http://b.hatena.ne.jp/ranking">はてなブックマークランキング - 週間ランキング</a></li>
-<li><a href="http://b.hatena.ne.jp/ranking/monthly">はてなブックマークランキング - 月間ランキング</a></li>
-</ul>
-
-<p>を見るとよい。</p>
-
-<p><a href="http://b.hatena.ne.jp/ranking"><center><img src="http://farm9.staticflickr.com/8183/8410686329_e3d0be8450.jpg" width="500" height="379"></center></a></p>
-
-<p>新しいトップページからはリンクされてないけど・・・。</p>
-
-<h1>まとめ</h1>
-
-<p>人気エントリーの算出方法が変わってタイムリーな記事が上位に来るようになったよ、前のような「ブックマーク数至上主義」なランキングを見たいなら <a href="http://b.hatena.ne.jp/hotentry/daily">日別ランキング</a>、<a href="http://b.hatena.ne.jp/ranking">週間別ランキング</a>、<a href="http://b.hatena.ne.jp/ranking/monthly">月間ランキング</a> が便利だよ、というお話でした。</p>
-
-<p>新しいトップページについての個人的な感想は</p>
-
-<ul>
-<li>確かに一覧性は悪くなったけど、初めて見る人には親しみやすいデザインになったんじゃないかな。</li>
-<li>Google Chrome で <code>[Ctrl] + [+]</code> で拡大しても文字サイズが変わらないのを何とかしてほしい。</li>
-<li>Nexus 7 を横にしてカテゴリーページを開いたら「見やすい」と感じたので、「タイル」はスマホ・タブレット向きのデザインなんだろう。これからの Web サービスは PC と携帯デバイスの見え方の違いをどう吸収していくかが課題になりそう。</li>
-<li>人気エントリーの新しいアルゴリズムは非常によい。トップページを見る頻度が上がった。</li>
-</ul>
-
-<p>といったところ。</p>
 ]]></description>
 		</item>
 
