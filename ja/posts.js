@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/03/25/livereloadx0-2-0/", title: "LiveReloadX 0.2.0 公開！ 除外ファイルを指定可能になったよ"},
 	{url: "/ja/blog/2013/02/27/livereloadx/", title: "ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った"},
 	{url: "/ja/blog/2013/02/19/node-source-map/", title: "Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法"},
 	{url: "/ja/blog/2013/02/15/viewport/", title: "これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ"},
-	{url: "/ja/blog/2013/02/14/text-size-adjust/", title: "-webkit-text-size-adjust: none を絶対に設定してはいけない理由"},
-	{url: "/ja/blog/2013/01/29/jquery-source-map/", title: "jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話"}
+	{url: "/ja/blog/2013/02/14/text-size-adjust/", title: "-webkit-text-size-adjust: none を絶対に設定してはいけない理由"}
 ];
 
 Site.archives.months = [
-  "201302"
+  "201303"
+, "201302"
 , "201301"
 , "201212"
 , "201211"
