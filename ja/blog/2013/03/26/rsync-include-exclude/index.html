@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>rsync の複雑怪奇な exclude と include の適用手順を理解しよう - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="rsync の複雑怪奇な exclude と include の適用手順を理解しよう"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="rsync は便利なんだけど、オプションが多くて難しい。特にややこしいのがファイルを選別するための --exclude と --include オプションだ。man を読んでもイメージがつかみにくかったので、ググったり、-vvv の結果を見たり、ソースを読んだりしつつ調べてみたところ、3 つのルールを理解すれば何とかなりそうなことが分かった。この記事では、その 3 つのルールをなるべく分かりやすく説明する。ルール1: 指定順に意味があるコマンドライン引数は、通常、どの順番に指定しても同じ挙動になることが多い。しかし、rsync の include と exclude に関しては、指定順が..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2013年03月26日</h2>
+<h1>rsync の複雑怪奇な exclude と include の適用手順を理解しよう</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/" class="hatena-bookmark-button" data-hatena-bookmark-title="rsync の複雑怪奇な exclude と include の適用手順を理解しよう - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/" data-lang="ja" data-size="horizontal" data-text="rsync の複雑怪奇な exclude と include の適用手順を理解しよう - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>rsync は便利なんだけど、オプションが多くて難しい。特にややこしいのがファイルを選別するための <code>--exclude</code> と <code>--include</code> オプションだ。</p>
+
+<p>man を読んでもイメージがつかみにくかったので、ググったり、<code>-vvv</code> の結果を見たり、ソースを読んだりしつつ調べてみたところ、<strong>3 つのルール</strong>を理解すれば何とかなりそうなことが分かった。</p>
+
+<p>この記事では、その 3 つのルールをなるべく分かりやすく説明する。</p>
+
+<h1>ルール1: 指定順に意味がある</h1>
+
+<p>コマンドライン引数は、通常、どの順番に指定しても同じ挙動になることが多い。しかし、rsync の <code>include</code> と <code>exclude</code> に関しては、指定順が意味を持つ。</p>
+
+<p>man にも出てくる例で説明しよう。MP3 だけをコピーするには次のようにする。</p>
+<div class="highlight"><pre><code class="text">rsync -av --include=&#39;*/&#39; --include=&#39;*.mp3&#39; --exclude=&#39;*&#39; src dst
+</code></pre></div>
+<p><code>-av</code> はコピーするときのお決まりのオプション。ネットワーク越しにコピーするときは、<code>-avz</code> として圧縮して転送することが多い。</p>
+
+<p>今回の本題は 3 つのフィルター。それぞれの意味は次の通り。</p>
+
+<ol>
+<li><code>--include=&#39;*/&#39;</code>: フォルダーはコピーする</li>
+<li><code>--include=&#39;*.mp3&#39;</code>: 拡張子が MP3 のファイルはコピーする</li>
+<li><code>--exclude=&#39;*&#39;</code>: それ以外はコピーしない</li>
+</ol>
+
+<p>もし、<code>exclude</code> を手前にもってきて</p>
+<div class="highlight"><pre><code class="text">rsync --include=&#39;*/&#39; --exclude=&#39;*&#39; --include=&#39;*.mp3&#39; src dst
+</code></pre></div>
+<p>とすると、フィルターの優先順位が</p>
+
+<ol>
+<li><code>--include=&#39;*/&#39;</code>: ディレクトリーはコピーする</li>
+<li><code>--exclude=&#39;*&#39;</code>: すべてのファイルをコピーしない</li>
+<li><code>--include=&#39;*.mp3&#39;</code>: 拡張子が MP3 のファイルはコピーする</li>
+</ol>
+
+<p>となる。<code>*.mp3</code> の前に <code>*</code> にマッチしてしまうので、何もコピーしてくれない。</p>
+
+<p>フィルターの指定順には意味があって、<strong>先頭から順番に判定していく</strong>と覚えておこう。</p>
+
+<h1>ルール2: 上の階層から順番に調べる</h1>
+
+<p>いきなりクイズ。</p>
+
+<p>次のコマンドを実行したとき、src フォルダーにある public_html/index.html はコピーされるだろうか？</p>
+<div class="highlight"><pre><code class="text">rsync -av --include=&#39;index.html&#39; --exclude=&#39;public_html/&#39; src dst
+</code></pre></div>
+<p>このコマンドのフィルターは次の 2 つ。</p>
+
+<ol>
+<li><code>--include=index.html</code></li>
+<li><code>--exlclude=public_html/</code></li>
+</ol>
+
+<p>public_html/index.html は両方のフィルターにマッチしそうだ。さきほど「先頭のフィルターを優先する」と説明したので、1 つ目のフィルターを優先してコピーされそうに思える。</p>
+
+<p>しかし、答えは「コピーされない」である。その理由を説明していこう。</p>
+
+<h2>まず最初に上の階層をチェック</h2>
+
+<p>public<em>html/index.html をコピーするか判定する場合、まず最初に public</em>html をコピーするかどうかを判定する。</p>
+
+<p>public_html に対して、2 つのフィルターを順番に適用する。</p>
+
+<ol>
+<li><code>--include=index.html</code> にはマッチしないので先へ進む。</li>
+<li><code>--exclude=public_html/</code> にはマッチする。</li>
+</ol>
+
+<p>exclude になった場合、それより下位のフォルダーは確認しない。</p>
+
+<p>つまり、public_html/index.html は問答無用でコピー対象から除外される。</p>
+
+<h2>フォルダー内の特定のファイルのみを転送するには？</h2>
+
+<p>では、public_html の下の index.html のみをコピー対象とするにはどう設定すればよいだろうか。</p>
+
+<p>答えはこうなる。</p>
+<div class="highlight"><pre><code class="text">rsync -av --include &#39;index.html&#39; --exclude &#39;public_html/*&#39; src dst
+</code></pre></div>
+<p>順番にみていこう。</p>
+
+<p>まず最初に public_html に対して 2 つのフィルターを適用する。</p>
+
+<ol>
+<li><code>--include=index.html</code> にはマッチしないので先へ進む。</li>
+<li><code>--exclude=public_html/*</code> にもマッチしない (<code>*</code> は 1 文字以上の任意の文字にしかマッチしない)。</li>
+</ol>
+
+<p><code>include</code> にマッチしたときと、どのフィルターにもマッチしなかったときは、下の階層のチェックに進む。</p>
+
+<p>ということで、public_html/index.html に対して 2 つのフィルターを適用してみよう。</p>
+
+<ol>
+<li><code>--include=index.html</code> にはマッチする。</li>
+</ol>
+
+<p><code>include</code> にマッチしたので、次の階層のチェックに進む。が、これが最後の階層なので、public_html/index.html はコピー対象となる。</p>
+
+<p>同じように考えていけば、public_html/other.html が除外されることも分かるだろう。</p>
+
+<h2>(参考) 擬似コード</h2>
+
+<p>ここまで文字で長々説明してきたが、プログラムが読める人なら、擬似コードで説明したほうが早いだろう (読めない人は飛ばしてね)。</p>
+<div class="highlight"><pre><code class="javascript"><span class="c1">// public_html/index.html をコピーするか確認 (上の階層から順番にチェックする)</span>
+<span class="nx">foreach</span> <span class="p">(</span><span class="nx">name</span> <span class="k">in</span> <span class="p">[</span><span class="s1">&#39;public_html&#39;</span><span class="p">,</span> <span class="s1">&#39;public_html/index.html&#39;</span><span class="p">])</span> <span class="p">{</span>
+  <span class="c1">// 1 つ目のフィルターから順番にチェックする</span>
+  <span class="nx">foreach</span> <span class="p">(</span><span class="nx">filter</span> <span class="k">in</span> <span class="nx">filters</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">filter_match</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">filter</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">is_exclude</span><span class="p">(</span><span class="nx">filter</span><span class="p">))</span> <span class="p">{</span>
+        <span class="c1">// exclude フィルターにマッチしたらその場で中断</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// include フィルターにマッチしたら、次の階層のチェックに移る</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="c1">// include にマッチしたとき、1 つもマッチしなかったときはここにくる</span>
+<span class="p">}</span>
+
+<span class="c1">// すべての階層で除外されなければコピーする</span>
+<span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</code></pre></div>
+<h1>ルール3: 個別のフィルターの記法いろいろ</h1>
+
+<p>あとはフィルターの記法を知ってれば完璧に理解できるだろう。</p>
+
+<h2>foo は何にマッチするか</h2>
+
+<p>単に <code>foo</code> というフィルターを書いたとき、末尾部分が foo になっているファイルにマッチする。</p>
+
+<ul>
+<li>○: <code>foo</code></li>
+<li>×: <code>abcfoo</code></li>
+<li>○: <code>abc/foo</code></li>
+<li>×: <code>foo/abc</code></li>
+</ul>
+
+<p>正規表現で書くと <code>(^|/)foo$</code> となる。</p>
+
+<h2>/ から始めると</h2>
+
+<p>一方、<code>/</code> から始めて、<code>/foo</code> のようにすると、マッチ対象が先頭のみになる。</p>
+
+<ul>
+<li>○: <code>foo</code></li>
+<li>×: <code>abcfoo</code></li>
+<li>×: <code>abc/foo</code></li>
+<li>×: <code>foo/abc</code></li>
+</ul>
+
+<p>正規表現で書くと <code>^foo$</code> となる。</p>
+
+<h2>/ で終わると</h2>
+
+<p>末尾に <code>/</code> をつけると、対象がフォルダーのときのみマッチする。</p>
+
+<p><code>foo/</code> は <code>foo</code> がフォルダーのときはマッチするが、ファイルのときにはマッチしない。</p>
+
+<h2>* や ** を使ってみる</h2>
+
+<p>記号についてもまとめておこう。</p>
+
+<table><thead>
+<tr>
+<th>記号</th>
+<th>意味</th>
+<th>対応する正規表現</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>*</code></td>
+<td><code>/</code> 以外の 1 文字以上</td>
+<td><code>[^/]+</code></td>
+</tr>
+<tr>
+<td><code>**</code></td>
+<td><code>/</code> を含む 1 文字以上</td>
+<td><code>.+</code></td>
+</tr>
+<tr>
+<td><code>?</code></td>
+<td><code>/</code> 以外の 1 文字</td>
+<td><code>[^/]</code></td>
+</tr>
+</tbody></table>
+
+<p>たとえば、<code>*.png</code> を正規表現で書くと <code>(^|/)[^/]+\.png$</code> となる。<code>abc.png</code> や <code>foo/abc.png</code> にはマッチするが、<code>abc.png/foo</code> や <code>.png</code>にはマッチしない。</p>
+
+<p>さらに、<code>***</code> は <code>foo/***</code> のように指定することで、フォルダーとその配下のファイルをまとめて指定できる。<code>foo/***</code> と指定するのは、<code>foo/</code> と <code>foo/**</code> の両方を指定することと等しい。</p>
+
+<h2>[a-z] を使う</h2>
+
+<p>正規表現のように、マッチする文字の範囲を指定できる。<code>[^a-z]</code> のように特定の文字以外にマッチするようにも書ける。POSIX クラスで <code>[[:digit:][:upper:][:space:]]</code> のように書くこともできる。</p>
+
+<p>正規表現のように書けてうれしいのだが、<code>[a-z]*</code> と書いたとしても、単に <code>[a-z][^/]+</code> にしかマッチしない。間違えないように注意。</p>
+
+<h1>まとめ</h1>
+
+<p>rsync の複雑な <code>include</code> / <code>exclude</code> の処理について説明した。要点は次の 3 つ。</p>
+
+<ul>
+<li>フィルターは指定順に優先されている</li>
+<li>判定処理は上の階層から実施して、各階層の中でフィルターを順番に適用していく</li>
+<li>個別の記法を理解すべし</li>
+</ul>
+
+<p>これが理解できれば、あとは頭の体操でフィルター条件を作れるはず！</p>
+
+<p>一見複雑怪奇ではあるが、このような仕組みになっているおかげで、一部除外や一部許可を設定しやすくなっている。一方、<code>tar</code> コマンドは man を見ると <code>exclude</code> を優先すると書いてあるので、一部除外しか指定できないような気がする。</p>
+
+</section>
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/" class="hatena-bookmark-button" data-hatena-bookmark-title="rsync の複雑怪奇な exclude と include の適用手順を理解しよう - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/" data-lang="ja" data-size="horizontal" data-text="rsync の複雑怪奇な exclude と include の適用手順を理解しよう - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/03/25/livereloadx0-2-0/">LiveReloadX 0.2.0 公開！ 除外ファイルを指定可能になったよ</a></li>
+
+<li><a href="/ja/blog/2008/01/07/pageant-security/">pageant.exe の仕組みと危険性</a></li>
+
+<li><a href="/ja/blog/2004/12/15/p1/">PuTTY で dynamic application-level port forwarding</a></li>
+
+<li><a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/03/25/livereloadx0-2-0/" rel="previous">LiveReloadX 0.2.0 公開！ 除外ファイルを指定可能になったよ</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
