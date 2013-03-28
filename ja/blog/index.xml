@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 27 Mar 2013 01:24:48 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 29 Mar 2013 01:58:16 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,108 @@
 
 
 
+
+		<item>
+			<title>Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/</guid>
+			<pubDate>Fri, 29 Mar 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Git で管理してるレポジトリーで、いくつかのブランチを別々の場所にチェックアウトしたいことがある。</p>
+
+<p>たとえば</p>
+
+<ul>
+<li>GUI なツールでブランチ間の比較したい</li>
+<li>同時に実行して比較しつつテストしたい</li>
+<li>ブランチ間でファイルをコピーしたい</li>
+<li>ドキュメントの生成結果を別ブランチで管理したい</li>
+</ul>
+
+<p>といったときに、必要になる。</p>
+
+<p>ブランチの個数だけ clone しちゃえば用は足りそうなんだけど、でかいレポジトリーだったら時間もディスク容量ももったいない。</p>
+
+<h1>git-new-workdir を使うべきでしょう！</h1>
+
+<p>先日、「git-new-workdir を使えばワーキング ディレクトリーを複数を作れて便利」と書いてあるブログを読んだ。</p>
+
+<ul>
+<li><a href="http://subtech.g.hatena.ne.jp/secondlife/20121207/1354854068">git-new-workdir が便利 - #生存戦略 、それは - subtech</a></li>
+</ul>
+
+<p><code>git-new-workdir</code> の usage を見てたら、別ブランチのワーキング ディレクトリー作成にも対応しているらしい！</p>
+<div class="highlight"><pre><code class="text">git-new-workdir &lt;repository&gt; &lt;new_workdir&gt; [&lt;branch&gt;]
+</code></pre></div>
+<p>これは活用しない手はない。</p>
+
+<h2>git-new-workdir はこんなに便利</h2>
+
+<p><code>master</code> ブランチで作業しているとして、<code>develop</code> ブランチの中身も展開したいと思ったとする。</p>
+<div class="highlight"><pre><code class="text">git-new-workdir . ../foo-develop develop
+</code></pre></div>
+<p>これだけで <code>../foo-develop</code> に <code>develop</code> ブランチの中身を展開してくれる。</p>
+
+<p>展開の処理に工夫があって、ワーキングディレクトリーとステージ (インデックス) は独立なんだけど、コミット履歴などはシンボリックリンクで共有されている。</p>
+
+<p>だから、ワーキング ディレクトリーの中身を比較できるのはもちろん、別々の場所で編集してコミットしてもよい。片方でコミットした内容は、もう片方で <code>git log</code> すれば表示できる。</p>
+
+<p><code>git push</code> すれば <code>master</code> と <code>develop</code> の両方の変更を一気に push できる。別々に clone していたらありえない。</p>
+
+<p>もちろん、<code>git fetch</code> も、どちらか一方で実行すれば、もう片方も最新の状態になってる。</p>
+
+<p>いろいろ便利でハッピー！</p>
+
+<h2>ドキュメントを別ブランチで管理するような場合にも使える</h2>
+
+<p>GitHub Pages を使うときにはありがちなんだけど、ドキュメントの生成結果を別ブランチにコミットする。このブログでは、Jekyll でサイト生成した結果を別ブランチにコミットしている (詳しくは <a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> 参照)。</p>
+
+<p>このようなケースには、サブモジュールを使うテクニックが知られている。</p>
+
+<ul>
+<li><a href="http://blog.64p.org/entry/20100310/1268189518">Doxygen を github-pages にあげるのをお気楽にやる方法 - tokuhirom&#39;s blog.</a></li>
+<li><a href="http://tell-k.hatenablog.com/entry/2012/01/20/020531">github のプロジェクトにSphinxドキュメントを良さげな感じにおきたい 其の二 - Study08.net 対シンバシ殲滅用人型機動兵器</a></li>
+<li><a href="http://blog.kaihatsubu.com/?p=1836">GitHub 上に ページを作成する | Tanablog</a></li>
+</ul>
+
+<p>このテクニックは一見便利そうなんだけども、使っているうちに不便なところが目に付いてきた・・・。</p>
+
+<ul>
+<li>同じレポジトリーを 2 回 clone するので非効率的。</li>
+<li>2 つの作業ディレクトリーのそれぞれで push, pull しなきゃいけない。</li>
+<li>ドキュメントのディレクトリーでコミットするたびに、submodule が更新された状態になる。それを放置してると、<code>submodule init</code> した人が古い状態のツリーを参照してしまうので、定期的にコミットして、サブモジュールの指す先を更新する必要がある。</li>
+</ul>
+
+<p>サブモジュールはそもそも別の Git レポジトリーを管理するために設計されたものだし、同じレポジトリーをサブモジュールとして持つのはいろいろ弊害あるように思う。</p>
+
+<p>で、サブモジュールに困っていたところで、<code>git-new-workdir</code> を使ってみたら便利だった。</p>
+
+<p>開発用ブランチが <code>master</code> で、ドキュメントのブランチが <code>gh-pages</code> だとして、gh-pages ディレクトリーに <code>gh-pages</code> ブランチの中身をチェックアウトする。</p>
+<div class="highlight"><pre><code class="text">git-new-workdir . gh-pages gh-pages
+</code></pre></div>
+<p>これで、Git レポジトリー直下の gh-pages ディレクトリーに <code>gh-pages</code> ブランチがチェックアウトされた。間違ってディレクトリーの中身をコミットしないように <code>.gitignore</code> に gh-pages を入れておくと安全だろう。</p>
+
+<p>あとは個別のディレクトリーで編集してコミットしていく。先ほどの例と同じく、片方でコミットした内容は、もう片方の作業ディレクトリーで <code>git log</code> すれば反映されるし、<code>git push</code> すれば一気にリモートに反映される。</p>
+
+<p>便利便利である。</p>
+
+<h1>git-new-workdir の導入方法</h1>
+
+<p>git-new-workdir は git-core の contrib に入っている。詳しくは <a href="http://subtech.g.hatena.ne.jp/secondlife/20121207/1354854068">git-new-workdir が便利 - #生存戦略 、それは - subtech</a> を参照。</p>
+
+<p>ただ、Windows で Git for Windows (msysGit) を使ってる場合は、そのまま持ってきても動かないので、次のようにした。</p>
+
+<ol>
+<li><a href="https://github.com/dansmith65/git/blob/master/contrib/workdir/git-new-workdir-win">git/contrib/workdir/git-new-workdir-win at master - dansmith65/git</a> から git-new-workdir-win を拾ってくる。</li>
+<li><code>C:\Program Files (x86)\Git\libexec\git-core</code> に <code>git-new-workdir</code> としてコピーする。(x86 環境なら <code>Program Files (x86)</code> を <code>Program Files</code> に読み替えるべし)</li>
+</ol>
+
+<p>これでおしまい。ただし、mklink.exe を使う関係で、UAC 有効にしてる環境では、bash を管理者として実行しておかないと、権限が足りなくてエラーになるので注意すべし。</p>
+
+<h1>まとめ</h1>
+
+<p><code>git-new-workdir</code> で便利な Git 生活を！</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>rsync の複雑怪奇な exclude と include の適用手順を理解しよう</title>
@@ -442,219 +544,6 @@ Error: this is a demo
 <p>Node.js でもソースマップが使えるよ。</p>
 
 <p>(参考記事) <a href="http://badassjs.com/post/42588937391/node-js-source-map-support-for-better-compiled">Node.js Source Map Support for Better Compiled JavaScript Debugging - Badass JavaScript</a></p>
-]]></description>
-		</item>
-
-		<item>
-			<title>これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/02/15/viewport/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/02/15/viewport/</guid>
-			<pubDate>Fri, 15 Feb 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>スマートフォン向けの Web サイトを作るとき、viewport の設定次第で使い勝手が大幅に変わる。</p>
-
-<p>最近はレスポンシブ Web デザインが流行してるけども、その大前提として viewport の設定パターンを抑えておくのは重要だろう。</p>
-
-<p>この記事では、viewport の設定によって、見た目・使い勝手がどう変わるかを解説する。</p>
-
-<h1>パターン1: 何も考えずに HTML を書く</h1>
-
-<p>まずは、viewport を指定せずに、単純な HTML をスマートフォンで表示してみる。</p>
-<div class="highlight"><pre><code class="html">&lt;!DOCTYPE html&gt;
-&lt;head&gt;
-&lt;meta charset=&quot;utf-8&quot;&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;img src=&quot;/images/logo-ja.png&quot;&gt;
-&lt;p&gt;色んな素材がごった煮になった様子をお椀で表現しています。
-湯気が&lt;strong&gt;「てっく」&lt;/strong&gt;に見えるのが隠し味になっています。
-「てっく煮」の右肩の「+4」 を「と、よん」と読むことで、
-ドメイン名の tech.nitoyon.com と等しくなります。&lt;/p&gt;
-&lt;/body&gt;
-</code></pre></div>
-<h2>表示結果</h2>
-
-<p>iPhone 3GS (iOS 5.1.1) で表示してみた (<a href="./no-viewport.html">デモ ページ</a>)。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8225/8472828815_ce69aec918.jpg" width="500" height="306"></center></p>
-
-<p>スマホ対応していないサイトを表示した状態だ。</p>
-
-<p>スマホートフォンは PC 向けのサイトを表示するときには、「横幅 980px 向けにデザインされている」という前提で描画する。結果として、文字が小さくなる。</p>
-
-<p>どれぐらい小さくなるか、iPhone を例に調べてみよう。iPhone のそれぞれの世代で、横幅 980px のページがどれぐらい縮小されて表示されるかを計算してみた。</p>
-
-<table><thead>
-<tr>
-<th>世代</th>
-<th>解像度</th>
-<th align="right">縦向き</th>
-<th align="right">横向き</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>iPhone 1～3</td>
-<td>320px × 480px</td>
-<td align="right">32.7%</td>
-<td align="right">49.0%</td>
-</tr>
-<tr>
-<td>iPhone 4</td>
-<td>640px × 960px</td>
-<td align="right">65.3%</td>
-<td align="right">98.0%</td>
-</tr>
-<tr>
-<td>iPhone 5</td>
-<td>640px × 1,136px</td>
-<td align="right">65.3%</td>
-<td align="right">116.0%</td>
-</tr>
-</tbody></table>
-
-<p>iPhone 4 以降の縦向き (Portrate mode) で 980px の PC 向けサイトは 2/3 に縮小して表示される。Retina ディスプレイで 2/3 のなので、文字はかなり小さくなる。ピンチ操作で拡大しないと読めない人も多いだろう。</p>
-
-<h2>採用例</h2>
-
-<p>このパターンでもデザインを工夫すれば、スマートフォンやタブレットでも見やすくなる。その代表格が Apple である。</p>
-
-<p>ここでは詳しく触れないが、<a href="http://www.pxt.jp/ja/diary/article/257/index.html">pxt | 考察：Appleはスマホサイトを作らない。</a> に分かりやすく書いてあるので、興味がある人は読んでみるとよいだろう。</p>
-
-<h1>パターン2: viewport でデバイスの横幅を指定する</h1>
-
-<p>「スマホ向けにデザインしているよ」と主張するには <code>&lt;head&gt;</code> タグの中に <code>viewport</code> を 1 行追加すればよい。</p>
-<div class="highlight"><pre><code class="html">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width&quot;&gt;
-</code></pre></div>
-<p><code>width=device-width</code> というのは「デバイスの横幅で描画してください」という意味である。</p>
-
-<p>一昔前は iPhone 前提で <code>width=320px</code> と指定すれば十分だったが、解像度がまちまちな Android やタブレット端末が登場したため、<code>width=device-width</code> と指定するのが新常識になった。</p>
-
-<h2>表示結果</h2>
-
-<p>表示するとこうなる (<a href="./scalable-viewport.html">デモ ページ</a>)。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8101/8473918432_eddb076e37.jpg" width="500" height="306"></center></p>
-
-<p>横向きにしたときには、縦向きのときの画面を引き伸ばして表示しようとするので、かなり拡大された印象になる (iPhone 4 までで 1.5 倍、iPhone 5 では 1.7 倍)。</p>
-
-<p>字が大きくなって読みやすくなるが、画面内の情報量が少なくなる。</p>
-
-<h2>採用例</h2>
-
-<p>あまり見たことがないが、たとえば、<a href="http://b.hatena.ne.jp/touch">はてなブックマーク スマートフォン版</a> のソースを見ると、</p>
-<div class="highlight"><pre><code class="html">&lt;meta content=&quot;width=320, minimum-scale=0.5&quot; name=&quot;viewport&quot; /&gt;
-</code></pre></div>
-<p>となっている。<code>320px</code> とあるので、旧世代の指定のままだ。現実問題として、Nexus 7 で閲覧すると <code>320px</code> だと信じて描画するので、フォントがでかすぎて見づらい。</p>
-
-<h1>パターン3: 回転してもサイズを変えたくないケース</h1>
-
-<p>スマートフォンのネイティブ アプリの動作をみていると、横向き (Landscape mode) にしたときには１行に表示する文字の数が増えるものが多い。</p>
-
-<p>例えば、iPhone 3GS 標準のメモ アプリがそうである。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8524/8472918769_f183e967df.jpg" width="500" height="306"></center></p>
-
-<p>Web においても同様に「横向きのときは一行の文字数を増やしたり、追加の情報を表示したりしたい」という欲求がでてくる。</p>
-
-<p>そのような場合は、<code>viewport</code> を次のように書きなおせばよい。</p>
-<div class="highlight"><pre><code class="html">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no&quot;&gt;
-</code></pre></div>
-<p>あわせて CSS に次のように指定しておく。</p>
-<div class="highlight"><pre><code class="css">body {
-  -webkit-text-size-adjust: 100%;
-}
-</code></pre></div>
-<p>(理由は <a href="/ja/blog/2013/02/14/text-size-adjust/">-webkit-text-size-adjust: none を絶対に設定してはいけない理由</a> を参照)</p>
-
-<h2>表示結果</h2>
-
-<p>横方向のときには次のようになる (<a href="./unscalable-viewport.html">デモ ページ</a>)。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8523/8473918482_552250ded9.jpg" width="500" height="306"></center></p>
-
-<p>メモ アプリの利用イメージに近くなった。</p>
-
-<p>ただし、この指定にしてしまうと、<strong>ピンチによる拡大・縮小ができない</strong>という大きな弱点がある。</p>
-
-<h2>採用例</h2>
-
-<p>数多くの大手サイトがこの方式を採用している。Google も Yahoo! Japan も twitter も facebook も全部これである。</p>
-
-<p>「ピンチできない」という大きな欠点はあるものの、端末の縦横方向を変えたときに画面内の情報量を減らしたくないないので、このパターンを採用せざるをえないのだろう。</p>
-
-<p>向きを変えたときに横幅が変わりつつピンチも使えるような手段が提供されるのが理想なのだが、現在のところ、そのような指定をする方法はない。</p>
-
-<h2>補足</h2>
-
-<p><code>viewport</code> で指定してるのは長ったらしい値は、次のようになっている。</p>
-<div class="highlight"><pre><code class="text">width         = device-width
-initial-scale = 1.0
-minimum-scale = 1.0
-maximum-scale = 1.0
-user-scalable = no
-</code></pre></div>
-<p>この設定により、iPhone と Android でページの表示倍率が <code>1.0</code> 固定にして、ページのピンチができないようにしている。</p>
-
-<p>その結果、ページの表示倍率が変わる余地をなくしている。表示倍率が変えられない状態になってはじめて、WebKit は仕方なくページの横幅を変えてくれるようだ。</p>
-
-<h1>パターン4: 拡大・縮小は認めたいケース</h1>
-
-<p>記事を公開したあと、コメント欄で教えてもらったのがこのパターン。</p>
-<div class="highlight"><pre><code class="html">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;&gt;
-</code></pre></div>
-<p>と設定することで、「ピンチは可能」かつ「横向きにしたときに 1 行の情報量が増える」を実現できる。</p>
-
-<p>文字のサイズを固定化したいなら、パターン 3 と同じように CSS に次のように指定しておく。</p>
-<div class="highlight"><pre><code class="css">body {
-  -webkit-text-size-adjust: 100%;
-}
-</code></pre></div>
-<p>(理由は <a href="/ja/blog/2013/02/14/text-size-adjust/">-webkit-text-size-adjust: none を絶対に設定してはいけない理由</a> を参照)</p>
-
-<h2>採用例</h2>
-
-<p><a href="http://twitter.github.com/bootstrap/">Bootstrap</a> のサイトはこのパターンだし、<a href="http://learn.jquery.com/jquery-mobile/getting-started/">jQuery mobile の Getting Started</a> でもこのパターンが推奨されている。</p>
-
-<p>方向を変えたときに、表示倍率が変わってしまうのが少し気になったが、利用者が自由に拡大・縮小できるので自由度が高い。。</p>
-
-<h1>まとめ</h1>
-
-<p>以上の内容を表でまとめる。</p>
-
-<table><thead>
-<tr>
-<th align="center">番号</th>
-<th>選ぶポイント</th>
-<th>弱点</th>
-<th>例</th>
-</tr>
-</thead><tbody>
-<tr>
-<td align="center">1</td>
-<td>PC 向けのサイトをスマホで見ても、十分に見やすいとき。</td>
-<td>初期状態の文字が小さい。</td>
-<td>Apple</td>
-</tr>
-<tr>
-<td align="center">2</td>
-<td>縦向き・横向きでレイアウトを変えたくないとき。</td>
-<td>横向きにしたときに極端に拡大される。</td>
-<td>△</td>
-</tr>
-<tr>
-<td align="center">3</td>
-<td>サイトの使い勝手をアプリっぽくしたいとき。</td>
-<td>ピンチで拡大・縮小できない。</td>
-<td>◎</td>
-</tr>
-<tr>
-<td align="center">4</td>
-<td>縦向き・横向きに対応しつつピンチも許可したいとき。</td>
-<td>向きを変えると表示倍率が変動する。</td>
-<td>○</td>
-</tr>
-</tbody></table>
-
-<p>このブログでも、ピンチできないのは不便だけど、結局、他の大手サイトと同じく 3 番目を採用した。</p>
 ]]></description>
 		</item>
 

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Git で管理してるレポジトリーで、いくつかのブランチを別々の場所にチェックアウトしたいことがある。たとえばGUI なツールでブランチ間の比較したい同時に実行して比較しつつテストしたいブランチ間でファイルをコピーしたいドキュメントの生成結果を別ブランチで管理したいといったときに、必要になる。ブランチの個数だけ clone しちゃえば用は足りそうなんだけど、でかいレポジトリーだったら時間もディスク容量ももったいない。git-new-workdir を使うべきでしょう！先日、「git-new-workdir を使えばワーキング ディレクトリーを複数を作れて便利」と書いてあるブログを読んだ。g..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<hgroup>
+<h2>2013年03月29日</h2>
+<h1>Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/" class="hatena-bookmark-button" data-hatena-bookmark-title="Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/" data-lang="ja" data-size="horizontal" data-text="Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Git で管理してるレポジトリーで、いくつかのブランチを別々の場所にチェックアウトしたいことがある。</p>
+
+<p>たとえば</p>
+
+<ul>
+<li>GUI なツールでブランチ間の比較したい</li>
+<li>同時に実行して比較しつつテストしたい</li>
+<li>ブランチ間でファイルをコピーしたい</li>
+<li>ドキュメントの生成結果を別ブランチで管理したい</li>
+</ul>
+
+<p>といったときに、必要になる。</p>
+
+<p>ブランチの個数だけ clone しちゃえば用は足りそうなんだけど、でかいレポジトリーだったら時間もディスク容量ももったいない。</p>
+
+<h1>git-new-workdir を使うべきでしょう！</h1>
+
+<p>先日、「git-new-workdir を使えばワーキング ディレクトリーを複数を作れて便利」と書いてあるブログを読んだ。</p>
+
+<ul>
+<li><a href="http://subtech.g.hatena.ne.jp/secondlife/20121207/1354854068">git-new-workdir が便利 - #生存戦略 、それは - subtech</a></li>
+</ul>
+
+<p><code>git-new-workdir</code> の usage を見てたら、別ブランチのワーキング ディレクトリー作成にも対応しているらしい！</p>
+<div class="highlight"><pre><code class="text">git-new-workdir &lt;repository&gt; &lt;new_workdir&gt; [&lt;branch&gt;]
+</code></pre></div>
+<p>これは活用しない手はない。</p>
+
+<h2>git-new-workdir はこんなに便利</h2>
+
+<p><code>master</code> ブランチで作業しているとして、<code>develop</code> ブランチの中身も展開したいと思ったとする。</p>
+<div class="highlight"><pre><code class="text">git-new-workdir . ../foo-develop develop
+</code></pre></div>
+<p>これだけで <code>../foo-develop</code> に <code>develop</code> ブランチの中身を展開してくれる。</p>
+
+<p>展開の処理に工夫があって、ワーキングディレクトリーとステージ (インデックス) は独立なんだけど、コミット履歴などはシンボリックリンクで共有されている。</p>
+
+<p>だから、ワーキング ディレクトリーの中身を比較できるのはもちろん、別々の場所で編集してコミットしてもよい。片方でコミットした内容は、もう片方で <code>git log</code> すれば表示できる。</p>
+
+<p><code>git push</code> すれば <code>master</code> と <code>develop</code> の両方の変更を一気に push できる。別々に clone していたらありえない。</p>
+
+<p>もちろん、<code>git fetch</code> も、どちらか一方で実行すれば、もう片方も最新の状態になってる。</p>
+
+<p>いろいろ便利でハッピー！</p>
+
+<h2>ドキュメントを別ブランチで管理するような場合にも使える</h2>
+
+<p>GitHub Pages を使うときにはありがちなんだけど、ドキュメントの生成結果を別ブランチにコミットする。このブログでは、Jekyll でサイト生成した結果を別ブランチにコミットしている (詳しくは <a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a> 参照)。</p>
+
+<p>このようなケースには、サブモジュールを使うテクニックが知られている。</p>
+
+<ul>
+<li><a href="http://blog.64p.org/entry/20100310/1268189518">Doxygen を github-pages にあげるのをお気楽にやる方法 - tokuhirom&#39;s blog.</a></li>
+<li><a href="http://tell-k.hatenablog.com/entry/2012/01/20/020531">github のプロジェクトにSphinxドキュメントを良さげな感じにおきたい 其の二 - Study08.net 対シンバシ殲滅用人型機動兵器</a></li>
+<li><a href="http://blog.kaihatsubu.com/?p=1836">GitHub 上に ページを作成する | Tanablog</a></li>
+</ul>
+
+<p>このテクニックは一見便利そうなんだけども、使っているうちに不便なところが目に付いてきた・・・。</p>
+
+<ul>
+<li>同じレポジトリーを 2 回 clone するので非効率的。</li>
+<li>2 つの作業ディレクトリーのそれぞれで push, pull しなきゃいけない。</li>
+<li>ドキュメントのディレクトリーでコミットするたびに、submodule が更新された状態になる。それを放置してると、<code>submodule init</code> した人が古い状態のツリーを参照してしまうので、定期的にコミットして、サブモジュールの指す先を更新する必要がある。</li>
+</ul>
+
+<p>サブモジュールはそもそも別の Git レポジトリーを管理するために設計されたものだし、同じレポジトリーをサブモジュールとして持つのはいろいろ弊害あるように思う。</p>
+
+<p>で、サブモジュールに困っていたところで、<code>git-new-workdir</code> を使ってみたら便利だった。</p>
+
+<p>開発用ブランチが <code>master</code> で、ドキュメントのブランチが <code>gh-pages</code> だとして、gh-pages ディレクトリーに <code>gh-pages</code> ブランチの中身をチェックアウトする。</p>
+<div class="highlight"><pre><code class="text">git-new-workdir . gh-pages gh-pages
+</code></pre></div>
+<p>これで、Git レポジトリー直下の gh-pages ディレクトリーに <code>gh-pages</code> ブランチがチェックアウトされた。間違ってディレクトリーの中身をコミットしないように <code>.gitignore</code> に gh-pages を入れておくと安全だろう。</p>
+
+<p>あとは個別のディレクトリーで編集してコミットしていく。先ほどの例と同じく、片方でコミットした内容は、もう片方の作業ディレクトリーで <code>git log</code> すれば反映されるし、<code>git push</code> すれば一気にリモートに反映される。</p>
+
+<p>便利便利である。</p>
+
+<h1>git-new-workdir の導入方法</h1>
+
+<p>git-new-workdir は git-core の contrib に入っている。詳しくは <a href="http://subtech.g.hatena.ne.jp/secondlife/20121207/1354854068">git-new-workdir が便利 - #生存戦略 、それは - subtech</a> を参照。</p>
+
+<p>ただ、Windows で Git for Windows (msysGit) を使ってる場合は、そのまま持ってきても動かないので、次のようにした。</p>
+
+<ol>
+<li><a href="https://github.com/dansmith65/git/blob/master/contrib/workdir/git-new-workdir-win">git/contrib/workdir/git-new-workdir-win at master - dansmith65/git</a> から git-new-workdir-win を拾ってくる。</li>
+<li><code>C:\Program Files (x86)\Git\libexec\git-core</code> に <code>git-new-workdir</code> としてコピーする。(x86 環境なら <code>Program Files (x86)</code> を <code>Program Files</code> に読み替えるべし)</li>
+</ol>
+
+<p>これでおしまい。ただし、mklink.exe を使う関係で、UAC 有効にしてる環境では、bash を管理者として実行しておかないと、権限が足りなくてエラーになるので注意すべし。</p>
+
+<h1>まとめ</h1>
+
+<p><code>git-new-workdir</code> で便利な Git 生活を！</p>
+
+</section>
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/" class="hatena-bookmark-button" data-hatena-bookmark-title="Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/03/29/git-new-workdir/" data-lang="ja" data-size="horizontal" data-text="Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a></li>
+
+<li><a href="/ja/blog/2013/01/11/github-clone-http/">GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速</a></li>
+
+<li><a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li>
+
+<li><a href="/ja/blog/2012/02/21/msysgit-utf8/">msysGit（Git for Windows）がいよいよ公式に UTF-8 をサポート！</a></li>
+
+<li><a href="/ja/blog/2012/12/25/jekyll-0-12-0/">Jekyll の 0.12.0 でシンタックス ハイライトが便利になった</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/03/26/rsync-include-exclude/" rel="previous">rsync の複雑怪奇な exclude と include の適用手順を理解しよう</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
