@@ -3,6 +3,7 @@ layout: post
 title: SourceTree が Git のグローバルな無視リストを書き換えて困った話
 tags: git
 lang: ja
+thumbnail: http://farm9.staticflickr.com/8382/8619841968_7bd4237420_o.png
 seealso:
   - 2013-03-29-git-new-workdir
   - 2013-01-11-github-clone-http
