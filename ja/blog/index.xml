@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 29 Mar 2013 01:58:16 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 05 Apr 2013 01:23:32 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,114 @@
 
 
 
+
+		<item>
+			<title>SourceTree が Git のグローバルな無視リストを書き換えて困った話</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/04/05/sourcetree/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/04/05/sourcetree/</guid>
+			<pubDate>Fri, 05 Apr 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Git を使ってるときに、<code>git status</code> に存在するはずのファイルが Untracked files に出てこない現象に出会って困ってしまった。</p>
+
+<p>いろいろ調べてみたところ、SourceTree さんがインストール時にグローバルな無視リストを作成していたことが判明した。SourceTree を使ってないときにも影響がでるのでたちが悪い。</p>
+
+<h1>勝手に書き換えられてしまうファイルはこれだ!!</h1>
+
+<p>Windows 版の例だけど、まず、<code>.gitconfig</code>。</p>
+<div class="highlight"><pre><code class="ini">[core]
+    excludesfile = C:\\Users\\username\\Documents\\gitignore_global.txt
+</code></pre></div>
+<p>Mac の場合は <code>/User/username/.gitignore_global</code> に設定する模様。</p>
+
+<p>gitignore_global.txt はこんな感じ。</p>
+<div class="highlight"><pre><code class="text">#ignore thumbnails created by windows
+Thumbs.db
+#Ignore files build by Visual Studio
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.dll
+*.lib
+*.sbr
+</code></pre></div>
+<p>Windows 系の開発で自動生成されたり、コミットする必要のないファイルが列挙されている。</p>
+
+<h1>.gitconfig に excludesfile がないときに発動</h1>
+
+<p>セットアップ時に、最初のダイアログには [Allow SourceTree to modify global Git and Mercurial config files] という設定項目がある。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8382/8619841968_d036e18115.jpg" width="470" height="500"></center></p>
+
+<p>デフォルトでチェック入ってるんだけど、これが入ってる以上は、<code>.gitconfig</code> がいじられても文句は言えない。</p>
+
+<p>デフォルトのままで先に進むと、<code>.gitconfig</code> に <code>excludesfile</code> の設定がない場合には SourceTree さんは上に書いたような書き換えを行ってくれる。</p>
+
+<p>シンセツダナー。</p>
+
+<p>この親切すぎて涙がでてしまう挙動は、当然のように一部のユーザーの逆鱗に触れることとなり、非難轟々、雨嵐霰がふき乱れた。</p>
+
+<blockquote class="twitter-tweet" lang="ja"><p>@<a href="https://twitter.com/daniellangnet">daniellangnet</a> Sorry this caused you hassle. We don't do this if you have a global ignore already, and it's a checkbox in the setup wizard</p>&mdash; SourceTree updatesさん (@sourcetree) <a href="https://twitter.com/sourcetree/status/314672749203308544">2013年3月21日</a></blockquote>
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>「最低なやつめ！　なんで gitignore_global.txt を勝手に作って .dll と .exe を除外しちゃうんだよ！？」というユーザーのお怒りの声。</p>
+
+<p>これに対して、「怒らせてごめんよ。すでにグローバルな ignore ファイルがあればそんなことはしないよ。」と答える SourceTree さん。</p>
+
+<blockquote class="twitter-tweet" lang="ja"><p>@<a href="https://twitter.com/daniellangnet">daniellangnet</a> We defaulted that to 'Yes' if you have no global ignore, trying to help people new to git, since committing dlls/exes is rare</p>&mdash; SourceTree updatesさん (@sourcetree) <a href="https://twitter.com/sourcetree/status/314672902148616192">2013年3月21日</a></blockquote>
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>「git に不慣れな人を助けるために、グローバルな ignore ファイルがないならそうしてるんだよ。だって、exe や dll をコミットすることなんてめったにないでしょ？」。まぁ、それはそうなんだけども・・・。</p>
+
+<blockquote class="twitter-tweet" lang="ja"><p>@<a href="https://twitter.com/daniellangnet">daniellangnet</a> We'll draw attention to that setup option more clearly in the next update to avoid this for people who commit binaries</p>&mdash; SourceTree updatesさん (@sourcetree) <a href="https://twitter.com/sourcetree/status/314674613844062208">2013年3月21日</a></blockquote>
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>「次のリリースでは、もうちょっと注意を引きやすい警告を出すようにして、バイナリー ファイルをコミットしたい人を困らせないようにするよ」と、将来のバージョン アップを誓っている。</p>
+
+<h1>最近は警告ダイアログをだしてくれる</h1>
+
+<p>で、その結果、最近のリリースでは、こんなダイアログが表示されるようになった。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8391/8619841994_5093182205_o.png" width="623" height="344"></center></p>
+
+<p>ざっと訳すと</p>
+
+<blockquote>
+<p>グローバルな ignore ファイルがないようだけど、SourceTree がデフォルトのやつを設定したげようか？</p>
+
+<p>.exe とか .dll とか .obj とか .suo とか Debug のようなフォルダーとか、普通はソース管理しないようなやつを追加しといてあげるよ。</p>
+
+<p>もし、デフォルトで全部のファイルをみれるようにしたいなら、とりあえず No を選んどいてね。あとで、Tools &gt; Options から設定することもできるよ。</p>
+</blockquote>
+
+<p>と書いてある。</p>
+
+<p>次のキャプチャーを見る限りは Mac 版でも「グローバル無視リスト」を書き換える処理はあるようだ。</p>
+
+<p><center><img src="http://farm9.staticflickr.com/8525/8618737121_b83669bf6a.jpg" width="500" height="456"></center></p>
+
+<p>(画像は <a href="http://kashewnuts-tech.blogspot.jp/2011/11/macgitmercurialgui-sourcetree.html">kashew_nuts-tech: Mac用Git/MercurialのGUIクライアント-SourceTree-を試してみた</a> より)</p>
+
+<h1>まとめ</h1>
+
+<p>SourceTree の Windows 版を試した人 (特に初期のバージョン) は、マイドキュメント直下に <code>gitignore_global.txt</code> がないか確認しておくとよいだろう。このファイルが残っていると、Git を使っていて無駄に混乱してしまうかもしれない。分かってて設定する分にはいいんだけども。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</title>
@@ -475,75 +583,6 @@ return true;
 <p>LiveReloadX を紹介した。Node.js の勉強がてら作っていたのだけど、なかなか便利なツールになったのではないかと思う。</p>
 
 <p>ソースは <a href="https://github.com/nitoyon/livereloadx">nitoyon/livereloadx - GitHub</a>  にあるので、Star や Pull Request してもらえると、とてもうれしい。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/02/19/node-source-map/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/02/19/node-source-map/</guid>
-			<pubDate>Tue, 19 Feb 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>以前、<a href="/ja/blog/2013/01/29/jquery-source-map/">jQuery 1.9 のソースマップ対応で圧縮版でもデバッグが簡単になった話</a> を書いたけど、Node.js でソースマップする方法を紹介する。</p>
-
-<p>何がうれしいかというと、Node.js で CoffeeScript や TypeScript、JSX なんかを使ったときに、例外に含まれるスタックトレースに変換前の位置を表示できる。</p>
-
-<p>やり方は簡単。<a href="https://github.com/evanw/node-source-map-support/">source-map-support</a> というモジュールを <code>require()</code> するだけ。</p>
-
-<h1>ためしに使ってみた</h1>
-
-<p>GitHub に動かし方が書いてあるので、その通りにやってみる。</p>
-
-<p>こんな感じの <code>demo.coffee</code> があったとする。</p>
-<div class="highlight"><pre><code class="coffeescript">require &#39;source-map-support&#39;
-foo = -&gt;
-  bar = -&gt; throw new Error &#39;this is a demo&#39;
-  bar()
-foo()
-</code></pre></div>
-<p><code>npm install source-map-support</code> で source-map-support モジュールをインストールしておく。</p>
-
-<p>生の CoffeeScript がソースマップに対応してないので、CoffeeScriptRedux を使って JavaScript に変換する。</p>
-<div class="highlight"><pre><code class="bash">$ CoffeeScriptRedux/bin/coffee --js -i demo.coffee &gt; demo.js
-$ echo &#39;//@ sourceMappingURL=demo.js.map&#39; &gt;&gt; demo.js
-$ CoffeeScriptRedux/bin/coffee --source-map -i demo.coffee &gt; demo.js.map
-</code></pre></div>
-<p>あとは普通に実行すれば、スタックトレースには coffee ファイルの位置が出てくる。</p>
-<div class="highlight"><pre><code class="bash">$ node demo.js
-
-demo.coffee:4
-  bar = -&gt; throw new Error &#39;this is a demo&#39;
-                  ^
-Error: this is a demo
-    at bar (demo.coffee:4:19)
-    at foo (demo.coffee:5:3)
-    at Object.&lt;anonymous&gt; (demo.coffee:6:3)
-    at Object.&lt;anonymous&gt; (demo.coffee:6:6)
-    at Module._compile (module.js:449:26)
-                 :
-</code></pre></div>
-<p><code>bar (demo.coffee:4:19)</code> のところにご注目。</p>
-
-<p>本当だったら、ここがコンパイル後の demo.js 上の位置になってるはずなんだけど、source-map-support モジュールのおかげで、コンパイル前の位置が表示されている。</p>
-
-<p>ここでは示してないけど、<code>Error</code> を <code>catch</code> したときの <code>error.stack</code> も coffee ファイルの場所になる。</p>
-
-<p>CoffeeScript だけじゃなく、TypeScript や JSX もソースマップには対応しているし、圧縮やファイル結合したきにもソースマップさえ吐いておけば、このように変換前の位置情報を出力してくれるようになるので、便利便利である。</p>
-
-<h1>仕組み</h1>
-
-<p>動作原理が気になったので <a href="https://github.com/evanw/node-source-map-support/blob/master/source-map-support.js">source-map-support.js</a> のソースをざっと読んでみた。</p>
-
-<p>一番の肝は <code>Error.prepareStackTrace()</code> を定義して、スタックトレースを書き換えているところ。どうやら V8 エンジンの <a href="http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi">Stack Trace API</a> というものがあるようだ。</p>
-
-<p>また、未処理の例外のときに例外が発生した位置のソースを表示するために、<code>process.on(&#39;uncaughtException&#39;, ...)</code> でがんばって処理している。</p>
-
-<p>ソースマップの解析には <a href="https://github.com/mozilla/source-map">Mozilla の source-map モジュール</a> を使っているようだ。</p>
-
-<h1>まとめ</h1>
-
-<p>Node.js でもソースマップが使えるよ。</p>
-
-<p>(参考記事) <a href="http://badassjs.com/post/42588937391/node-js-source-map-support-for-better-compiled">Node.js Source Map Support for Better Compiled JavaScript Debugging - Badass JavaScript</a></p>
 ]]></description>
 		</item>
 
