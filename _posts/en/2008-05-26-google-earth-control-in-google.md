@@ -2,7 +2,7 @@
 layout: post
 title: Google Earth control in Google Maps
 lang: en
-tag: [ActionScript, Google Maps]
+tags: [ActionScript, Google Maps]
 ---
 I placed Google Earth control in Google Maps.
 

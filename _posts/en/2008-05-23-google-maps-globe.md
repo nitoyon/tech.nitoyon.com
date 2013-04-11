@@ -2,7 +2,7 @@
 layout: post
 title: Google Maps Globe
 lang: en
-tag: [ActionScript, Google Maps]
+tags: [ActionScript, Google Maps]
 ---
 I created a globe using Google Maps API for Flash.
 

@@ -2,7 +2,7 @@
 layout: post
 title: Google Maps API for Flash without MXML
 lang: en
-tag: [ActionScript, Google Maps]
+tags: [ActionScript, Google Maps]
 ---
 In the [Google Maps API for Flash](http://code.google.com/apis/maps/documentation/flash/index.html) tutorial, a sample using MXML is introduced. But MXML is not required, because `com.google.maps.Map` class derives from `Sprite` class.
 

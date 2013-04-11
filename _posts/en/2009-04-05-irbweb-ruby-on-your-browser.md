@@ -2,7 +2,7 @@
 layout: post
 title: IRBWEB - Try Ruby on Your Browser!
 lang: en
-tag: [Ruby, Silverlight]
+tags: [Ruby, Silverlight]
 ---
 One of the annoyances of trying ruby is installing Ruby. IRBWEB let you try it on your browser!
 
