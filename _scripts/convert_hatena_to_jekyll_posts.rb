@@ -1,3 +1,4 @@
+# coding: utf-8
 # はてなダイアリー Jekyll インポート
 # ==================================
 #
@@ -89,14 +90,13 @@ def parse_day(e, hatena_id)
 
     # "*name*[tag1][tag2]name_ja" に分解
     # name がないエントリーはスキップする
-    unless m = title.match(/^\*([^*]+)\*(?:\[([^\]]+)\])*(.*)/)
+    unless m = title.match(/^\*([^*]+)\*(?:\[(.*)\])?(.*)/)
         puts "skip: #{title}"
         next
     end
     name = m[1]
-    name_ja = m[-1]
-    tags = m[2..-2]
-    if tags[0].nil? then tags = [] end
+    name_ja = m[3]
+    tags = m[2].nil? ? [] : m[2].split('][')
     old_url = date.gsub('-', '') + "/" + name
     new_name = name.gsub('_', '-')
 
@@ -111,7 +111,10 @@ def parse_day(e, hatena_id)
     content = {
       "layout" => "post", 
       "title" => name_ja,
-      "tags" => tags.join(","),
+      "tags" => case tags.length
+                when 0 then ""
+                when 1 then tags[0]
+                else tags end,
       "lang" => "ja",
       "old_url" => "http://d.hatena.ne.jp/#{hatena_id}/#{old_url}",
     }.to_yaml + "---\n" + convert_text(text, hatena_id)
