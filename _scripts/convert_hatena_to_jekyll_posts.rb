@@ -100,6 +100,52 @@ def parse_day(e, hatena_id)
     old_url = date.gsub('-', '') + "/" + name
     new_name = name.gsub('_', '-')
 
+    # タグの置き換えや削除を行うときはここに設定する
+    tags.map! { |tag|
+      case tag
+      #when "as" then "ActionScript"
+      #when "as3" then "ActionScript"
+      #when "web" then "Web"
+      #when "pg"  then ""
+      #when "dev" then ""
+      #when "tips" then "Tips"
+      #when "mfc" then ""
+      #when "c++" then "C++"
+      #when "ms" then "Microsoft"
+      #when "html" then "HTML"
+      #when "perl" then "Perl"
+      #when "net" then ""
+      #when "unix" then "Unix"
+      #when "pc" then "PC"
+      #when "p2p" then "P2P"
+      #when "GoogleMapsAPI" then "Google Maps"
+      #when "ldap" then "LDAP"
+      #when "linux" then "Linux"
+      #when "css" then "CSS"
+      #when "twitter" then "Twitter"
+      #when "それPi" then "Yahoo! Pipes"
+      #when "pipes" then "Yahoo! Pipes"
+      #when "flex" then "Flex"
+      #when "イベント" then "event"
+      #when "書籍" then "book"
+      #when "ネタ" then "neta"
+      #when "はてブ年鑑" then "hatebu-nenkan"
+      #when "box2d" then "Box2d"
+      #when "win32" then "Win32"
+      #when "lisp" then "Lisp"
+      #when "win8" then "Windows 8"
+      #when "ruby" then "Ruby"
+      #when "javascript" then "JavaScript"
+      #when "air" then "Adobe AIR"
+      #when "silverlight" then "Silverlight"
+      #when "てっく煮" then "tech-ni"
+      #when "html5" then "HTML5"
+      #when "IEコントロール" then ""
+      else tag
+      end
+    }
+    tags = tags.select { |tag| tag != "" }.uniq
+
     # スキップ条件
     if name_ja =~ $title_ng_regex
         puts "skip: #{title}" if $debug
@@ -108,18 +154,25 @@ def parse_day(e, hatena_id)
 
     # ファイル出力する
     fn = "_posts/#{date}-#{new_name}.htn"
-    content = {
+    yaml = {
       "layout" => "post", 
       "title" => name_ja,
       "tags" => case tags.length
                 when 0 then ""
-                when 1 then tags[0]
+                when 1 then (tags[0].include?(" ") ? tags : tags[0])
                 else tags end,
       "lang" => "ja",
       "old_url" => "http://d.hatena.ne.jp/#{hatena_id}/#{old_url}",
-    }.to_yaml + "---\n" + convert_text(text, hatena_id)
-    if FileTest.file?(fn) && File.read(fn) == content
-      puts "Skip #{fn}" if $debug
+    }.to_yaml
+    content = yaml + "---\n" + convert_text(text, hatena_id)
+    if FileTest.file?(fn)
+      header, old_yaml, old_content = File.read(fn).split("---\n", 3)
+      if old_yaml == yaml
+        puts "Skip #{fn}" if $debug
+      else
+        File.open(fn, "w") { |f| f.write(yaml + "---\n" + old_content) }
+        puts "Update #{fn}" if $debug
+      end
     else
       File.open(fn, "w") { |f| f.write(content) }
       puts "Success #{fn}" if $debug
