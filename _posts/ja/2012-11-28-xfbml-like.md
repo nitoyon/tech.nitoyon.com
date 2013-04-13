@@ -1,7 +1,9 @@
 ---
 layout: post
 title: 「いいね！」ボタンは XFBML 版を設置して Facebook に最適化すべき
-tags: ブログ, Facebook
+tags:
+- tech-ni
+- Facebook
 lang: ja
 ---
 Facebook の「いいね！」ボタンはどれも同じ見た目に見えますが、実は XFBML 版と IFRAME 版の２種類があります。
