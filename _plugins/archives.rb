@@ -63,7 +63,13 @@ module Jekyll
       self.data["title"] = title
       self.data["posts"] = posts.reverse
       self.data["lang"] = lang;
-      self.data["update_policy"] = "{% for post in page.posts %}{% if post.raw.yaml_modified %}1{% endif %}{%endfor%}"
+    end
+
+    def needs_render?
+      self.data["posts"].each { |post|
+        return true if post.yaml_modified
+      }
+      false
     end
   end
   
