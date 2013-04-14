@@ -2,8 +2,7 @@ module Jekyll
   module Filters
     # Convert a text using locale file.
     #
-    # input - locale.
-    # name - key
+    # input - text.
     #
     # Liquid:
     #     {{'hello' | t}}

@@ -25,7 +25,7 @@ module Jekyll
     end
 
     def source
-      File.join(@base, @name)
+      File.join(@base, @name)[@site.source.length .. -1]
     end
   end
 
@@ -52,7 +52,7 @@ module Jekyll
     end
 
     def source
-      File.join(@base, @dir, @name)
+      File.join(@base, @dir, @name)[@site.source.length .. -1]
     end
   end
 
@@ -102,6 +102,11 @@ module Jekyll
       self.generate_archives
       t_archive = Time.now - t_archive
 
+      t_tag = Time.now
+      puts "process: tags"
+      self.generate_tags
+      t_tag = Time.now - t_tag
+
       t_lang = Time.now
       puts "process: languages"
       self.generate_languages
@@ -125,6 +130,7 @@ module Jekyll
       puts "generate:      #{t_generate} sec"
       puts "render:        #{t_render} sec"
       puts "archive:       #{t_archive} sec"
+      puts "tag:           #{t_tag} sec"
       puts "languages:     #{t_lang} sec"
       puts "cleanup:       #{t_cleanup} sec"
       puts "writing:       #{t_write} sec"
