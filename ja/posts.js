@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/04/17/jekyll-pluralize/", title: "Jekyll のカテゴリーとタグの指定方法 3 パターン"},
 	{url: "/ja/blog/2013/04/05/sourcetree/", title: "SourceTree が Git のグローバルな無視リストを書き換えて困った話"},
 	{url: "/ja/blog/2013/03/29/git-new-workdir/", title: "Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利"},
 	{url: "/ja/blog/2013/03/26/rsync-include-exclude/", title: "rsync の複雑怪奇な exclude と include の適用手順を理解しよう"},
-	{url: "/ja/blog/2013/03/25/livereloadx0-2-0/", title: "LiveReloadX 0.2.0 公開！ 除外ファイルを指定可能になったよ"},
-	{url: "/ja/blog/2013/02/27/livereloadx/", title: "ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った"}
+	{url: "/ja/blog/2013/03/25/livereloadx0-2-0/", title: "LiveReloadX 0.2.0 公開！ 除外ファイルを指定可能になったよ"}
 ];
 
 Site.archives.months = [

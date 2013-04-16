@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sun, 24 Mar 2013 22:26:42 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 17 Apr 2013 00:33:29 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,93 @@
 
 
 
+
+		<item>
+			<title>3 ways to specify categories and tags in Jekyll</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/04/17/jekyll-pluralize/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/04/17/jekyll-pluralize/</guid>
+			<pubDate>Wed, 17 Apr 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>To specify categories and tags, you should write in <a href="https://github.com/mojombo/jekyll/wiki/yaml-front-matter">YAML front matter</a>. It&#39;s so complicated because there are 3 ways to specify it.</p>
+
+<p>This article is targeted on Jekyll 0.12.0.</p>
+
+<h1>(1) Use singular key</h1>
+
+<p>Use singular key (such as <code>category</code> or <code>tag</code>), then we can specify at most 1 category or tag.</p>
+<div class="highlight"><pre><code class="yaml">---
+category: Foo
+tag: Bar
+</code></pre></div>
+<p>In the above example, we specify a category named <code>Foo</code> and a tag named <code>Bar</code>.</p>
+
+<p>Even if we write as follows:</p>
+<div class="highlight"><pre><code class="yaml">---
+category: Foo Bar
+tag: Bar, Baz
+</code></pre></div>
+<p>we&#39;ll get a tag named <code>Foo Bar</code> and a category named <code>Bar, Baz</code>.</p>
+
+<h1>(2) Use string with plural key</h1>
+
+<p>Use plural key (such as <code>categories</code> or <code>tags</code>) and a space-separated string value.</p>
+<div class="highlight"><pre><code class="yaml">---
+categories: Foo Bar
+tags: Bar Baz
+</code></pre></div>
+<p>In the above example, we get 2 categories (<code>Foo</code> and <code>Bar</code>) and 2 tags (<code>Bar</code> and <code>Baz</code>).</p>
+
+<p>We cannot specify name which contains a space character. If you wants, use the next pattern &quot;plural + string array&quot;.</p>
+
+<h1>(3) Use an array of string with plural key</h1>
+
+<p>Use plural key (such as <code>categories</code> and `tags) and an array of string value.</p>
+<div class="highlight"><pre><code class="yaml">---
+categories:
+- Foo Bar
+- AA,BBB
+tags:
+- Bar
+- Baz, AAA
+</code></pre></div>
+<p>In the above example, we get 2 categories (<code>Foo Bar</code> and <code>AA,BBB</code>) and 2 tags (<code>Bar Baz</code> and <code>AAA</code>).</p>
+
+<p>We can specify following, but in this case, we cannot specify name which contains a comma character.</p>
+<div class="highlight"><pre><code class="yaml">---
+categories: [Foo Bar, AABBB]
+tags: [Bar Baz, AAA]
+</code></pre></div>
+<h1>Read Jekyll&#39;s source code</h1>
+
+<p>To understand this complecated specification, reading the source code would be helpful.</p>
+
+<p>See <code>Hash#pluralized_array</code> method in <a href="https://github.com/mojombo/jekyll/blob/9d814a4eb7b59ce617569b40a19c3c183fecda33/lib/jekyll/core_ext.rb">lib/jekyll/core_ext.rb</a>.</p>
+
+<p>This method is called like <code>self.data.pluralized_array(&quot;tag&quot;, &quot;tags&quot;)</code>.</p>
+<div class="highlight"><pre><code class="ruby">class Hash
+
+  # Read array from the supplied hash favouring the singular key
+  # and then the plural key, and handling any nil entries.
+  #   +hash+ the hash to read from
+  #   +singular_key+ the singular key
+  #   +plural_key+ the singular key
+  #
+  # Returns an array
+  def pluralized_array(singular_key, plural_key)
+    hash = self
+    if hash.has_key?(singular_key)
+      array = [hash[singular_key]] if hash[singular_key]
+    elsif hash.has_key?(plural_key)
+      case hash[plural_key]
+      when String
+        array = hash[plural_key].split
+      when Array
+        array = hash[plural_key].compact
+      end
+    end
+    array || []
+  end
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>LiveReloadX 0.2.0 Released: try include/exclude filter</title>
@@ -206,238 +293,6 @@ public class FireCube extends Sprite{
         }
     }
 }
-}
-</code></pre></div>
-]]></description>
-		</item>
-
-		<item>
-			<title>50 polygons Mona Lisa in AS3</title>
-			<link>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2009/02/17/50-polygons-mona-lisa-in-as3/</guid>
-			<pubDate>Tue, 17 Feb 2009 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>I ported <a href="http://alteredqualia.com/visualization/evolve/">Image evolution</a> to ActionScript 3. </p>
-
-<blockquote>
-<p>We start from random 50 polygons that are invisible. In each optimization step
-we randomly modify one parameter (like color components or polygon vertices)
-and check whether such new variant looks more like the original image.
-If it is, we keep it, and continue to mutate this one instead.</p>
-</blockquote>
-
-<p>In my computer, the result was as follows.</p>
-
-<p><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090217/20090217014358.jpg" width="450" height="378"></center></p>
-
-<p>It&#39;s waste of CPU.., but very interesting.</p>
-
-<p>Published SWF (CAUSION: TOO HEAVY CPU 60%~)</p>
-
-<p><object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="450"
-    height="420" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
-    <param name="src" value="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf"/>
-    <param name="play" value="true"/>
-    <param name="loop" value="true"/>
-    <param name="bgcolor" value="#ffffff"/>
-    <param name="quality" value="high"/>
-    <embed src="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf" width="450" height="420" bgcolor="#ffffff" play="true" loop="true"
-    quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
-    </embed>
-</object>
-<noscript>(Flash Player 9 or above required)</noscript></p>
-
-<p>Because this program uses <code>BitmapData.compare()</code> to improve performance, it is about 10 times faster than the <a href="http://alteredqualia.com/visualization/evolve/">JavaScript version</a>. The original <a href="http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/">C# version</a> is about 3 times faster than mine.</p>
-
-<p>Here is the code: (189lines)</p>
-
-<div class="highlight"><pre><code class="actionscript">package{
-import flash.display.*;
-import flash.text.*;
-import flash.geom.*;
-import flash.filters.ColorMatrixFilter;
-import flash.utils.setInterval;
-
-[SWF(backgroundColor=&quot;#eeeeee&quot;)]
-public class Evolve extends Sprite{
-    [Embed(source=&#39;mona_lisa_crop.jpg&#39;)]
-    private var MonaLisa:Class;
-    private var imgWidth:int;
-    private var imgHeight:int;
-
-    private const POLYGONS:int = 50;
-    private var polygons:Array = [];
-    private var mutating:Boolean = false;
-
-    private var monotoneFilter:ColorMatrixFilter = new ColorMatrixFilter([
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-            1 / 3, 1 / 3, 1 / 3, 0, 0, 
-                0,     0,     0, 1, 0 ]);
-    private var pt0:Point = new Point(0, 0);
-    private var rect:Rectangle;
-
-    private var bestBmd:BitmapData;
-    private var testBmd:BitmapData;
-    private var inputBmd:BitmapData;
-    private var debugBmd:BitmapData;
-
-    private var canvas:Sprite;
-
-    private var score:uint;
-    private var scoreMax:uint;
-    private var mutations:uint = 0;
-    private var candidates:uint = 0;
-    private var totalTime:Number = 0;
-    private var time:Date;
-    private var scoreText:TextField;
-
-    public function Evolve(){
-        stage.scaleMode = &quot;noScale&quot;;
-        stage.align = &quot;TL&quot;;
-
-        // init image
-        var bmp:Bitmap = new MonaLisa();
-        inputBmd = bmp.bitmapData;
-        addChild(bmp);
-        imgWidth = bmp.width;
-        imgHeight = bmp.height;
-        rect = inputBmd.rect;
-        score = scoreMax = rect.width * rect.height * 255;
-
-        // init buffer
-        bestBmd = inputBmd.clone(); bestBmd.fillRect(rect, 0x000000);
-        testBmd = inputBmd.clone(); testBmd.fillRect(rect, 0x000000);
-        debugBmd = inputBmd.clone();
-        addChild(new Bitmap(bestBmd)).x = bmp.width + 10;
-
-        // init data and canvas
-        canvas = new Sprite();
-        for(var i:int = 0; i &lt; POLYGONS; i++){
-            polygons[i] = new Polygon();
-            canvas.addChild(new Sprite());
-        }
-        drawTest();
-        testToBest();
-
-        // init ui
-        var tf:TextField = new TextField();
-        tf.text = &quot;click to start&quot;;
-        tf.y = bmp.height + 10;
-        tf.scaleX = tf.scaleY = 3;
-        addChild(tf);
-        stage.addEventListener(&quot;click&quot;, function(event:*):void{
-            mutating = !mutating;
-            time = (mutating ? new Date() : null);
-            tf.text = (mutating ? &quot;Now Simulating...&quot; : &quot;click to start&quot;);
-        });
-        scoreText = new TextField();
-        scoreText.autoSize = &quot;left&quot;;
-        scoreText.y = bmp.height + 60;
-        scoreText.scaleX = scoreText.scaleY = 3;
-        addChild(scoreText);
-
-        // start timer
-        setInterval(update, 10);
-    }
-
-    private function update():void{
-        if(!mutating) return;
-        var t:Date = new Date();
-        totalTime += (t.getTime() - time.getTime()) / 1000;
-        time = t;
-
-        for(var i:int = 0; i &lt; 10; i++) update1();
-        scoreText.text = (int((1 - score / scoreMax) * 10000) / 100)
-             + &quot;%\n&quot; + mutations + &quot; / &quot; + candidates + &quot;\n&quot;
-             + (int(totalTime * 10) / 10) + &quot;s&quot;;
-    }
-
-    private function update1():void{
-        var index:int = Math.random() * POLYGONS;
-        var backup:Polygon = polygons[index].clone();
-        polygons[index].mutate();
-        drawTest();
-
-        var diffBmd:BitmapData = testBmd.compare(inputBmd) as BitmapData;
-        diffBmd.applyFilter(diffBmd, rect, pt0, monotoneFilter);
-        var testScore:uint = 0;
-        for(var i:int = 0; i &lt; 0x100; i++){
-            testScore += diffBmd.threshold(diffBmd, rect, pt0, &quot;==&quot;, i, i, 0xff) * i;
-        }
-
-        if(score &gt; testScore){
-            score = testScore;
-            testToBest();
-            mutations++;
-        }else{
-            polygons[index] = backup;
-        }
-        candidates++;
-    }
-
-    private function drawTest():void{
-        canvas.graphics.clear();
-        for(var i:int = 0; i &lt; POLYGONS; i++){
-            polygons[i].draw(canvas, imgWidth, imgHeight);
-        }
-
-        testBmd.fillRect(rect, 0x000000);
-        testBmd.draw(canvas);
-    }
-
-    private function testToBest():void{
-        bestBmd.copyPixels(testBmd, rect, pt0);
-    }
-}
-}
-
-import flash.display.*;
-import flash.geom.*;
-
-class Polygon{
-    private const POINTS:int = 6;
-
-    public var points:Array = [];
-    public var color:uint;
-    public var alpha:Number;
-
-    public function Polygon(polygon:Polygon = null){
-        for(var i:int = 0; i &lt; POINTS; i++)
-            points[i] = (polygon ? polygon.points[i].clone() : new Point(Math.random(), Math.random()));
-        color = (polygon ? polygon.color : 0xffffff * Math.random());
-        alpha = (polygon ? polygon.alpha : .1);
-    }
-
-    public function clone():Polygon{
-        return new Polygon(this);
-    }
-
-    public function mutate():void{
-        (Math.random() &lt; 0.5 ? mutateColor() : mutatePosition());
-    }
-
-    private function mutateColor():void{
-        switch(int(Math.random() * 4)){
-            case 0: color = (color &amp; 0x00ffff) + int(Math.random() * 255) * 0x010000; break;
-            case 1: color = (color &amp; 0xff00ff) + int(Math.random() * 255) * 0x000100; break;
-            case 2: color = (color &amp; 0xffff00) + int(Math.random() * 255) * 0x000001; break;
-            case 3: alpha = Math.random(); break;
-        }
-    }
-
-    private function mutatePosition():void{
-        var p:int = Math.random() * POINTS;
-        if(Math.random() &lt; .5) points[p].x = Math.random();
-        else                   points[p].y = Math.random();
-    }
-
-    public function draw(canvas:Sprite, w:Number, h:Number):void{
-        canvas.graphics.beginFill(color, alpha);
-        canvas.graphics.moveTo(points[0].x * w, points[0].y * h);
-        for(var i:int = 1; i &lt; POINTS; i++)
-            canvas.graphics.lineTo(points[i].x * w, points[i].y * h);
-        canvas.graphics.endFill();
-    }
 }
 </code></pre></div>
 ]]></description>

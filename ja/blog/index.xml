@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 05 Apr 2013 01:23:32 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 17 Apr 2013 00:32:24 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,101 @@
 
 
 
+
+		<item>
+			<title>Jekyll のカテゴリーとタグの指定方法 3 パターン</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/04/17/jekyll-pluralize/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/04/17/jekyll-pluralize/</guid>
+			<pubDate>Wed, 17 Apr 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Jekyll で記事にカテゴリーやタグを設定するには YAML の部分に書けばいいんだけど、指定方法が 3 通りもあって複雑だったのでまとめておく。</p>
+
+<p>Jekyll 0.12.0 を前提に書いてるけど、将来的に大きな変更が入るとは思いにくい。</p>
+
+<h1>(1) 単数形を使う</h1>
+
+<p>単数形 (<code>category</code>・<code>tag</code>) で指定したときは 1 つだけしか指定できない。</p>
+<div class="highlight"><pre><code class="yaml">---
+category: Foo
+tag: Bar
+</code></pre></div>
+<p>上の例では、<code>Foo</code> というカテゴリー、<code>Bar</code> というタグを設定したことになる。</p>
+
+<p>1 つしか指定できないので、</p>
+<div class="highlight"><pre><code class="yaml">---
+category: Foo Bar
+tag: Bar, Baz
+</code></pre></div>
+<p>のようにカンマやスペースで区切ったとしても、<code>Foo Bar</code> という名前のカテゴリー、<code>Bar, Baz</code> という名前のタグが指定されたものと解釈される。</p>
+
+<h1>(2) 複数形に文字列を指定する</h1>
+
+<p>複数形 (<code>categories</code>・<code>tags</code>) に文字列を与えると、スペース区切りで複数指定できる。</p>
+<div class="highlight"><pre><code class="yaml">---
+categories: Foo Bar
+tags: Bar Baz
+</code></pre></div>
+<p>この例では、カテゴリーは <code>Foo</code> と <code>Bar</code>、タグは <code>Bar</code> と <code>Baz</code> の 2 つずつ指定されたものとみなされる。</p>
+
+<p>つまり、この書き方ではスペースを含むカテゴリー名やタグ名は指定できない。スペースを含めたいなら、次で紹介する「複数形＋配列」で指定する方法を使うのがよい。前述の「単数形」の指定を使ってもよいけど、個数を増やしたときに無駄にハマりそうなので、複数形で統一したほうが分かりやすいと思う。</p>
+
+<h1>(3) 複数形に配列を指定する</h1>
+
+<p>複数形 (<code>categories</code>・`tags) に文字列の配列を渡すこともできる。</p>
+<div class="highlight"><pre><code class="yaml">---
+categories:
+- Foo Bar
+- AA,BBB
+tags:
+- Bar
+- Baz, AAA
+</code></pre></div>
+<p>上の指定では、カテゴリーは <code>Foo Bar</code> と <code>AA,BBB</code>、タグは <code>Bar Baz</code> と <code>AAA</code> の 2 つずつが指定されたものと解釈される。名前にスペースやカンマを含めることが可能。</p>
+
+<p>次のようにも書けるけど、この場合は YAML の制限でカンマを含む名前は指定できない。</p>
+<div class="highlight"><pre><code class="yaml">---
+categories: [Foo Bar, AABBB]
+tags: [Bar Baz, AAA]
+</code></pre></div>
+<h1>該当箇所のソースを読んでみる</h1>
+
+<p>ソースを読んだほうが早いかもしれない。</p>
+
+<p><a href="https://github.com/mojombo/jekyll/blob/9d814a4eb7b59ce617569b40a19c3c183fecda33/lib/jekyll/core_ext.rb">lib/jekyll/core_ext.rb</a> の <code>Hash#pluralized_array</code> を見ればよい。</p>
+
+<p>この関数が <code>self.data.pluralized_array(&quot;tag&quot;, &quot;tags&quot;)</code> のように呼ばれる。</p>
+<div class="highlight"><pre><code class="ruby">class Hash
+
+  # Read array from the supplied hash favouring the singular key
+  # and then the plural key, and handling any nil entries.
+  #   +hash+ the hash to read from
+  #   +singular_key+ the singular key
+  #   +plural_key+ the singular key
+  #
+  # Returns an array
+  def pluralized_array(singular_key, plural_key)
+    hash = self
+    if hash.has_key?(singular_key)
+      array = [hash[singular_key]] if hash[singular_key]
+    elsif hash.has_key?(plural_key)
+      case hash[plural_key]
+      when String
+        array = hash[plural_key].split
+      when Array
+        array = hash[plural_key].compact
+      end
+    end
+    array || []
+  end
+</code></pre></div>
+<p>singular が単数形、plural が複数形。</p>
+
+<p>ビルトインの <code>Hash</code> にメソッドを追加するあたりがなんともアグレッシブ。</p>
+
+<h1>まとめ</h1>
+
+<p>親切な計らいのおかげで、かえって悩むことが増えそうにも思える不思議な仕様・・・。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>SourceTree が Git のグローバルな無視リストを書き換えて困った話</title>
@@ -473,116 +568,6 @@ return true;
 <p>とすればよい。</p>
 
 <p>include/exclude の判定ロジックは rsync の真似をしているので自由度はかなり高い。ただ、rsync の include/exclude ルール自体が複雑怪奇なので、それについては <a href="/ja/blog/2013/03/26/rsync-include-exclude/">rsync の複雑怪奇な exclude と include の適用手順を理解しよう</a> で記事にした。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/02/27/livereloadx/</guid>
-			<pubDate>Wed, 27 Feb 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><center><img src="http://farm9.staticflickr.com/8100/8509399251_7056f91a11.jpg" width="500" height="294"></center></p>
-
-<p>Web 開発してると、ソースを編集して、ブラウザーをリロードして、という作業の繰り返しになりがちだ。ソースを編集したら、自動でブラウザーをリロードしてくれるような夢のツールがあれば便利そうだ。</p>
-
-<p>この分野では <a href="http://incident57.com/codekit/">CodeKit</a> や <a href="http://livereload.com/">LiveReload</a> などが有名なんだけど、もれなく有料だったり GUI だったりする。そこで、<a href="http://livereload.com/">LiveReload</a> のオープンソースな部分を参考にしつつ、コマンドラインで使える <a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> というものを作ってみた。</p>
-
-<p>特長はこんなところ。</p>
-
-<ul>
-<li>Node.js を使ってるので Windows/Mac/Linux 問わずに動かせる</li>
-<li>開発環境のブラウザーだけでなくスマートフォンのブラウザーもリロードできる</li>
-<li>無料</li>
-</ul>
-
-<h1>インストール方法</h1>
-
-<p>インストールは超簡単！</p>
-
-<ol>
-<li><a href="http://nodejs.org/">Node.js</a> をインストールする。</li>
-<li>コマンドラインで <code>npm install -g livereloadx</code> を実行する。</li>
-</ol>
-
-<h1>動作原理</h1>
-
-<p><center><img src="http://farm9.staticflickr.com/8099/8509399561_17e6288376.jpg" width="500" height="159"></center></p>
-
-<p>インストールしたら <code>livereloadx</code> コマンドが動くようになる。ただ、それだけではブラウザーはリロードしてくれないので、ちょいと動作原理を説明しておく。</p>
-
-<ol>
-<li>コマンドラインで <code>livereloadx path/to/dir</code> を実行すると、LiveReloadX が開始して、次のような処理をする。
-
-<ul>
-<li>フォルダー <code>path/to/dir</code> の監視を開始する。</li>
-<li>ポート <code>35729</code> で Web サーバーとして動き始める。この Web サーバーは <code>livereload.js</code> を公開しつつ、WebSocket サーバーとしても動く。</li>
-</ul></li>
-<li>ブラウザーで <code>livereload.js</code> を読み込むと、LiveReloadX サーバーに WebSocket で接続しにいく。</li>
-<li><code>path/to/dir</code> 配下のファイルを更新したら、LiveReloadX サーバーはブラウザーに WebSocket で通知を出す。通知を受け取ったブラウザーは再読込する。</li>
-</ol>
-
-<p>ということで、ブラウザーに <code>livereload.js</code> を読み込ませる方法が重要になってくる。</p>
-
-<h1>livereload.js の読み込ませ方</h1>
-
-<p>4 通りあるので、好きなやつを選ぶことになる。</p>
-
-<ul>
-<li>手動で追加する</li>
-<li>ブラウザー拡張をインストールする (PC 版 Safari・Chrome・Firefox のみ).</li>
-<li>static モードで実行する</li>
-<li>proxy モードで実行する</li>
-</ul>
-
-<p>前半の 2 つは LiveReload で提供されてる手段で、後半の 2 つはオリジナルだ。</p>
-
-<h2>手動で追加する</h2>
-
-<p><center><img src="http://farm9.staticflickr.com/8506/8509400159_435002302f.jpg" width="500" height="254"></center></p>
-
-<p>既存の HTML ファイルに次の <code>&lt;script&gt;</code> タグ (JavaScript スニペット) を追加する。それだけ。</p>
-<div class="highlight"><pre><code class="html">&lt;script&gt;document.write(&#39;&lt;script src=&quot;http://&#39; + (location.host || &#39;localhost&#39;).split(&#39;:&#39;)[0] +
-&#39;:35729/livereload.js?snipver=2&quot;&gt;&lt;/&#39; + &#39;script&gt;&#39;)&lt;/script&gt;
-</code></pre></div>
-<p>静的な HTML ファイルで開発してる場合とか、動的 HTML だけどテンプレートを編集するだけで済む場合は、この手順が楽だろう。</p>
-
-<h2>ブラウザー拡張をインストールする</h2>
-
-<p><center><img src="http://farm9.staticflickr.com/8252/8509400245_25dbf28c7f.jpg" width="500" height="260"></center></p>
-
-<p>ソースはいじりたくないよ、という場合は <a href="http://feedback.livereload.com/knowledgebase/articles/86242-how-do-i-install-and-use-the-browser-extensions-">How do I install and use the browser extensions? – LiveReload Help &amp; Support</a> からブラウザー拡張を導入するとよい。ただし、対応するブラウザーは PC 版 Safari・Chrome・Firefox のみに限られる。</p>
-
-<p>拡張の LiveReload ツールバーのボタンを押すと、<code>livereload.js</code> が表示中のページに動的に挿入されるようになる。</p>
-
-<h2>static モードで実行する</h2>
-
-<p><center><img src="http://farm9.staticflickr.com/8240/8509400365_6086b6644a.jpg" width="500" height="156"></center></p>
-
-<p>静的なサイトのときには、これが便利かもしれない。<code>-s</code> か <code>--static</code> オプションつきで実行する。</p>
-<div class="highlight"><pre><code class="bash">livereloadx -s [-p 35729] [path/to/dir]
-</code></pre></div>
-<p>static モードでは<strong>静的 Web サーバー</strong>として動作する。</p>
-
-<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると <code>path/to/dir/foo/index.html</code> からファイルを読み取って返してくれる。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
-
-<h2>proxy モードで実行する</h2>
-
-<p><center><img src="http://farm9.staticflickr.com/8089/8510508898_7c8e065387.jpg" width="500" height="156"></center></p>
-
-<p>HTML をいじりたくないし、ブラウザー拡張も入れたくないし、静的サイトでもないときは、この方法が便利だろう。<code>-y http://example.com/</code> か <code>--proxy http://example.com/</code> オプションをつけて実行する。</p>
-<div class="highlight"><pre><code class="text">$ livereloadx -y http://example.com/ [-p 35729] [-l] [path/to/dir]
-</code></pre></div>
-<p>proxy モードでは<strong>リバース プロキシー</strong>として動作する。</p>
-
-<p>たとえば、<code>http://localhost:35729/foo/</code> にアクセスすると、裏側で <code>http://example.com/foo/</code> からデータを取ってきてクライアントに返す。ついでに、<code>&lt;script&gt;</code> タグを自動で挿入して、ブラウザーが <code>livereload.js</code> を読み込むようにしてくれる。</p>
-
-<p>さらに、<code>-l</code> か <code>--prefer-local</code> フラグをつけて起動すると、最初にローカルのファイルがあるか確認して、あればそっちを返すようになる。稼働中の本番環境のうち、一部の JavaScript とか CSS だけを手元に持ってきて編集しながら検証できて便利だ。</p>
-
-<h1>まとめ</h1>
-
-<p>LiveReloadX を紹介した。Node.js の勉強がてら作っていたのだけど、なかなか便利なツールになったのではないかと思う。</p>
-
-<p>ソースは <a href="https://github.com/nitoyon/livereloadx">nitoyon/livereloadx - GitHub</a>  にあるので、Star や Pull Request してもらえると、とてもうれしい。</p>
 ]]></description>
 		</item>
 
