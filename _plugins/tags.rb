@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19
+# -*- encoding: utf-8 -*-
 #
 # Generate yearly and monthly archive page
 #
@@ -15,17 +15,28 @@
 module Jekyll
   class Tag < Page
     def initialize(site, base, tag, lang, posts)
+      tag_file_name = Tag.tag2filename(tag)
+      tag_display_name = Tag.tag2displayname(site.config, lang, tag)
+
       @site = site
       @base = base
       @name = "index.html"
-      @dir = "/#{lang}/blog/tags/#{Tag.tag2filename(tag)}"
+      @dir = "/#{lang}/blog/tags/#{tag_file_name}"
 
       self.process(name)
       self.read_yaml(File.join(base, '_layouts'), 'tag.html')
 
       self.data['tag'] = tag
+      self.data['tag_file_name'] = tag_file_name
+      self.data['tag_display_name'] = tag_display_name
       self.data['posts'] = posts
       self.data["lang"] = lang
+
+      if lang == 'ja'
+        self.data['title'] = "タグ「#{tag_display_name}」の記事一覧"
+      else
+        self.data['title'] = "Tag: #{tag_display_name}"
+      end
     end
 
     def needs_render?
