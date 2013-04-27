@@ -35,6 +35,13 @@ module Jekyll
     def self.tag2filename(name)
       name.downcase.gsub(' ', '-')
     end
+
+    def self.tag2displayname(config, lang, name)
+      filename = self.tag2filename(name)
+      text = Jekyll::Locales.translate(config, lang, filename)
+      text = name if text.start_with? "(UNKNOWN TEXT: "
+      return text
+    end
   end
 
   class Site
