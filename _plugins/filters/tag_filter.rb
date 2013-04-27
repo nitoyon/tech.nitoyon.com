@@ -21,12 +21,12 @@ module Jekyll
     #         blog: "BLOG BLOG BLOG"
     #
     # Liquid:
-    #     {{'blog' | tag}}
+    #     {{'blog' | tag2displayname}}
     #     # => 'BLOG BLOG BLOG'
     #
     # Returns the translated String "BLOG BLOG BLOG".
     # If there's no entry in the locale file, returns the given text.
-    def tag2display_name(input)
+    def tag2displayname(input)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
       config = @context.registers[:site].config
