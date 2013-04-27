@@ -5,9 +5,11 @@ module Jekyll
     # input - key name when string is nil, parameter otherwise.
     # string - key name or nil.
     #
-    # Locale file(_locales/en.yml):
-    #     hello: "Hello world"
-    #     hello2: "Hello world '$0'"
+    # _config.yml file:
+    #     locale:
+    #       en:
+    #         hello: "Hello world"
+    #         hello2: "Hello world '$0'"
     #
     # Liquid:
     #     {{'hello' | t}}            # => Hello world
@@ -17,11 +19,17 @@ module Jekyll
     def t(input, string=nil)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
-      locale_dir = File.join(@context.registers[:site].source, '_locales')
-      locale_file = "#{locale_dir}/#{lang}.yml"
+      config = @context.registers[:site].config
+      Jekyll::Locales::translate(config, lang, input, string)
+    end
+  end
 
-      $locale_filter_mtime = {} if $locale_filter_mtime.nil?
-      $locale_filter_hash = {} if $locale_filter_hash.nil?
+  class Locales
+    def self.translate(config, lang, input, string=nil)
+      unless config.has_key?('locale') && config['locale'].has_key?(lang)
+        return "(UNKNOWN TEXT: locale config for #{lang} not found)"
+      end
+      config = config['locale']
 
       # Set param when `string` is set
       param = nil
@@ -31,24 +39,17 @@ module Jekyll
       end
 
       begin
-        # reload locale YAML if modified
-        if File.mtime(locale_file) > ($locale_filter_mtime[lang] || Time.new(0))
-          $locale_filter_hash[lang] = YAML.load(File.read(locale_file))
-          $locale_filter_mtime[lang] = File.mtime(locale_file)
-          puts "loaded #{locale_file}"
-        end
-
         if input.nil?
           "(nil)"
         elsif input.class == Time
-          if $locale_filter_hash[lang].has_key? 'date'
-            input.strftime($locale_filter_hash[lang]['date'])
+          if config[lang].has_key? 'date'
+            input.strftime(config[lang]['date'])
           else
             "(`date` is not defined for #{lang})"
           end
         elsif input.class == String
-          if $locale_filter_hash[lang].has_key? input
-            ret = $locale_filter_hash[lang][input]
+          if config[lang].has_key? input
+            ret = config[lang][input]
             ret = ret.gsub('$0', param) unless param.nil?
             ret
           else
