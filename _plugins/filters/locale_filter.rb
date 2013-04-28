@@ -62,28 +62,26 @@ module Jekyll
 
       begin
         if input.nil?
-          "(nil)"
-        elsif input.class == Time
-          if config[lang].has_key? 'date'
-            input.strftime(config[lang]['date'])
-          else
-            "(`date` is not defined for #{lang})"
-          end
+          return "(nil)"
         elsif input.class == String
+          # get value
           if config[lang].has_key? input
-            if param.nil?
-              config[lang][input]
-            else
-              config[lang][input].gsub('$0', param)
-            end
+            value = config[lang][input]
           elsif default.nil?
-            "(UNKNOWN TEXT: #{input} for #{lang})"
+            return "(UNKNOWN TEXT: #{input} for #{lang})"
           else
-            if param.nil?
-              default
-            else
-              default.gsub('$0', param)
-            end
+            value = default
+          end
+
+          # apply param
+          if param.nil?
+            return value
+          elsif param.class == String
+            return value.gsub('$0', param)
+          elsif param.class == Time
+            return param.strftime(value)
+          else
+            return "(UNKNOWN PARAM CLASS: #{param.class})"
           end
         else
           "(UNKNOWN CLASS: #{input.class})"
