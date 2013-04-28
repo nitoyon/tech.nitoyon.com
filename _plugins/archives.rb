@@ -52,13 +52,13 @@ module Jekyll
 
       if day
         title = Jekyll::Locales.translate(site.config, lang,
-          time, 'archive.title.day', 'Archives for %B %d, %Y')
+          'archive.title.day', 'Archives for %B %d, %Y', time)
       elsif month
         title = Jekyll::Locales.translate(site.config, lang,
-          time, 'archive.title.month', 'Archives for %B %Y')
+          'archive.title.month', 'Archives for %B %Y', time)
       else
         title = Jekyll::Locales.translate(site.config, lang,
-          time, 'archive.title.year', 'Archives for %Y')
+          'archive.title.year', 'Archives for %Y', time)
       end
       
       self.data["title"] = title

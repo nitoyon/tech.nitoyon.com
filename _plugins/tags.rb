@@ -33,7 +33,7 @@ module Jekyll
       self.data["lang"] = lang
 
       self.data['title'] = Jekyll::Locales.translate(site.config, lang,
-        tag_display_name, 'tag.title', 'Tag: $0')
+        'tag.title', 'Tag: $0', tag_display_name)
     end
 
     def needs_render?
@@ -46,7 +46,7 @@ module Jekyll
 
     def self.tag2displayname(config, lang, name)
       filename = self.tag2filename(name)
-      Jekyll::Locales.translate(config, lang, filename, nil, name)
+      Jekyll::Locales.translate(config, lang, filename, name)
     end
   end
 

@@ -13,14 +13,16 @@ module Jekyll
     #
     # Liquid:
     #     {{'hello' | t}}            # => Hello world
-    #     {{'foo' | t:hello2}}       # => Hello world 'foo'
+    #     {{'foo' | t:'hello2'}}     # => Hello world 'foo'
     #
     # Returns the translated String.
     def t(input, string=nil)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
       config = @context.registers[:site].config
-      Jekyll::Locales::translate(config, lang, input, string)
+      param = string.nil? ? nil : input
+      key = string.nil? ? input : string
+      Jekyll::Locales::translate(config, lang, key, nil, param)
     end
   end
 
@@ -29,9 +31,9 @@ module Jekyll
     #
     # config - Site#config
     # lang - language name
-    # input - key name when string is nil, parameter otherwise.
-    # string - key name or nil.
-    # default - returned value when key is not found
+    # key - key name
+    # default_value - (optional) default value when locale is not defined
+    # param - (optional) parameter for the value
     #
     # Returns the translated String.
     #
@@ -42,52 +44,46 @@ module Jekyll
     #       en:
     #         hello: "Hello world"
     #         hello2: "Hello world '$0'"
+    #         date: 'Date=%v'
     #
     #     translate(c, 'en', 'hello')            # => Hello world
     #     translate(c, 'ja', 'hello')            # => こんにちは世界
-    #     translate(c, 'en', 'foo', 'hello2')    # => Hello world 'foo'
+    #     translate(c, 'en', 'hello2', 'foo')    # => Hello world 'foo'
     #     translate(c, 'fr', 'hello', nil, '!')  # => !
-    def self.translate(config, lang, input, string=nil, default=nil)
+    #     translate(c, 'en', 'date', Time.now)   # => 01-JAN-2013
+    def self.translate(config, lang, key, default_value=nil, param=nil)
       unless config.has_key?('locale') && config['locale'].has_key?(lang)
         return "(UNKNOWN TEXT: locale config for #{lang} not found)"
       end
       config = config['locale']
 
-      # Set param when `string` is set
-      param = nil
-      unless string.nil?
-        param = input
-        input = string
-      end
-
       begin
-        if input.nil?
+        if key.nil?
           return "(nil)"
-        elsif input.class == String
-          # get value
-          if config[lang].has_key? input
-            value = config[lang][input]
-          elsif default.nil?
-            return "(UNKNOWN TEXT: #{input} for #{lang})"
-          else
-            value = default
-          end
+        elsif key.class != String
+          "(UNKNOWN CLASS: #{key.class})"
+        end
 
-          # apply param
-          if param.nil?
-            return value
-          elsif param.class == String
-            return value.gsub('$0', param)
-          elsif param.class == Time
-            return param.strftime(value)
-          else
-            return "(UNKNOWN PARAM CLASS: #{param.class})"
-          end
+        # get value
+        if config[lang].has_key? key
+          value = config[lang][key]
         else
-          "(UNKNOWN CLASS: #{input.class})"
+          value = default_value
+          return "(UNKNOWN KEY: #{key} for #{lang})" if value.nil?
+        end
+
+        # apply param
+        if param.nil?
+          return value
+        elsif param.class == String
+          return value.gsub('$0', param)
+        elsif param.class == Time
+          return param.strftime(value)
+        else
+          return "(UNKNOWN PARAM CLASS: #{param.class})"
         end
       rescue => e
-        "(ERROR: #{input} for #{lang} #{e.message})"
+        "(ERROR: #{key} for #{lang} #{e.message})"
       end
     end
   end
