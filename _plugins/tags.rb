@@ -32,11 +32,8 @@ module Jekyll
       self.data['posts'] = posts
       self.data["lang"] = lang
 
-      if lang == 'ja'
-        self.data['title'] = "タグ「#{tag_display_name}」の記事一覧"
-      else
-        self.data['title'] = "Tag: #{tag_display_name}"
-      end
+      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+        tag_display_name, 'tag.title', 'Tag: $0')
     end
 
     def needs_render?

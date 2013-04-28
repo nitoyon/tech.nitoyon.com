@@ -50,14 +50,15 @@ module Jekyll
       self.process(@name)
       self.read_yaml(File.join(base, '_layouts'), 'archive.html')
 
-      title = "Archives for "
-      
       if day
-        title += "#{time.strftime('%B %d, %Y')}"
+        title = Jekyll::Locales.translate(site.config, lang,
+          time, 'archive.title.day', 'Archives for %B %d, %Y')
       elsif month
-        title += "#{time.strftime('%B %Y')}"
+        title = Jekyll::Locales.translate(site.config, lang,
+          time, 'archive.title.month', 'Archives for %B %Y')
       else
-        title += year.to_s
+        title = Jekyll::Locales.translate(site.config, lang,
+          time, 'archive.title.year', 'Archives for %Y')
       end
       
       self.data["title"] = title
