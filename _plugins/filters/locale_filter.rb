@@ -25,7 +25,29 @@ module Jekyll
   end
 
   class Locales
-    def self.translate(config, lang, input, string=nil)
+    # Convert a text using locale file.
+    #
+    # config - Site#config
+    # lang - language name
+    # input - key name when string is nil, parameter otherwise.
+    # string - key name or nil.
+    # default - returned value when key is not found
+    #
+    # Returns the translated String.
+    #
+    # (ex) _config.yml file:
+    #     locale:
+    #       ja:
+    #         hello: "こんにちは世界"
+    #       en:
+    #         hello: "Hello world"
+    #         hello2: "Hello world '$0'"
+    #
+    #     translate(c, 'en', 'hello')            # => Hello world
+    #     translate(c, 'ja', 'hello')            # => こんにちは世界
+    #     translate(c, 'en', 'foo', 'hello2')    # => Hello world 'foo'
+    #     translate(c, 'fr', 'hello', nil, '!')  # => !
+    def self.translate(config, lang, input, string=nil, default=nil)
       unless config.has_key?('locale') && config['locale'].has_key?(lang)
         return "(UNKNOWN TEXT: locale config for #{lang} not found)"
       end
@@ -49,11 +71,19 @@ module Jekyll
           end
         elsif input.class == String
           if config[lang].has_key? input
-            ret = config[lang][input]
-            ret = ret.gsub('$0', param) unless param.nil?
-            ret
-          else
+            if param.nil?
+              config[lang][input]
+            else
+              config[lang][input].gsub('$0', param)
+            end
+          elsif default.nil?
             "(UNKNOWN TEXT: #{input} for #{lang})"
+          else
+            if param.nil?
+              default
+            else
+              default.gsub('$0', param)
+            end
           end
         else
           "(UNKNOWN CLASS: #{input.class})"
