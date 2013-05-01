@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 23 Apr 2013 00:36:09 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 02 May 2013 02:44:35 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,53 @@
 
 
 
+
+		<item>
+			<title>git commit --amend を省力化する方法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/05/02/git-commit-amend/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/05/02/git-commit-amend/</guid>
+			<pubDate>Thu, 02 May 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Git で最後のコミットを修正するときには <code>git commit --amend</code> を使うんだけども、いままでは</p>
+
+<ol>
+<li><code>git add .</code></li>
+<li><code>git commit --amend</code></li>
+<li>エディターが立ち上がって、前回のコミット メッセージが表示される</li>
+<li>エディターを終了させる</li>
+</ol>
+
+<p>としていた。</p>
+
+<p>この作業は何度も繰り返すと面倒だったので、man を調べてみると <code>--no-edit</code> なるステキなオプションを発見した。</p>
+
+<h1>--no-edit を使う</h1>
+
+<p><code>--no-edit</code> を指定すると、上の手順はこうなる。</p>
+
+<ol>
+<li><code>git add .</code></li>
+<li><code>git commit --amend --no-edit</code></li>
+</ol>
+
+<p>コミット メッセージはそのままに、コミットの中身だけを書き換えられる。エディターが立ち上がらないので楽チン。</p>
+
+<h1>-a でさらに省力化</h1>
+
+<p>さらに <code>git add .</code> も省力化できて</p>
+<div class="highlight"><pre><code class="text">git commit -a --amend --no-edit
+</code></pre></div>
+<p>とすればよい。</p>
+
+<p><strong>コマンド一発</strong>になった。超楽チン。</p>
+
+<p>注意点は次の 2 つ。</p>
+
+<ul>
+<li>新しいファイルを追加したときは明示的に add する必要がある。<code>git add .</code> と <code>git c    ommit -a</code> ではステージするファイルが違うので注意。</li>
+<li>コミットしたくない変更がワーキング ディレクトリーに残ってる状態では使えない。<code>git stash</code> するなどでよけておくべし。</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>Google Chrome で超手軽にスマホ向けデザインを確認する方法</title>
@@ -400,224 +447,6 @@ Thumbs.db
 <h1>まとめ</h1>
 
 <p><code>git-new-workdir</code> で便利な Git 生活を！</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>rsync の複雑怪奇な exclude と include の適用手順を理解しよう</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/03/26/rsync-include-exclude/</guid>
-			<pubDate>Tue, 26 Mar 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>rsync は便利なんだけど、オプションが多くて難しい。特にややこしいのがファイルを選別するための <code>--exclude</code> と <code>--include</code> オプションだ。</p>
-
-<p>man を読んでもイメージがつかみにくかったので、ググったり、<code>-vvv</code> の結果を見たり、ソースを読んだりしつつ調べてみたところ、<strong>3 つのルール</strong>を理解すれば何とかなりそうなことが分かった。</p>
-
-<p>この記事では、その 3 つのルールをなるべく分かりやすく説明する。</p>
-
-<h1>ルール1: 指定順に意味がある</h1>
-
-<p>コマンドライン引数は、通常、どの順番に指定しても同じ挙動になることが多い。しかし、rsync の <code>include</code> と <code>exclude</code> に関しては、指定順が意味を持つ。</p>
-
-<p>man にも出てくる例で説明しよう。MP3 だけをコピーするには次のようにする。</p>
-<div class="highlight"><pre><code class="text">rsync -av --include=&#39;*/&#39; --include=&#39;*.mp3&#39; --exclude=&#39;*&#39; src dst
-</code></pre></div>
-<p><code>-av</code> はコピーするときのお決まりのオプション。ネットワーク越しにコピーするときは、<code>-avz</code> として圧縮して転送することが多い。<code>-n</code> (dry run) をつければ、どのファイルが同期されるのかを事前に知ることができる。</p>
-
-<p>今回の本題は 3 つのフィルター。それぞれの意味は次の通り。</p>
-
-<ol>
-<li><code>--include=&#39;*/&#39;</code>: フォルダーはコピーする</li>
-<li><code>--include=&#39;*.mp3&#39;</code>: 拡張子が MP3 のファイルはコピーする</li>
-<li><code>--exclude=&#39;*&#39;</code>: それ以外はコピーしない</li>
-</ol>
-
-<p>もし、<code>exclude</code> を手前にもってきて</p>
-<div class="highlight"><pre><code class="text">rsync --include=&#39;*/&#39; --exclude=&#39;*&#39; --include=&#39;*.mp3&#39; src dst
-</code></pre></div>
-<p>とすると、フィルターの優先順位が</p>
-
-<ol>
-<li><code>--include=&#39;*/&#39;</code>: ディレクトリーはコピーする</li>
-<li><code>--exclude=&#39;*&#39;</code>: すべてのファイルをコピーしない</li>
-<li><code>--include=&#39;*.mp3&#39;</code>: 拡張子が MP3 のファイルはコピーする</li>
-</ol>
-
-<p>となる。<code>*.mp3</code> の前に <code>*</code> にマッチしてしまうので、何もコピーしてくれない。</p>
-
-<p>フィルターの指定順には意味があって、<strong>先頭から順番に判定していく</strong>と覚えておこう。</p>
-
-<h1>ルール2: 上の階層から順番に調べる</h1>
-
-<p>いきなりクイズ。</p>
-
-<p>次のコマンドを実行したとき、src フォルダーにある public_html/index.html はコピーされるだろうか？</p>
-<div class="highlight"><pre><code class="text">rsync -av --include=&#39;index.html&#39; --exclude=&#39;public_html/&#39; src dst
-</code></pre></div>
-<p>このコマンドのフィルターは次の 2 つ。</p>
-
-<ol>
-<li><code>--include=index.html</code></li>
-<li><code>--exlclude=public_html/</code></li>
-</ol>
-
-<p>public_html/index.html は両方のフィルターにマッチしそうだ。さきほど「先頭のフィルターを優先する」と説明したので、1 つ目のフィルターを優先してコピーされそうに思える。</p>
-
-<p>しかし、答えは「コピーされない」である。その理由を説明していこう。</p>
-
-<h2>まず最初に上の階層をチェック</h2>
-
-<p>rsync は <code>public_html/index.html</code> をコピーするか判定する前に、上の階層の public_html をコピーするかどうかを確認する。</p>
-
-<p>public_html に対して、2 つのフィルターを順番に適用する。</p>
-
-<ol>
-<li><code>--include=index.html</code> にはマッチしないので先へ進む。</li>
-<li><code>--exclude=public_html/</code> にはマッチする。</li>
-</ol>
-
-<p>exclude になった場合、それより下位のフォルダーは確認しない。</p>
-
-<p>つまり、public_html/index.html は問答無用でコピー対象から除外される。</p>
-
-<h2>フォルダー内の特定のファイルのみを転送するには？</h2>
-
-<p>では、public_html の下の index.html のみをコピー対象とするにはどう設定すればよいだろうか。</p>
-
-<p>答えはこうなる。</p>
-<div class="highlight"><pre><code class="text">rsync -av --include &#39;index.html&#39; --exclude &#39;public_html/*&#39; src dst
-</code></pre></div>
-<p>順番にみていこう。</p>
-
-<p>まず最初に public_html に対して 2 つのフィルターを適用する。</p>
-
-<ol>
-<li><code>--include=index.html</code> にはマッチしないので先へ進む。</li>
-<li><code>--exclude=public_html/*</code> にもマッチしない (<code>*</code> は 1 文字以上の任意の文字にしかマッチしない)。</li>
-</ol>
-
-<p><code>include</code> にマッチしたときと、どのフィルターにもマッチしなかったときは、下の階層のチェックに進む。</p>
-
-<p>ということで、public_html/index.html に対して 2 つのフィルターを適用してみよう。</p>
-
-<ol>
-<li><code>--include=index.html</code> にはマッチする。</li>
-</ol>
-
-<p><code>include</code> にマッチしたので、次の階層のチェックに進む。が、これが最後の階層なので、public_html/index.html はコピー対象となる。</p>
-
-<p>同じように考えていけば、public_html/other.html が除外されることも分かるだろう。</p>
-
-<h2>(参考) 擬似コード</h2>
-
-<p>ここまで文字で長々説明してきたが、プログラムが読める人なら、擬似コードで説明したほうが早いだろう (読めない人は飛ばしてね)。</p>
-<div class="highlight"><pre><code class="javascript">// public_html/index.html をコピーするか確認 (上の階層から順番にチェックする)
-foreach (name in [&#39;public_html&#39;, &#39;public_html/index.html&#39;]) {
-  // 1 つ目のフィルターから順番にチェックする
-  foreach (filter in filters) {
-    if (filter_match(name, filter)) {
-      if (is_exclude(filter)) {
-        // exclude フィルターにマッチしたらその場で中断
-        return false;
-      } else {
-        // include フィルターにマッチしたら、次の階層のチェックに移る
-        break;
-      }
-    }
-  }
-
-  // include にマッチしたとき、1 つもマッチしなかったときはここにくる
-}
-
-// すべての階層で除外されなければコピーする
-return true;
-</code></pre></div>
-<h1>ルール3: 個別のフィルターの記法いろいろ</h1>
-
-<p>あとはフィルターの記法を知ってれば完璧に理解できるだろう。</p>
-
-<h2>foo は何にマッチするか</h2>
-
-<p>単に <code>foo</code> というフィルターを書いたとき、末尾部分が foo になっているファイルにマッチする。</p>
-
-<ul>
-<li>○: <code>foo</code></li>
-<li>×: <code>abcfoo</code></li>
-<li>○: <code>abc/foo</code></li>
-<li>×: <code>foo/abc</code></li>
-</ul>
-
-<p>正規表現で書くと <code>(^|/)foo$</code> となる。</p>
-
-<h2>/ から始めると</h2>
-
-<p>一方、<code>/</code> から始めて、<code>/foo</code> のようにすると、マッチ対象が先頭のみになる。</p>
-
-<ul>
-<li>○: <code>foo</code></li>
-<li>×: <code>abcfoo</code></li>
-<li>×: <code>abc/foo</code></li>
-<li>×: <code>foo/abc</code></li>
-</ul>
-
-<p>正規表現で書くと <code>^foo$</code> となる。</p>
-
-<h2>/ で終わると</h2>
-
-<p>末尾に <code>/</code> をつけると、対象がフォルダーのときのみマッチする。</p>
-
-<p><code>foo/</code> は <code>foo</code> がフォルダーのときはマッチするが、ファイルのときにはマッチしない。</p>
-
-<h2>* や ** を使ってみる</h2>
-
-<p>記号についてもまとめておこう。</p>
-
-<table><thead>
-<tr>
-<th>記号</th>
-<th>意味</th>
-<th>対応する正規表現</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><code>*</code></td>
-<td><code>/</code> 以外の 1 文字以上</td>
-<td><code>[^/]+</code></td>
-</tr>
-<tr>
-<td><code>**</code></td>
-<td><code>/</code> を含む 1 文字以上</td>
-<td><code>.+</code></td>
-</tr>
-<tr>
-<td><code>?</code></td>
-<td><code>/</code> 以外の 1 文字</td>
-<td><code>[^/]</code></td>
-</tr>
-</tbody></table>
-
-<p>たとえば、<code>*.png</code> を正規表現で書くと <code>(^|/)[^/]+\.png$</code> となる。<code>abc.png</code> や <code>foo/abc.png</code> にはマッチするが、<code>abc.png/foo</code> や <code>.png</code>にはマッチしない。</p>
-
-<p>さらに、<code>***</code> は <code>foo/***</code> のように指定することで、フォルダーとその配下のファイルをまとめて指定できる。<code>foo/***</code> と指定するのは、<code>foo/</code> と <code>foo/**</code> の両方を指定することと等しい。</p>
-
-<h2>[a-z] を使う</h2>
-
-<p>正規表現のように、マッチする文字の範囲を指定できる。<code>[^a-z]</code> のように特定の文字以外にマッチするようにも書ける。POSIX クラスで <code>[[:digit:][:upper:][:space:]]</code> のように書くこともできる。</p>
-
-<p>正規表現のように書けてうれしいのだが、<code>[a-z]*</code> と書いたとしても、単に <code>[a-z][^/]+</code> にしかマッチしない。間違えないように注意。</p>
-
-<h1>まとめ</h1>
-
-<p>rsync の複雑な <code>include</code> / <code>exclude</code> の処理について説明した。要点は次の 3 つ。</p>
-
-<ul>
-<li>フィルターは指定順に優先されている</li>
-<li>判定処理は上の階層から実施して、各階層の中でフィルターを順番に適用していく</li>
-<li>個別の記法を理解すべし</li>
-</ul>
-
-<p>これが理解できれば、あとは頭の体操でフィルター条件を作れるはず！</p>
-
-<p>一見複雑怪奇ではあるが、このような仕組みになっているおかげで、一部除外や一部許可を設定しやすくなっている。一方、<code>tar</code> コマンドは man を見ると <code>exclude</code> を優先すると書いてあるので、一部除外しか指定できないような気がする。</p>
 ]]></description>
 		</item>
 

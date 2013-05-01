@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/05/02/git-commit-amend/", title: "git commit --amend を省力化する方法"},
 	{url: "/ja/blog/2013/04/23/chrome-responsive-debug/", title: "Google Chrome で超手軽にスマホ向けデザインを確認する方法"},
 	{url: "/ja/blog/2013/04/17/jekyll-pluralize/", title: "Jekyll のカテゴリーとタグの指定方法 3 パターン"},
 	{url: "/ja/blog/2013/04/05/sourcetree/", title: "SourceTree が Git のグローバルな無視リストを書き換えて困った話"},
-	{url: "/ja/blog/2013/03/29/git-new-workdir/", title: "Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利"},
-	{url: "/ja/blog/2013/03/26/rsync-include-exclude/", title: "rsync の複雑怪奇な exclude と include の適用手順を理解しよう"}
+	{url: "/ja/blog/2013/03/29/git-new-workdir/", title: "Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利"}
 ];
 
 Site.archives.months = [
-  "201304"
+  "201305"
+, "201304"
 , "201303"
 , "201302"
 , "201301"
