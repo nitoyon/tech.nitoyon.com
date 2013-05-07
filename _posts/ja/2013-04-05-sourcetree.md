@@ -11,7 +11,7 @@ seealso:
   - 2012-02-21-msysgit-utf8
   - 2012-12-21-text-hatena-js-github
 ---
-Git を使ってるときに、`git status` に存在するはずのファイルが Untracked files に出てこない現象に出会って困ってしまった。
+Git で `git status` を実行したときに、Untracked files として表示されるはずのファイルが表示されない現象に出会った。
 
 いろいろ調べてみたところ、SourceTree さんがインストール時にグローバルな無視リストを作成していたことが判明した。SourceTree を使ってないときにも影響がでるのでたちが悪い。
 
@@ -19,7 +19,7 @@ Git を使ってるときに、`git status` に存在するはずのファイル
 勝手に書き換えられてしまうファイルはこれだ!!
 ============================================
 
-Windows 版の例だけど、まず、`.gitconfig`。
+Windows 版の例だけど、まず、`.gitconfig` に次のような設定が追加されちゃう。
 
 ```ini
 [core]
@@ -28,7 +28,7 @@ Windows 版の例だけど、まず、`.gitconfig`。
 
 Mac の場合は `/User/username/.gitignore_global` に設定する模様。
 
-gitignore_global.txt はこんな感じ。
+gitignore_global.txt はこんな感じになってた。
 
 ```
 #ignore thumbnails created by windows
@@ -56,7 +56,7 @@ Thumbs.db
 *.sbr
 ```
 
-Windows 系の開発で自動生成されたり、コミットする必要のないファイルが列挙されている。
+この辺の拡張子は、Windows 関係の開発で自動生成されたり、中間ファイルだったりするファイルなので、確かにコミットする必要がないことはない。
 
 
 .gitconfig に excludesfile がないときに発動
