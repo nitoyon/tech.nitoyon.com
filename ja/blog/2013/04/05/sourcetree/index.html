@@ -13,7 +13,7 @@
 	<meta property="og:title" content="SourceTree が Git のグローバルな無視リストを書き換えて困った話"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/04/05/sourcetree/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="Git を使ってるときに、git status に存在するはずのファイルが Untracked files に出てこない現象に出会って困ってしまった。いろいろ調べてみたところ、SourceTree さんがインストール時にグローバルな無視リストを作成していたことが判明した。SourceTree を使ってないときにも影響がでるのでたちが悪い。勝手に書き換えられてしまうファイルはこれだ!!Windows 版の例だけど、まず、.gitconfig。[core] excludesfile = C:\\Users\\username\\Documents\\gitignore_global.txtM..."/>
+	<meta property="og:description" content="Git で git status を実行したときに、Untracked files として表示されるはずのファイルが表示されない現象に出会った。いろいろ調べてみたところ、SourceTree さんがインストール時にグローバルな無視リストを作成していたことが判明した。SourceTree を使ってないときにも影響がでるのでたちが悪い。勝手に書き換えられてしまうファイルはこれだ!!Windows 版の例だけど、まず、.gitconfig に次のような設定が追加されちゃう。[core] excludesfile = C:\\Users\\username\\Documents\\gitigno..."/>
 	<meta property="og:image" content="http://farm9.staticflickr.com/8382/8619841968_7bd4237420_o.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -56,19 +56,19 @@
 <div class="entry">
 <div class="entry-body">
 <section>
-<p>Git を使ってるときに、<code>git status</code> に存在するはずのファイルが Untracked files に出てこない現象に出会って困ってしまった。</p>
+<p>Git で <code>git status</code> を実行したときに、Untracked files として表示されるはずのファイルが表示されない現象に出会った。</p>
 
 <p>いろいろ調べてみたところ、SourceTree さんがインストール時にグローバルな無視リストを作成していたことが判明した。SourceTree を使ってないときにも影響がでるのでたちが悪い。</p>
 
 <h1>勝手に書き換えられてしまうファイルはこれだ!!</h1>
 
-<p>Windows 版の例だけど、まず、<code>.gitconfig</code>。</p>
+<p>Windows 版の例だけど、まず、<code>.gitconfig</code> に次のような設定が追加されちゃう。</p>
 <div class="highlight"><pre><code class="ini"><span class="k">[core]</span>
     <span class="na">excludesfile</span> <span class="o">=</span> <span class="s">C:\\Users\\username\\Documents\\gitignore_global.txt</span>
 </code></pre></div>
 <p>Mac の場合は <code>/User/username/.gitignore_global</code> に設定する模様。</p>
 
-<p>gitignore_global.txt はこんな感じ。</p>
+<p>gitignore_global.txt はこんな感じになってた。</p>
 <div class="highlight"><pre><code class="text">#ignore thumbnails created by windows
 Thumbs.db
 #Ignore files build by Visual Studio
@@ -93,7 +93,7 @@ Thumbs.db
 *.lib
 *.sbr
 </code></pre></div>
-<p>Windows 系の開発で自動生成されたり、コミットする必要のないファイルが列挙されている。</p>
+<p>この辺の拡張子は、Windows 関係の開発で自動生成されたり、中間ファイルだったりするファイルなので、確かにコミットする必要がないことはない。</p>
 
 <h1>.gitconfig に excludesfile がないときに発動</h1>
 
