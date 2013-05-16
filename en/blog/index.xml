@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 17 Apr 2013 00:33:29 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 17 May 2013 01:00:05 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,62 @@
 
 
 
+
+		<item>
+			<title>Bugzilla: Edit bug status using Perl script</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/</guid>
+			<pubDate>Fri, 17 May 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I wrote a perl script which adds a comment and modify status of bug in Bugzilla. This script is useful if you want to fix a bug automatically with a commit log.</p>
+<div class="highlight"><pre><code class="perl">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib
+
+use strict;
+use Bugzilla;
+use Bugzilla::User;
+use Bugzilla::Status;
+use Bugzilla::Bug;
+use utf8;
+
+&amp;update_bug(1, &quot;ほげほげ&quot;);
+
+# API document: http://www.bugzilla.org/docs/4.2/en/html/api/
+sub update_bug {
+    my ($bug_id, $text) = @_;
+
+    # open bug
+    my $bug = Bugzilla::Bug-&gt;new($bug_id);
+    die $bug-&gt;error if defined $bug-&gt;error;
+
+    # get user
+    my $user = Bugzilla::User-&gt;new({name =&gt; &#39;admin@example.com&#39;});
+    die &#39;user not found!!!!&#39; unless defined $user;
+
+    # login
+    Bugzilla-&gt;set_user($user);
+
+    # comment to the bug
+    $bug-&gt;add_comment($text);
+
+    # FIXED
+    $bug-&gt;set_bug_status(Bugzilla::Status-&gt;new({name =&gt; &#39;RESOLVED&#39;}),
+                         {resolution =&gt; &#39;FIXED&#39;});
+
+    # save to database
+    $bug-&gt;update();
+}
+</code></pre></div>
+<p>Tested on Bugzilla 4.2.5.</p>
+
+<p>When you are using Git, call this subroutine from <code>post-receive</code> hook.</p>
+
+<p>Warnings:</p>
+
+<ul>
+<li>This script must be executed on the server Bugzilla installed.</li>
+<li>I&#39;m using undocumented module, <code>Bugzilla::Bug</code>. At first, I tried to use <code>Bugzilla::WebService::Bug</code> (documented), but it depends on <code>Test/Taint</code> module and my server doesn&#39;t have the module.</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>3 ways to specify categories and tags in Jekyll</title>
@@ -169,132 +225,6 @@ tags: [Bar Baz, AAA]
 <h1>How does it work?</h1>
 
 <p>Silverlight supports DLR(Dynamic Language Runtime) which enables us to execute Ruby and Python on .NET application. IRBWEB is developped based on repl sample included in <a href="http://www.codeplex.com/sdlsdk">Silverlight Dynamic Languages SDK</a> 0.5.0.</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Processing &quot;FireCube&quot; example ported to ActionScript 3.0</title>
-			<link>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2009/03/25/processing-firecube-example-ported-to-actionscript-30/</guid>
-			<pubDate>Wed, 25 Mar 2009 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090309/20090309001432.png" width="398" height="168"></center></p>
-
-<p>Processing example <a href="http://processing.org/learning/topics/firecube.html">FireCube</a> is so interesting to me. I ported it to ActionScript 3.0.</p>
-
-<p>The result is...</p>
-
-<p><center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"> </script><noscript>(Flash Player 9  or later required)</noscript></center></p>
-
-<h1>Performance improvement</h1>
-
-<p><a href="http://processing.org/learning/topics/firecube.html">Processing version</a> calculates every pixel color when</p>
-
-<ul>
-<li>creating noise,</li>
-<li>combining values from adjacent pixels and</li>
-<li>converting color.</li>
-</ul>
-
-<p>So I implement it as follows:</p>
-
-<ul>
-<li>creating noise -&gt; <code>BitmapData.noise()</code></li>
-<li>combining values from adjacent pixels -&gt; <code>ConvolutionFilter</code></li>
-<li>converting color -&gt; <code>BitmapData.paletteMap()</code></li>
-</ul>
-
-<h1>Difficulty</h1>
-
-<p>HSV color space is not supported in AS3! I created a function called <code>HSVtoRGB</code>.</p>
-
-<p>Drawing a cube was a pain. So, I changed a cube to circle...</p>
-
-<p>Here is the code: (83 lines)</p>
-
-<div class="highlight"><pre><code class="actionscript">// Processing FireCube (AS3 version) 
-// original source: http://processing.org/learning/topics/firecube.html
-package {
-import flash.display.*;
-import flash.filters.*;
-import flash.geom.*;
-
-public class FireCube extends Sprite{
-    private const WIDTH:int = 200;
-    private const HEIGHT:int = 150;
-
-    public function FireCube(){
-        stage.align = &quot;TL&quot;;
-        stage.scaleMode = &quot;noScale&quot;;
-        scaleX = scaleY = 2;
-
-        // Create circle
-        var circle:Sprite = new Sprite();
-        circle.graphics.beginFill(0x808080);
-        circle.graphics.drawCircle(0, 0, 10);
-        circle.graphics.endFill();
-
-        // Create buffered image
-        var fire:BitmapData = new BitmapData(WIDTH, HEIGHT, false, 0);
-        var pg:BitmapData = fire.clone();
-        var noiseBmd:BitmapData = new BitmapData(WIDTH, 1);
-
-        var bmp:Bitmap = new Bitmap(pg);
-        addChild(bmp);
-
-        // Generate the palette
-        var r:Array = [], g:Array = [], b:Array = [];
-        for(var x:int = 0; x &lt; 256; x++) {
-            //Hue goes from 0 to 85: red to yellow
-            //Saturation is always the maximum: 255
-            //Lightness is 0..255 for x=0..128, and 255 for x=128..255
-            HSVtoRGB(x / 3, 1, Math.min(x * 3 / 255.0, 1), r, g, b);
-        }
-
-        // Use ConvolutionFilter to calculate for every pixel
-        var filter:ConvolutionFilter = new ConvolutionFilter(3, 3, [0, 0, 0, 16, 16, 16, 0, 16, 0], 65);
-
-        // Prepare points and matrix
-        var matrix:Matrix = new Matrix();
-        var pt0:Point = new Point(0, HEIGHT - 1);
-        var pt1:Point = new Point(0, -1);
-        var pt2:Point = new Point(0, 1);
-
-        // Do loop
-        addEventListener(&quot;enterFrame&quot;, function(event:*):void{
-            // Randomize the bottom row of the fire buffer
-            noiseBmd.noise(Math.random() * 0xffffffff, 0, 190, 7, true);
-            fire.copyPixels(noiseBmd, noiseBmd.rect, pt0);
-
-            // Display circle
-            matrix.tx = mouseX;
-            matrix.ty = mouseY;
-            fire.draw(circle, matrix);
-
-            // Add pixel values around current pixel
-            fire.applyFilter(fire, fire.rect, pt1, filter);
-
-            // Output everything to screen using our palette colors
-            pg.paletteMap(fire, fire.rect, pt2, r, g, b);
-        });
-    }
-
-    // AS3 does not natively support HSV...  :-(
-    private function HSVtoRGB(h:int, s:Number, v:Number, r:Array, g:Array, b:Array):void {
-        if (h &lt; 60) {
-            r.push((v * 255) &lt;&lt; 16);
-            g.push((v * (1 - (1 - h / 60.0) * s) * 255) &lt;&lt; 8)
-            b.push(v * (1 - s) * 255);
-        } else if (h &lt; 120) {
-            r.push((v * (1 - (-h / 60.0 - 1) * s) * 255) &lt;&lt; 16);
-            g.push((v * 255) &lt;&lt; 8);
-            b.push(v * (1 - s) * 255);
-        } else {
-            throw Error(&#39;not implemented&#39;);
-        }
-    }
-}
-}
-</code></pre></div>
 ]]></description>
 		</item>
 

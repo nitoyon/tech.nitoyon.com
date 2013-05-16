@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Bugzilla に登録してあるバグをプログラムから更新する方法 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Bugzilla に登録してあるバグをプログラムから更新する方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="会社で BTS として Bugzilla を使っているんだけど、修正したあとに手作業で Web インターフェースから書き込むのが面倒になってきたので、自動化してみた。コミットしたとき (Git の場合は push したとき) に、コミットメッセージからバグ番号を読み取って、対応するバグにメッセージを書き込みつつ、FIXED にすればよい。情報がなくて困ったのが、バグにコメントを書いたり、FIXED にする方法。この部分の処理を抜き出してみた。#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/libuse strict;use ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2013/05/17/bugzilla-hack/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/</span>.</a>
+</div>
+
+<article>
+<header>
+<hgroup>
+<h2>2013年05月17日</h2>
+<h1>Bugzilla に登録してあるバグをプログラムから更新する方法</h1>
+</hgroup>
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/" class="hatena-bookmark-button" data-hatena-bookmark-title="Bugzilla に登録してあるバグをプログラムから更新する方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/" data-lang="ja" data-size="horizontal" data-text="Bugzilla に登録してあるバグをプログラムから更新する方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+
+<p>会社で BTS として Bugzilla を使っているんだけど、修正したあとに手作業で Web インターフェースから書き込むのが面倒になってきたので、自動化してみた。</p>
+
+<p>コミットしたとき (Git の場合は push したとき) に、コミットメッセージからバグ番号を読み取って、対応するバグにメッセージを書き込みつつ、FIXED にすればよい。</p>
+
+<p>情報がなくて困ったのが、バグにコメントを書いたり、FIXED にする方法。この部分の処理を抜き出してみた。</p>
+<div class="highlight"><pre><code class="perl"><span class="c1">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib</span>
+
+<span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+<span class="k">use</span> <span class="n">Bugzilla</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">User</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">Status</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">Bug</span><span class="p">;</span>
+<span class="k">use</span> <span class="n">utf8</span><span class="p">;</span>
+
+<span class="o">&amp;</span><span class="n">update_bug</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;ほげほげ&quot;</span><span class="p">);</span>
+
+<span class="c1"># API document: http://www.bugzilla.org/docs/4.2/en/html/api/</span>
+<span class="k">sub </span><span class="nf">update_bug</span> <span class="p">{</span>
+    <span class="k">my</span> <span class="p">(</span><span class="nv">$bug_id</span><span class="p">,</span> <span class="nv">$text</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+
+    <span class="c1"># open bug</span>
+    <span class="k">my</span> <span class="nv">$bug</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="n">Bug</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="nv">$bug_id</span><span class="p">);</span>
+    <span class="nb">die</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">error</span> <span class="k">if</span> <span class="nb">defined</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">error</span><span class="p">;</span>
+
+    <span class="c1"># get user</span>
+    <span class="k">my</span> <span class="nv">$user</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="n">User</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="n">name</span> <span class="o">=&gt;</span> <span class="s">&#39;admin@example.com&#39;</span><span class="p">});</span>
+    <span class="nb">die</span> <span class="s">&#39;user not found!!!!&#39;</span> <span class="k">unless</span> <span class="nb">defined</span> <span class="nv">$user</span><span class="p">;</span>
+
+    <span class="c1"># login</span>
+    <span class="n">Bugzilla</span><span class="o">-&gt;</span><span class="n">set_user</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+
+    <span class="c1"># comment to the bug</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">add_comment</span><span class="p">(</span><span class="nv">$text</span><span class="p">);</span>
+
+    <span class="c1"># FIXED</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">set_bug_status</span><span class="p">(</span><span class="nn">Bugzilla::</span><span class="n">Status</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="n">name</span> <span class="o">=&gt;</span> <span class="s">&#39;RESOLVED&#39;</span><span class="p">}),</span>
+                         <span class="p">{</span><span class="n">resolution</span> <span class="o">=&gt;</span> <span class="s">&#39;FIXED&#39;</span><span class="p">});</span>
+
+    <span class="c1"># save to database</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">update</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Bugzilla 4.2.5 で動作を確認している。</p>
+
+<p>あとは、Git なら <code>post-receive</code> フックで、コミットログを解析して、この関数を呼ぶようにすればよい。</p>
+
+<p>注意点:</p>
+
+<ul>
+<li>Bugzilla がインストールされているサーバー上で動くことを前提としている。同一サーバーならパスワードなしで、特定のユーザーに su できるようだ。</li>
+<li><code>Bugzilla::Bug</code> はドキュメント化されていないので、バージョンアップしたら使えなくなる可能性がある。同じような機能の <code>Bugzilla::WebService::Bug</code> はドキュメントがあるんだけど、使おうとしたら <code>Test/Taint.pm</code> が必要だとか言われて面倒になったのでやめた。</li>
+</ul>
+
+
+</div>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="bottom-share">
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/" class="hatena-bookmark-button" data-hatena-bookmark-title="Bugzilla に登録してあるバグをプログラムから更新する方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/" data-lang="ja" data-size="horizontal" data-text="Bugzilla に登録してあるバグをプログラムから更新する方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+
+<div class="seealso">
+<h4>あわせてどうぞ</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/03/29/git-new-workdir/">Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</a></li>
+
+<li><a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li>
+
+<li><a href="/ja/blog/2012/03/19/perl-feature-extraction/">Perl で文章の特徴抽出した話を Kyoto.pm #01 で発表しました</a></li>
+
+<li><a href="/ja/blog/2010/02/23/perl-exif/">Image::ExifTool で写真の EXIF 時刻をまとめてずらす</a></li>
+
+<li><a href="/ja/blog/2008/06/03/perl-open/">Perl 2008年のファイルオープン</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager-bottom">
+	
+		&laquo;&nbsp;<a href="/ja/blog/2013/05/02/git-commit-amend/" rel="previous">git commit --amend を省力化する方法</a>
+	
+
+	
+
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2012. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
