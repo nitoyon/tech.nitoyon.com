@@ -3,6 +3,7 @@ layout: post
 title: 俺の最強ブログ システムが火を噴くぜ
 tags:
 - hatena
+- Jekyll
 - tech-ni
 lang: ja
 ---

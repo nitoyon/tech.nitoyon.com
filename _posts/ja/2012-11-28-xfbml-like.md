@@ -2,7 +2,6 @@
 layout: post
 title: 「いいね！」ボタンは XFBML 版を設置して Facebook に最適化すべき
 tags:
-- tech-ni
 - Facebook
 lang: ja
 ---

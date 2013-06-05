@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "-webkit-text-size-adjust: none を絶対に設定してはいけない理由"
-tags: CSS
+tags: CSS HTML5 iPhone
 lang: ja
 thumbnail: http://farm9.staticflickr.com/8515/8467619207_9625a87b57_o.jpg
 seealso:
