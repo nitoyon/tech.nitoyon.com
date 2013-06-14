@@ -50,19 +50,69 @@ module Jekyll
     end
   end
 
+  class TagList < Page
+    def initialize(site, base, tags, lang)
+      @site = site
+      @base = base
+      @name = "index.html"
+      @dir = "/#{lang}/blog/tags"
+
+      self.process(name)
+      self.read_yaml(File.join(base, '_layouts'), 'tags.html')
+
+      tag_names = tags.keys.sort {|a, b| a.downcase <=> b.downcase }
+      self.data['max_posts'] = max_posts = tags.values.map {|p| p.length}.max
+      self.data['tags'] = tag_names.map {|name|
+        ratio = (tags[name].count.to_f / max_posts * 100.0).to_i
+        {'name' => name,
+         'posts' => tags[name],
+         'cloud' => case ratio
+           when 100
+             "0"
+           when 50..100
+             "1"
+           when 15 .. 50
+             "2"
+           when 10 .. 15
+             "3"
+           when 5 .. 10
+             "4"
+           else
+             "5"
+           end
+         }
+      }
+      self.data["lang"] = lang
+
+      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+        'tags.title', 'Tag Cloud')
+    end
+
+    def needs_render?
+      @site.yaml_cache.yaml_modified
+    end
+  end
+
   class Site
     def generate_tags
       payload = site_payload
 
+      lang_tags = {}
       self.tags.each do |tag, posts|
-        lang_posts = {}
         posts.each do |post|
-          lang_posts[post.lang] = [] unless lang_posts.key? post.lang
-          lang_posts[post.lang] << post
+          lang_tags[post.lang] = {} unless lang_tags.key? post.lang
+          lang_tags[post.lang][tag] = [] unless lang_tags[post.lang].key? tag
+          lang_tags[post.lang][tag] << post
         end
+      end
 
-        lang_posts.each do |lang, p|
-          page = Tag.new(self, self.source, tag, lang, p)
+      lang_tags.each do |lang, tags|
+        page = TagList.new(self, self.source, tags, lang)
+        self.render_if_modified(page, payload)
+        self.pages << page
+
+        tags.each do |tag, posts|
+          page = Tag.new(self, self.source, tag, lang, posts)
           self.render_if_modified(page, payload)
           self.pages << page
         end
