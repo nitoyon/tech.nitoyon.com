@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年06月03日</h2>
+<div class="post-date">2008年06月03日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/perl/">Perl</a></div>
+
 <h1>Perl 2008年のファイルオープン</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080603/perl_open" class="hatena-bookmark-button" data-hatena-bookmark-title="Perl 2008年のファイルオープン - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/03/perl-open/" data-lang="ja" data-size="horizontal" data-text="Perl 2008年のファイルオープン - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/06/03/perl-open/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -60,9 +62,7 @@
 <blockquote><p><a href="/otsune/"><img src="http://www.hatena.ne.jp/users/ot/otsune/profile_s.gif" class="hatena-id-icon" alt="otsune" title="otsune" width="16" height="16" /></a> <a href="/otsune/20080602#bookmark-8806292">otsune</a>  <span class="comment">2006年のhyuki Catalyst記事を載せるのもアレなのに2003年の記事を載せるのは無しだろ……open IN, ...のあたりは有害情報なので全力で見逃せ</span><br></p><p><a href="/TAKESAKO/"><img src="http://www.hatena.ne.jp/users/TA/TAKESAKO/profile_s.gif" class="hatena-id-icon" alt="TAKESAKO" title="TAKESAKO" width="16" height="16" /></a> <a href="/TAKESAKO/20080602#bookmark-8806292">TAKESAKO</a> <span class="comment"> ちょｗ→出典：日経Linux 2003年7月号　125ページより</span><br></p><p><a href="/miyagawa/"><img src="http://www.hatena.ne.jp/users/mi/miyagawa/profile_s.gif" class="hatena-id-icon" alt="miyagawa" title="miyagawa" width="16" height="16" /></a> <a href="/miyagawa/20080602#bookmark-8806292">miyagawa</a>  <span class="comment"> 2008年にこの記事はねーよ、と思ったら2003年の記事をいまさら再掲か。なんでわざわざ古い記事を新しいものかのように出して混乱させる？</span></p></blockquote>
 <p>問題があるというソースコードはこんなの。</p>
 <div class="highlight"><pre><span class="nb">open</span> <span class="n">IN</span><span class="p">,</span> <span class="s">&#39;&lt;/etc/passwd&#39;</span><span class="p">;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>えー！　どこが問題あるのかさっぱり分からん！！！！！！</p>
 <a name="seemore"></a>
 <h1>調べてみた</h1>
@@ -76,23 +76,17 @@
 <p>どれどれ。</p>
 <div class="highlight"><pre>&gt; perl -e <span class="s2">&quot;open FH, &#39;__not__found__&#39; or die $!&quot;</span>
 No such file or directory at -e line 1.
-</pre>
-</div>
-
+</pre></div>
 <p>おー、確かに。</p>
 <p>数値リテラルだとエラーコードになるらしい。どれどれ...</p>
 <div class="highlight"><pre>&gt; perl -e <span class="s2">&quot;open FH, &#39;__not__found__&#39; or print int($!)&quot;</span>
 2
-</pre>
-</div>
-
+</pre></div>
 <p>ほんとだ。</p>
 <h1>MODE を分ける</h1>
 <p>それでは、modern その１のコードを見てみる。</p>
 <div class="highlight"><pre><span class="nb">open</span> <span class="k">my</span> <span class="nv">$fh</span><span class="p">,</span> <span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s">&#39;filename&#39;</span> <span class="ow">or</span> <span class="nb">die</span> <span class="vg">$!</span><span class="p">;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>謎だ。</p>
 <p>困ってても仕方がないので、perldoc の <a href="http://perldoc.perl.org/functions/open.html">open</a> を見てみた。いくつもの書き方があるようだ。</p>
 <pre>open FILEHANDLE,EXPR 
@@ -115,16 +109,12 @@ open FILEHANDLE </pre>
 <p>読んだり閉じたりするには次のようにする。</p>
 <div class="highlight"><pre><span class="k">print</span> <span class="sr">&lt;$fh&gt;</span><span class="p">;</span>
 <span class="nb">close</span> <span class="nv">$fh</span><span class="p">;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>Perl 5.6 以降限定だけど、これも明日から使えそうなテクニックだ。</p>
 <h1>modern その２</h1>
 <p>modern その２はお手上げ。</p>
 <div class="highlight"><pre><span class="n">file</span><span class="p">(</span><span class="s">&#39;filename&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>file 関数ってなんだ？？　なんかのモジュール？？</p>
 <p>(追記) コメント欄でkzysさんに教えてもらいました。Path::Class モジュールのようです（<a href="http://search.cpan.org/dist/Path-Class/lib/Path/Class.pm">Path::Class</a>）。ありがとうございます。ファイルやディレクトリをたどるのが簡単になりそうですね。</p>
 <h1>まとめ</h1>
@@ -134,6 +124,8 @@ open FILEHANDLE </pre>
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -166,24 +158,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080603/perl_open" class="hatena-bookmark-button" data-hatena-bookmark-title="Perl 2008年のファイルオープン - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/06/03/perl-open/" data-lang="ja" data-size="horizontal" data-text="Perl 2008年のファイルオープン - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/06/03/perl-open/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/06/02/jsdokan/" rel="previous">JSDokan で JSON をファイルシステムに</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年06月03日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-06-03-perl-open.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/perl/">Perl</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/06/05/csharp-jscriptcodeprovider/" rel="next">C#の JScriptCodeProvider で JScript.NET と仲良くする&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/06/02/jsdokan/" rel="previous"><b>&laquo;</b><span class="title">JSDokan で JSON をファイルシステムに</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/06/05/csharp-jscriptcodeprovider/" rel="next"><span class="title">C#の JScriptCodeProvider で JScript.NET と仲良くする</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -191,7 +193,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -216,7 +218,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -243,7 +245,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

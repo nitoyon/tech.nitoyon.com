@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年01月22日</h2>
+<div class="post-date">2009年01月22日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/tamarin/">tamarin</a></div>
+
 <h1>ActionScript3 ブロックスコープの ABC</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090122/block_scope_abc" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 ブロックスコープの ABC - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 ブロックスコープの ABC - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -65,9 +67,7 @@
     <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>外で宣言をしたほうが</p>
 <div class="highlight"><pre><span class="c1">// 外バージョン</span>
 <span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
@@ -76,9 +76,7 @@
     <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>a が宣言される回数が少ないので効率的だとしています。</p>
 <p>けれども、<strong>これは間違い</strong>です。</p>
 <p>for の中で宣言したとしても、for のあとで変数は生き残ってます。さらに、for の前でも参照できます。</p>
@@ -92,9 +90,7 @@
 <span class="p">}</span>
 
 <span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                       <span class="c1">// 9</span>
-</pre>
-</div>
-
+</pre></div>
 <p>for の中で var a を宣言していますが、for を抜けたあとも 9 ですね。また、for の前では NaN（Number の初期値） になっています。</p>
 <p>ということで、var は実はどこに書いても同じ。全て<strong>関数の冒頭に宣言した場合と同じ</strong>になるわけです。</p>
 <h1>ブロックスコープと let</h1>
@@ -105,9 +101,7 @@
   <span class="c1">// 警告: 変数定義が重複しています。</span>
   <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>この警告からも、AS3 がブロックスコープを持たないのが分かりますね。</p>
 <p>対して、C++ や Java はブロックスコープを持つので、ブロックでだけ有効な変数を宣言することができます。</p>
 <p>ちなみに、JavaScript だと with を使ってブロックスコープを再現できるのですが、AS3 では with はなかったことになってるので使えません。（関連）<a href="http://d.hatena.ne.jp/amachang/20090119/1232331329">for 文と無名関数のイディオム - IT戦記</a></p>
@@ -134,9 +128,7 @@
     <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>Flex SDK 3.2 の asc.jar でコンパイルして、Tamarin 付属の abcdump でバイトコードを眺めてみた。</p>
 <p>中バージョンではこんな感じになった。</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="kc">undefined</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>    <span class="cm">/* disp_id 0*/</span>
@@ -168,9 +160,7 @@
 
   <span class="mi">32</span>        <span class="nx">returnvoid</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>いっぱい出てきたが、焦らずにゆっくり見ていこう。</p>
 <h1>最初にローカル変数の準備</h1>
 <p>まずは冒頭の7行。</p>
@@ -186,9 +176,7 @@
   <span class="mi">7</span>  <span class="nx">setlocal1</span>         <span class="c1">// pop して register 1 に代入</span>
 
   <span class="mi">8</span>  <span class="nx">jump</span>       <span class="nx">L1</span>     <span class="c1">// L1 に移動</span>
-</pre>
-</div>
-
+</pre></div>
 <p>関数の最初ではローカル変数 a と i を準備していることが分かる。</p>
 <p>ここまでのバイトコードは、「外バージョン」も「中バージョン」も同じだった。<strong>ローカル変数は宣言した場所によらず、関数の冒頭で確保される</strong>ようだ。</p>
 <h1>for を抜けるチェック</h1>
@@ -201,9 +189,7 @@
                        <span class="c1">// i が小さければ L2 にジャンプする</span>
 
   <span class="mi">32</span> <span class="nx">returnvoid</span>        <span class="c1">// void を返す</span>
-</pre>
-</div>
-
+</pre></div>
 <p>i < 10 である限りは、L2 にジャンプし続けるわけですな。実はここも、外バージョンと中バージョンで同じ。</p>
 <h1>いよいよ for の中を解析</h1>
 <p>最後に L2。ここで外と中の違いがでてくる。</p>
@@ -222,9 +208,7 @@
   <span class="mi">22</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
   <span class="mi">23</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
   <span class="mi">24</span> <span class="nx">setlocal1</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
-</pre>
-</div>
-
+</pre></div>
 <p>素直な感じ。</p>
 <p>次は外バージョン（<code>a = new Object()</code>）。</p>
 <div class="highlight"><pre><span class="c1">// var c:* = new Object()</span>
@@ -247,15 +231,11 @@
   <span class="mi">28</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
   <span class="mi">29</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
   <span class="mi">30</span> <span class="nx">setlocal2</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
-</pre>
-</div>
-
+</pre></div>
 <p>ということで、new の結果を一時変数 var c:* に代入したような扱いになっている。</p>
 <p>一時変数がどこからでてくるのかがよく分からなかったが、もしかしたら、</p>
 <div class="highlight"><pre><span class="nx">x</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-</pre>
-</div>
-
+</pre></div>
 <p>のような構文で <code>y = new Object()</code> の結果を <code>x</code> に代入するための一時オブジェクトなのかもしれない。</p>
 <p>C++ でいうコピーコンストラクタと代入演算子の違いのような感じ。</p>
 <h1>バイトコードを見た感想</h1>
@@ -266,9 +246,7 @@
     <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>の方が</p>
 <div class="highlight"><pre><span class="c1">// 外バージョン</span>
 <span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
@@ -277,15 +255,15 @@
     <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>よりも多少効率がよかった。とはいえ、ほんとうに些細な違いであり、無視していいレベルのはずだ。普通にコードを書いたら、ボトルネックは別の場所に出てくるだろう。</p>
 <h1>結論</h1>
 <ul><li>AS3 は関数スコープ</li><li>書きやすいほうで書け</li></ul>
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -318,24 +296,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090122/block_scope_abc" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript3 ブロックスコープの ABC - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-lang="ja" data-size="horizontal" data-text="ActionScript3 ブロックスコープの ABC - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/01/22/block-scope-abc/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/01/21/active-hogehoge/" rel="previous">Active ナントカで年代測定</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年01月22日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-01-22-block-scope-abc.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/tamarin/">tamarin</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/01/23/abcdump-build/" rel="next">Tamarin の abcdump.as から abcdump.exe を作成する方法 2009年1月版&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/01/21/active-hogehoge/" rel="previous"><b>&laquo;</b><span class="title">Active ナントカで年代測定</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/01/23/abcdump-build/" rel="next"><span class="title">Tamarin の abcdump.as から abcdump.exe を作成する方法 2009年1月版</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -343,7 +331,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -368,7 +356,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -395,7 +383,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

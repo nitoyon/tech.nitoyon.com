@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2010年08月26日</h2>
+<div class="post-date">2010年08月26日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/win32/">Win32</a><span class="delimiter">, </span><a href="/ja/blog/tags/c++/">C++</a></div>
+
 <h1>ATL の CAtlServiceModuleT を使ってサービスを作る</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100826/catlservicemodule" class="hatena-bookmark-button" data-hatena-bookmark-title="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-lang="ja" data-size="horizontal" data-text="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -130,9 +132,7 @@
 
     <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 </div>
 <h1>使い方</h1>
 <p>サービス登録するには、<code>sc create</code> コマンドを使うか、<code>_tWinMain()</code> のコメントアウトしてある部分を消して一度実行するとよい。</p>
@@ -147,9 +147,7 @@
 <div class="highlight"><pre><span class="cp">#define _ATL_NO_COM_SUPPORT</span>
 <span class="cp">#include &lt;atlbase.h&gt;</span>
 <span class="cp">#include &lt;tchar.h&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>クラス定義</h2>
 <p><code>CAtlServiceModuleT</code> は ATL の <code>CComObject</code> クラスなどと同じように、クラス名をテンプレート引数に渡して継承してやる。</p>
 <div class="highlight"><pre><span class="k">class</span> <span class="nc">CMyServiceModule</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CAtlServiceModuleT</span><span class="o">&lt;</span><span class="n">CMyServiceModule</span><span class="o">&gt;</span>
@@ -160,9 +158,7 @@
 
 <span class="c1">// ...</span>
 <span class="p">};</span>
-</pre>
-</div>
-
+</pre></div>
 <p><code>CAtlServiceModuleT</code> には <code>WinMain</code> メソッドや、その他のサービス実装に便利なメソッドが定義されている。</p>
 <p>ここでは、追加でサービス停止時にシグナル化される <code>m_hStopEvent</code> を追加で定義してあげた。public なのは気持ち悪いが、<code>CAtlServiceModuleT</code> クラスの他のフィールドも public なのでそれに合わせる形とした。</p>
 <h2>コンストラクタ</h2>
@@ -174,9 +170,7 @@
         <span class="c1">// サービス名を設定</span>
         <span class="n">_tcscpy_s</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_countof</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">),</span> <span class="n">SERVICE_NAME</span><span class="p">);</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p><code>m_szServiceName</code> にサービス名を設定している。</p>
 <p><code>CAtlServiceModuleT</code> のコンストラクタには、リソースからサービス名を取得する実装があるのだが、リソースに依存するのは不便だったので、自力でサービス名を設定するようにしておいた。これでリソースがなくても、<code>m_szServiceName</code> にサービス名が設定される。<code>ServiceName</code> のところは自分で作るサービス名に適宜置き換えるべし。</p>
 <h2>エントリポイント</h2>
@@ -193,9 +187,7 @@
     <span class="c1">// モジュールの WinMain に処理を委譲すうｒ</span>
     <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>単純に処理を <code>CAtlServiceModuleT::WinMain</code> に委譲している。呼ばれた <code>CAtlServiceModuleT::WinMain()</code> は、「<code>CAtlServiceModuleT::GetCommandLine()</code> を実行し、成功すれば <code>CAtlServiceModuleT::Start()</code> を呼ぶ」という実装になっている。</p>
 <p>コメントアウトされてる部分はサービスの登録処理だ。必要に応じて活用してもよいだろう。</p>
 <h2>ParseCommandLine メソッド</h2>
@@ -205,9 +197,7 @@
         <span class="o">*</span><span class="n">pnRetCode</span> <span class="o">=</span> <span class="n">S_OK</span><span class="p">;</span>
         <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>Start メソッド</h2>
 <p><code>CAtlServiceModuleT::Start()</code> は、「サービスの登録を行う」以外にも、「レジストリの <code>HKCR\AppID</code> から COM サーバーの情報を読み出してサービスかどうか判定する」という処理が入っている。</p>
 <p>そこで、「サービスを登録を行う」部分だけを抜き出してオーバーライドしている。</p>
@@ -222,9 +212,7 @@
             <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span> <span class="o">=</span> <span class="n">GetLastError</span><span class="p">();</span>
         <span class="k">return</span> <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span><span class="p">;</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>この部分で StartServiceCtrlDispatcher() API を使って _ServiceMain を登録する。</p>
 <p>CAtlServiceModuleT::_ServiceMain() は Handler を登録して、成功すれば Run() を呼び出すようになっている。次は Run() の実装を見ていく。</p>
 <h2>Run メソッド</h2>
@@ -250,9 +238,7 @@
 
         <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>OnStop メソッド</h2>
 <p>サービス停止が要求されると、<code>OnStop()</code> メソッドが呼ばれる。このあたりの流れは、<code>CAtlServiceModuleT::Handler()</code> の実装を確認するとよい。</p>
 <p>ここでは <code>OnStop()</code> のデフォルト実装をオーバーライドし、停止通知用のイベントをシグナル化している。</p>
@@ -261,9 +247,7 @@
         <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_STOP_PENDING</span><span class="p">);</span>
         <span class="n">SetEvent</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>その他</h2>
 <p><code>LogEvent()</code> ではデフォルトでイベントログに出力するが、これもオーバーライドしてもよいかもしれない。</p>
 <h1>まとめ</h1>
@@ -274,6 +258,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -306,24 +292,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20100826/catlservicemodule" class="hatena-bookmark-button" data-hatena-bookmark-title="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-lang="ja" data-size="horizontal" data-text="ATL の CAtlServiceModuleT を使ってサービスを作る - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2010/08/26/catlservicemodule/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2010/07/26/p1/" rel="previous">東山三十六峰のマイマップを作った</a>
-	
+<div class="entry-data">
+<div class="post-date">2010年08月26日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2010-08-26-catlservicemodule.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/win32/">Win32</a><span class="delimiter">, </span><a href="/ja/blog/tags/c++/">C++</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2010/09/24/wikipedia-db-table/" rel="next">Wikipedia が記事の履歴をどのように DB に格納してるか調べてみた&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2010/07/26/p1/" rel="previous"><b>&laquo;</b><span class="title">東山三十六峰のマイマップを作った</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2010/09/24/wikipedia-db-table/" rel="next"><span class="title">Wikipedia が記事の履歴をどのように DB に格納してるか調べてみた</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -331,7 +327,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -356,7 +352,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -383,7 +379,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

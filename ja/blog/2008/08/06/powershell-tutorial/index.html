@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年08月06日</h2>
+<div class="post-date">2008年08月06日</div>
+
+
+
 <h1>オブジェクト指向なコマンド環境「Powershell」を試してみた</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080806/powershell_tutorial" class="hatena-bookmark-button" data-hatena-bookmark-title="オブジェクト指向なコマンド環境「Powershell」を試してみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/06/powershell-tutorial/" data-lang="ja" data-size="horizontal" data-text="オブジェクト指向なコマンド環境「Powershell」を試してみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/08/06/powershell-tutorial/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -87,9 +89,7 @@ d-r--     2006/02/17     23:39          Favorites
 d-r--     2006/02/19     18:56          My Documents
 d-r--     2004/08/19      9:56          スタート メニュー
 d----     2006/02/19     23:06          デスクトップ
-</pre>
-</div>
-
+</pre></div>
 <p>alias の仕組みがあって、dir と ls はいずれも Get-ChildItem というコマンドの alias になってる。</p>
 <div class="highlight"><pre>PS&gt; get-alias | where <span class="o">{</span><span class="nv">$_</span>.Definition -eq <span class="s2">&quot;Get-Childitem&quot;</span><span class="o">}</span>
 
@@ -98,18 +98,14 @@ CommandType     Name                     Definition
 Alias           gci                      Get-ChildItem
 Alias           ls                       Get-ChildItem
 Alias           dir                      Get-ChildItem
-</pre>
-</div>
-
+</pre></div>
 <p>同じ感じで、pwd、cp、mv、ps、pushd、popd、rm などの alias がデフォルトで登録されているし、追加で登録することもできる。ちなみに、このワンライナーの意味はこの記事を読み終わった頃には理解できるはず。</p>
 <br />
 <h1>変数にオブジェクトを格納</h1>
 <p>Powershell は強力なスクリプト環境をそなえている。</p>
 <p>まずは ls の結果を $files 変数に代入してみる。</p>
 <div class="highlight"><pre>PS&gt; <span class="nv">$files</span> <span class="o">=</span> ls
-</pre>
-</div>
-
+</pre></div>
 <p>$files と入力して Enter を押すと、$files 変数の中身が評価される。</p>
 <div class="highlight"><pre>PS&gt; <span class="nv">$files</span>
 
@@ -123,24 +119,18 @@ d-r--     2006/02/17     23:39          Favorites
 d-r--     2006/02/19     18:56          My Documents
 d-r--     2004/08/19      9:56          スタート メニュー
 d----     2006/02/19     23:06          デスクトップ
-</pre>
-</div>
-
+</pre></div>
 <p>で、ここで面白いのが、$files に入ってるのが実は文字列じゃないところ。なんと、$files には<strong>ファイルオブジェクトの配列</strong>が格納されている。</p>
 <p>ということで、length プロパティで数が分かる。</p>
 <div class="highlight"><pre>PS&gt; <span class="nv">$files</span>.length
 5
-</pre>
-</div>
-
+</pre></div>
 <p>[0] で最初のオブジェクトにアクセスできる。</p>
 <div class="highlight"><pre>PS&gt; <span class="nv">$files</span><span class="o">[</span>0<span class="o">]</span>
 Mode                LastWriteTime     Length Name
 ----                -------------     ------ ----
 d---s        2006/02/19     22:35            Cookies
-</pre>
-</div>
-
+</pre></div>
 <a name="seemore"></a>
 <p>[0 .. 2] で連番にしたり、[-1] で最後のオブジェクトを取得したりもできる。</p>
 <div class="highlight"><pre>PS&gt; <span class="nv">$files</span><span class="o">[</span>0 .. 2<span class="o">]</span>
@@ -157,15 +147,11 @@ PS&gt; <span class="nv">$files</span><span class="o">[</span>-1<span class="o">]
 Mode                LastWriteTime     Length Name
 ----                -------------     ------ ----
 d----        2006/02/19     23:06            デスクトップ
-</pre>
-</div>
-
+</pre></div>
 <p>ファイルオブジェクトのプロパティを参照してもよい。</p>
 <div class="highlight"><pre>&gt; <span class="nv">$files</span><span class="o">[</span>0<span class="o">]</span>.FullName
 C:<span class="se">\D</span>ocuments and Settings<span class="se">\n</span>itoyon<span class="se">\C</span>ookies
-</pre>
-</div>
-
+</pre></div>
 <h1>メソッド・プロパティの列挙</h1>
 <p>オブジェクトのメソッドやプロパティを知りたくなったら、get-member コマンドを実行するとよい。</p>
 <div class="highlight"><pre>PS&gt; ls | get-member
@@ -184,9 +170,7 @@ FullName               Property      System.String FullName <span class="o">{</s
 LastAccessTime         Property      System.DateTime LastAccessTime <span class="o">{</span>get...
 LastAccessTimeUtc      Property      System.DateTime LastAccessTimeUtc <span class="o">{</span>...
   :                      :                   :
-</pre>
-</div>
-
+</pre></div>
 <p>何気にパイプを使ってるけど、実は、Powershell では<strong>パイプで渡されるのもオブジェクト</strong>。すごいですね。</p>
 <p>おまけに、System.String などと書いてあるところからピンとくる人もいるかもしれないけど、オブジェクトは .NET Framework 的なオブジェクトになってる。.NET に親しい人ならすごく使いやすいはず。</p>
 <h1>ループも条件分岐も</h1>
@@ -203,16 +187,12 @@ GEXPlugin.ax
 iis6.log
 setupapi.del
 WindowsUpdate.log
-</pre>
-</div>
-
+</pre></div>
 <p>1MB より大きいものだけを if で調べて出力してる。コマンドラインなので、> の変わりに、-gt という演算子が用意されている。</p>
 <p>ちなみに、1MB というのはあらかじめ定義されている定数。</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; 1MB
 1048576
-</pre>
-</div>
-
+</pre></div>
 <h1>よりオブジェクト指向らしく</h1>
 <p>パイプを使って、よりオブジェクト指向らしいプログラミングを実践してみよう。</p>
 <h2>where でフィルタリング</h2>
@@ -229,29 +209,21 @@ Mode             LastWriteTime    Length Name
 -a---     2008/07/10      3:01   1124405 iis6.log
 -a---     2004/08/19     10:40   1080959 setupapi.del
 -a---     2008/08/04      1:26   1907044 WindowsUpdate.log
-</pre>
-</div>
-
+</pre></div>
 <p>where コマンドは、配列の中から条件にマッチするものだけを返す。絞り込みができるわけ。Perl の grep、Ruby の find_all(や select)、JavaScript 1.6 の filter みたいな感じ。</p>
 <h2>foreach で全ての要素に対して実行</h2>
 <p>今度は、パイプの受け口として foreach を使ってみる。</p>
 <p>いままで、ファイルのサンプルばかりだったので、次はプロセス情報を使ってみよう。起動中のメモ帳をばっさり閉じる例。</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad | foreach <span class="o">{</span><span class="nv">$_</span>.kill<span class="o">()}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>notepad.exe のプロセスを列挙して、それぞれについてプロセスオブジェクトの kill() メソッドを実行して殺している。</p>
 <p>とはいえ、kill コマンドもあって、プロセスの配列を処理できる。</p>
 <p>同じ処理は次のように書ける。</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad | <span class="nb">kill</span>
-</pre>
-</div>
-
+</pre></div>
 <p>さらに、kill コマンドには -name フラグもあるので本当は１発で書けたりもする。</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; <span class="nb">kill</span> -name notepad
-</pre>
-</div>
-
+</pre></div>
 <p>でも、複雑な処理をするときには、foreach が便利ですよね、ということで。</p>
 <h2>プロパティ名で sort</h2>
 <p>ソートも簡単。</p>
@@ -265,33 +237,25 @@ Handles   NPM<span class="o">(</span>K<span class="o">)</span>   PM<span class="
     404        9   42468   40712   175    26.67   3744 powershell
     827       31   27956   32696   226    33.14   2224 msnmsgr
    1761       66   21764   32348   169   107.77   1748 svchost
-</pre>
-</div>
-
+</pre></div>
 <p>sort の後にプロパティ名を指定してるだけ。UNIX 系だとソートも文字ベースなんだけど、プロパティ名で色々実現できるのが愉快！</p>
 <p>ちなみに、select コマンドは配列を置き換える map のような機能があったり、UNIX コマンドの uniq、head、tail に相当する機能があったり、色んな用途に使える。詳しくは、man select -detailed でヘルプが見れる。</p>
 <h1>関数を定義する</h1>
 <p>関数も作れるよ。</p>
 <p>メモリ使用量が多いプロセス top N を求める関数を作ってみた。</p>
 <div class="highlight"><pre>PS C:&gt; <span class="k">function </span>psmemory<span class="o">([</span>int<span class="o">]</span><span class="nv">$n</span> <span class="o">=</span> 5<span class="o">){</span>ps | sort WS -Descending | <span class="k">select</span> -first <span class="nv">$n</span><span class="o">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>呼び出したところ。</p>
 <div class="highlight"><pre>PS C:&gt; psmemory 1
 
 Handles  NPM<span class="o">(</span>K<span class="o">)</span>    PM<span class="o">(</span>K<span class="o">)</span>      WS<span class="o">(</span>K<span class="o">)</span> VM<span class="o">(</span>M<span class="o">)</span>   CPU<span class="o">(</span>s<span class="o">)</span>     Id ProcessName
 -------  ------    -----      ----- -----   ------     -- -----------
    1121      22    31092      48496   181   227.88   1384 explorer
-</pre>
-</div>
-
+</pre></div>
 <p>引数に 1 を渡しているので、１つだけ表示される。psmemory(1) のように、括弧つきで呼び出すこともできる。パラメータを省略すると5個列挙されるように作ってる。</p>
 <p>ところで、勘のいい人なら既に気付いてるかもしれないけど、上で示したサンプル</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls | where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>の <strong>{$_.length -gt 1mb} の部分は関数</strong>なんです。Powershell では「スクリプトブロック」という名前がついてるんだけど、無名関数と言ったほうが分かりやすいかもしれない。Ruby に詳しい人は、ブロックと言い換えるとすっきりするはず。</p>
 <p>というわけで、このサンプルは、ls した結果を where で回して、無名関数でフィルタリングしてる。うわー、オブジェクト指向っぽい！</p>
 <h1>ドライブ名</h1>
@@ -311,9 +275,7 @@ Function   Function
 HKCU       Registry      HKEY_CURRENT_USER
 HKLM       Registry      HKEY_LOCAL_MACHINE
 Variable   Variable
-</pre>
-</div>
-
+</pre></div>
 <p>A: や C: はお馴染みなんだけど、それ以外にも色々定義されている。</p>
 <p>例えば、Function: や Variable: には関数、変数の一覧が格納されてる。</p>
 <div class="highlight"><pre>PS&gt; ls Variable:
@@ -324,9 +286,7 @@ Name          Value
 PID           5324
 files         <span class="o">{</span>.ssh, Contacts, Cookies, Favorites...<span class="o">}</span>
  :             :
-</pre>
-</div>
-
+</pre></div>
 <p>あらかじめ定義されている PID などに加えて、自分で定義した $files も列挙されているのが分かる。</p>
 <p>他にも、cert: は証明書ストア、HKCU: や HKLM: はレジストリ情報を表す。これらの情報をファイルシステムのように抽象化されていて、ls や cd で参照したり、検索したりできるようになってる。</p>
 <p>この仕組みの肝が Privider。列挙したり参照したりする機能を提供している。Provider は C# で自前実装することもできて、例えば、<a href="http://d.hatena.ne.jp/coma2n/">id:coma2n</a> さんによる <a href="http://d.hatena.ne.jp/coma2n/20080222/1203633878">PowerShellで2chビューワ</a> なんかが面白い。2ch ドライブで 2ch の掲示板情報を参照できるようだ。</p>
@@ -339,9 +299,7 @@ home       FileSystem    C:<span class="se">\D</span>ocuments and Settings<span 
 
 PS&gt; ls home:
 <span class="c"># ホームディレクトリのファイル一覧</span>
-</pre>
-</div>
-
+</pre></div>
 <p>まぁ、あくまで Powershell 内での擬似的なドライブなんだけど楽しい。</p>
 <h1>インストール方法</h1>
 <p>最後にインストール方法を紹介しておく。当初は Vista に搭載される予定だったけど間に合わなかったので、いまのところ必ずインストールする必要がある。</p>
@@ -398,6 +356,8 @@ PS&gt; ls home:
 
 </div>
 
+<footer>
+
 <div id="post-ad">
 <div id="post-ad1">
 <script type="text/javascript"><!--
@@ -429,24 +389,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080806/powershell_tutorial" class="hatena-bookmark-button" data-hatena-bookmark-title="オブジェクト指向なコマンド環境「Powershell」を試してみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/08/06/powershell-tutorial/" data-lang="ja" data-size="horizontal" data-text="オブジェクト指向なコマンド環境「Powershell」を試してみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/08/06/powershell-tutorial/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/08/04/pv3d-racing/" rel="previous">PV3D でレーシングゲーム</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年08月06日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-08-06-powershell-tutorial.htn">編集履歴</a></span></div>
 
-	|
 
+</div>
+
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/08/08/p1/" rel="next">［宣伝］会社のブログもよろしく&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/08/04/pv3d-racing/" rel="previous"><b>&laquo;</b><span class="title">PV3D でレーシングゲーム</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/08/08/p1/" rel="next"><span class="title">［宣伝］会社のブログもよろしく</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -454,7 +424,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -479,7 +449,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -506,7 +476,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

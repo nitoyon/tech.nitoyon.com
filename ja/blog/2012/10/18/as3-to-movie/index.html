@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2012年10月18日</h2>
+<div class="post-date">2012年10月18日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/movie/">動画</a></div>
+
 <h1>ActionScript のみで作った SWF をコマ落ちせずに動画にする手法</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-lang="ja" data-size="horizontal" data-text="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -74,7 +76,6 @@
 
 <iframe width="560" height="315" src="http://www.youtube.com/embed/2tm9okNtkOg" frameborder="0" allowfullscreen></iframe>
 
-
 <h2>ソースコードについて</h2>
 
 <p>ソースは <a href="https://gist.github.com/3885010">https://gist.github.com/3885010</a> に上げている。</p>
@@ -90,54 +91,60 @@
         <span class="nx">counter</span><span class="o">++;</span>
         <span class="k">if</span> <span class="p">(</span><span class="nx">counter</span> <span class="o">%</span> <span class="mi">120</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="nx">f</span> <span class="o">=</span> <span class="o">!</span><span class="nx">f</span><span class="o">;</span> <span class="p">}</span>
     <span class="p">});</span>
-</code></pre>
-</div>
+</code></pre></div>
 
 
-<p>画像のサイズは <code>stage</code> のサイズを利用しているので、<code>SWF</code> メタタグやコンパイルオプションでサイズを指定できる。</p>
+画像のサイズは `stage` のサイズを利用しているので、`SWF` メタタグやコンパイルオプションでサイズを指定できる。
 
-<p>ファイルを扱うために、AIR アプリとして実行している。<code>amxmlc</code> でビルドして、<code>adl app.xml</code> で画像出力を開始してくれるようになっている。出力先のパスは <code>PngOutput</code> クラスに直接書いてあるので、適切に変更して利用してほしい。</p>
+ファイルを扱うために、AIR アプリとして実行している。`amxmlc` でビルドして、`adl app.xml` で画像出力を開始してくれるようになっている。出力先のパスは `PngOutput` クラスに直接書いてあるので、適切に変更して利用してほしい。
 
-<p>よくあるキャプチャして動画にするツールとは違って、コマ落ちは発生しない。というのも、<strong>1 フレームずつ、順番に「描画＋画像に変換」を実行している</strong>からだ。変換中は、ゆっくり 1 フレームずつ再生しながら画像出力しているが、できあがった画像をつなぎ合わせればコマ落ちが発生しない動画になっている。ソースコードが手中にあるからこそできる技である。</p>
+よくあるキャプチャして動画にするツールとは違って、コマ落ちは発生しない。というのも、**1 フレームずつ、順番に「描画＋画像に変換」を実行している**からだ。変換中は、ゆっくり 1 フレームずつ再生しながら画像出力しているが、できあがった画像をつなぎ合わせればコマ落ちが発生しない動画になっている。ソースコードが手中にあるからこそできる技である。
 
-<p>連番画像ファイルから動画への変換は AviUtil を使った。先頭の画像をドロップして、エンコードすればいいだけなのでお手軽だった。たいがいの動画変換ソフトが連番画像ファイルに対応しているだろうから、慣れているものを使って変換すればよいだろう。</p>
+連番画像ファイルから動画への変換は AviUtil を使った。先頭の画像をドロップして、エンコードすればいいだけなのでお手軽だった。たいがいの動画変換ソフトが連番画像ファイルに対応しているだろうから、慣れているものを使って変換すればよいだろう。
 
-<h1>タイマーを参照するパターン</h1>
 
-<p>さて、もう少し厄介なのが、各フレームでタイマーを参照するパターンの作品だ。そのようなコードを意識して書いていなかったとしても、トゥイーン系ライブラリでは内部的にタイマー系の関数を利用している。</p>
+タイマーを参照するパターン
+==========================
 
-<p>このパターンの作品を、1つ目と同じように <code>enterFrame</code> で 1 フレームずつ画像出力していると、早送りの動画が出来上がってしまう。というのも、描画して画像を出力している間に、<code>1 / frameRate</code> 以上の時間が経過してしまうので、飛び飛びの画像しか出力できないのだ。</p>
+さて、もう少し厄介なのが、各フレームでタイマーを参照するパターンの作品だ。そのようなコードを意識して書いていなかったとしても、トゥイーン系ライブラリでは内部的にタイマー系の関数を利用している。
 
-<p>これを防ぐためには、トゥイーン ライブラリで利用しているタイマー系の関数を置き換えて騙すしかない。</p>
+このパターンの作品を、1つ目と同じように `enterFrame` で 1 フレームずつ画像出力していると、早送りの動画が出来上がってしまう。というのも、描画して画像を出力している間に、`1 / frameRate` 以上の時間が経過してしまうので、飛び飛びの画像しか出力できないのだ。
 
-<h2>変換例</h2>
+これを防ぐためには、トゥイーン ライブラリで利用しているタイマー系の関数を置き換えて騙すしかない。
 
-<p>過去に wonderfl に投稿した <a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> を動画にしてみた。</p>
+
+変換例
+------
+
+過去に wonderfl に投稿した [Hello World!!!](http://wonderfl.net/c/nCFQ) を動画にしてみた。
 
 <iframe width="560" height="315" src="http://www.youtube.com/embed/nI-u_XPbCTw" frameborder="0" allowfullscreen></iframe>
 
 
-<h2>ソースコードについて</h2>
+ソースコードについて
+--------------------
 
-<p>ソースは <a href="https://gist.github.com/3885404">https://gist.github.com/3885404</a> に上げている。</p>
+ソースは [https://gist.github.com/3885404](https://gist.github.com/3885404) に上げている。
 
-<p><a href="http://wonderfl.net/c/nCFQ">Hello World!!!</a> は Tweener を使ってアニメーションしている。Tweener は、ライブラリの内部で <code>flash.utils.getTimer()</code> を使って、時間管理を実施している。この部分を書き換えて、自前で定義した <code>getTimer()</code> 関数を呼ぶようにした。</p>
+[Hello World!!!](http://wonderfl.net/c/nCFQ) は Tweener を使ってアニメーションしている。Tweener は、ライブラリの内部で `flash.utils.getTimer()` を使って、時間管理を実施している。この部分を書き換えて、自前で定義した `getTimer()` 関数を呼ぶようにした。
 
-<p><code>enterFrame</code> で 1 フレームごとに画像を出力する点は以前のものと変わらない。ただ、画像を 1 枚出力するごとに、自前の <code>getTimer()</code> が返す値が <code>1 / frameRate</code> だけ増えるように細工している。結果、出力した秒数に応じた位置で Tweener のアニメーションが停止するようになる。よって、コマ落ちが発生しない。</p>
+`enterFrame` で 1 フレームごとに画像を出力する点は以前のものと変わらない。ただ、画像を 1 枚出力するごとに、自前の `getTimer()` が返す値が `1 / frameRate` だけ増えるように細工している。結果、出力した秒数に応じた位置で Tweener のアニメーションが停止するようになる。よって、コマ落ちが発生しない。
 
-<p>フレームレートは <code>stage.frameRate</code> を利用しているので、コンパイルオプションや <code>SWF</code> メタタグでカスタマイズすれば、デフォルト以外のフレームレートでも出力できる。</p>
+フレームレートは `stage.frameRate` を利用しているので、コンパイルオプションや `SWF` メタタグでカスタマイズすれば、デフォルト以外のフレームレートでも出力できる。
 
-<p>自前の <code>getTimer()</code> をトップレベルのパッケージとして定義しているが、これは <code>flash.utils.getTimer()</code> を利用するライブラリを一緒にビルドしようとしたときに、ビルドエラーにさせるためである。<code>flash.utils.getTimer()</code> を利用している箇所を grep して見つけ出してもいいんだけど、コンパイラに見つけさせよう、という魂胆である。</p>
+自前の `getTimer()` をトップレベルのパッケージとして定義しているが、これは `flash.utils.getTimer()` を利用するライブラリを一緒にビルドしようとしたときに、ビルドエラーにさせるためである。`flash.utils.getTimer()` を利用している箇所を grep して見つけ出してもいいんだけど、コンパイラに見つけさせよう、という魂胆である。
 
-<h1>まとめ</h1>
 
-<p>ActionScript のソースが手元にあるときに、コマ落ちなく動画に変換する方法を説明した。</p>
+まとめ
+======
 
-<p>今回は簡単なソースコードで説明したが、<code>setInterval()</code> を使ってるようなケースではさらに複雑になる。マウスインタラクションがあったり、外部 SWF をロードしていると太刀打ちできなくもなる。</p>
+ActionScript のソースが手元にあるときに、コマ落ちなく動画に変換する方法を説明した。
 
-<p>応用事例になるが、リアルタイムではとてもじゃないけど再生できないような劇重 Flash を作成したとしても、この方法を使って動画に変換はできる。パーティクルをいくつ配置しようが、ポリゴンをいくつ配置しようが、HD 画質にしようが、動画にしてしまえばコマ落ちの心配はない。Flash Player では得られない高画質な動画を作ることもできるだろう。</p>
+今回は簡単なソースコードで説明したが、`setInterval()` を使ってるようなケースではさらに複雑になる。マウスインタラクションがあったり、外部 SWF をロードしていると太刀打ちできなくもなる。
 
-<p>ここで紹介した 2 つの作品は、<a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a> で解説してもらっているので、興味がある人はそちらもどうぞ。</p>
+応用事例になるが、リアルタイムではとてもじゃないけど再生できないような劇重 Flash を作成したとしても、この方法を使って動画に変換はできる。パーティクルをいくつ配置しようが、ポリゴンをいくつ配置しようが、HD 画質にしようが、動画にしてしまえばコマ落ちの心配はない。Flash Player では得られない高画質な動画を作ることもできるだろう。
+
+ここで紹介した 2 つの作品は、<a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098">ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜</a> で解説してもらっているので、興味がある人はそちらもどうぞ。
 
 <div class="hatena-asin-detail">
   <a href="http://www.amazon.co.jp/ActionScript-Beautifl-Code%E3%80%9CBeautifl-Gallery-wonderfl%E3%80%9C/dp/4862671098%3FSubscriptionId%3DAKIAJTLVJPAVA2KR4PJA%26tag%3Dnitoyoncom-22%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4862671098"><img src="http://ecx.images-amazon.com/images/I/51d7HQjkhbL._SL160_.jpg" class="hatena-asin-detail-image" alt="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜" title="ActionScript Beautifl Code〜Beautifl: Flash Gallery of wonderfl〜"></a>
@@ -154,10 +161,11 @@
   <div class="hatena-asin-detail-foot"></div>
 </div>
 
-
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -190,24 +198,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-lang="ja" data-size="horizontal" data-text="ActionScript のみで作った SWF をコマ落ちせずに動画にする手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2012/10/18/as3-to-movie/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2012/10/15/static-site-js-css-cache/" rel="previous">静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</a>
-	
+<div class="entry-data">
+<div class="post-date">2012年10月18日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2012-10-18-as3-to-movie.md">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/movie/">動画</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2012/10/29/liquid-drop/" rel="next">Ruby の Liquid でテンプレートに値を渡すパターン４つ&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2012/10/15/static-site-js-css-cache/" rel="previous"><b>&laquo;</b><span class="title">静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2012/10/29/liquid-drop/" rel="next"><span class="title">Ruby の Liquid でテンプレートに値を渡すパターン４つ</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -215,7 +233,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -240,7 +258,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -267,7 +285,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

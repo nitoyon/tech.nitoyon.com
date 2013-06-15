@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年04月30日</h2>
+<div class="post-date">2009年04月30日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/box2d/">Box2d</a></div>
+
 <h1>DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版)</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090430/box2d_no_debug_draw" class="hatena-bookmark-button" data-hatena-bookmark-title="DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/30/box2d-no-debug-draw/" data-lang="ja" data-size="horizontal" data-text="DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/04/30/box2d-no-debug-draw/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -70,9 +72,7 @@
 
 <span class="c1">// 大きさ：360cm×20cm</span>
 <span class="nx">wallShapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>Box2D でシミュレーションするときは <code>1 / SCALE</code> していた。<code>SCALE</code> は <code>100</code> なので、センチメーターをメーターに変換して Box2D に伝えていたと考えると良いだろう。</p>
 <p>描画するときは Box2D のサイズを  <code>SCALE</code> 倍して描画することにする。つまり、床の大きさは 360px×20px となる。</p>
 <a name="seemore"></a>
@@ -87,9 +87,7 @@
 <span class="nx">floorSprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
 <span class="nx">floorSprite</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="mi">180</span> <span class="o">/</span> <span class="mi">24</span><span class="p">;</span>
 <span class="nx">addChild</span><span class="p">(</span><span class="nx">floorSprite</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>箱の描画</h1>
 <p>落下する箱の Sprite を生成するメソッドを作成しておく。</p>
 <div class="highlight"><pre><span class="c1">// 物体の Sprite を作成する</span>
@@ -112,18 +110,14 @@
 
     <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>箱の物体を Box2D に追加したあとに <code>m_userData</code> に Sprite を設定して関連付けておく。</p>
 <div class="highlight"><pre><span class="c1">// Sprite を m_userData に割り当てる</span>
 <span class="kd">var</span> <span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="nx">createSprite</span><span class="p">();</span>
 <span class="nx">sprite</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">sprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span><span class="p">;</span> <span class="c1">// 画面外に移動</span>
 <span class="nx">addChild</span><span class="p">(</span><span class="nx">sprite</span><span class="p">);</span>
 <span class="nx">objBd</span><span class="p">.</span><span class="nx">m_userData</span> <span class="o">=</span> <span class="nx">sprite</span><span class="p">;</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>シミュレーション処理で位置も更新する</h1>
 <p>前のサンプルでは enterFrame のイベントではシミュレーションのみを行っていたが、ここに Sprite の位置を更新する処理を追加する。</p>
 <div class="highlight"><pre><span class="c1">// 毎フレームの処理</span>
@@ -154,9 +148,7 @@
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">});</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>完成品</h1>
 <p>クリックすると始まるよ。</p>
 <center><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FBox2dSimpleSample202MyDraw.swf&amp;up_background=%23ccddff&amp;synd=open&amp;w=430&amp;h=450&amp;title=Box2dFlashAS3+simple+sample&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script><noscript>(Flash Player 9 以上が必要です)<br></noscript>（表示されない場合はリロードしてください。）</center>
@@ -328,9 +320,7 @@
     <span class="p">}</span>
 <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 </div>
 <div class="seealso">
 <h1>目次</h1>
@@ -341,6 +331,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -373,24 +365,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090430/box2d_no_debug_draw" class="hatena-bookmark-button" data-hatena-bookmark-title="DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/30/box2d-no-debug-draw/" data-lang="ja" data-size="horizontal" data-text="DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/04/30/box2d-no-debug-draw/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/04/28/box2dflashas3-2-0-2/" rel="previous">Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年04月30日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-04-30-box2d-no-debug-draw.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/box2d/">Box2d</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/05/05/hatebu-nenkan-200904/" rel="next">はてブ年鑑2009年4月分を更新した&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/04/28/box2dflashas3-2-0-2/" rel="previous"><b>&laquo;</b><span class="title">Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/05/05/hatebu-nenkan-200904/" rel="next"><span class="title">はてブ年鑑2009年4月分を更新した</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -398,7 +400,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -423,7 +425,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -450,7 +452,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年02月19日</h2>
+<div class="post-date">2009年02月19日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/silverlight/">Silverlight</a></div>
+
 <h1>jQuery と object タグの怪</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090219/object_jquery" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery と object タグの怪 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/19/object-jquery/" data-lang="ja" data-size="horizontal" data-text="jQuery と object タグの怪 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/02/19/object-jquery/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -64,16 +66,12 @@
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20090219/20090219004208.png" width="296" height="195" border="1"></center>
 <p>どうやら</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;&lt;object&gt;&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-</pre>
-</div>
-
+</pre></div>
 <p>のところで object タグが作られていないようだ。</p>
 <p>jQuery でよく見る現象だ。こういうときは閉じ括弧を入れてあげると大抵うまくいく。</p>
 <a name="seemore"></a>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;&lt;object/&gt;&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-</pre>
-</div>
-
+</pre></div>
 <p>IE DOM Explorer で確認したら &lt;object&gt; になってた。</p>
 <h1>でも、だめ</h1>
 <p>一歩前進したのでコメントアウトを外してみた。</p>
@@ -84,9 +82,7 @@
                     <span class="nx">value</span><span class="o">:</span> <span class="nx">value</span>
                 <span class="p">})</span>
             <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>同じ作戦で <code>&lt;param&gt;&lt;/param&gt;</code> のようにやってみたが変わらず。</p>
 <p>仕方がないので、jQuery の <code>$('&lt;param&gt;')</code> から呼ばれる clean のソースを読んでみた。</p>
 <p>IE で <code>$('&lt;param&gt;')</code> とすると、内部ではこんな処理をしてる。</p>
@@ -94,9 +90,7 @@
 <span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;div&lt;div&gt;&quot;</span> <span class="o">+</span> <span class="nx">html</span> <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span><span class="p">;</span>
 <span class="nx">div</span> <span class="o">=</span> <span class="nx">div</span><span class="p">.</span><span class="nx">lastChild</span><span class="p">;</span>
 <span class="k">return</span> <span class="nx">jQuery</span><span class="p">.</span><span class="nx">makeArray</span><span class="p">(</span> <span class="nx">div</span><span class="p">.</span><span class="nx">childNodes</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>空の div タグを作って、その中に innerHTML で HTML 文字列を流し込んで DOM ノードを作成しているようだ。</p>
 <p>ここでピーンときた。仕様上は param タグは、本来は object タグの内部にしか入れることができない。なので、<code>&lt;div&gt;&lt;param&gt;&lt;/div&gt;</code> のような HTML を innerHTML で設定すると、このときに生成される param タグは本来の param タグではなく、何か別のものになってるんじゃないだろうか。だから、object に appendChild すると不正なノードを追加したのでエラーになる。</p>
 <p>あくまで想像。</p>
@@ -109,16 +103,12 @@
 <span class="nx">alert</span><span class="p">(</span><span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span><span class="p">);</span>  <span class="c1">// &lt;OBJECT&gt;&lt;/OBJECT&gt;</span>
 <span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&lt;object&gt;&lt;param/&gt;&lt;/object&gt;&quot;</span><span class="p">;</span>
 <span class="nx">alert</span><span class="p">(</span><span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span><span class="p">);</span>  <span class="c1">// &lt;OBJECT&gt;&lt;/OBJECT&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>なぜか param が消える。ナゼジャー！</p>
 <h1>仕方がないから諦めた</h1>
 <p>ということで、諦めて次のように置き換えたらうまく行った。</p>
 <div class="highlight"><pre>  <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;param&#39;</span><span class="p">)).</span><span class="nx">attr</span><span class="p">({</span>
-</pre>
-</div>
-
+</pre></div>
 <p>jQuery に任せず、自分で作っちゃえ！ということですな。</p>
 <h1>そして…</h1>
 <p>IE DOM Explorer で眺めてみたら、ちゃんと object の中に param が入って理想的な DOM ノードが構築されていた。</p>
@@ -135,6 +125,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -167,24 +159,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090219/object_jquery" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery と object タグの怪 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/19/object-jquery/" data-lang="ja" data-size="horizontal" data-text="jQuery と object タグの怪 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/02/19/object-jquery/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/02/18/screen-client-transform/" rel="previous">スクリーン座標・クライアント座標の変換いろいろ</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年02月19日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-02-19-object-jquery.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/silverlight/">Silverlight</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/02/20/object-jquery2/" rel="next">jQuery と object タグの怪 (その２)&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/02/18/screen-client-transform/" rel="previous"><b>&laquo;</b><span class="title">スクリーン座標・クライアント座標の変換いろいろ</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/02/20/object-jquery2/" rel="next"><span class="title">jQuery と object タグの怪 (その２)</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -192,7 +194,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -217,7 +219,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -244,7 +246,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

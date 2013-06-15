@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年12月28日</h2>
+<div class="post-date">2009年12月28日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+
 <h1>as3corelib の JSON.decode() をいい加減な JSON に対応させる</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091228/as3corelib_lazy_json" class="hatena-bookmark-button" data-hatena-bookmark-title="as3corelib の JSON.decode() をいい加減な JSON に対応させる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/12/28/as3corelib-lazy-json/" data-lang="ja" data-size="horizontal" data-text="as3corelib の JSON.decode() をいい加減な JSON に対応させる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/12/28/as3corelib-lazy-json/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -65,9 +67,7 @@
     <span class="nx">b</span><span class="o">:</span> <span class="p">.</span><span class="mi">4</span><span class="p">,</span> 
     <span class="nx">c</span><span class="o">:</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> 
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>本当はこうすべき。</p>
 <div class="highlight"><pre><span class="p">{</span>
     <span class="c1">// a → &quot;a&quot;</span>
@@ -75,9 +75,7 @@
     <span class="s2">&quot;b&quot;</span><span class="o">:</span> <span class="mf">0.4</span><span class="p">,</span> 
     <span class="s2">&quot;c&quot;</span><span class="o">:</span> <span class="mf">0.9</span>  <span class="c1">// カンマを削った</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>オレオレなプロジェクトで JSON を手書きするときには、この３つの制限を緩和してあげたくなる。json.org の仕様には違反しちゃうけど、書きやすさを優先で GO!!!</p>
 <p>そこで、ActionScript の定番 JSON パーサーである <a href="http://code.google.com/p/as3corelib/">as3corelib</a> の .92.1 に手を入れてみた。</p>
 <p>たとえば、配列末尾のカンマを許容するには <code>com/adobe/serialization/json/JSONDecoder.as</code> の parseArray() 関数に次のように手を入れた。</p>
@@ -90,16 +88,12 @@
 <span class="o">+</span>            <span class="k">return</span> <span class="nx">a</span><span class="o">;</span>
 <span class="o">+</span>        <span class="p">}</span>
      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</pre>
-</div>
-
+</pre></div>
 <p>カンマだったときに次が <code>]</code> だったら、配列を返すようにする。</p>
 <p>こんな感じで、ごにょごにょといじっていく。</p>
 <p>「2. object のキーは文字列じゃないといけない」については、そもそも JSON の仕様に identifier がないので、ECMAScript の仕様を参考にしつつ、<code>JSONTokenizer.as</code> に手を入れていった。本当はキー名として日本語などの Unicode 文字も許可しなきゃいけないんだけど、めんどくさいので</p>
 <div class="highlight"><pre><span class="sr">/^[a-z_$][a-z_$0-9]*$/</span>
-</pre>
-</div>
-
+</pre></div>
 <p>を許可するキー名の条件とした。</p>
 <p>完成品のソースはここにおいてる：</p>
 <ul><li><a href="http://tech.nitoyon.com/misc/swf/as3corelib_lazy_json.zip">http://tech.nitoyon.com/misc/swf/as3corelib_lazy_json.zip</a></li></ul>
@@ -109,12 +103,12 @@
     <span class="nx">b</span><span class="o">:</span> <span class="p">.</span><span class="mi">4</span><span class="p">,</span> 
     <span class="nx">c</span><span class="o">:</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> 
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>がパースエラーにならない。やったね。</p>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -147,24 +141,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20091228/as3corelib_lazy_json" class="hatena-bookmark-button" data-hatena-bookmark-title="as3corelib の JSON.decode() をいい加減な JSON に対応させる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/12/28/as3corelib-lazy-json/" data-lang="ja" data-size="horizontal" data-text="as3corelib の JSON.decode() をいい加減な JSON に対応させる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/12/28/as3corelib-lazy-json/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/12/16/google-ime-kunni/" rel="previous">Google IME で「○○君に」と入力したら</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年12月28日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-12-28-as3corelib-lazy-json.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/12/31/kotoshi-matome/" rel="next">今年まとめ（自己満足）&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/12/16/google-ime-kunni/" rel="previous"><b>&laquo;</b><span class="title">Google IME で「○○君に」と入力したら</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/12/31/kotoshi-matome/" rel="next"><span class="title">今年まとめ（自己満足）</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -172,7 +176,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -197,7 +201,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -224,7 +228,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

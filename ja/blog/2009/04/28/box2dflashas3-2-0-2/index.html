@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年04月28日</h2>
+<div class="post-date">2009年04月28日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/box2d/">Box2d</a><span class="delimiter">, </span><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+
 <h1>Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版)</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090428/box2dflashas3_2_0_2" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/28/box2dflashas3-2-0-2/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/04/28/box2dflashas3-2-0-2/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -76,16 +78,12 @@
 
 <span class="c1">// 世界のインスタンスを作成する</span>
 <span class="nx">world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>まずは、<code>worldAABB</code> を作ってシミュレーション計算する範囲を指定する。<span class="footnote"><a href="#f1" title="ver 1 では b2AABB の範囲を指定するプロパティは minVertex, maxVertex だったのが、ver 2 からはそれぞれ lowerBound, upperBound に変わっいてる" name="fn1">*1</a></span></p>
 <p>次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。</p>
 <p>これで準備完了。世界を生成する。</p>
 <div class="highlight"><pre><span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>第3パラメータは <code>doSleep</code>。ここを <code>true</code> にしておくと、物体が動いていないときはその分のシミュレーション処理を削減できる。</p>
 <h1>2. 床の作成</h1>
 <p>さて、世界ができたら床を作っていこう。</p>
@@ -98,32 +96,24 @@
 <span class="kd">var</span> <span class="nx">wallBdDef</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
 <span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">300</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
 <span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">angle</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">24</span><span class="p">;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>400, 300 の位置に物体を作る。角度はラジアンで指定する（π(=180°) / 24 なので 7.5°傾ける）。</p>
 <h2>2-2. 物体を作る。</h2>
 <p>世界上に物体を作成する。</p>
 <div class="highlight"><pre><span class="c1">// 物体を作る</span>
 <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBdDef</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>2-3. 形の定義を作成する</h2>
 <div class="highlight"><pre><span class="c1">// 形の定義を作る</span>
 <span class="kd">var</span> <span class="nx">wallShapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
 <span class="nx">wallShapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p><code>b2PolygonDef</code> を使って 180×10 の四角形の定義を作る。<span class="footnote"><a href="#f2" title="ver1 には b2BoxDef があったが、ver2 からは箱は b2PolygonDef.SetAsBox() で作成するようになった" name="fn2">*2</a></span></p>
 <h2>2-4. 形を物体に追加する</h2>
 <p>定義を作っただけではだめで物体に追加しなきゃいけない。</p>
 <div class="highlight"><pre><span class="c1">// 形を物体に追加する</span>
 <span class="nx">wallBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">wallShapeDef</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p><code>b2Body</code> オブジェクトの <code>CreateShape</code> を呼ぶ。<span class="footnote"><a href="#f3" title="ver 2.0.0 では CreateStaticShape() と CreateDynamicShape() に分かれていたが、ver 2.0.1 からは CreateShape() に統一された" name="fn3">*3</a></span></p>
 <h2>2-5. (動く物体の場合のみ) 重さを計算する</h2>
 <p>今回は動かない物体なので必要ない。</p>
@@ -153,9 +143,7 @@
 
 <span class="c1">// 重さ・重心を計算する</span>
 <span class="nx">objBd</span><span class="p">.</span><span class="nx">SetMassFromShapes</span><span class="p">();</span>
-</pre>
-</div>
-
+</pre></div>
 <p>先ほどの手順と同じだが、動く物体なので最後に <code>SetMassFromShapes()</code> を利用して重さや重心を計算している。</p>
 <p><code>ShepeDef</code> のプロパティは次の通り。</p>
 <dl><dt><code>density</code></dt><dd><code>0</code> 以外に設定すると、固定されない（自由落下する）ようになる。</dd><dt><code>restitution</code></dt><dd>はね返り具合。</dd><dt><code>friction</code></dt><dd>摩擦ぐあいを表すパラメータ。<code>0</code> だとよく滑る。</dd></dl>
@@ -163,9 +151,7 @@
 <h1>4. シミュレーションの開始</h1>
 <p><code>enterFrame</code> の中で次の関数を実行する。</p>
 <div class="highlight"><pre><span class="nx">world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <ul><li>第一引数（<code>timeStep</code>）は１回のステップで進める秒数。</li><li>第二引数（<code>iterations</code>）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）</li></ul>
 <h1>5. 描画</h1>
 <p>ver 2 から DebugView が導入された。開発の初期の段階では、物体を正しく定義できているか調べるのに便利だ。今回も DebugView を使って描画している。</p>
@@ -180,9 +166,7 @@
 <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_lineThickness</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_drawFlags</span> <span class="o">=</span> <span class="nx">b2DebugDraw</span><span class="p">.</span><span class="nx">e_shapeBit</span><span class="p">;</span>
 <span class="nx">world</span><span class="p">.</span><span class="nx">SetDebugDraw</span><span class="p">(</span><span class="nx">debugDraw</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>ソース</h1>
 <p>コメントを細かく書いているので128行あります。</p>
 <a name="seemore"></a>
@@ -315,9 +299,7 @@
     <span class="p">}</span>
 <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 </div>
 <div class="seealso">
 <h1>目次</h1>
@@ -329,6 +311,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -361,24 +345,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090428/box2dflashas3_2_0_2" class="hatena-bookmark-button" data-hatena-bookmark-title="Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版) - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/04/28/box2dflashas3-2-0-2/" data-lang="ja" data-size="horizontal" data-text="Box2DFlashAS3 の単純なサンプルと使い方 (2.0.2版) - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/04/28/box2dflashas3-2-0-2/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/04/27/mixi-hokkaido/" rel="previous">mixi で自分の都道府県を落とすアプリを作ってみた</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年04月28日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-04-28-box2dflashas3-2-0-2.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/box2d/">Box2d</a><span class="delimiter">, </span><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/04/30/box2d-no-debug-draw/" rel="next">DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版)&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/04/27/mixi-hokkaido/" rel="previous"><b>&laquo;</b><span class="title">mixi で自分の都道府県を落とすアプリを作ってみた</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/04/30/box2d-no-debug-draw/" rel="next"><span class="title">DebugDraw を使わない Box2DFlashAS3 のサンプル (2.0.2版)</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -386,7 +380,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -411,7 +405,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -438,7 +432,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

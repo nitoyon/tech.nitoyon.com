@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2009年02月05日</h2>
+<div class="post-date">2009年02月05日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/lisp/">Lisp</a></div>
+
 <h1>On Lisp 続き 6章～9章</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090205/on_lisp2" class="hatena-bookmark-button" data-hatena-bookmark-title="On Lisp 続き 6章～9章 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-lang="ja" data-size="horizontal" data-text="On Lisp 続き 6章～9章 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -65,15 +67,11 @@
 <p> + のマクロ版が</p>
 <div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">sum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
   <span class="o">`</span><span class="p">(</span><span class="nb">apply</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="p">(</span><span class="nb">list</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)))</span>
-</pre>
-</div>
-
+</pre></div>
 <p>と定義されていたが、これでもいけた。</p>
 <div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">mysum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
   <span class="o">`</span><span class="p">(</span><span class="nb">funcall</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="o">,@</span><span class="nb">rest</span><span class="p">))</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>いつマクロを使うべきか</h2>
 <ul><li>基本はマクロ</li><li>マクロが必要なときはマクロ<ul><li>いつ必要かを説明していくよ</li></ul></li></ul>
 <h2>マクロにしかできないこと</h2>
@@ -83,9 +81,7 @@
   <span class="p">(</span><span class="nv">while</span> <span class="p">(</span><span class="nb">&gt;</span> <span class="nv">x</span> <span class="mi">0</span><span class="p">)</span> 
     <span class="p">(</span><span class="nb">incf</span> <span class="nv">sum</span> <span class="nv">x</span><span class="p">)</span>
     <span class="p">(</span><span class="nb">decf</span> <span class="nv">x</span><span class="p">))</span> <span class="nv">sum</span><span class="p">)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>すごく手続きっぽい書き方になってしまったが、while の中の setq は x の値によって呼ばれる回数が変わってくる。全く評価されないかもしれない。</p>
 <ol><li>変形(setfパターン)<ul><li>setf は引数として与えられた値に書き込む</li><li><pre>(let <span class="footnote"><a href="#f1" title="x '(3 4" name="fn1">*1</a></span>) (setf (car x) 9) x)  ; (9 4)</pre></li><li>第一引数を見て判断するのでマクロでないとできない</li></ul></li><li>束縛<ul><li>let や setq などのレキシカルな束縛を変更する処理はマクロが必須</li></ul></li><li>条件分岐<ul><li>条件が満たされたときのみ評価するにはマクロが必須</li><li><code>(if t (print 3) (print 4))</code> で 4 が表示されては困る。if が関数なら呼び出す時点で評価されてしまう。</li></ul></li><li>複数回の評価<ul><li>while など、ループのたびに評価されるようにするにはマクロが必須。</li></ul></li><li>呼び出し側環境の利用<ul><li>呼ばれた場所のコンテキストに応じた変数を使える</li><li>これは危険。通常は使うな。 (On Lisp の本では継続とATNコンパイラで利用している)</li></ul></li><li>新しい環境を包み込む<ul><li>ちょっと分からん。保留。</li></ul></li><li>関数呼び出しの節約<ul><li>インラインでも同じ</li></ul></li></ol>
 <p>悩むような微妙なケース。</p>
@@ -94,9 +90,7 @@
   <span class="o">`</span><span class="p">(</span><span class="nb">/</span> <span class="p">(</span><span class="nb">+</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)</span> <span class="o">,</span><span class="p">(</span><span class="nb">length</span> <span class="nv">args</span><span class="p">)))</span>
 <span class="nb">&gt;</span> <span class="p">(</span><span class="nb">pprint</span> <span class="p">(</span><span class="nb">macroexpand-1</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">avg</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span><span class="p">)))</span>
 <span class="c1">; (/ (+ 10 11 12) 3)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>コンパイル時には長さが固定された状態になっている。</p>
 <p>長所まとめ：</p>
 <ol><li>コンパイル時計算<ul><li>一部をコンパイル時に展開できる。上の avg みたいな。</li><li>詳細は13章</li></ul></li><li>Lisp との連携<ul><li>一部を Lisp に任せられる。DSL などで有利。</li><li>よく分からんが詳細は19章とのこと</li></ul></li><li>関数呼び出しの節約<ul><li>inline でも同じだけど。</li></ul></li></ol>
@@ -119,6 +113,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -151,24 +147,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20090205/on_lisp2" class="hatena-bookmark-button" data-hatena-bookmark-title="On Lisp 続き 6章～9章 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-lang="ja" data-size="horizontal" data-text="On Lisp 続き 6章～9章 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2009/02/05/on-lisp2/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2009/02/03/ansicl-chm/" rel="previous">ANSI Common Lisp の仕様書を HTML Help にした</a>
-	
+<div class="entry-data">
+<div class="post-date">2009年02月05日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2009-02-05-on-lisp2.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/lisp/">Lisp</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2009/02/06/silverlight2-trial/" rel="next">Silverlight 2 でちょっとしたアプリケーションをデザイナと作った話&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2009/02/03/ansicl-chm/" rel="previous"><b>&laquo;</b><span class="title">ANSI Common Lisp の仕様書を HTML Help にした</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2009/02/06/silverlight2-trial/" rel="next"><span class="title">Silverlight 2 でちょっとしたアプリケーションをデザイナと作った話</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -176,7 +182,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -201,7 +207,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -228,7 +234,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

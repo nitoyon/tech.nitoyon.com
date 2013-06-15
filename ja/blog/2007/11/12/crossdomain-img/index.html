@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2007年11月12日</h2>
+<div class="post-date">2007年11月12日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+
 <h1>AS で別ドメインの画像を読み込むときの注意点</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071112/crossdomain_img" class="hatena-bookmark-button" data-hatena-bookmark-title="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-lang="ja" data-size="horizontal" data-text="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -64,16 +66,12 @@
 <span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
 <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">);</span>
 <span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>画像形式は PNG、GIF、JPEG のみ。BMP はダメ。アニメーション GIF の場合は１フレーム目しか描画されない。</p>
 <p>読み込み完了したことを知るためには、contentLoaderInfo プロパティの complete イベントを監視すればよい。ファイルが存在しなかったり、ファイル形式が不正だった場合は ioError イベントが発生する。ioError を listen していない場合には例外が投げられる。</p>
 <div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="nx">completeHandler</span><span class="p">);</span>
 <span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;ioError&quot;</span><span class="p">,</span> <span class="nx">ioErrorHandler</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>読み込んだ画像は、回転・拡大したり、透明度を変えたり、フィルタをかけたりすることが可能だ。以下の例を見ていただきたい。</p>
 <p><script src="http://gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FImageLoader1.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=200&amp;h=80&amp;title=magnify+mixi+logo&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></script></p>
 <p>この例では、mixi のロゴを img.mixi.jp のドメインから動的に読み込んでいる。ColorMatrixFilter で紫色に変色させ、DisplacementMapFilter でマウスの上を歪ませている。</p>
@@ -93,18 +91,14 @@
 <span class="nt">&lt;cross-domain-policy&gt;</span>
   <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
 <span class="nt">&lt;/cross-domain-policy&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>一方、mixi にも crossdomain.xml はあるのだけど、現時点では<a href="http://mixi.jp/crossdomain.xml">任意のドメインからのアクセスは許可されていない</a>。</p>
 <div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> 
 <span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;</span>
 <span class="nt">&lt;cross-domain-policy&gt;</span>
   <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*.mixi.jp&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
 <span class="nt">&lt;/cross-domain-policy&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>では、実際にロード時に crossdomain.xml を読み込ませてみよう。といっても２箇所修正するだけだ。</p>
 <div class="highlight"><pre><span class="c1">// LoaderContextを準備</span>
 <span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">LoaderContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LoaderContext</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
@@ -113,9 +107,7 @@
 <span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
 <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span> <span class="c1">// 第２引数に context を渡す</span>
 <span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>LoaderContext の checkPolicyFile を true にするところがポイント。これ以外に、Security.loadPolicyFile() メソッドを使って、事前に読み込んでおく方法もある。loadPolicyFile() を使うと、crossdomain.xml 以外の URL からクロスドメインポリシーファイルを読み取ることができる。</p>
 <p>crossdomain.xml が存在しない場合、もしくは許可されなかった場合にも、<strong>画像はロードされる</strong>。ロードした段階では例外も発生しない。BitmapData.draw() しようとした段階になって初めて例外が出るので注意が必要だ。</p>
 <p>では、どうやって許可されたかを調べるかというと、実際に試してみて例外を拾うのが一番簡単。</p>
@@ -128,18 +120,14 @@
         <span class="nx">trace</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
     <span class="p">}</span>
 <span class="p">});</span>
-</pre>
-</div>
-
+</pre></div>
 <p>もう１つの方法として、loader.contentLoaderInfo.childAllowsParent で調べることもできる。</p>
 <div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">childAllowsParent</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// あとはお好きに</span>
     <span class="p">}</span>
 <span class="p">});</span>
-</pre>
-</div>
-
+</pre></div>
 <p>どちらでもお好きな方を。</p>
 <p>具体例を１つ。</p>
 <p></p>
@@ -157,6 +145,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -189,24 +179,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20071112/crossdomain_img" class="hatena-bookmark-button" data-hatena-bookmark-title="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-lang="ja" data-size="horizontal" data-text="AS で別ドメインの画像を読み込むときの注意点 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2007/11/12/crossdomain-img/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2007/11/09/ie-activex-activation/" rel="previous">さらば！「このコントロールをアクティブ化して使用するにはクリックしてください」</a>
-	
+<div class="entry-data">
+<div class="post-date">2007年11月12日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2007-11-12-crossdomain-img.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2007/11/13/twitter-tracker/" rel="next">ついったー足あとちょう&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2007/11/09/ie-activex-activation/" rel="previous"><b>&laquo;</b><span class="title">さらば！「このコントロールをアクティブ化して使用するにはクリックしてください」</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2007/11/13/twitter-tracker/" rel="next"><span class="title">ついったー足あとちょう</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -214,7 +214,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -239,7 +239,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -266,7 +266,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

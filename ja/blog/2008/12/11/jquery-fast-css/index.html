@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年12月11日</h2>
+<div class="post-date">2008年12月11日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/css/">CSS</a></div>
+
 <h1>jQuery を高速に使う CSS セレクタの書き方</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081211/jquery_fast_css" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery を高速に使う CSS セレクタの書き方 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/12/11/jquery-fast-css/" data-lang="ja" data-size="horizontal" data-text="jQuery を高速に使う CSS セレクタの書き方 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/12/11/jquery-fast-css/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -66,9 +68,7 @@
 <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div.foo&quot;</span><span class="p">).</span><span class="nx">addClass</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">);</span>
 <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div.foo&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;#ffffff&quot;</span><span class="p">);</span>
 <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div.foo&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);});</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>何が問題か</h2>
 <p>jQuery は CSS セレクタを書くたびに、DOM をたどってセレクタにマッチする要素を検索します。</p>
 <p><code>$("div.foo")</code> を実行すると、その背後で jQuery は次のような処理を実行しています。</p>
@@ -94,9 +94,7 @@ for(var i = 0; i < elems.length; i++){
 <span class="nx">foos</span><span class="p">.</span><span class="nx">addClass</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">);</span>
 <span class="nx">foos</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;#ffffff&quot;</span><span class="p">);</span>
 <span class="nx">foos</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);});</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>改善方法2: メソッドチェーン</h2>
 <p>メソッドチェーンを使うと、jQuery っぽくなりますし、処理効率も上がります。</p>
 <div class="highlight"><pre><span class="c1">// コード 1-2</span>
@@ -104,17 +102,13 @@ for(var i = 0; i < elems.length; i++){
     <span class="p">.</span><span class="nx">addClass</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;#ffffff&quot;</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);});</span>
-</pre>
-</div>
-
+</pre></div>
 <p><code>$("div.foo")</code>セレクタの実行結果が次のメソッドに順番に引き継がれます。一時変数を必要としないのも嬉しいところです。</p>
 <h1>2. クラスだけを指定するのは禁止</h1>
 <h2>改善前</h2>
 <div class="highlight"><pre><span class="c1">// 例題 2</span>
 <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.foo&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;display&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>何が問題か</h2>
 <p>クラス名だけを指定すると、jQuery は全ての HTML ノードを列挙して、そのそれぞれについてクラス名を調べます。</p>
 <p><code>$(".foo")</code> の背後は次のような処理が実行されます。</p>
@@ -131,18 +125,14 @@ for(var i = 0; i < elems.length; i++){
         <span class="nx">ret</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">elems</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
     <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>全てのタグを列挙してループを回すわけですから非効率的ですね。</p>
 <p>少し、話がそれますが、Firefox3 や Opera9.5、Safari3 には getElementsByClassName() メソッドがネイティブ実装されています。そのため、これらのブラウザは高速に <code>$(".foo")</code> を実行できる能力を持っています。しかし、jQuery 1.2.6 の時点では、ネイティブの getElementsByClassName() を使っていません。</p>
 <p>jQuery の次期 CSS セレクタである <a href="http://webos-goodies.jp/archives/51408207.html">Sizzle</a> では、getElementsByClassName() が定義されていれば利用するよう実装されているようです。</p>
 <h2>改善方法: タグを併記する</h2>
 <p>タグを明示します。</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div.foo&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;display&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>全てのノードからではなく指定したタグの中からクラス名で絞り込むようになるため、ループの回数が大幅に削減されます。</p>
 <h1>3. #id を積極的に使う</h1>
 <h2>改善前</h2>
@@ -158,9 +148,7 @@ for(var i = 0; i < elems.length; i++){
   <span class="err">&lt;</span> ... &gt;
 <span class="nt">&lt;/div&gt;</span>
 <span class="nt">&lt;/body&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>何が問題か</h2>
 <p>先ほども述べましたが、jQuery ではクラス名での探索は非効率的です。</p>
 <p>HTML の設計の話になってしまいますが、HTML 中で１度しか登場しないクラス名は id にしてしまってもよいでしょう。そのほうが JavaScript で扱うにも好都合です。</p>
@@ -178,9 +166,7 @@ for(var i = 0; i < elems.length; i++){
   <span class="err">&lt;</span> ... &gt;
 <span class="nt">&lt;/div&gt;</span>
 <span class="nt">&lt;/body&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>jQuery は、セレクタに id が指定されていた場合には、再帰的に探索せずに <code>getElementById()</code> を利用します。そのため、全ノードを列挙するのに比べ、格段に高速に処理できます。</p>
 <h1>4. 途中までの結果を再利用する</h1>
 <h2>改善前</h2>
@@ -204,16 +190,12 @@ for(var i = 0; i < elems.length; i++){
   <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="o">&lt;</span><span class="err">/body&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>どこが問題か</h2>
 <p>ここまで読んでこれば既にお分かりかもしれません。</p>
 <div class="highlight"><pre>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry&quot;</span><span class="p">)</span>              <span class="c1">// (A)</span>
     <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry div.body&quot;</span><span class="p">)</span>     <span class="c1">// (B)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>(B) のセレクタでは、</p>
 <ol><li>#main を探す</li><li>その子孫から div.entry を列挙する</li><li>その子孫から div.body を列挙する</li></ol>
 <p>という処理を行います。このうちの、1. と 2. は (A) と全く同じ処理です。(A) で求めた結果を再利用すれば処理速度は向上するはずです。</p>
@@ -224,31 +206,23 @@ for(var i = 0; i < elems.length; i++){
 
 <span class="c1">// $() の第2引数に (A) の結果を渡す</span>
 <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div.body&quot;</span><span class="p">,</span> <span class="nx">entries</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>$() 関数の第２引数には探す基点を指定することができます。(A) の結果に含まれる要素の子孫から div.body を探してくれます。</p>
 <p><code>find()</code> メソッドを使ってもよいでしょう。</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">entries</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
 <span class="nx">entries</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;div.body&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>おっと、ここまでくればメソッドチェーンができそうですね。</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">)</span>
     <span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;div.body&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>応用例</h2>
 <p>div.head も探したい場合にはどうすればよいでしょう。</p>
 <p>はい、こうすればよいですね。</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">entries</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
 <span class="nx">entries</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;div.body&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
 <span class="nx">entries</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;div.head&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>こいつもメソッドチェーンしてしまいましょう。end() を使えば、find() で探す前の状態に戻すことができます。</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main div.entry&quot;</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
@@ -258,9 +232,7 @@ for(var i = 0; i < elems.length; i++){
     <span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;div.head&quot;</span><span class="p">)</span> <span class="c1">// #main div.entry div.head になる</span>
         <span class="p">.</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">)</span>
     <span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</pre>
-</div>
-
+</pre></div>
 <p>ここまで来るとアクロバティックですが…一番最初のコードより高速なのは間違いありません。</p>
 <h1>5. 子供セレクタ(>)を使うと速くなることがある</h1>
 <h2>改善前</h2>
@@ -283,9 +255,7 @@ for(var i = 0; i < elems.length; i++){
   <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="o">&lt;</span><span class="err">/body&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <h2>どこが問題なのか</h2>
 <p>「#main div.entry」は #main のあとに子孫セレクタ（スペース）があります。つまり、#main ノードの下の全ての div ノードから entry クラスを探し出します。</p>
 <p><code>$("#main div.entry")</code> の背後では次のような処理が実行されています。</p>
@@ -305,17 +275,13 @@ for(var i = 0; i < elems.length; i++){
         <span class="nx">ret</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">elems</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
     <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>elems には <code>div#main</code> の下の全ての div タグが格納されます。この全てについてクラス名を確認するわけですら、場合によっては遅くなってしまいます。</p>
 <p>もし、div.entry が div#main 直下にのみ存在するのであれば、「子孫セレクタ」ではなく「子供セレクタ」を使えば効率的に動作するかもしれません。</p>
 <h2>改善方法</h2>
 <p>子供セレクタ(>)を使います。</p>
 <div class="highlight"><pre>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#main &gt; div.entry&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span> <span class="p">...</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>jQuery では子供セレクタが出てくると、全ての子孫ではなく、子供の中からマッチするものを調べます。孫やその子供については調査しないため、高速化が期待されます。</p>
 <p><code>$("#main &gt; div.entry")</code> の背後では次のような処理が実行されます。</p>
 <div class="highlight"><pre><span class="c1">// セレクタで選択した結果を格納する配列</span>
@@ -337,9 +303,7 @@ for(var i = 0; i < elems.length; i++){
 
     <span class="nx">child</span> <span class="o">=</span> <span class="nx">child</span><span class="p">.</span><span class="nx">nextSibling</span><span class="p">;</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>子供セレクタを使えば必ず速くなるというわけにはいきませんが、子供の数に比べて子孫が大量にいる場合には、子供セレクタのほうが速くなります。</p>
 <h1>実際のコードで試す</h1>
 <p>実際にブラウザで実行したときに CSS セレクタによって処理速度がどれだけ改善するかを確認してみましょう。</p>
@@ -357,9 +321,7 @@ for(var i = 0; i < elems.length; i++){
     <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;day&quot;</span><span class="nt">&gt;</span> ... <span class="nt">&lt;/div&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;day&quot;</span><span class="nt">&gt;</span> ... <span class="nt">&lt;/div&gt;</span>
 <span class="nt">&lt;/div&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>このような HTML に対して、jQuery を実行してみました。</p>
 <table><tr><th>CSS セレクタ</th><th>Firefox2</th><th>IE7</th><th>Opera9</th><th>Safari3(Win)</th></tr><tr><td><code>.body</code></td><td>22.18ms</td><td>19.85ms</td><td>5.32ms</td><td>2.49ms</td></tr><tr><td><code>div.body</code></td><td>2.34ms</td><td>2.82ms</td><td>1.24ms</td><td>0.49ms</td></tr><tr><td><code>#days &gt; div.day &gt; div.body</code></td><td>2.66ms</td><td>1.72ms</td><td>1.25ms</td><td>0.44ms</td></tr></table>
 <ul><li>全てのブラウザで、<code>.body</code> に比べて <code>div.body</code> の方が5～10倍速くなっている。</li><li><code>#days &gt; div.day &gt; div.body</code> は子供セレクタを２回使っているのに、<code>div.body</code> と同じぐらいの速度で実行できている。</li></ul>
@@ -373,6 +335,8 @@ for(var i = 0; i < elems.length; i++){
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -405,24 +369,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081211/jquery_fast_css" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery を高速に使う CSS セレクタの書き方 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/12/11/jquery-fast-css/" data-lang="ja" data-size="horizontal" data-text="jQuery を高速に使う CSS セレクタの書き方 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/12/11/jquery-fast-css/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/12/10/hatebu-nenkan-release/" rel="previous">はてブ年鑑をリリースしました</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年12月11日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-12-11-jquery-fast-css.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/css/">CSS</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/12/12/hatebu-tips/" rel="next">はてなブックマークの細かすぎて伝わりにくい新機能を勝手に紹介&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/12/10/hatebu-nenkan-release/" rel="previous"><b>&laquo;</b><span class="title">はてブ年鑑をリリースしました</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/12/12/hatebu-tips/" rel="next"><span class="title">はてなブックマークの細かすぎて伝わりにくい新機能を勝手に紹介</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -430,7 +404,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -455,7 +429,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -482,7 +456,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

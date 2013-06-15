@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年10月17日</h2>
+<div class="post-date">2008年10月17日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/algorithm/">アルゴリズム</a></div>
+
 <h1>Haskell でヒープソートを書いてみた</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081017/haskell_heapsort" class="hatena-bookmark-button" data-hatena-bookmark-title="Haskell でヒープソートを書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-lang="ja" data-size="horizontal" data-text="Haskell でヒープソートを書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -62,9 +64,7 @@
 <p>まずは、配列のインデックスを 1 ベースにする。ライブラリの Array 型は好きな値からインデックスを始められるようだが、Haskell の基本的な使い方を覚えたいのでパス。あえてリストで書いてみる。リストの要素にアクセスする関数は !! なので、これをラップした !!! を作ってみる。</p>
 <div class="highlight"><pre><span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="ow">::</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="n">a</span>
 <span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="n">xs</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">xs</span> <span class="o">!!</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>次は、教科書の PARENT, LEFT, RIGHT。</p>
 <div class="highlight"><pre><span class="nf">parent</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
 <span class="nf">parent</span> <span class="ow">=</span> <span class="p">(`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">)</span>
@@ -74,9 +74,7 @@
 
 <span class="nf">right</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
 <span class="nf">right</span> <span class="ow">=</span> <span class="p">(</span><span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
-</pre>
-</div>
-
+</pre></div>
 <p>単純な関数なので、部分適用や関数合成を使って書いてみた。</p>
 <p>次、swap。これも頑張って書き下してみる。もっとシンプルな書き方がありそうなんだが、ひとまずは泥臭く。</p>
 <div class="highlight"><pre><span class="nf">swap</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
@@ -87,9 +85,7 @@
              <span class="o">++</span> <span class="n">drop</span> <span class="n">i2</span> <span class="n">list</span>
     <span class="kr">where</span> <span class="n">i1</span> <span class="ow">=</span> <span class="n">min</span> <span class="n">m</span> <span class="n">n</span>
           <span class="n">i2</span> <span class="ow">=</span> <span class="n">max</span> <span class="n">m</span> <span class="n">n</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>手続き型脳から脱却できぬ</h1>
 <p>いよいよ大物へ。MAX-HEAPIFY。if 文が並んでいた THE 手続き型な関数だったので、とても苦労した。</p>
 <div class="highlight"><pre><span class="nf">maxHeapify</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
@@ -106,17 +102,13 @@
                 <span class="kr">then</span> <span class="n">right</span> <span class="n">i</span>
                 <span class="kr">else</span> <span class="n">j</span>
         <span class="n">largest</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">largeRight</span> <span class="n">i</span> <span class="o">$</span> <span class="n">largeLeft</span> <span class="n">i</span> <span class="n">i</span>
-</pre>
-</div>
-
+</pre></div>
 <p>ひとまずは教科書をそのまま書き下してみた。もっとシンプルに関数型っぽく書き直してみたいんだけど、方針が思いつかない。</p>
 <h1>ループの書き直し</h1>
 <p>BUILD-MAX-HEAP には for 文が登場。Haskell に for 文はないので、再帰か畳み込みで書き直す必要がある。ここでは畳み込み(foldr)を使ってみた。</p>
 <div class="highlight"><pre><span class="nf">buildMaxHeap</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
 <span class="nf">buildMaxHeap</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">foldr</span> <span class="n">maxHeapify</span> <span class="n">arr</span> <span class="o">$</span> <span class="p">[</span><span class="mi">1</span> <span class="o">..</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="p">`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">]</span>
-</pre>
-</div>
-
+</pre></div>
 <p>畳み込みにも苦手意識があったけど、<a href="http://d.hatena.ne.jp/blanketsky/20071129/1196329379" title="畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-logへ">畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-log</a> がすごく分かりやすかった。ありがたい。</p>
 <p>最後は HEAP-SORT。ここでも for 文が登場するので、今度は再帰を使ってみた。</p>
 <div class="highlight"><pre><span class="nf">heapSort</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
@@ -124,16 +116,12 @@
 <span class="nf">heapSort</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">heapSort</span> <span class="p">(</span><span class="n">take</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">$</span> <span class="n">swapped</span> <span class="n">arr</span><span class="p">)</span>
             <span class="o">++</span> <span class="p">[</span><span class="n">head</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span><span class="p">]</span>
     <span class="kr">where</span> <span class="n">swapped</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">swap</span> <span class="mi">1</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span>
-</pre>
-</div>
-
+</pre></div>
 <h1>動け！</h1>
 <p>最後に main。</p>
 <div class="highlight"><pre><span class="nf">main</span> <span class="ow">=</span> <span class="n">print</span> <span class="o">$</span> <span class="n">heapSort</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span>
 <span class="c1">-- [1,2,3,4,7,8,9,10,14,16]</span>
-</pre>
-</div>
-
+</pre></div>
 <p>動いた！</p>
 <h1>感想</h1>
 <p>なんとか動いたが、Haskell っぽいソースに見えない。誰かに添削してほしい。ujihisa とか。</p>
@@ -172,6 +160,8 @@
 
 </div>
 
+<footer>
+
 <div id="post-ad">
 <div id="post-ad1">
 <script type="text/javascript"><!--
@@ -203,24 +193,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20081017/haskell_heapsort" class="hatena-bookmark-button" data-hatena-bookmark-title="Haskell でヒープソートを書いてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-lang="ja" data-size="horizontal" data-text="Haskell でヒープソートを書いてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/10/17/haskell-heapsort/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/10/16/as3-debug-library/" rel="previous">ActionScript 3.0 用デバッグ支援ライブラリいろいろ</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年10月17日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-10-17-haskell-heapsort.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/algorithm/">アルゴリズム</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/10/20/topcoder/" rel="next">TopCoder 参加中&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/10/16/as3-debug-library/" rel="previous"><b>&laquo;</b><span class="title">ActionScript 3.0 用デバッグ支援ライブラリいろいろ</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/10/20/topcoder/" rel="next"><span class="title">TopCoder 参加中</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -228,7 +228,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -253,7 +253,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -280,7 +280,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

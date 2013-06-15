@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年04月30日</h2>
+<div class="post-date">2008年04月30日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+
 <h1>RubyAmf のシリアライザだけを使う</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080430/rubyamf_serialize" class="hatena-bookmark-button" data-hatena-bookmark-title="RubyAmf のシリアライザだけを使う - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-lang="ja" data-size="horizontal" data-text="RubyAmf のシリアライザだけを使う - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -61,8 +63,8 @@
 <div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;app/amf&#39;</span>
 <span class="nb">require</span> <span class="s1">&#39;io/amf_serializer&#39;</span>
 
-<span class="n">amfobj</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">AMF</span><span class="o">::</span><span class="no">AMFObject</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="n">serializer</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">IO</span><span class="o">::</span><span class="no">AMFSerializer</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">amfobj</span><span class="p">)</span>
+<span class="n">amfobj</span> <span class="o">=</span> <span class="ss">RubyAMF</span><span class="p">:</span><span class="ss">:AMF</span><span class="o">::</span><span class="no">AMFObject</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">serializer</span> <span class="o">=</span> <span class="ss">RubyAMF</span><span class="p">:</span><span class="ss">:IO</span><span class="o">::</span><span class="no">AMFSerializer</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">amfobj</span><span class="p">)</span>
 
 <span class="n">serializer</span><span class="o">.</span><span class="n">reset_referencables</span>
 <span class="n">serializer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="o">]</span><span class="p">)</span>
@@ -71,9 +73,7 @@
     <span class="n">f</span><span class="o">.</span><span class="n">binmode</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span> <span class="n">serializer</span><span class="o">.</span><span class="n">stream</span>
 <span class="k">end</span>
-</pre>
-</div>
-
+</pre></div>
 <p>Flash 側で開くには、次のようにする。</p>
 <div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
     <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
@@ -97,9 +97,7 @@
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>trace の結果、[3, 4] と表示される。Ruby でシリアライズした配列を、ActionScript で復元できたことになる。</p>
 <p>今回は静的なファイルに書き込んだけど、Ruby を CGI として使って動的にシリアライズした結果を返してもよいだろう。Flash Remoting を SOAP 的だと解釈するなら、こちらの方法は REST 的。リクエストがバイナリじゃない分、デバッグはしやすいと思う。</p>
 <p>以下、細かい補足。</p>
@@ -108,6 +106,8 @@
 <p>(追記) <a href="http://yoshimoto.blog.so-net.ne.jp/">Flex＆Java Blog</a> さんにて、Java で S2Flex を使って似たようなことをやる方法が紹介されているのを発見しました。<a href="http://yoshimoto.blog.so-net.ne.jp/2007-12-16">S2Flex2　Javaで圧縮しFlex2で展開する：Flex＆Java Blog：So-net blog</a></p>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -140,24 +140,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080430/rubyamf_serialize" class="hatena-bookmark-button" data-hatena-bookmark-title="RubyAmf のシリアライザだけを使う - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-lang="ja" data-size="horizontal" data-text="RubyAmf のシリアライザだけを使う - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/04/28/kanmenkan-party/" rel="previous">百万ベンチャー(?)交流会に行ってきた</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年04月30日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-04-30-rubyamf-serialize.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/actionscript/">ActionScript</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/05/01/gihyo-8/" rel="next">gihyo.jp 連載８回目: Flex概要&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/04/28/kanmenkan-party/" rel="previous"><b>&laquo;</b><span class="title">百万ベンチャー(?)交流会に行ってきた</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/05/01/gihyo-8/" rel="next"><span class="title">gihyo.jp 連載８回目: Flex概要</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -165,7 +175,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -190,7 +200,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -217,7 +227,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

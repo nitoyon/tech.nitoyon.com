@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2007年04月17日</h2>
+<div class="post-date">2007年04月17日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/flex/">Flex</a></div>
+
 <h1>Flex の Binding 具体例と内部事情の覗き見</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070417/binding_example" class="hatena-bookmark-button" data-hatena-bookmark-title="Flex の Binding 具体例と内部事情の覗き見 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/04/17/binding-example/" data-lang="ja" data-size="horizontal" data-text="Flex の Binding 具体例と内部事情の覗き見 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2007/04/17/binding-example/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -78,9 +80,7 @@
     <span class="nt">&lt;mx:TextInput</span> <span class="na">id=</span><span class="s">&quot;input1&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;mx:Label</span> <span class="na">id=</span><span class="s">&quot;label1&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/mx:Application&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>applicationComplete は JavaScript でいう onload みたいなものです。このなかで init 関数を呼び出して初期化を行います。</p>
 <p>init 関数の中は、input1 に対して addEventListener でイベント登録してます。「input1 の中身に変化があったら onchange 関数に通知してね」とお願いしてるわけです。</p>
 <p>ハンドラ(onchange 関数)の中では、input1 に入力された文字の前に "Input text: " を加えて、label1 に表示してます。</p>
@@ -100,17 +100,13 @@
     <span class="nt">&lt;mx:TextInput</span> <span class="na">id=</span><span class="s">&quot;input1&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;mx:Label</span> <span class="na">id=</span><span class="s">&quot;label1&quot;</span> <span class="na">text=</span><span class="s">&quot;Input text: {input1.text}&quot;</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/mx:Application&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p><a href="/ja/blog/2007/04/16/bindable-intro/">Flex の Bindable 入門</a> では、監視したいデータに [Bindable] をつけましょう、と説明しました。ここでは、input1 の text プロパティを監視したいのですが、実は text プロパティは [Bindable] がついた状態で定義されています。text プロパティは、変更を他に通知する前提で作られている、ということです。</p>
 <p>このことはFlex リファレンス ガイドでも確認できます。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070417/20070417002125.jpg" width="285" height="212" alt="リファレンス"></center>
 <p>次は通知を受け取る側です。受け取る側は中括弧をつけて {mySlider.value} のようにやる、と説明しました。ここでは、input1 の text プロパティを label1 の text プロパティに反映させるわけですから</p>
 <div class="highlight"><pre>    <span class="nt">&lt;mx:Label</span> <span class="na">id=</span><span class="s">&quot;label1&quot;</span> <span class="na">text=</span><span class="s">&quot;Input text: {input1.text}&quot;</span> <span class="nt">/&gt;</span>
-</pre>
-</div>
-
+</pre></div>
 <p>となります。</p>
 <p>いかがでしょう。１箇所だけだとあまり効果ははっきりしませんが、複数個所になってくると効果は歴然です。中括弧の中では関数呼び出しや演算などもできるので、自由度はかなり高いです。</p>
 <h1>技術的に掘り下げてみる</h1>
@@ -139,14 +135,14 @@
             <span class="s2">&quot;label1.text&quot;</span><span class="p">);</span>
         <span class="nx">_bindings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">binding</span><span class="p">;</span>
     <span class="p">}</span>
-</pre>
-</div>
-
+</pre></div>
 <p>mx.binding.Binding クラスが出てきて複雑ですが、イベントを受け取ったときの処理を Binding クラスを使ってと登録しています。処理内容は第２引数の関数を実行して、その戻り値を第３引数に渡す、という流れです。</p>
 <p>ソースをさらに追うと、第４引数は mx/binding/BindingManager.as の中で力技でパースしていたりして面白いのですが、なにせ Flex SDK のソースは分量も多くて複雑なので、なかなか全体像は把握しきれません。興味のある人は SDK の frameworks/source/mx の中にソースがあるので、ぜひ挑戦してみてください。</p>
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -179,24 +175,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20070417/binding_example" class="hatena-bookmark-button" data-hatena-bookmark-title="Flex の Binding 具体例と内部事情の覗き見 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2007/04/17/binding-example/" data-lang="ja" data-size="horizontal" data-text="Flex の Binding 具体例と内部事情の覗き見 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2007/04/17/binding-example/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2007/04/16/p1/" rel="previous">Flex 勉強会に行ってきました</a>
-	
+<div class="entry-data">
+<div class="post-date">2007年04月17日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2007-04-17-binding-example.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/flex/">Flex</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2007/04/17/ria-gekidou/" rel="next">RIA 業界で動きありすぎな4月16日&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2007/04/16/p1/" rel="previous"><b>&laquo;</b><span class="title">Flex 勉強会に行ってきました</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2007/04/17/ria-gekidou/" rel="next"><span class="title">RIA 業界で動きありすぎな4月16日</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -204,7 +210,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -229,7 +235,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -256,7 +262,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 

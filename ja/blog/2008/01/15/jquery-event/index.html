@@ -17,7 +17,7 @@
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
 </head>
 <body class="ja">
@@ -40,15 +40,17 @@
 
 <article>
 <header>
-<hgroup>
-<h2>2008年01月15日</h2>
+<div class="post-date">2008年01月15日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
 <h1>jQuery の bind, unbind の裏側</h1>
-</hgroup>
+
 
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080115/jquery_event" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery の bind, unbind の裏側 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/15/jquery-event/" data-lang="ja" data-size="horizontal" data-text="jQuery の bind, unbind の裏側 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/01/15/jquery-event/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </header>
@@ -61,16 +63,12 @@
 <h1>そもそもの目的</h1>
 <p>DOM 標準の removeEventListener は、element と type(click, submit, blur など) と listener の３つを指定する必要がある。</p>
 <div class="highlight"><pre><span class="nx">element</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="nx">click</span><span class="p">,</span> <span class="nx">listener</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>jQuery ではイベント解除に unbind という便利な関数が用意されている。</p>
 <ol><li>element, type, listener を指定して解除する（通常の removeEventListener と同じ）</li><li>element, type を指定して全てのイベントハンドラを解除する</li><li>element から全てのイベントを解除する</li></ol>
 <p>例えば、</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#foo&quot;</span><span class="p">).</span><span class="nx">unbind</span><span class="p">();</span>
-</pre>
-</div>
-
+</pre></div>
 <p>とすると、#foo なエレメントに（jQuery 経由で）bind したイベントを全て解除できる。</p>
 <p>1. は通常の removeEventListener そのままなんだけど、2. や 3. をどうするかが腕の見せ所。</p>
 <h1>実現方法</h1>
@@ -79,9 +77,7 @@
 <h2>bind の裏側</h2>
 <p>bind は次のようにして使う。</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">).</span><span class="nx">bind</span><span class="p">(</span> <span class="nx">type</span><span class="p">,</span> <span class="nx">fn</span> <span class="p">);</span>
-</pre>
-</div>
-
+</pre></div>
 <p>このとき、裏側では次のように動いている。</p>
 <ol><li>fn に guid を設定する。guid はイベントハンドラに一意につけられた id。</li><li>type と guid をキーにして、イベントハンドラを保持する（hash.events[type][guid] = fn）。<ul><li>element から登録された type 一覧を知ることができる</li><li>element と type から登録された fn の一覧を知ることができる</li></ul></li><li>element に type のイベントが登録されていない場合は、element.addEventListener(type, <特製ハンドラ>, false) する。<ul><li>複数回 bind しても、登録されるイベントハンドラはこの特製ハンドラ１つだけ</li><li>このハンドラが呼ばれると、hash.events[type] に保存されている fn（実際に bind で登録されたイベントハンドラ）を順番に呼び出す。</li></ul></li></ol>
 <p>element と type が同じなら、１回しか addEventListener が呼び出されず、同じイベントハンドラを使いまわしている。</p>
@@ -100,6 +96,8 @@
 </section>
 
 </div>
+
+<footer>
 
 <div id="post-ad">
 <div id="post-ad1">
@@ -132,24 +130,34 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 
 </div>
 
-<div class="bottom-share">
+<div class="share">
+
 <div class="share">
 	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/entry/20080115/jquery_event" class="hatena-bookmark-button" data-hatena-bookmark-title="jQuery の bind, unbind の裏側 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
 	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2008/01/15/jquery-event/" data-lang="ja" data-size="horizontal" data-text="jQuery の bind, unbind の裏側 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
-	<div class="fb-like" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2008/01/15/jquery-event/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
 </div>
 
 </div>
 
-<div id="pager-bottom">
-	
-		&laquo;&nbsp;<a href="/ja/blog/2008/01/11/kanasan-js2/" rel="previous">Kanasan.JS JavaScript第5版読書会#2 のお知らせ</a>
-	
+<div class="entry-data">
+<div class="post-date">2008年01月15日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2008-01-15-jquery-event.htn">編集履歴</a></span></div>
 
-	|
+<div class="post-tags"><a href="/ja/blog/tags/jquery/">jQuery</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
 
+
+
+<div id="pager">
 	
-		<a href="/ja/blog/2008/01/16/dounavi-blog-rss/" rel="next">動ナビブログ全文配信RSS&nbsp;&raquo;</a>
+	<div class="previous">
+		<a href="/ja/blog/2008/01/11/kanasan-js2/" rel="previous"><b>&laquo;</b><span class="title">Kanasan.JS JavaScript第5版読書会#2 のお知らせ</span></a>
+	</div>
+	
+	
+	<div class="next">
+		<a href="/ja/blog/2008/01/16/dounavi-blog-rss/" rel="next"><span class="title">動ナビブログ全文配信RSS</span><b>&raquo;</b></a>
+	</div>
 	
 </div>
 
@@ -157,7 +165,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-
+</footer>
 </div><!--entry-->
 
 </article>
@@ -182,7 +190,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 	<div id="subscribe">
 		<h3>Subscribe</h3>
 		<ul>
-			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon></a></li>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
 			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
 			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
 		</ul>
@@ -209,7 +217,7 @@ src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 </div><!-- wrapped -->
 
 <div class="wrap copy">
-&copy; nitoyon 2002-2012. All rights reserved.
+&copy; nitoyon 2002-2013. All rights reserved.
 </div>
 </footer>
 
