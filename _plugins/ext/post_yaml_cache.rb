@@ -8,6 +8,7 @@ module Jekyll
 
     def read
       @yaml_cache = YamlCache.new(self) if @yaml_cache.nil?
+      @yaml_cache.clear_modified
 
       self.read_layouts
       self.read_directories
@@ -48,12 +49,17 @@ module Jekyll
   #            'content'  => "...",   # content cache
   #          },
   # }
+  #
+  # After Site#read was called, YamlCache#modified represents whether cache
+  # is modified and YamlCache#yaml_modified represents whether YAML is modified.
   class YamlCache
+    attr_accessor :modified, :yaml_modified
+
     def initialize(site)
       @site = site
       @cache_path = File.join(@site.source, '_caches/posts.yml')
       @cache = nil
-      @file_modified = false
+      @yaml_modified = @modified = false
     end
 
     def ret_hash(yaml, content, yaml_modified, content_modified, updated)
@@ -100,7 +106,8 @@ module Jekyll
       yaml_modified = YAML.dump(old_yaml) != YAML.dump(yaml)
       content_modified = old_content != content
       modified = yaml_modified || content_modified
-      @file_modified |= modified
+      @yaml_modified |= yaml_modified
+      @modified |= modified
 
       # set cache
       @cache[key] = {
@@ -126,11 +133,14 @@ module Jekyll
     end
 
     def save
-      if @file_modified
+      if @modified
         yaml = YAML.dump(@cache)
         File.open(@cache_path, "w") { |f| f.write(yaml) }
       end
-      @file_modified = @content_modified = false
+    end
+
+    def clear_modified
+      @modified = @yaml_modified = false
     end
   end
 end

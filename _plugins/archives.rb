@@ -50,20 +50,27 @@ module Jekyll
       self.process(@name)
       self.read_yaml(File.join(base, '_layouts'), 'archive.html')
 
-      title = "Archives for "
-      
       if day
-        title += "#{time.strftime('%B %d, %Y')}"
+        title = Jekyll::Locales.translate(site.config, lang,
+          'archive.title.day', 'Archives for %B %d, %Y', time)
       elsif month
-        title += "#{time.strftime('%B %Y')}"
+        title = Jekyll::Locales.translate(site.config, lang,
+          'archive.title.month', 'Archives for %B %Y', time)
       else
-        title += year.to_s
+        title = Jekyll::Locales.translate(site.config, lang,
+          'archive.title.year', 'Archives for %Y', time)
       end
       
       self.data["title"] = title
       self.data["posts"] = posts.reverse
       self.data["lang"] = lang;
-      self.data["update_policy"] = "{% for post in page.posts %}{% if post.raw.yaml_modified %}1{% endif %}{%endfor%}"
+    end
+
+    def needs_render?
+      self.data["posts"].each { |post|
+        return true if post.yaml_modified
+      }
+      false
     end
   end
   

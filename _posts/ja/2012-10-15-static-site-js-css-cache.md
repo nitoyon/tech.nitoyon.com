@@ -1,7 +1,9 @@
 ---
 layout: post
 title: 静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ
-tags: [てっく煮, Jekyll]
+tags:
+- tech-ni
+- Jekyll
 lang: ja
 ---
 「[ABOUT](/ja/about/)」のページをリニューアルしました。

@@ -1,7 +1,10 @@
 ---
 layout: post
 title: 俺の最強ブログ システムが火を噴くぜ
-tags: [はてな, てっく煮]
+tags:
+- hatena
+- Jekyll
+- tech-ni
 lang: ja
 ---
 ブログを「はてなダイアリー」から、自分のサーバーに移転しました。

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: rsync の複雑怪奇な exclude と include の適用手順を理解しよう
-tags: unix
+tags: UNIX
 lang: ja
 seealso:
   - ja/2013-03-25-livereloadx0-2-0

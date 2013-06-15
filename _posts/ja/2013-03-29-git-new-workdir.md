@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利
-tags: git
+tags: Git
 lang: ja
 seealso:
   - 2012-09-20-moved-completed

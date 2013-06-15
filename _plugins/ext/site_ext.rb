@@ -9,19 +9,50 @@
 #  - lang plugin
 
 module Jekyll
+  module Convertible
+    def needs_render?
+      self.modified
+    end
+  end
+
   class Post
     attr_accessor :skipped, :yaml_modified, :modified
 
+    def needs_render?
+      self.modified ||
+        self.previous && self.previous.yaml_modified ||
+        self.next && self.next.yaml_modified
+    end
+
     def source
-      File.join(@base, @name)
+      File.join(@base, @name)[@site.source.length .. -1]
     end
   end
 
   class Page
     attr_accessor :skipped, :yaml_modified, :modified
 
+    def needs_render?
+      unless self.data.has_key?("update_policy")
+        return self.modified
+      end
+      update_policy = self.data["update_policy"]
+
+      @@template_cache ||= {}
+      unless @@template_cache.has_key? update_policy
+        @@template_cache[update_policy] = Liquid::Template.parse(update_policy)
+      end
+      template = @@template_cache[update_policy]
+
+      update = template.render(
+        { "page" => self }.deep_merge(self.site.site_payload), 
+        { :filters => [Jekyll::Filters], :registers => { :site => self.site } })
+      puts "#{self.destination('/')} updated: #{update.strip}" unless update.strip.empty?
+      !update.strip.empty?
+    end
+
     def source
-      File.join(@base, @dir, @name)
+      File.join(@base, @dir, @name)[@site.source.length .. -1]
     end
   end
 
@@ -71,6 +102,11 @@ module Jekyll
       self.generate_archives
       t_archive = Time.now - t_archive
 
+      t_tag = Time.now
+      puts "process: tags"
+      self.generate_tags
+      t_tag = Time.now - t_tag
+
       t_lang = Time.now
       puts "process: languages"
       self.generate_languages
@@ -94,6 +130,7 @@ module Jekyll
       puts "generate:      #{t_generate} sec"
       puts "render:        #{t_render} sec"
       puts "archive:       #{t_archive} sec"
+      puts "tag:           #{t_tag} sec"
       puts "languages:     #{t_lang} sec"
       puts "cleanup:       #{t_cleanup} sec"
       puts "writing:       #{t_write} sec"
@@ -160,12 +197,10 @@ module Jekyll
     def render
       payload = site_payload
       self.posts.each do |post|
-        post.skipped = true
         self.render_if_modified(post, payload)
       end
 
       self.pages.each do |page|
-        page.skipped = true
         self.render_if_modified(page, payload)
       end
 
@@ -176,56 +211,10 @@ module Jekyll
     end
 
     def render_if_modified(page, payload)
-      begin
-        page.skipped = !self.check_render(page)
-      rescue Exception => e
-        puts "Failed to check render #{page.destination('/')}: #{e}"
-        page.skipped = false
-      end
-      page.render(self.layouts, payload) unless page.skipped
-    end
-
-    def check_render(page)
-      unless self.is_modified_only
-        true
-      else
-        default_update_policy = self.config['default_update_policy']
-        @template_cache ||= {}
-
-        if page.data.has_key?("update_policy")
-          update_policy = page.data["update_policy"]
-        elsif page.class == Page && default_update_policy && default_update_policy['page']
-          update_policy = default_update_policy['page']
-        elsif page.class == Post && default_update_policy && default_update_policy['post']
-          update_policy = default_update_policy['post']
-        else
-          update_policy = "{% if page.raw.modified %}1{% endif %}"
-        end
-
-        # performance improvement (skip Liquid rendering)
-        if update_policy == "{% if page.raw.modified %}1{% endif %}"
-          return page.modified
-        elsif update_policy == "{% if page.raw.modified or page.previous.raw.yaml_modified or page.next.raw.yaml_modified %}1{% endif %}"
-          return (page.modified || 
-                  page.previous && page.previous.yaml_modified || 
-                  page.next && page.next.yaml_modified)
-        elsif update_policy == "{% for post in page.posts %}{% if post.raw.yaml_modified %}1{% endif %}{%endfor%}"
-          for post in page.data["posts"]
-            return true if post.yaml_modified
-          end
-          return false
-        end
-
-        unless @template_cache.has_key? update_policy
-          @template_cache[update_policy] = Liquid::Template.parse(update_policy)
-        end
-        template = @template_cache[update_policy]
-
-        update = template.render(
-          { "page" => page }.deep_merge(site_payload), 
-          { :filters => [Jekyll::Filters], :registers => { :site => self } })
-        puts "#{page.destination('/')} updated: #{update.strip}" unless update.strip.empty?
-        !update.strip.empty?
+      page.skipped = self.is_modified_only && !page.needs_render?
+      unless page.skipped
+        page.render(self.layouts, payload)
+        puts "rendered " + page.destination('/')
       end
     end
 

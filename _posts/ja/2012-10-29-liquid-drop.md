@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Ruby の Liquid でテンプレートに値を渡すパターン４つ
-tags: Ruby
+tags: Ruby Jekyll
 lang: ja
 ---
 今日は Ruby のテンプレート エンジン Liquid において、コードとテンプレートの間でデータをやり取りする方法についてまとめておく。

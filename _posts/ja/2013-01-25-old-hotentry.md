@@ -1,7 +1,8 @@
 ---
 layout: post
 title: はてなブックマークの入れ替わり激しくない人気エントリーを見る方法
-tags: はてなブックマーク
+tags:
+- hatena
 lang: ja
 seealso:
 - 2009-07-02-may-affiliate

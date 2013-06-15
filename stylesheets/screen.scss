@@ -31,97 +31,30 @@ $post-ad-height: 250px;
 
 // color
 $textcolor: #000000;
+$bodybgcolor: #fef9ef;
 $subcolor:  #336699;
 $quiet-color: #888888;
 $footerbgcolor: #e9e9e9;
 
-// CSS arrow
-// https://github.com/chriseppstein/sass-recipes/tree/master/css-arrow
-@mixin arrow($direction, $bg-color, $border-color, $border-width, $top, $left, $width: 10px){
-  position: relative;
-  &:before{
-    content: " ";
-    // reduce the damage in FF3.0:
-    display: block;
-    position: absolute;
-    width: 0;
-    height: 0;
-    top: $top;
-    left: $left;
-    bottom: auto;
-    border-width: floor($width / 2);
-    border-style: solid;
-    @if $direction == "south"{
-      border-color: $border-color transparent transparent transparent;
-    }
-    @if $direction == "north"{
-      border-color: transparent transparent $border-color transparent;
-    }
-    @if $direction == "east"{
-      border-color: transparent transparent transparent $border-color;
-    }
-    @if $direction == "west"{
-      border-color: transparent $border-color transparent transparent;
-    }
-  }
-  // creates the smaller triangle
-  &:after{
-    content: " ";
-    display: block;
-    position: absolute;
-    width: 0;
-    height: 0;
-    @if $direction == "south"{
-      top: $top - $border-width;
-    }
-    @else if $direction == "north"{
-      top: $top + $border-width;
-    }
-    @else{
-      top: $top;
-    }
-    @if $direction == "east"{
-      left: $left - $border-width;
-    }
-    @else if $direction == "west"{
-      left: $left + $border-width;
-    }
-    @else{
-      left: $left;
-    }
-    bottom: auto;
-    border-width: floor($width / 2);
-    border-style: solid;
-    @if $direction == "south"{
-      border-color: $bg-color transparent transparent transparent
-    }
-    @if $direction == "north"{
-      border-color: transparent transparent $bg-color transparent;
-    }
-    @if $direction == "east"{
-      border-color: transparent transparent transparent $bg-color;
-    }
-    @if $direction == "west"{
-      border-color: transparent $bg-color transparent transparent;
-    }
-  }
-}
 
 //////////////////////////////// common ////////////////////////////////
 body{
 	font-family: $gothic;
 	line-height: 1.2;
-	background: #fef9ef;
+	background: $bodybgcolor;
 	-webkit-text-size-adjust: 100%;
 }
 
-h1,h2,h3,h4,h5{
+h1,h2,h3,h4,h5,div.title{
 	font-family: $serif;
 }
 
 code{
 	font-family: $code;
-	background: #f2f2f2;
+	background: #f8f8f8;
+	padding: 0 .3em;
+	border: 1px solid #e6e6e6;
+	@include border-radius(.2em, .2em);
 }
 
 strong code{
@@ -202,8 +135,8 @@ header.page-header {
 	@include single-box-shadow(#dddddd, 0px, 0px, 20px);
 
 	.wrapped{
-		padding-top: 3em;
-		padding-bottom: 1.8em;
+		padding-top: 1.3em;
+		padding-bottom: 1.0em;
 		position: relative;
 
 		h1 a{
@@ -291,7 +224,7 @@ div.entry {
 }
 
 div#post-ad{
-	margin-bottom: 1em;
+	margin: 2em 0 1em 0;
 
 	div#post-ad1{
 		float: left;
@@ -313,34 +246,62 @@ div#post-ad{
 }
 
 div.entry-body {
-	margin-top: 3em;
+	margin-top: 1.5em;
 	margin-bottom: 2em;
 }
 
 
 body.ja article {
-	h1,h2,h3,h4,h5{
+	h1,h2,h3,h4,h5,div.title{
 		font-family: $serif_ja;
 	}
 }
 
 
-// entry header
+// entry header and entry list
 article {
 	// entry title
+	ul.posts,
 	header {
-		margin-top: 2em;
-		margin-bottom: 1em;
-
-		h2{
-			font-size: 1.2em;
-			margin-bottom: .2em;
+		.post-date {
+			vertical-align: middle;
+			display: inline;
 			color: $quiet-color;
-			font-weight: normal;
 		}
 
+		.post-tags {
+			display: inline;
+			margin-left: .5em;
+			span.delimiter {
+				display: none;
+			}
+			a {
+				vertical-align: middle;
+				font-size: .8em;
+				@include border-radius(.4em, .4em);
+				padding: 0 .5em;
+				margin: 0 .3em;
+				background: lighten($quiet-color, 15%);
+				color: white;
+				text-decoration: none;
+
+				&:hover {
+					background-color: darken($quiet-color, 10%);
+					text-decoration: underline;
+				}
+			}
+		}
+
+		.share {
+			margin: .3em 0 0 0;
+		}
+	}
+
+	header {
+		padding-top: 1.5em;
+
 		h1{
-			margin: 0 0 .5em 0;
+			margin: .1em 0 .4em 0;
 			@include single-text-shadow(#cccccc, .03em, 0, .08em);
 			font-size: 2.4em;
 			font-weight: normal;
@@ -348,7 +309,43 @@ article {
 			text-decoration: none;
 		}
 	}
+
+	ul.posts{
+		list-style: none;
+		margin: .7em 0 0 0;
+
+		div.title a{
+			@include single-text-shadow(#cccccc, .03em, 0, .08em);
+			padding: .5em 0 .2em;
+			font-size: 1.4em;
+			font-weight: normal;
+			color: black;
+			text-decoration: none;
+			display: block;
+			line-height: 1.3;
+		}
+		div.title a:visited{
+			color: #939;
+		}
+		div.title a:hover{
+			text-decoration: underline;
+		}
+
+		li {
+			margin: 0;
+			padding: 0 0 .8em 0;
+			border-bottom: 1px solid white;
+			border-top: 1px solid #e3e3dc;
+			&:first-child{
+				border-top: none;
+			}
+			&:last-child{
+				border-bottom: none;
+			}
+		}
+	}
 }
+
 
 // entry body
 article {
@@ -497,6 +494,8 @@ article {
 
 	pre code{
 		background: inherit;
+		border: none;
+		padding: 0;
 	}
 
 	div.fix-height-syntax pre {
@@ -526,13 +525,17 @@ article {
 
 	// seealso
 	div.seealso{
+		background:$footerbgcolor;
+		@include border-radius(.5em, .5em);
+		margin: 1em 0;
+		padding: 1em 1em .6em 1em;
+
+		h1, // <h1> is used in old *.htn entries
 		h4{
-			background:#e6e6e6;
 			border: 0;
-			padding: .4em;
-			margin: 2em 0 .5em 0;
+			margin: 0 0 .4em 0;
 			color: black;
-			font-weight: normal;
+			font-weight: bold;
 			font-family: $gothic;
 			font-size: 100%;
 			font-family: selif;
@@ -598,10 +601,6 @@ article {
 		margin: 1em auto !important;
 	}
 
-	.fb-like-box {
-		background: white;
-	}
-
 	// google gadget
 	table.gadget {
 		border-collapse: separate;
@@ -623,47 +622,68 @@ article {
 
 .share{
 	margin-bottom: 1em;
-	@include pie-clearfix;
 
 	.hatena-bookmark-button-frame,
 	.twitter-share-button,
 	div.fb-like {
-		float: left;
 		padding-right: 1em;
+	}
+	div.fb-like {
+		// fix Google Chrome layout in Zoom 125%
+		vertical-align: top;
 	}
 	.twitter-share-button { padding-right: .2em; }
 }
-.ja .share .twitter-share-button { width: 115px!important; }
+.ja .share .twitter-share-button { width: 110px!important; }
 .en .share .twitter-share-button { width: 85px!important; }
 
-div.bottom-share{
-	margin: 1em 0 1em 0;
-}
+article footer{
+	div.share{
+		margin: 1em 0 1em 0;
+	}
 
-div#pager-bottom{
-	margin: 2em 0 2.5em 0;
-	clear: both;
-}
+	div.entry-data{
+		margin: 1.2em 0;
+		color: $quiet-color;
+		div.post-date{
+			margin-bottom: .4em;
 
-//////////////////////////////// archive ////////////////////////////////
-
-article{
-	ul.posts{
-		list-style: none;
-		margin: 0;
-
-		li {
-			margin-left: 0;
-
-			@media screen and (max-width: $body_width){
-				a{
-					display: block;
-					padding-bottom: .8em;
-				}
+			span.edit-history{
+				&:before { content: "("; }
+				&:after { content: ")"; }
 			}
 		}
-		span.date{
-			font-family: $monospace;
+
+		a { color: $quiet-color; }
+
+		.ja & div.post-date:before{ content: "公開: "; }
+		.ja & div.post-tags:before{ content: "タグ: "; }
+		.en & div.post-date:before{ content: "Posted: "; }
+		.en & div.post-tags:before{ content: "Tags: "; }
+	}
+
+	div#pager{
+		margin: 2em 0 2.5em 0;
+
+		div.previous a b{
+			padding-right: .2em;
+		}
+		div.next{
+			text-align: right;
+			a b{
+				padding-left: .2em;
+			}
+		}
+		div.previous a,
+		div.next a{
+			padding: .2em 0;
+			text-decoration: none;
+			b{
+				color: #000;
+			}
+		}
+		a:hover span.title{
+			text-decoration: underline;
 		}
 	}
 }
@@ -976,4 +996,26 @@ footer.page-footer {
 .highlight .vc { color: #19177C } // Name.Variable.Class 
 .highlight .vg { color: #19177C } // Name.Variable.Global 
 .highlight .vi { color: #19177C } // Name.Variable.Instance 
-.highlight .il { color: #666666 } // Literal.Number.Integer.Long 
+.highlight .il { color: #666666 } // Literal.Number.Integer.Long
+
+
+//////////////////////////////// cloud ////////////////////////////////
+.tag-cloud {
+	margin-top: .7em;
+}
+
+.tag-cloud a {
+	text-decoration: none;
+	margin-right: .2em;
+}
+
+.tag-cloud a:hover {
+	text-decoration: underline;
+}
+
+.tag-cloud-0 { font-size: 2.4em; }
+.tag-cloud-1 { font-size: 2.2em; }
+.tag-cloud-2 { font-size: 2.0em; }
+.tag-cloud-3 { font-size: 1.8em; }
+.tag-cloud-4 { font-size: 1.4em; }
+.tag-cloud-5 { font-size: 1em;   }

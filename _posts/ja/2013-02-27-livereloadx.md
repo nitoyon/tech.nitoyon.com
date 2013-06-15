@@ -1,7 +1,7 @@
 ---
 layout: post
 title: ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った
-tags: JavaScript
+tags: JavaScript release LiveReloadX
 lang: ja
 alternate:
   lang: en_US

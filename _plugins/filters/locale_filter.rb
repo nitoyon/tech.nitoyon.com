@@ -2,52 +2,88 @@ module Jekyll
   module Filters
     # Convert a text using locale file.
     #
-    # input - locale.
-    # name - key
+    # input - key name when string is nil, parameter otherwise.
+    # string - key name or nil.
+    #
+    # _config.yml file:
+    #     locale:
+    #       en:
+    #         hello: "Hello world"
+    #         hello2: "Hello world '$0'"
     #
     # Liquid:
-    #     {{'hello' | t}}
-    #
-    # Locale file(_locales/en.yml):
-    #     hello: "Hello world"
+    #     {{'hello' | t}}            # => Hello world
+    #     {{'foo' | t:'hello2'}}     # => Hello world 'foo'
     #
     # Returns the translated String.
-    def t(input)
+    def t(input, string=nil)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
-      locale_dir = File.join(@context.registers[:site].source, '_locales')
-      locale_file = "#{locale_dir}/#{lang}.yml"
+      config = @context.registers[:site].config
+      param = string.nil? ? nil : input
+      key = string.nil? ? input : string
+      Jekyll::Locales::translate(config, lang, key, nil, param)
+    end
+  end
 
-      $locale_filter_mtime = {} if $locale_filter_mtime.nil?
-      $locale_filter_hash = {} if $locale_filter_hash.nil?
+  class Locales
+    # Convert a text using locale file.
+    #
+    # config - Site#config
+    # lang - language name
+    # key - key name
+    # default_value - (optional) default value when locale is not defined
+    # param - (optional) parameter for the value
+    #
+    # Returns the translated String.
+    #
+    # (ex) _config.yml file:
+    #     locale:
+    #       ja:
+    #         hello: "こんにちは世界"
+    #       en:
+    #         hello: "Hello world"
+    #         hello2: "Hello world '$0'"
+    #         date: 'Date=%v'
+    #
+    #     translate(c, 'en', 'hello')            # => Hello world
+    #     translate(c, 'ja', 'hello')            # => こんにちは世界
+    #     translate(c, 'en', 'hello2', 'foo')    # => Hello world 'foo'
+    #     translate(c, 'fr', 'hello', nil, '!')  # => !
+    #     translate(c, 'en', 'date', Time.now)   # => 01-JAN-2013
+    def self.translate(config, lang, key, default_value=nil, param=nil)
+      unless config.has_key?('locale') && config['locale'].has_key?(lang)
+        return "(UNKNOWN TEXT: locale config for #{lang} not found)"
+      end
+      config = config['locale']
 
       begin
-        # reload locale YAML if modified
-        if File.mtime(locale_file) > ($locale_filter_mtime[lang] || Time.new(0))
-          $locale_filter_hash[lang] = YAML.load(File.read(locale_file))
-          $locale_filter_mtime[lang] = File.mtime(locale_file)
-          puts "loaded #{locale_file}"
+        if key.nil?
+          return "(nil)"
+        elsif key.class != String
+          "(UNKNOWN CLASS: #{key.class})"
         end
 
-        if input.nil?
-          "(nil)"
-        elsif input.class == Time
-          if $locale_filter_hash[lang].has_key? 'date'
-            input.strftime($locale_filter_hash[lang]['date'])
-          else
-            "(`date` is not defined for #{lang})"
-          end
-        elsif input.class == String
-          if $locale_filter_hash[lang].has_key? input
-            $locale_filter_hash[lang][input]
-          else
-            "(UNKNOWN TEXT: #{input} for #{lang})"
-          end
+        # get value
+        if config[lang].has_key? key
+          value = config[lang][key]
         else
-          "(UNKNOWN CLASS: #{input.class})"
+          value = default_value
+          return "(UNKNOWN KEY: #{key} for #{lang})" if value.nil?
+        end
+
+        # apply param
+        if param.nil?
+          return value
+        elsif param.class == String
+          return value.gsub('$0', param)
+        elsif param.class == Time
+          return param.strftime(value)
+        else
+          return "(UNKNOWN PARAM CLASS: #{param.class})"
         end
       rescue => e
-        "(ERROR: #{input} for #{lang} #{e.message})"
+        "(ERROR: #{key} for #{lang} #{e.message})"
       end
     end
   end
