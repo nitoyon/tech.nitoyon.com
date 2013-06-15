@@ -61,9 +61,9 @@ module Jekyll
       self.read_yaml(File.join(base, '_layouts'), 'tags.html')
 
       tag_names = tags.keys.sort {|a, b| a.downcase <=> b.downcase }
-      self.data['max_posts'] = max_posts = tags.values.map {|p| p.length}.max
+      min_posts, max_posts = tags.values.map {|p| p.length}.minmax
       self.data['tags'] = tag_names.map {|name|
-        ratio = (tags[name].count.to_f / max_posts * 100.0).to_i
+        ratio = ((tags[name].count.to_f - min_posts) * 100 / (max_posts - min_posts)).to_i
         {'name' => name,
          'posts' => tags[name],
          'cloud' => case ratio
