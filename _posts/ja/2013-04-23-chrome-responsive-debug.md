@@ -1,9 +1,7 @@
 ---
 layout: post
 title: Google Chrome で超手軽にスマホ向けデザインを確認する方法
-tags:
-  - CSS
-  - Chrome Developer Tool
+tags: CSS HTML5 iPhone
 lang: ja
 thumbnail: http://farm9.staticflickr.com/8114/8672493580_228a11eae0_o.png
 seealso:
