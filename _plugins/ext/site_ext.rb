@@ -1,7 +1,6 @@
 # This plugin modifies Site class and adds following functions.
 #
-#  - Reload modified plugin in --server and --auto mode.
-#  - Skip unmodified post in --server and --auto mode.
+#  - Skip unmodified post in not --server mode.
 #
 # Dependent plugins:
 #  - post_yaml_cache plugin
@@ -62,7 +61,7 @@ module Jekyll
 
   class Site
     def is_modified_only
-      self.config['server'] && self.config['auto']
+      !self.config['watch']
     end
 
     # Render the site to the destination.
@@ -183,10 +182,6 @@ module Jekyll
       files.merge(dirs)
 
       obsolete_files = dest_files - files
-
-      require 'pp'
-      puts 'obsolete files:'
-      pp obsolete_files
 
       FileUtils.rm_rf(obsolete_files.to_a)
     end
