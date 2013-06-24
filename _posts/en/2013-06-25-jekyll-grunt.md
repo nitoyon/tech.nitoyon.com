@@ -6,6 +6,10 @@ lang: en
 alternate:
   lang: ja_JP
   url: /ja/blog/2013/06/25/jekyll-grunt/
+seealso:
+- en/2013-04-17-jekyll-pluralize
+- en/2013-02-27-livereloadx
+- en/2009-04-05-irbweb-ruby-on-your-browser
 ---
 I'm using [Jekyll] for building my site.  When I write a new entry, I have executed `jekyll --auto`. But I noticed that ruby consumes up to 25% of CPU on my quad core PC.
 
