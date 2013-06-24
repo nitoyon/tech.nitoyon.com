@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Jekyll: Use Grunt instead of --watch option - TECH-NI Blog</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Jekyll: Use Grunt instead of --watch option"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/en/blog/2013/06/25/jekyll-grunt/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="I&amp;#39;m using Jekyll for building my site. When I write a new entry, I have executed jekyll --auto. But I noticed that ruby consumes up to 25% of CPU on my quad core PC.This problem is caused by directory_watcher module...."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="TECH-NI Blog"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/en/blog/index.xml" />
+	<link rel="alternate" hreflang="ja_JP" href="http://tech.nitoyon.com/ja/blog/2013/06/25/jekyll-grunt/">
+</head>
+<body class="en">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/en/blog/" id="logo-blog-en">TECH-NI Blog</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/en/">HOME</a></li><li class="about"><a href="/en/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-ja-notice" class="alternate-notice">
+<a href="/ja/blog/2013/06/25/jekyll-grunt/">このページには日本語版があります。ぜひ <span>http://tech.nitoyon.com/ja/blog/2013/06/25/jekyll-grunt/</span> をご覧ください。</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">25 Jun 2013</div>
+
+<div class="post-tags"><a href="/en/blog/tags/jekyll/">Jekyll</a><span class="delimiter">, </span><a href="/en/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/en/blog/tags/node.js/">Node.js</a></div>
+
+<h1>Jekyll: Use Grunt instead of --watch option</h1>
+
+
+<div class="share">
+	
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/en/blog/2013/06/25/jekyll-grunt/" data-lang="en" data-size="horizontal" data-text="Jekyll: Use Grunt instead of --watch option - TECH-NI Blog" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/en/blog/2013/06/25/jekyll-grunt/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>I&#39;m using <a href="https://github.com/mojombo/jekyll">Jekyll</a> for building my site.  When I write a new entry, I have executed <code>jekyll --auto</code>. But I noticed that ruby consumes up to 25% of CPU on my quad core PC.</p>
+
+<p>This problem is caused by <code>directory_watcher</code> module. It executes <code>File::Stat()</code> on all files under the given directory every one second! It works fine when the number of files is small, but as it grow up, it begins wasting our CPU.</p>
+
+<p>For example, my site has over 600+ posts by which Jekyll generates 900 files. And more, there are 5000 files under <code>.git</code> dir. Suprisingly, Jekyll ~0.12 watches all files under the current directory, which means that it execute stat to these 6,500 files every one second.</p>
+
+<p>Jekyll 1.0&#39;s <code>jekyll build --watch</code> doesn&#39;t watch <code>.git</code> and <code>_site</code> directory. Despite of such improvement, ruby still uses up to 10% of CPU.</p>
+
+<p>So I decided to use <a href="http://gruntjs.com/">Grunt</a> instead of using <code>--watch</code> (or <code>--auto</code>) option.</p>
+
+<h1>Grunt config files</h1>
+
+<p>I&#39;m use following versions:</p>
+
+<ul>
+<li>Jekyll 1.0.3</li>
+<li>Grunt 0.4.1
+
+<ul>
+<li><code>grunt-shell-spawn</code> plugin</li>
+<li><code>grunt-contrib-watch</code> plugin</li>
+</ul></li>
+</ul>
+
+<p>At first, I used <code>grunt-jekyll</code> instead of <code>grunt-shell-spawn</code>, but <code>grunt-jekyll</code> plugin doesn&#39;t show Jekyll&#39;s output until it exits.</p>
+
+<p>See <a href="http://gruntjs.com/getting-started">Getting started - Grunt</a> to setup Grunt.</p>
+
+<p>Here is my <code>package.json</code> and <code>Gruntfile.js</code>.</p>
+
+<h2>package.json</h2>
+<div class="highlight"><pre><code class="json language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tech-ni&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;devDependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;grunt&quot;</span><span class="p">:</span> <span class="s2">&quot;~0.4.1&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;grunt-shell-spawn&quot;</span><span class="p">:</span> <span class="s2">&quot;~0.2.4&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;grunt-contrib-watch&quot;</span><span class="p">:</span> <span class="s2">&quot;~0.4.4&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2>Gruntfile.js</h2>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">grunt</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+    <span class="nx">pkg</span><span class="o">:</span> <span class="nx">grunt</span><span class="p">.</span><span class="nx">file</span><span class="p">.</span><span class="nx">readJSON</span><span class="p">(</span><span class="s1">&#39;package.json&#39;</span><span class="p">),</span>
+    <span class="nx">shell</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jekyll</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">command</span><span class="o">:</span> <span class="s1">&#39;jekyll build&#39;</span><span class="p">,</span>
+        <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">async</span><span class="o">:</span> <span class="kc">false</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">watch</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jekyll</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">files</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;_posts/**/*.md&#39;</span><span class="p">,</span> <span class="s1">&#39;_layout/*.html&#39;</span><span class="p">,</span> <span class="s1">&#39;_includes/*.html&#39;</span><span class="p">],</span>
+        <span class="nx">tasks</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;shell:jekyll&#39;</span><span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-shell-spawn&#39;</span><span class="p">);</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span><span class="p">(</span><span class="s1">&#39;grunt-contrib-watch&#39;</span><span class="p">);</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;shell:jekyll&#39;</span><span class="p">]);</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>(If you&#39;re using Jekyll ~0.12, replace <code>jekyll build</code> to <code>jekyll</code>)</p>
+
+<h1>How to Use</h1>
+
+<p>By entering <code>grunt watch</code>, it starts watching files. When some posts or HTML files are modified, grunt executes <code>jekyll build</code>.</p>
+
+<p>But CPU usage is not 0%. It turns out that <code>grunt-contrib-watch</code> doesn&#39;t use native watch API -- <code>fs.watch()</code>. It uses <code>gaze</code> module which execute <code>fs.statSync()</code> periodically.</p>
+
+<p>Oh!! Nothing changes...</p>
+
+<p>It seems that <code>fs.watch()</code> had many problems such as not reporting filenames on mac and executing <code>fs.stat()</code> became popular. Oh, hell!</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/en/blog/2013/06/25/jekyll-grunt/" data-lang="en" data-size="horizontal" data-text="Jekyll: Use Grunt instead of --watch option - TECH-NI Blog" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/en/blog/2013/06/25/jekyll-grunt/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">25 Jun 2013 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/en/2013-06-25-jekyll-grunt.md">View history</a></span></div>
+
+<div class="post-tags"><a href="/en/blog/tags/jekyll/">Jekyll</a><span class="delimiter">, </span><a href="/en/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/en/blog/tags/node.js/">Node.js</a></div>
+</div>
+
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/en/blog/2013/05/17/bugzilla-hack/" rel="previous"><b>&laquo;</b><span class="title">Bugzilla: Edit bug status using Perl script</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon</p>
+		<p>I'm a programmer in Japan, Kyoto.</p>
+		<p class="seemore"><a href="/en/about/">more</a></p>
+	</div>
+
+	
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/en/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

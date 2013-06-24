@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 17 Jun 2013 00:39:24 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 25 Jun 2013 01:37:12 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,90 @@
 
 
 
+
+		<item>
+			<title>Jekyll で --watch の代わりに Grunt を使ってみるテスト</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/06/25/jekyll-grunt/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/06/25/jekyll-grunt/</guid>
+			<pubDate>Tue, 25 Jun 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>このブログでは <a href="https://github.com/mojombo/jekyll">Jekyll</a> を使ってることは何度か書いたのだけど、いままで記事を書くときには <code>jekyll --auto</code> を実行した状態で書いていた。このようにしておくと、ファイルを書き換えたら自動的にサイトをビルドしてくれるようになる。ただ、このコマンドを実行してると CPU がグオーンと音を上げ始め、クアッドコアで CPU 使用率 25% に達するという地球に優しくない状態であった。</p>
+
+<p>原因を調べてみると <code>directory_watcher</code> モジュールが犯人だった。このモジュールは、監視対象のディレクトリー配下の全ファイルに対して、毎秒、<code>File::Stat()</code> を実行する、という富豪的実装になっている。もちろん、ファイルの数が少ないときには問題なく動くんだけども、ファイルの数が増えると CPU を浪費してしまう。</p>
+
+<p>たとえば、このサイトの場合、600 個以上の記事があって、Jekyll が 900 個のファイルを生成する。しかも、<code>.git</code> フォルダーの下には 5,000 個程度のファイルがある。ひどいことに、Jekyll 0.12 までのバージョンは、これらのファイルすべてを監視対象にする。毎秒 6,500 個のファイルを stat するわけだから、当然、CPU は振り切る。</p>
+
+<p>Jekyll 1.0 になって、コマンドも <code>jekyll build --watch</code> に変わって、<code>_site</code> (サイトの出力先) や <code>.git</code> が監視対象から外れたので、パフォーマンスはだいぶ改善した。それでも自分の環境で常時 10% ぐらい CPU を消費し続けている。</p>
+
+<p>ということで、<code>--watch</code> (もしくは <code>--auto</code>) オプションの代わりに、流行の <a href="http://gruntjs.com/">Grunt</a> を使ってみることにした。</p>
+
+<h1>Grunt の設定ファイル</h1>
+
+<p>使っているバージョンやプラグインは次の通り。</p>
+
+<ul>
+<li>Jekyll 1.0.3</li>
+<li>Grunt 0.4.1
+
+<ul>
+<li><code>grunt-shell-spawn</code> プラグイン</li>
+<li><code>grunt-contrib-watch</code> プラグイン</li>
+</ul></li>
+</ul>
+
+<p>最初は、<code>grunt-shell-spawn</code> ではなく <code>grunt-jekyll</code> を使ってたんだけど、<code>grunt-jekyll</code> は Jekyll を実行中の途中経過を表示してくれないので使うのをやめた。</p>
+
+<p>Grunt の使い方については <a href="http://gruntjs.com/getting-started">Getting started - Grunt</a> を見たほうが早いだろうから、ここでは <code>package.json</code> と <code>Gruntfile.js</code> を紹介する。</p>
+
+<h2>package.json</h2>
+<div class="highlight"><pre><code class="json language-json" data-lang="json">{
+  &quot;name&quot;: &quot;tech-ni&quot;,
+  &quot;version&quot;: &quot;0.1.0&quot;,
+  &quot;devDependencies&quot;: {
+    &quot;grunt&quot;: &quot;~0.4.1&quot;,
+    &quot;grunt-shell-spawn&quot;: &quot;~0.2.4&quot;,
+    &quot;grunt-contrib-watch&quot;: &quot;~0.4.4&quot;
+  }
+}
+</code></pre></div>
+<h2>Gruntfile.js</h2>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">module.exports = function(grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON(&#39;package.json&#39;),
+    shell: {
+      jekyll: {
+        command: &#39;jekyll build&#39;,
+        options: {
+          async: false
+        }
+      }
+    },
+    watch: {
+      jekyll: {
+        files: [&#39;_posts/**/*.md&#39;, &#39;_layout/*.html&#39;, &#39;_includes/*.html&#39;],
+        tasks: [&#39;shell:jekyll&#39;]
+      }
+    }
+  });
+
+  grunt.loadNpmTasks(&#39;grunt-shell-spawn&#39;);
+  grunt.loadNpmTasks(&#39;grunt-contrib-watch&#39;);
+
+  grunt.registerTask(&#39;default&#39;, [&#39;shell:jekyll&#39;]);
+};
+</code></pre></div>
+<p>(Jekyll 0.12 までを使用している場合は、<code>jekyll build</code> を <code>jekyll</code> で置き換えるべし)</p>
+
+<h1>使い方</h1>
+
+<p><code>grunt watch</code> を実行すると、ファイルの監視を始める。記事や HTML が編集されたら、<code>jekyll build</code> が実行されるようになっている。</p>
+
+<p>しかし、Jekyll で監視するよりも CPU 消費量は小さいが・・・0 ではない・・・!?　と、ここで調べてみて気づいたんだけども、Grunt の watch は、ネイティブ API の <code>fs.watch()</code> を使ってファイルを監視していない!!!　<code>gaze</code> モジュールを使って定期的にファイルを stat しているだけだった。</p>
+
+<p>これでは Ruby の <code>directory_watcher</code> と同じである。</p>
+
+<p>どうやら、Node.js の <code>fs.watch()</code> は Mac OS でファイル名を取れなかった過去があるなど、歴史的に不安定であり、結局、stat で独自に監視する、という手順が一般的になったようだ。なんという罠。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>ブログのタグ機能が復活したよ</title>
@@ -37,7 +121,7 @@
 
 <h1>Jekyll のタグ機能をカスタマイズ</h1>
 
-<p><a href="/ja/blog/2012/09/20/moved-completed/">以前に書いた</a>とおり、このブログの出力には <a href="https://github.com/mojombo/jekyll/">Jekyll</a> を使っています。Jekyll 本体には、記事に<a href="/ja/blog/2013/04/17/jekyll-pluralize/">タグを設定する機構</a>は用意されているのですが、タグの記事一覧を出力する機能がなくて、自前で実装する必要があります。</p>
+<p><a href="/ja/blog/2012/09/20/moved-completed/">以前に書いた</a>とおり、このブログの出力には <a href="https://github.com/mojombo/jekyll/">Jekyll</a> を使っています。Jekyll 本体には、記事に<a href="/en/blog/2013/04/17/jekyll-pluralize/">タグを設定する機構</a>は用意されているのですが、タグの記事一覧を出力する機能がなくて、自前で実装する必要があります。</p>
 
 <p>そこで、<a href="https://github.com/BlackBulletIV/blackbulletiv.github.com/">blackbulletiv.github.com</a> さんの <a href="https://github.com/BlackBulletIV/blackbulletiv.github.com/blob/master/_plugins/tags_categories.rb">tags_categories.rb</a> を参考にしつつ、「日本語タグだけど URL は英語」「複数ブログ対応」といったあたりを実現するために、いろいろと手をいれてカスタマイズしています。</p>
 
@@ -77,7 +161,7 @@
 <p>コミットしたとき (Git の場合は push したとき) に、コミットメッセージからバグ番号を読み取って、対応するバグにメッセージを書き込みつつ、FIXED にすればよい。</p>
 
 <p>情報がなくて困ったのが、バグにコメントを書いたり、FIXED にする方法。この部分の処理を抜き出してみた。</p>
-<div class="highlight"><pre><code class="perl">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib
 
 use strict;
 use Bugzilla;
@@ -159,7 +243,7 @@ sub update_bug {
 <h1>-a でさらに省力化</h1>
 
 <p>さらに <code>git add .</code> も省力化できて</p>
-<div class="highlight"><pre><code class="text">git commit -a --amend --no-edit
+<div class="highlight"><pre><code class="text language-text" data-lang="text">git commit -a --amend --no-edit
 </code></pre></div>
 <p>とすればよい。</p>
 
@@ -251,101 +335,6 @@ sub update_bug {
 <p>Google Chrome に統合されているので、とてもお手軽に試せることが分かりました。レスポンシブ Web デザインしている場合も、サーバー側で User Agent みている場合でも、どちらでも活用できるのが便利です。大手サイトのスマホ デザインを確認するのも手軽にできるのが嬉しいですね。</p>
 
 <p>ちなみに、User Agent を変更する機能は 2012 年 2 月の <a href="http://googlesystem.blogspot.jp/2011/12/changing-user-agent-new-google-chrome.html">Chrome 17 から提供</a>、サイズを変更する機能は 2012 年 10 月から<a href="http://blog.chromium.org/2012/10/do-more-with-chrome-developer-tools.html">提供されている</a>ようです。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Jekyll のカテゴリーとタグの指定方法 3 パターン</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/04/17/jekyll-pluralize/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/04/17/jekyll-pluralize/</guid>
-			<pubDate>Wed, 17 Apr 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Jekyll で記事にカテゴリーやタグを設定するには YAML の部分に書けばいいんだけど、指定方法が 3 通りもあって複雑だったのでまとめておく。</p>
-
-<p>Jekyll 0.12.0 を前提に書いてるけど、将来的に大きな変更が入るとは思いにくい。</p>
-
-<h1>(1) 単数形を使う</h1>
-
-<p>単数形 (<code>category</code>・<code>tag</code>) で指定したときは 1 つだけしか指定できない。</p>
-<div class="highlight"><pre><code class="yaml">---
-category: Foo
-tag: Bar
-</code></pre></div>
-<p>上の例では、<code>Foo</code> というカテゴリー、<code>Bar</code> というタグを設定したことになる。</p>
-
-<p>1 つしか指定できないので、</p>
-<div class="highlight"><pre><code class="yaml">---
-category: Foo Bar
-tag: Bar, Baz
-</code></pre></div>
-<p>のようにカンマやスペースで区切ったとしても、<code>Foo Bar</code> という名前のカテゴリー、<code>Bar, Baz</code> という名前のタグが指定されたものと解釈される。</p>
-
-<h1>(2) 複数形に文字列を指定する</h1>
-
-<p>複数形 (<code>categories</code>・<code>tags</code>) に文字列を与えると、スペース区切りで複数指定できる。</p>
-<div class="highlight"><pre><code class="yaml">---
-categories: Foo Bar
-tags: Bar Baz
-</code></pre></div>
-<p>この例では、カテゴリーは <code>Foo</code> と <code>Bar</code>、タグは <code>Bar</code> と <code>Baz</code> の 2 つずつ指定されたものとみなされる。</p>
-
-<p>つまり、この書き方ではスペースを含むカテゴリー名やタグ名は指定できない。スペースを含めたいなら、次で紹介する「複数形＋配列」で指定する方法を使うのがよい。前述の「単数形」の指定を使ってもよいけど、個数を増やしたときに無駄にハマりそうなので、複数形で統一したほうが分かりやすいと思う。</p>
-
-<h1>(3) 複数形に配列を指定する</h1>
-
-<p>複数形 (<code>categories</code>・`tags) に文字列の配列を渡すこともできる。</p>
-<div class="highlight"><pre><code class="yaml">---
-categories:
-- Foo Bar
-- AA,BBB
-tags:
-- Bar
-- Baz, AAA
-</code></pre></div>
-<p>上の指定では、カテゴリーは <code>Foo Bar</code> と <code>AA,BBB</code>、タグは <code>Bar Baz</code> と <code>AAA</code> の 2 つずつが指定されたものと解釈される。名前にスペースやカンマを含めることが可能。</p>
-
-<p>次のようにも書けるけど、この場合は YAML の制限でカンマを含む名前は指定できない。</p>
-<div class="highlight"><pre><code class="yaml">---
-categories: [Foo Bar, AABBB]
-tags: [Bar Baz, AAA]
-</code></pre></div>
-<h1>該当箇所のソースを読んでみる</h1>
-
-<p>ソースを読んだほうが早いかもしれない。</p>
-
-<p><a href="https://github.com/mojombo/jekyll/blob/9d814a4eb7b59ce617569b40a19c3c183fecda33/lib/jekyll/core_ext.rb">lib/jekyll/core_ext.rb</a> の <code>Hash#pluralized_array</code> を見ればよい。</p>
-
-<p>この関数が <code>self.data.pluralized_array(&quot;tag&quot;, &quot;tags&quot;)</code> のように呼ばれる。</p>
-<div class="highlight"><pre><code class="ruby">class Hash
-
-  # Read array from the supplied hash favouring the singular key
-  # and then the plural key, and handling any nil entries.
-  #   +hash+ the hash to read from
-  #   +singular_key+ the singular key
-  #   +plural_key+ the singular key
-  #
-  # Returns an array
-  def pluralized_array(singular_key, plural_key)
-    hash = self
-    if hash.has_key?(singular_key)
-      array = [hash[singular_key]] if hash[singular_key]
-    elsif hash.has_key?(plural_key)
-      case hash[plural_key]
-      when String
-        array = hash[plural_key].split
-      when Array
-        array = hash[plural_key].compact
-      end
-    end
-    array || []
-  end
-</code></pre></div>
-<p>singular が単数形、plural が複数形。</p>
-
-<p>ビルトインの <code>Hash</code> にメソッドを追加するあたりがなんともアグレッシブ。</p>
-
-<h1>まとめ</h1>
-
-<p>親切な計らいのおかげで、かえって悩むことが増えそうにも思える不思議な仕様・・・。</p>
 ]]></description>
 		</item>
 

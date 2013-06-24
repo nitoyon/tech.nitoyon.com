@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/06/25/jekyll-grunt/", title: "Jekyll で --watch の代わりに Grunt を使ってみるテスト"},
 	{url: "/ja/blog/2013/06/17/blog-tag/", title: "ブログのタグ機能が復活したよ"},
 	{url: "/ja/blog/2013/05/17/bugzilla-hack/", title: "Bugzilla に登録してあるバグをプログラムから更新する方法"},
 	{url: "/ja/blog/2013/05/02/git-commit-amend/", title: "git commit --amend を省力化する方法"},
-	{url: "/ja/blog/2013/04/23/chrome-responsive-debug/", title: "Google Chrome で超手軽にスマホ向けデザインを確認する方法"},
-	{url: "/ja/blog/2013/04/17/jekyll-pluralize/", title: "Jekyll のカテゴリーとタグの指定方法 3 パターン"}
+	{url: "/ja/blog/2013/04/23/chrome-responsive-debug/", title: "Google Chrome で超手軽にスマホ向けデザインを確認する方法"}
 ];
 
 Site.archives.months = [
