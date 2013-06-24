@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法
-tags: JavaScript
+tags: JavaScript Node.js
 lang: ja
 seealso:
   - 2013-01-29-jquery-source-map
