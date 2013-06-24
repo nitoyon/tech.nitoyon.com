@@ -6,6 +6,12 @@ lang: ja
 alternate:
   lang: en_US
   url: /en/blog/2013/06/25/jekyll-grunt/
+seealso:
+- 2012-09-20-moved-completed
+- ja/2013-04-17-jekyll-pluralize
+- 2012-12-25-jekyll-0-12-0
+- 2012-10-15-static-site-js-css-cache
+- 2012-10-29-liquid-drop
 ---
 このブログでは [Jekyll] を使ってることは何度か書いたのだけど、いままで記事を書くときには `jekyll --auto` を実行した状態で書いていた。このようにしておくと、ファイルを書き換えたら自動的にサイトをビルドしてくれるようになる。ただ、このコマンドを実行してると CPU がグオーンと音を上げ始め、クアッドコアで CPU 使用率 25% に達するという地球に優しくない状態であった。
 
