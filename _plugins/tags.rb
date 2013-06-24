@@ -23,6 +23,9 @@ module Jekyll
       @name = "index.html"
       @dir = "/#{lang}/blog/tags/#{tag_file_name}"
 
+      # quick hack for #1211
+      @url = "/#{lang}/blog/tags/#{CGI.escape(tag_file_name)}/"
+
       self.process(name)
       self.read_yaml(File.join(base, '_layouts'), 'tag.html')
 
@@ -31,6 +34,7 @@ module Jekyll
       self.data['tag_display_name'] = tag_display_name
       self.data['posts'] = posts
       self.data["lang"] = lang
+      self.data["permalink"] = permalink
 
       self.data['title'] = Jekyll::Locales.translate(site.config, lang,
         'tag.title', 'Tag: $0', tag_display_name)
