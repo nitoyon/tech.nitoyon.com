@@ -11,9 +11,9 @@ Initialize
 
     $ git clone https://github.com/nitoyon/tech.nitoyon.com.git
     $ cd tech.nitoyon.com
-    $ git new-workdir . _site
-    $ cd _site
-    $ git checkout html
+    $ git new-workdir . _site html
+    $ npm install
+    $ npm install -g grunt-cli
 
 (ref) [git-new-workdir](https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir), [git-new-workdir-win](https://github.com/dansmith65/git/blob/master/contrib/workdir/git-new-workdir-win)
 
@@ -21,13 +21,17 @@ Initialize
 How to Build
 ------------
 
-Generate all pages.
-
-    $ jekyll
-
 Generate only modified pages.
 
-    $ jekyll --server --auto
+    $ grunt
+
+Generate only modified pages when file is modified.
+
+    $ grunt watch
+
+Generate all pages.
+
+    $ jekyll build --watch
 
 * Post and Page are generated when source file is modified.
 * Archive and Lang are generated when page's yaml front matter or post's yaml front matter is modified.
@@ -36,8 +40,10 @@ Generate only modified pages.
 Build Requirements
 ------------------
 
+* Node.js 0.8
+  * grunt-cli
 * Ruby 1.9.3
-  * Jekyll 0.12.0
+  * Jekyll 1.0.3
   * hparser
   * Sass 3.2
 * Python 2.7
