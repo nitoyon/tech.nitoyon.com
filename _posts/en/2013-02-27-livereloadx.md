@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LiveReloadX Released: Reload your Browser Automatically!"
-tags: JavaScript
+tags: JavaScript Node.js
 lang: en
 alternate:
   lang: ja_JP
