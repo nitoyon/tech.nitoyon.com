@@ -67,7 +67,8 @@ module Jekyll
       tag_names = tags.keys.sort {|a, b| a.downcase <=> b.downcase }
       min_posts, max_posts = tags.values.map {|p| p.length}.minmax
       self.data['tags'] = tag_names.map {|name|
-        ratio = ((tags[name].count.to_f - min_posts) * 100 / (max_posts - min_posts)).to_i
+        ratio = max_posts == min_posts ? 1 :
+          ((tags[name].count.to_f - min_posts) * 100 / (max_posts - min_posts)).to_i
         {'name' => name,
          'posts' => tags[name],
          'cloud' => case ratio
