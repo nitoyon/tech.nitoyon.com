@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 25 Jun 2013 01:37:12 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 27 Jun 2013 03:09:26 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,165 @@
 
 
 
+
+		<item>
+			<title>Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/</guid>
+			<pubDate>Thu, 27 Jun 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Node.js の次のメジャーバージョン 0.12 で <code>yield</code> が使えるようになります。</p>
+
+<p>そのおかげで、JavaScript のコールバック地獄に光が差し込むのです。ああ、さようなら、コールバック地獄。</p>
+
+<h1>7 年ごしで実現した yield</h1>
+
+<p>2006 年、Firefox 2 のリリースと同時に <code>yield</code> は JavaScript 界に<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/New_in_JavaScript/1.7">登場</a>しました。随分と前の話ですね。</p>
+
+<p>登場した当時は JavaScript 界隈でけっこう話題になっていました。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/amachang/20060805/1154743229">JavaScript 1.7 の yield が凄すぎる件について - IT戦記</a></li>
+<li><a href="http://piro.sakura.ne.jp/latest/blosxom/webtech/javascript/2006-08-07_yield.htm">Latest topics &gt; JavaScript 1.7のyield文ってなんじゃらほ - outsider reflex</a></li>
+<li><a href="http://nanto.asablo.jp/blog/2006/08/12/481381">JavaScript 1.7 の新機能: Days on the Moon</a></li>
+</ul>
+
+<p>登場したときにはインパクト大きかったものの、結局 Firefox でしか使えない <code>yield</code> さんは忘れ去られていたわけです。</p>
+
+<p>それがここにきて、<a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">ECMAScript 6 に yield が入る</a>ことが決定して、V8 に実装されました。となれば、V8 を使ってる Node.js でも自動的に利用できるようになった、という流れであります。</p>
+
+<p>7 年の月日を経て、日の目を見たわけで胸が熱くなります。何はともあれ、Node.js の次のバージョンに <code>yield</code> がやってくるのであります。ヤァヤァヤァ。</p>
+
+<h1>さようなら！ コールバック地獄</h1>
+
+<p>ということで、Node.js の話です。</p>
+
+<p>脱出する前に、皆さんに地獄を見てもらいましょう。</p>
+
+<h2>これが地獄絵図だ！</h2>
+
+<p>サンプルとして、簡単なスクリプトを書いてみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">var fs = require(&#39;fs&#39;);
+
+// カレント ディレクトリーのファイル一覧を取得する
+fs.readdir(&#39;.&#39;, function(err, files) {
+    // 先頭のファイルの中身を読み取る
+    fs.readFile(files[0], &#39;utf-8&#39;, function(err, data) {
+        // 読み取った結果を出力する
+        console.log(data);
+    });
+});
+</code></pre></div>
+<p>ああ、美しきコールバック地獄。たった 3 つの処理をするだけなのに、コールバックが 2 つもあるわけです。</p>
+
+<p>といっても、Node.js には <code>fs.readdirSync()</code> や <code>fs.readFileSync()</code> といった同期処理をする関数も用意されておりますが、コールバック地獄を再現するために、あえて非同期版を使っております。</p>
+
+<h2>Deferred にすがりつく</h2>
+
+<p>こういうコールバック地獄から逃げるための今までの定石は Deferred だったわけです。jQuery にも実装されてるアレです。</p>
+
+<p>Node.js で Deferred といえば <a href="https://github.com/kriskowal/q">Q</a> が有名らしいので、Q を使って書き直してみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">var fs = require(&#39;fs&#39;);
+var Q = require(&#39;q.js&#39;);
+
+Q.nfcall(fs.readdir, &#39;.&#39;)
+.then(function(files) {
+    return Q.nfcall(fs.readFile, files[0], &#39;utf-8&#39;);
+})
+.then(function(data) {
+    console.log(data);
+})
+.done();
+</code></pre></div>
+<p>確かにコールバックの階層は押さえられたのですが、かえって読みにくくなったようにも感じます。Deferred をマスターしてしまえば極楽なのかもしれませんが、Deferred は学習コストがそこそこ高いと思うわけです。</p>
+
+<p>また、コードもいまいちすっきりしません。<code>then()</code> でコールバックを繋げるために deferred を返しているのが、何とも読みにくい構造になっています。</p>
+
+<p>Deferred にすがりつくと、一見、幸せになりそうなんだけど、数ヶ月後にソースを読んだときに、ただのコールバック地獄よりも一層深い奈落の底に叩き落される恐れすらあるわけです。</p>
+
+<h2>yield の恩恵を体験する</h2>
+
+<p>で、<code>yield</code> です。</p>
+
+<p>生で <code>yield</code> を扱うのは面倒なので、ライブラリーの力を借りましょう。</p>
+
+<p>Node.js 界で数々の著名モジュールを作ってる TJ Holowaychuk (visionmedia) さんが、さっそく <code>yield</code> を活用するための <a href="(https://github.com/visionmedia/co/)">co</a> というモジュールを作ってるので使わせてもらいます。</p>
+
+<p>こうなるんだぜ。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">var co = require(&#39;co&#39;);
+var fs = require(&#39;fs&#39;);
+
+co(function *() {
+  var files = yield co.wrap(fs.readdir)(&#39;.&#39;);
+  var data = yield co.wrap(fs.readFile)(files[0], &#39;utf-8&#39;);
+  console.log(data);
+});
+</code></pre></div>
+<p>同期処理っぽく書いていますが、実はコールバック地獄版と同じ処理になっています。</p>
+
+<p>それぞれの処理で失敗したときには例外が飛ぶので、エラー処理もばっちりです。</p>
+
+<p>ああ、幸せですね。夢が広がりんぐです。いままで面倒だった非同期処理がとっても気楽に書けるのであります。C# の <code>await</code> みたいなことができます。</p>
+
+<p>あ、いちおう細かな点について触れときます。</p>
+
+<ul>
+<li>上のソースを実行するには、<a href="http://jenkins.nodejs.org/html/nightlies.html">Node.js の Nightlies builds</a> から v0.11 のバイナリーを拾ってきて、<code>node --harmony-generators foo.js</code> として実行する必要がある。</li>
+<li>co の最新のソース (<a href="https://github.com/visionmedia/co/commit/5bd0169604e82c8f9900ad7b6edf95a5cb23df53">co@5bd0169</a>) は 48 行目の <code>gen.send(res);</code> でエラーになるので、<code>gen.next(res);</code> に書き換える必要がある。</li>
+</ul>
+
+<h1>yield について簡単に説明するよ</h1>
+
+<p>いちおう <code>yield</code> が何か、という話を簡単に触れておきます。詳しくは <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">harmony:generators [ES Wiki]</a> を見てください。</p>
+
+<p>シンプルな例を書いてみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">function* N() {
+    console.log(&quot;start&quot;);
+    yield 1;
+    console.log(&quot;after 1&quot;);
+    yield 2;
+    console.log(&quot;after 2&quot;);
+    return 3;
+}
+</code></pre></div>
+<p>まず、<code>yield</code> を使う関数は <code>function</code> ではなく <code>function*</code> で宣言します。(Firefox の先行実装と少し違います)</p>
+
+<p>で、この関数を呼んでみます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">var g = N();
+console.log(g);
+// {}
+</code></pre></div>
+<p><code>function*</code> な関数を呼んでも、関数の処理は始まりません。変わりに関数の処理を開始させるためのジェネレーターが返ってきます。</p>
+
+<p>では、ジェネレーターを使ってみましょう。ジェネレーターの <code>next()</code> を呼ぶと、関数の処理を開始できます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
+// start
+// { value: 1, done: false }
+</code></pre></div>
+<p><code>yield</code> は <code>return</code> みたいなもので戻り値を返します。ここでは、戻り値の <code>1</code> が <code>value</code> として返ってきています。</p>
+
+<p><code>yield</code> と <code>return</code> の違い、それは、<code>yield</code> は続きから処理を再開できるところにあります。そう、<code>g.next()</code> を呼べばね。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
+// after 1
+// { value: 2, done: false }
+</code></pre></div>
+<p><code>after 1</code> から処理が再開して、<code>2</code> を返して、再び、関数は中断しました。もう一度 <code>g.next()</code> を呼んでみます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
+// after 2
+// { value: 3, done: true }
+</code></pre></div>
+<p><code>return</code> で関数が終わったので、<code>done</code> が <code>true</code> になりました。(この戻り値も Firefox の先行実装と異なります)</p>
+
+<p>こんな感じで、<code>yield</code> を使えば、関数の処理を途中で中断しておくことができます。で、上の co を使ったサンプルを見たら・・・なんとなく実現できそうな気がしてきましたか？</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>ECMAScript 6 に <code>yield</code> が入った → V8 に実装 → Node.js 0.12 で使える</li>
+<li><code>yield</code> を使えばコールバック地獄から脱出できる。</li>
+<li>この記事では <a href="(https://github.com/visionmedia/co/)">co</a> を紹介したけど、便利ライブラリーはまだまだ登場しそう。</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>Jekyll で --watch の代わりに Grunt を使ってみるテスト</title>
@@ -255,86 +414,6 @@ sub update_bug {
 <li>新しいファイルを追加したときは明示的に add する必要がある。<code>git add .</code> と <code>git commit -a</code> ではステージするファイルが違うので注意。</li>
 <li>コミットしたくない変更がワーキング ディレクトリーに残ってる状態では使えない。<code>git stash</code> するなどでよけておくべし。</li>
 </ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>Google Chrome で超手軽にスマホ向けデザインを確認する方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/04/23/chrome-responsive-debug/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/04/23/chrome-responsive-debug/</guid>
-			<pubDate>Tue, 23 Apr 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>最近、<strong>Google Chrome のデベロッパー ツールにスマートフォンでの表示を確認する機能がある</strong>ことを知りました。</p>
-
-<p>いままでは、レスポンシブデザイン Web デザインをするときに、ちまちまとブラウザーのサイズを変えたり、Web サービス (<a href="http://mattkersley.com/responsive/">Responsive Design Testing</a> とか <a href="http://designmodo.com/responsive-test/">Responsive Web Design Test Tool</a> とか) を使っていたのですが、こちらの手順のほうがお手軽なので紹介します。</p>
-
-<h1>設定は超簡単！！</h1>
-
-<p>Google Chrome のデベロッパー ツールを開いて、右下の歯車のアイコンをクリックします。</p>
-
-<p>左側から [Overrides] を選んで、[User Agent] と [Device metrics] にチェックを入れます。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8260/8672447614_28f45f8d1d.jpg" width="500" height="296"></center></p>
-
-<p>これだけです！</p>
-
-<h2>ためしに Yahoo! を表示してみよう</h2>
-
-<p>[User Agent] で [iPhone -- iOS 4] を選んでから Yahoo! のトップページを開いてみると・・・。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8114/8672493580_8246647f79.jpg" width="500" height="477"></center></p>
-
-<p>m.yahoo.co.jp にリダイレクトされて、iPhone 4 のサイズで表示されました。</p>
-
-<p>解像度指定の右にあるボタンを押すと「縦横切り替え」ができます。リロード不要です！</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8379/8672493572_927d7e0e0e.jpg" width="485" height="500"></center></p>
-
-<p>横方向になると、画面の構成が少し変わりましたね。</p>
-
-<p>今度は [iPad -- iOS 5] にしてみます。リロードしてみると・・・。</p>
-
-<p><center><img src="http://farm9.staticflickr.com/8397/8671392997_2fc220a0eb.jpg" width="500" height="377"></center></p>
-
-<p>はい、PC 版にリダイレクトされて、iPad のサイズで表示できました。</p>
-
-<p>User Agent も切り替えてくれるので、レスポンシブ Web デザインに対応したサイトだけでなく、User Agent で表示を切り替えているサイトも確認できますね。</p>
-
-<h2>登録されているスマートフォン一覧</h2>
-
-<p>Google Chrome 26 に登録されているスマートフォンは次のもの。</p>
-
-<ul>
-<li>iPhone -- iOS 5</li>
-<li>iPhone -- iOS 4</li>
-<li>iPad -- iOS 5</li>
-<li>iPad -- iOS 4</li>
-<li>Android 2.3 -- Nexus S</li>
-<li>Android 4.0.2 -- Galaxy Nexus</li>
-<li>BlackBerry -- PlayBook 2.1</li>
-<li>BlackBerry -- 9900</li>
-<li>BlackBerry -- BB10</li>
-<li>MeeGo -- Nokia N9</li>
-</ul>
-
-<p>試したい機種が登録されていなくても心配後無用。User Agent や解像度は手入力も可能です。</p>
-
-<h2>気になるところ</h2>
-
-<p>注意しなきゃいけないのは、<strong>スマートフォンの表示を完全にエミュレートできるわけではない</strong>、ということです。PC 版ブラウザーでUserAgent と表示サイズを変更しているだけだと割り切りましょう。</p>
-
-<p>まず、viewport の設定が無視されます。そのため、viewport の設定によっては実際のスマートフォンでの表示と異なります。</p>
-
-<p>たとえば、Yahoo! のモバイル版では viewport に <code>device-width</code> が設定してあるので、iPhone 4 では横幅 <code>320px</code> 相当で描画されるべきです。しかし、実際には <code>640px</code> 相当で描画してしまってます。実際の iPhone の表示に近づけるためには、サイズを <code>320px</code> に変更しなきゃいけません。</p>
-
-<p>他にも、[Fit in window] をチェックすると、ブラウザーの領域内に収まるように表示してくれて便利なのですが、iPad の設定で Yahoo! のトップページを開くと横スクロールバーが表示されて変でした。[Fit in window] のチェックを外すと表示されないので、ズーム関係の処理と CSS の何かの指定がバッティングしてるのかもしれません。</p>
-
-<p>ということで、最終確認は必ず実機でやるべきです。それでも、この機能を活用すれば、開発効率はかなり改善するはずです！</p>
-
-<h1>まとめ</h1>
-
-<p>Google Chrome に統合されているので、とてもお手軽に試せることが分かりました。レスポンシブ Web デザインしている場合も、サーバー側で User Agent みている場合でも、どちらでも活用できるのが便利です。大手サイトのスマホ デザインを確認するのも手軽にできるのが嬉しいですね。</p>
-
-<p>ちなみに、User Agent を変更する機能は 2012 年 2 月の <a href="http://googlesystem.blogspot.jp/2011/12/changing-user-agent-new-google-chrome.html">Chrome 17 から提供</a>、サイズを変更する機能は 2012 年 10 月から<a href="http://blog.chromium.org/2012/10/do-more-with-chrome-developer-tools.html">提供されている</a>ようです。</p>
 ]]></description>
 		</item>
 

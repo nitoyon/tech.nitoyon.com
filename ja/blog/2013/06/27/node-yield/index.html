@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Node.js の次のメジャーバージョン 0.12 で yield が使えるようになります。そのおかげで、JavaScript のコールバック地獄に光が差し込むのです。ああ、さようなら、コールバック地獄。7 年ごしで実現した yield2006 年、Firefox 2 のリリースと同時に yield は JavaScript 界に登場しました。随分と前の話ですね。登場した当時は JavaScript 界隈でけっこう話題になっていました。JavaScript 1.7 の yield が凄すぎる件について - IT戦記Latest topics &amp;gt; JavaScript 1.7のyie..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年06月27日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
+<h1>Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" class="hatena-bookmark-button" data-hatena-bookmark-title="Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" data-lang="ja" data-size="horizontal" data-text="Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div class="entry">
+<div class="entry-body">
+<section>
+<p>Node.js の次のメジャーバージョン 0.12 で <code>yield</code> が使えるようになります。</p>
+
+<p>そのおかげで、JavaScript のコールバック地獄に光が差し込むのです。ああ、さようなら、コールバック地獄。</p>
+
+<h1>7 年ごしで実現した yield</h1>
+
+<p>2006 年、Firefox 2 のリリースと同時に <code>yield</code> は JavaScript 界に<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/New_in_JavaScript/1.7">登場</a>しました。随分と前の話ですね。</p>
+
+<p>登場した当時は JavaScript 界隈でけっこう話題になっていました。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/amachang/20060805/1154743229">JavaScript 1.7 の yield が凄すぎる件について - IT戦記</a></li>
+<li><a href="http://piro.sakura.ne.jp/latest/blosxom/webtech/javascript/2006-08-07_yield.htm">Latest topics &gt; JavaScript 1.7のyield文ってなんじゃらほ - outsider reflex</a></li>
+<li><a href="http://nanto.asablo.jp/blog/2006/08/12/481381">JavaScript 1.7 の新機能: Days on the Moon</a></li>
+</ul>
+
+<p>登場したときにはインパクト大きかったものの、結局 Firefox でしか使えない <code>yield</code> さんは忘れ去られていたわけです。</p>
+
+<p>それがここにきて、<a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">ECMAScript 6 に yield が入る</a>ことが決定して、V8 に実装されました。となれば、V8 を使ってる Node.js でも自動的に利用できるようになった、という流れであります。</p>
+
+<p>7 年の月日を経て、日の目を見たわけで胸が熱くなります。何はともあれ、Node.js の次のバージョンに <code>yield</code> がやってくるのであります。ヤァヤァヤァ。</p>
+
+<h1>さようなら！ コールバック地獄</h1>
+
+<p>ということで、Node.js の話です。</p>
+
+<p>脱出する前に、皆さんに地獄を見てもらいましょう。</p>
+
+<h2>これが地獄絵図だ！</h2>
+
+<p>サンプルとして、簡単なスクリプトを書いてみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+
+<span class="c1">// カレント ディレクトリーのファイル一覧を取得する</span>
+<span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// 先頭のファイルの中身を読み取る</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// 読み取った結果を出力する</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>ああ、美しきコールバック地獄。たった 3 つの処理をするだけなのに、コールバックが 2 つもあるわけです。</p>
+
+<p>といっても、Node.js には <code>fs.readdirSync()</code> や <code>fs.readFileSync()</code> といった同期処理をする関数も用意されておりますが、コールバック地獄を再現するために、あえて非同期版を使っております。</p>
+
+<h2>Deferred にすがりつく</h2>
+
+<p>こういうコールバック地獄から逃げるための今までの定石は Deferred だったわけです。jQuery にも実装されてるアレです。</p>
+
+<p>Node.js で Deferred といえば <a href="https://github.com/kriskowal/q">Q</a> が有名らしいので、Q を使って書き直してみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Q</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;q.js&#39;</span><span class="p">);</span>
+
+<span class="nx">Q</span><span class="p">.</span><span class="nx">nfcall</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">nfcall</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">,</span> <span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">done</span><span class="p">();</span>
+</code></pre></div>
+<p>確かにコールバックの階層は押さえられたのですが、かえって読みにくくなったようにも感じます。Deferred をマスターしてしまえば極楽なのかもしれませんが、Deferred は学習コストがそこそこ高いと思うわけです。</p>
+
+<p>また、コードもいまいちすっきりしません。<code>then()</code> でコールバックを繋げるために deferred を返しているのが、何とも読みにくい構造になっています。</p>
+
+<p>Deferred にすがりつくと、一見、幸せになりそうなんだけど、数ヶ月後にソースを読んだときに、ただのコールバック地獄よりも一層深い奈落の底に叩き落される恐れすらあるわけです。</p>
+
+<h2>yield の恩恵を体験する</h2>
+
+<p>で、<code>yield</code> です。</p>
+
+<p>生で <code>yield</code> を扱うのは面倒なので、ライブラリーの力を借りましょう。</p>
+
+<p>Node.js 界で数々の著名モジュールを作ってる TJ Holowaychuk (visionmedia) さんが、さっそく <code>yield</code> を活用するための <a href="(https://github.com/visionmedia/co/)">co</a> というモジュールを作ってるので使わせてもらいます。</p>
+
+<p>こうなるんだぜ。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">var</span> <span class="nx">co</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;co&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+
+<span class="nx">co</span><span class="p">(</span><span class="kd">function</span> <span class="o">*</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="nx">yield</span> <span class="nx">co</span><span class="p">.</span><span class="nx">wrap</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">)(</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">yield</span> <span class="nx">co</span><span class="p">.</span><span class="nx">wrap</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">)(</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>同期処理っぽく書いていますが、実はコールバック地獄版と同じ処理になっています。</p>
+
+<p>それぞれの処理で失敗したときには例外が飛ぶので、エラー処理もばっちりです。</p>
+
+<p>ああ、幸せですね。夢が広がりんぐです。いままで面倒だった非同期処理がとっても気楽に書けるのであります。C# の <code>await</code> みたいなことができます。</p>
+
+<p>あ、いちおう細かな点について触れときます。</p>
+
+<ul>
+<li>上のソースを実行するには、<a href="http://jenkins.nodejs.org/html/nightlies.html">Node.js の Nightlies builds</a> から v0.11 のバイナリーを拾ってきて、<code>node --harmony-generators foo.js</code> として実行する必要がある。</li>
+<li>co の最新のソース (<a href="https://github.com/visionmedia/co/commit/5bd0169604e82c8f9900ad7b6edf95a5cb23df53">co@5bd0169</a>) は 48 行目の <code>gen.send(res);</code> でエラーになるので、<code>gen.next(res);</code> に書き換える必要がある。</li>
+</ul>
+
+<h1>yield について簡単に説明するよ</h1>
+
+<p>いちおう <code>yield</code> が何か、という話を簡単に触れておきます。詳しくは <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">harmony:generators [ES Wiki]</a> を見てください。</p>
+
+<p>シンプルな例を書いてみました。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">function</span><span class="o">*</span> <span class="nx">N</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">);</span>
+    <span class="nx">yield</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;after 1&quot;</span><span class="p">);</span>
+    <span class="nx">yield</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;after 2&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>まず、<code>yield</code> を使う関数は <code>function</code> ではなく <code>function*</code> で宣言します。(Firefox の先行実装と少し違います)</p>
+
+<p>で、この関数を呼んでみます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">var</span> <span class="nx">g</span> <span class="o">=</span> <span class="nx">N</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">g</span><span class="p">);</span>
+<span class="c1">// {}</span>
+</code></pre></div>
+<p><code>function*</code> な関数を呼んでも、関数の処理は始まりません。変わりに関数の処理を開始させるためのジェネレーターが返ってきます。</p>
+
+<p>では、ジェネレーターを使ってみましょう。ジェネレーターの <code>next()</code> を呼ぶと、関数の処理を開始できます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">g</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span>
+<span class="c1">// start</span>
+<span class="c1">// { value: 1, done: false }</span>
+</code></pre></div>
+<p><code>yield</code> は <code>return</code> みたいなもので戻り値を返します。ここでは、戻り値の <code>1</code> が <code>value</code> として返ってきています。</p>
+
+<p><code>yield</code> と <code>return</code> の違い、それは、<code>yield</code> は続きから処理を再開できるところにあります。そう、<code>g.next()</code> を呼べばね。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">g</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span>
+<span class="c1">// after 1</span>
+<span class="c1">// { value: 2, done: false }</span>
+</code></pre></div>
+<p><code>after 1</code> から処理が再開して、<code>2</code> を返して、再び、関数は中断しました。もう一度 <code>g.next()</code> を呼んでみます。</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">g</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span>
+<span class="c1">// after 2</span>
+<span class="c1">// { value: 3, done: true }</span>
+</code></pre></div>
+<p><code>return</code> で関数が終わったので、<code>done</code> が <code>true</code> になりました。(この戻り値も Firefox の先行実装と異なります)</p>
+
+<p>こんな感じで、<code>yield</code> を使えば、関数の処理を途中で中断しておくことができます。で、上の co を使ったサンプルを見たら・・・なんとなく実現できそうな気がしてきましたか？</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>ECMAScript 6 に <code>yield</code> が入った → V8 に実装 → Node.js 0.12 で使える</li>
+<li><code>yield</code> を使えばコールバック地獄から脱出できる。</li>
+<li>この記事では <a href="(https://github.com/visionmedia/co/)">co</a> を紹介したけど、便利ライブラリーはまだまだ登場しそう。</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer */
+google_ad_slot = "9965361520";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+<div id="post-ad2">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+/* tech.nitoyon.com footer2 */
+google_ad_slot = "6039524013";
+google_ad_width = 300;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" class="hatena-bookmark-button" data-hatena-bookmark-title="Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" data-lang="ja" data-size="horizontal" data-text="Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年06月27日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-06-27-node-yield.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/02/27/livereloadx/">ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</a></li>
+
+<li><a href="/ja/blog/2013/02/19/node-source-map/">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a></li>
+
+<li><a href="/ja/blog/2011/09/29/async-await-in-js/">WinRT の async/await コーディングがおもしろい(のでJavaScriptで真似してみた)</a></li>
+
+<li><a href="/ja/blog/2011/03/24/jQuery-extend-mania/">jQuery.extend マニアックス</a></li>
+
+<li><a href="/ja/blog/2008/12/11/jquery-fast-css/">jQuery を高速に使う CSS セレクタの書き方</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/06/25/jekyll-grunt/" rel="previous"><b>&laquo;</b><span class="title">Jekyll で --watch の代わりに Grunt を使ってみるテスト</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
