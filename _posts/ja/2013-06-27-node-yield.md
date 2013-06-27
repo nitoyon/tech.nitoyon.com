@@ -73,7 +73,7 @@ Node.js で Deferred といえば [Q](https://github.com/kriskowal/q) が有名�
 
 ```js
 var fs = require('fs');
-var Q = require('q.js');
+var Q = require('q');
 
 Q.nfcall(fs.readdir, '.')
 .then(function(files) {
@@ -129,7 +129,7 @@ co(function *() {
 yield について簡単に説明するよ
 ==============================
 
-いちおう `yield` が何か、という話を簡単に触れておきます。詳しくは [harmony:generators [ES Wiki]](http://wiki.ecmascript.org/doku.php?id=harmony:generators) を見てください。
+いちおう `yield` が何か、という話を簡単に触れておきます。詳しくは [harmony:generators [ES Wiki]](http://wiki.ecmascript.org/doku.php?id=harmony:generators) を見てください (ちょっと情報が古いようですが…)。
 
 シンプルな例を書いてみました。
 
@@ -194,4 +194,4 @@ console.log(g.next());
 * `yield` を使えばコールバック地獄から脱出できる。
 * この記事では [co] を紹介したけど、便利ライブラリーはまだまだ登場しそう。
 
-[co]: (https://github.com/visionmedia/co/)
+[co]: https://github.com/visionmedia/co/
