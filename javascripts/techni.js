@@ -63,6 +63,9 @@ $(function(){
 					.text(month_str[month - 1])
 					.appendTo(month_li);
 			}
+			if (month == 6) {
+				$("<br>").appendTo(month_li);
+			}
 		}
 	}
 });
