@@ -2,8 +2,11 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     shell: {
-      jekyll: {
+      jekyll_build: {
         command: 'jekyll build'
+      },
+      jekyll_rebuild: {
+        command: 'jekyll build --future'
       }
     },
     livereloadx: {
@@ -13,7 +16,7 @@ module.exports = function(grunt) {
     watch: {
       jekyll: {
         files: ['_posts/**/*.md', '_layouts/*.html', '_includes/*.html', '_plugins/**/*.rb', 'stylesheets/*'],
-        tasks: ['shell:jekyll']
+        tasks: ['shell:jekyll_build']
       }
     }
   });
@@ -23,4 +26,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('livereloadx');
 
   grunt.registerTask('default', ['livereloadx', 'watch']);
+  grunt.registerTask('build', ['shell:jekyll_build']);
+  grunt.registerTask('rebuild', ['shell:jekyll_rebuild']);
 };
