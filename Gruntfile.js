@@ -6,9 +6,13 @@ module.exports = function(grunt) {
         command: 'jekyll build'
       }
     },
+    livereloadx: {
+      static: true,
+      dir: '_site'
+    },
     watch: {
       jekyll: {
-        files: ['_posts/**/*.md', '_layout/*.html', '_includes/*.html', '_plugins/**/*.rb'],
+        files: ['_posts/**/*.md', '_layouts/*.html', '_includes/*.html', '_plugins/**/*.rb', 'stylesheets/*'],
         tasks: ['shell:jekyll']
       }
     }
@@ -16,6 +20,7 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-shell-spawn');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('livereloadx');
 
-  grunt.registerTask('default', ['shell:jekyll']);
+  grunt.registerTask('default', ['livereloadx', 'watch']);
 };
