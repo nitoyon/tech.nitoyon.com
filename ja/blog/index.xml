@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sun, 30 Jun 2013 01:52:14 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 03 Jul 2013 01:58:20 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,158 @@
 
 
 
+
+		<item>
+			<title>git difftool --dir-diff が便利すぎて泣きそうです</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/07/02/git-dir-diff/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/07/02/git-dir-diff/</guid>
+			<pubDate>Tue, 02 Jul 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p><center><img src="http://farm3.staticflickr.com/2869/9194395890_e02e5eae04_o.jpg" width="550" height="244"></center></p>
+
+<p>Git の 1.7.11 から <code>git difftool</code> コマンドに <code>--dir-diff</code> というオプションが追加されたのですが、これがライフ チェンジングだと思ったので紹介します。</p>
+
+<p><code>--dir-diff</code> 登場以前の <code>git difftool</code> は「ファイルごとに順番に差分を表示していく」ことしかできず、使い勝手はいまいちでした。それが、<code>--dir-diff</code> オプションの登場で状況が一変したわけです。</p>
+
+<h1>こんな感じの使い心地だよ</h1>
+
+<p>ある Git レポジトリーで <code>dir1/a.txt</code> と <code>dir2/c.txt</code> を編集したとしましょう。</p>
+
+<p>この状態で <code>git difftool --dir-diff</code> または <code>git difftool -d</code>  を実行してみると・・・。</p>
+
+<p><center><img src="http://farm6.staticflickr.com/5339/9190948901_e8af0e9b5d.jpg" width="500" height="366"></center></p>
+
+<p>はい、差分のあるファイルが一覧で表示されました。</p>
+
+<p>(difftool に WinMerge を設定して、メニューから [ツリー表示] を有効にしたときの表示例です。設定方法は後述します)</p>
+
+<h2>個別のファイルの diff を見る</h2>
+
+<p><code>a.txt</code> を選択すると、新しいタブが開いて、<code>a.txt</code> の差分が表示されます。</p>
+
+<p><center><img src="http://farm6.staticflickr.com/5477/9193747196_ebd8033182.jpg" width="500" height="366"></center></p>
+
+<p>カラフルに色分けされているし、ショートカットキーで前後の差分に移動できるので便利です (WinMerge の場合は Alt + ↑ と Alt + ↓)。</p>
+
+<p>当然、タブを移動して差分一覧に戻れば、<code>c.txt</code> の差分も表示できます。</p>
+
+<p>コマンドラインの <code>git diff</code> に比べて、</p>
+
+<ul>
+<li>確認するファイルを選びやすい</li>
+<li>差分間の移動がキーボードでやりやすい</li>
+<li>ファイル全体が表示されているので、差分から前後に好きなだけたどっていける</li>
+</ul>
+
+<p>といったところが嬉しいですね。</p>
+
+<p>おっと、ここまでなら、GUI な Git クライアントでも同じようなことはできますね。便利なのはこの次です。</p>
+
+<h2>ファイル編集も！</h2>
+
+<p>なんと、右側のファイルを編集して保存すると、<strong>ワーキング ディレクトリーに反映される</strong>のです (ただし、右側のファイルがワーキング ディレクトリーのファイルと同じ内容のときのみ)。</p>
+
+<p>これがとてつもなく便利です。</p>
+
+<p>差分を見ながら、「この差分は不要」とか「typo 発見」とか気づいたときに、その場で修正ができちゃうわけです。</p>
+
+<h2>比較対象は無限大</h2>
+
+<p><code>git difftool</code> で比較対象を指定する方法は <code>git diff</code> とまったく同じです。</p>
+
+<p>たとえば、<code>git difftool -d master...topic</code> として、トピックブランチでの変更点をまとめて閲覧したりもできるわけです。<code>git difftool -d --cached</code> としてインデックスとの差分を確認できるわけです。任意のコミット間の差分も確認できるわけです。タグがうってあれば、特定のバージョン間の差分も確認できるわけです</p>
+
+<p>うれしいですね。</p>
+
+<h1>裏側で起こっていること</h1>
+
+<p><code>git difftool -d</code> を実行したときに、裏側で何が起こっているのでしょうか。</p>
+
+<p>内部的に <code>git diff</code> を呼び出して、出てきたファイルを一時ディレクトリーにチェックアウトしています。</p>
+
+<p>たとえば、先ほどの例でいうと</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Temp/git-difftool.VoxJJ/
+    left/
+        dir1/
+            a.txt
+        dir2/
+            c.txt
+    right/
+        dir1/
+            a.txt
+        dir2/
+            c.txt
+</code></pre></div>
+<p>といった構造になります。中身が同一なファイルはチェックアウトされないので、大きなレポジトリーでも安心です。</p>
+
+<p>さらに、Mac や Linux では、<code>right</code> のファイルがワーキング ディレクトリーと同じなら、「ワーキング ディレクトリーへのシンボリックリンク」になっています。その結果、<code>right</code> のファイルを書き換えると、即時にワーキング ディレクトリーに反映されるわけです。</p>
+
+<p>Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。</p>
+
+<h1>使えるようにするまでの準備</h1>
+
+<p>便利なのは分かってもらえたと思うので、使えるように準備してみましょう！</p>
+
+<h2>最新の git-difftool を取得しておく</h2>
+
+<p>先ほど書いた通り、<code>git difftool --dir-diff</code> は 1.7.11 から追加されています。ただ、最近になっていくつか大きなバグが修正されているので、なるべく新しいヤツ (Linux なら 1.8.3、Windows なら 1.8.3.2 ) を利用するのがオススメです。</p>
+
+<p>Git 全体を更新するのが面倒な場合は、git-difftool だけを</p>
+
+<ul>
+<li><a href="https://github.com/git/git/blob/master/git-difftool.perl">GitHub (git/git-difftool.perl at master)</a></li>
+</ul>
+
+<p>から落としてきて、<code>libexec/git-core/git-difftool</code> に上書きすれば、よほど古いバージョンじゃなければ動く・・・と思います。</p>
+
+<h2>difftool の設定: WinMerge 篇</h2>
+
+<p>Windows で WinMerge を使う場合は、<code>.gitconfig</code> に次のように書きます。</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
+    tool = winmerge
+[difftool winmerge]
+    path = C:/Program Files (x86)/WinMerge/winmergeu.exe
+    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;
+</code></pre></div>
+<p>インストール先が異なる場合は適宜修正してください。</p>
+
+<p>コマンドライン オプションの意味は次の通りです。</p>
+
+<ul>
+<li><code>-r</code>: 再帰的に比較する</li>
+<li><code>-u</code>: 最近開いた一覧に追加しない</li>
+</ul>
+
+<p>人によっては <code>-e</code> を追加して ESC で WinMerge を閉じられるようにしているようですが、複数タブを開いてるときに ESC を押して WinMerge が閉じてしまうと困るので私は設定していません。</p>
+
+<h2>difftool の設定: meld 篇</h2>
+
+<p>Mac や Linux で meld を利用する場合は、<code>.gitconfig</code> に次のように書きます。</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
+    tool = meld
+</code></pre></div>
+<p>簡単ですね。</p>
+
+<p>Git 本体に meld のコマンドラインオプションの情報が入ってるので、これで動くようです。</p>
+
+<p>(手元に Mac がないので動作確認はできませんでしたが、<a href="http://stackoverflow.com/questions/2006032/view-differences-of-branches-with-meld#answer-12815806">git - View differences of branches with meld? - Stack Overflow</a> に同じ手順が書いてあって、プラス評価がついてるので正しいはずです)</p>
+
+<p>Pro Git には <a href="http://git-scm.com/book/ja/Git-%E3%81%AE%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA-Git-%E3%81%AE%E8%A8%AD%E5%AE%9A#%E5%A4%96%E9%83%A8%E3%81%AE%E3%83%9E%E3%83%BC%E3%82%B8%E3%83%84%E3%83%BC%E3%83%AB%E3%81%8A%E3%82%88%E3%81%B3-Diff-%E3%83%84%E3%83%BC%E3%83%AB">P4Merge を使う手順</a> が書いてあるんだけど、P4Merge はディレクトリーの比較に対応してないので、<code>--dir-diff</code> には活用できません。</p>
+
+<h2>エイリアスを設定する</h2>
+
+<p>このあたりは好みですが、<code>.gitconfig</code> でエイリアスを設定しておくと便利でしょう。</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[alias]
+    d = difftool -d
+    dc = difftool -d --cached
+    dp = difftool -d HEAD~
+</code></pre></div>
+<p><code>git d &lt;branch&gt;</code> とか <code>git d HEAD</code> のように入力するだけで、difftool が <code>--dir-diff</code> で立ち上がるようになります。</p>
+
+<h1>まとめ</h1>
+
+<p><code>difftool --dir-diff</code> で快適な Git 生活を！</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</title>
@@ -366,53 +518,6 @@ sub update_bug {
 <ul>
 <li>Bugzilla がインストールされているサーバー上で動くことを前提としている。同一サーバーならパスワードなしで、特定のユーザーに su できるようだ。</li>
 <li><code>Bugzilla::Bug</code> はドキュメント化されていないので、バージョンアップしたら使えなくなる可能性がある。同じような機能の <code>Bugzilla::WebService::Bug</code> はドキュメントがあるんだけど、使おうとしたら <code>Test/Taint.pm</code> が必要だとか言われて面倒になったのでやめた。</li>
-</ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>git commit --amend を省力化する方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/05/02/git-commit-amend/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/05/02/git-commit-amend/</guid>
-			<pubDate>Thu, 02 May 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Git で最後のコミットを修正するときには <code>git commit --amend</code> を使うんだけども、いままでは</p>
-
-<ol>
-<li><code>git add .</code></li>
-<li><code>git commit --amend</code></li>
-<li>エディターが立ち上がって、前回のコミット メッセージが表示される</li>
-<li>エディターを終了させる</li>
-</ol>
-
-<p>としていた。</p>
-
-<p>この作業は何度も繰り返すと面倒だったので、man を調べてみると <code>--no-edit</code> なるステキなオプションを発見した。</p>
-
-<h1>--no-edit を使う</h1>
-
-<p><code>--no-edit</code> を指定すると、上の手順はこうなる。</p>
-
-<ol>
-<li><code>git add .</code></li>
-<li><code>git commit --amend --no-edit</code></li>
-</ol>
-
-<p>コミット メッセージはそのままに、コミットの中身だけを書き換えられる。エディターが立ち上がらないので楽チン。</p>
-
-<h1>-a でさらに省力化</h1>
-
-<p>さらに <code>git add .</code> も省力化できて</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">git commit -a --amend --no-edit
-</code></pre></div>
-<p>とすればよい。</p>
-
-<p><strong>コマンド一発</strong>になった。超楽チン。</p>
-
-<p>注意点は次の 2 つ。</p>
-
-<ul>
-<li>新しいファイルを追加したときは明示的に add する必要がある。<code>git add .</code> と <code>git commit -a</code> ではステージするファイルが違うので注意。</li>
-<li>コミットしたくない変更がワーキング ディレクトリーに残ってる状態では使えない。<code>git stash</code> するなどでよけておくべし。</li>
 </ul>
 ]]></description>
 		</item>
