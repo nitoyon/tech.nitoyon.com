@@ -5,6 +5,7 @@ tags: Git
 lang: ja
 thumbnail: http://farm4.staticflickr.com/3792/9191502091_5f4e156b87_o.jpg
 seealso:
+- ja/2013-07-09-symlink-dir-diff-on-windows
 - ja/2013-01-11-github-clone-http
 - ja/2012-04-12-msysgit-utf8-2
 - ja/2013-03-29-git-new-workdir
@@ -101,7 +102,7 @@ Temp/git-difftool.VoxJJ/
 
 さらに、Mac や Linux では、`right` のファイルがワーキング ディレクトリーと同じなら、「ワーキング ディレクトリーへのシンボリックリンク」になっています。その結果、`right` のファイルを書き換えると、即時にワーキング ディレクトリーに反映されるわけです。
 
-Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。
+Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。(追記) 改造しました!! {% post_link ja/2013-07-09-symlink-dir-diff-on-windows %}
 
 
 使えるようにするまでの準備
