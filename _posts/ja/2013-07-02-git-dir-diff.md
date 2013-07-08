@@ -126,7 +126,7 @@ Git 全体を更新するのが面倒な場合は、git-difftool だけを
 difftool の設定: WinMerge 篇
 ----------------------------
 
-Windows で WinMerge を使う場合は、`.gitconfig` に次のように書きます。
+Windows で WinMerge を使う場合は、`.gitconfig` に次のように書きます (Git for Windows の場合)。
 
 ```ini
 [diff]
