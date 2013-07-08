@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 03 Jul 2013 01:58:20 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 09 Jul 2013 01:42:40 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,73 @@
 
 
 
+
+		<item>
+			<title>Windows でも git difftool --dir-diff でシンボリックリンクを使う方法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/07/09/symlink-dir-diff-on-windows/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/07/09/symlink-dir-diff-on-windows/</guid>
+			<pubDate>Tue, 09 Jul 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p><code>git difftool --dir-diff</code> が便利だよ、という話を <a href="/ja/blog/2013/07/02/git-dir-diff/">git difftool --dir-diff が便利すぎて泣きそうです</a> で書きましたが、１つ宿題が残っていました。Windows では一時ファイルがワーキング ディレクトリーへのシンボリックリンクにならないので、Unix や Mac に比べて、少しだけ不便だよ、という話です。</p>
+
+<p>そこで、Windows でもシンボリックリンクを使えるようにしちゃおう、というのがこのエントリーの趣旨でございます。</p>
+
+<h1>Windows 向けの応急処置パッチ</h1>
+
+<p>Git for Windows 1.8.3 で動作確認しています。OS は Windows 7 (64 ビット)。</p>
+
+<p><code>C:\Program Files (x86)\Git\libexec\git-core\git-difftool</code> のパッチがこちら。</p>
+<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">--- git-difftool    Sun Jun  2 11:28:06 2013
++++ git-difftool    Tue Jul  9 00:42:02 2013
+@@ -283,7 +283,7 @@
+            exit_cleanup($tmpdir, 1);
+        }
+        if ($symlinks) {
+-           symlink(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
++           !system(&quot;git&quot;, &quot;mklink&quot;, &quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
+            exit_cleanup($tmpdir, 1);
+        } else {
+            copy(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
+@@ -448,7 +448,7 @@
+    my $indices_loaded = 0;
+
+    for my $file (@worktree) {
+-       next if $symlinks &amp;&amp; -l &quot;$b/$file&quot;;
++       next if $symlinks;
+        next if ! -f &quot;$b/$file&quot;;
+
+        if (!$indices_loaded) {
+</code></pre></div>
+<p>適当な場所に保存して、GitBash を管理者権限で起動して適用してやります。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ cd /c/Program\ Files\ \(x86\)/Git/libexec/git-core/
+$ patch &lt; ~/git-difftool.patch
+patching file `git-difftool&#39;
+</code></pre></div>
+<p>さらに、<code>C:\Program Files (x86)\Git\libexec\git-core\git-mklink</code> を作ります。</p>
+<div class="highlight"><pre><code class="sh language-sh" data-lang="sh">#!/bin/sh
+
+cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
+</code></pre></div>
+<p>(このスクリプトは <code>/tmp/</code> といった msys 内のパスを Windows のパスに変換するために必要)</p>
+
+<h1>使い方</h1>
+
+<p>最初に、<code>.gitconfig</code> に difftool の設定をしておきます。<a href="http://winmerge.org/">WinMerge</a> を利用するには次のようにしておきます。</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
+    tool = winmerge
+[difftool winmerge]
+    path = C:/Program Files (x86)/WinMerge/winmergeu.exe
+    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;
+</code></pre></div>
+<p>GitBash を管理者権限で起動して、次のように実行します (Windows ではシンボリックリンクを作成するには管理者権限が必要)。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git difftool -d --symlinks [&lt;commit&gt; [&lt;commit&gt;]]
+</code></pre></div>
+<p>ついでに <code>.gitconfig</code> にエイリアスを定義しておくと便利でしょう。</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[alias]
+    d = difftool -d --symlinks
+</code></pre></div>
+<p>どうぞご利用ください。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>git difftool --dir-diff が便利すぎて泣きそうです</title>
@@ -102,7 +169,7 @@
 
 <p>さらに、Mac や Linux では、<code>right</code> のファイルがワーキング ディレクトリーと同じなら、「ワーキング ディレクトリーへのシンボリックリンク」になっています。その結果、<code>right</code> のファイルを書き換えると、即時にワーキング ディレクトリーに反映されるわけです。</p>
 
-<p>Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。</p>
+<p>Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。(追記) 改造しました!! <a href="/ja/blog/2013/07/09/symlink-dir-diff-on-windows/">Windows でも git difftool --dir-diff でシンボリックリンクを使う方法</a></p>
 
 <h1>使えるようにするまでの準備</h1>
 
@@ -122,7 +189,7 @@
 
 <h2>difftool の設定: WinMerge 篇</h2>
 
-<p>Windows で WinMerge を使う場合は、<code>.gitconfig</code> に次のように書きます。</p>
+<p>Windows で WinMerge を使う場合は、<code>.gitconfig</code> に次のように書きます (Git for Windows の場合)。</p>
 <div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
     tool = winmerge
 [difftool winmerge]
@@ -459,66 +526,6 @@ console.log(g);
 </ul>
 
 <p>そんなことより、もっと頻繁に記事を書けよ、という感じではありますが・・・。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Bugzilla に登録してあるバグをプログラムから更新する方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/05/17/bugzilla-hack/</guid>
-			<pubDate>Fri, 17 May 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>会社で BTS として Bugzilla を使っているんだけど、修正したあとに手作業で Web インターフェースから書き込むのが面倒になってきたので、自動化してみた。</p>
-
-<p>コミットしたとき (Git の場合は push したとき) に、コミットメッセージからバグ番号を読み取って、対応するバグにメッセージを書き込みつつ、FIXED にすればよい。</p>
-
-<p>情報がなくて困ったのが、バグにコメントを書いたり、FIXED にする方法。この部分の処理を抜き出してみた。</p>
-<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib
-
-use strict;
-use Bugzilla;
-use Bugzilla::User;
-use Bugzilla::Status;
-use Bugzilla::Bug;
-use utf8;
-
-&amp;update_bug(1, &quot;ほげほげ&quot;);
-
-# API document: http://www.bugzilla.org/docs/4.2/en/html/api/
-sub update_bug {
-    my ($bug_id, $text) = @_;
-
-    # open bug
-    my $bug = Bugzilla::Bug-&gt;new($bug_id);
-    die $bug-&gt;error if defined $bug-&gt;error;
-
-    # get user
-    my $user = Bugzilla::User-&gt;new({name =&gt; &#39;admin@example.com&#39;});
-    die &#39;user not found!!!!&#39; unless defined $user;
-
-    # login
-    Bugzilla-&gt;set_user($user);
-
-    # comment to the bug
-    $bug-&gt;add_comment($text);
-
-    # FIXED
-    $bug-&gt;set_bug_status(Bugzilla::Status-&gt;new({name =&gt; &#39;RESOLVED&#39;}),
-                         {resolution =&gt; &#39;FIXED&#39;});
-
-    # save to database
-    $bug-&gt;update();
-}
-</code></pre></div>
-<p>Bugzilla 4.2.5 で動作を確認している。</p>
-
-<p>あとは、Git なら <code>post-receive</code> フックで、コミットログを解析して、この関数を呼ぶようにすればよい。</p>
-
-<p>注意点:</p>
-
-<ul>
-<li>Bugzilla がインストールされているサーバー上で動くことを前提としている。同一サーバーならパスワードなしで、特定のユーザーに su できるようだ。</li>
-<li><code>Bugzilla::Bug</code> はドキュメント化されていないので、バージョンアップしたら使えなくなる可能性がある。同じような機能の <code>Bugzilla::WebService::Bug</code> はドキュメントがあるんだけど、使おうとしたら <code>Test/Taint.pm</code> が必要だとか言われて面倒になったのでやめた。</li>
-</ul>
 ]]></description>
 		</item>
 

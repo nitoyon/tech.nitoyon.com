@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sun, 30 Jun 2013 01:52:14 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 09 Jul 2013 01:42:40 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,77 @@
 
 
 
+
+		<item>
+			<title>Use symlinks in git difftool --dir-diff on Windows</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/07/09/symlink-dir-diff-on-windows/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/07/09/symlink-dir-diff-on-windows/</guid>
+			<pubDate>Tue, 09 Jul 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I like <code>git difftool --dir-diff</code> because it checks out the modified files to a temporary directory and executes diff tool with directory pathes.</p>
+
+<p>On Unix and MacOS, <code>git difftool --dir-diff</code> create a symbolic link to the working directory if a right-hand file has the same SHA1 as the file in the working directory.  It&#39;s very useful when we modify right-hand files with a difftool.</p>
+
+<p>On Windows, instead of creating symbolic links, <code>git difftool --dir-diff</code> copy back right-hand files to working directory after difftool program exits.  I want to use symlinks on Git for Windows like Unix and MacOS.</p>
+
+<h1>Quick Hack Patch</h1>
+
+<p>Environment: Git for Windows 1.8.3 and Windows 7 (64bit).</p>
+
+<p>Patch for <code>C:\Program Files (x86)\Git\libexec\git-core\git-difftool</code>.</p>
+<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">--- git-difftool    Sun Jun  2 11:28:06 2013
++++ git-difftool    Tue Jul  9 00:42:02 2013
+@@ -283,7 +283,7 @@
+            exit_cleanup($tmpdir, 1);
+        }
+        if ($symlinks) {
+-           symlink(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
++           !system(&quot;git&quot;, &quot;mklink&quot;, &quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
+            exit_cleanup($tmpdir, 1);
+        } else {
+            copy(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
+@@ -448,7 +448,7 @@
+    my $indices_loaded = 0;
+
+    for my $file (@worktree) {
+-       next if $symlinks &amp;&amp; -l &quot;$b/$file&quot;;
++       next if $symlinks;
+        next if ! -f &quot;$b/$file&quot;;
+
+        if (!$indices_loaded) {
+</code></pre></div>
+<p>Save this patch to somewhere, and run GitBash as administrator.</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ cd /c/Program\ Files\ \(x86\)/Git/libexec/git-core/
+$ patch &lt; ~/git-difftool.patch
+patching file `git-difftool&#39;
+</code></pre></div>
+<p>Create a file on <code>C:\Program Files (x86)\Git\libexec\git-core\git-mklink</code>:</p>
+<div class="highlight"><pre><code class="sh language-sh" data-lang="sh">#!/bin/sh
+
+cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
+</code></pre></div>
+<p>(This script is necessary for converting <code>/tmp/</code> directory to Windows path)</p>
+
+<h1>How to Use</h1>
+
+<p>First, configure difftool on <code>.gitconfig</code>. For example, set <a href="http://winmerge.org/">WinMerge</a> as difftool.</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
+    tool = winmerge
+[difftool winmerge]
+    path = C:/Program Files (x86)/WinMerge/winmergeu.exe
+    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;
+</code></pre></div>
+<p>Run GitBash as an administrator, and enter following command.</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git difftool -d --symlinks [&lt;commit&gt; [&lt;commit&gt;]]
+</code></pre></div>
+<p>(On Windows, administrator privileges is required to create symbolic links)</p>
+
+<p>If you want, create an alias on <code>.gitconfig</code>.</p>
+<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[alias]
+    d = difftool -d --symlinks
+</code></pre></div>
+<p>Enjoy.</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Jekyll: Use Grunt instead of --watch option</title>
@@ -269,25 +340,6 @@ tags: [Bar Baz, AAA]
 <p>Iinclude/exclude options works like rsync. See FILTER RULES section of rsync manual for details.</p>
 
 <p>Try it now!!</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>LiveReloadX Released: Reload your Browser Automatically!</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/02/27/livereloadx/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/02/27/livereloadx/</guid>
-			<pubDate>Wed, 27 Feb 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><center><img src="http://farm9.staticflickr.com/8100/8509399251_7056f91a11.jpg" width="500" height="294"></center></p>
-
-<p>When we are developping a web site, we often edit source code and reload a browser. It would be wonderful if browsers are reloaded automatically.</p>
-
-<p>There are some softwares such as <a href="http://incident57.com/codekit/">CodeKit</a> and <a href="http://livereload.com/">LiveReload</a>, but they are GUI tools and not free of charge. So I created a command line tool named <a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> based on <a href="http://livereload.com/">LiveReload</a> source code.</p>
-
-<p>LiveReloadX is using Node.js, so it runs on Windows, Mac and Linux. It reloads the browser not only on developping environment but also on iPhone and Android. Of course, free of charge.</p>
-
-<p>See <a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> for details!!</p>
-
-<p>You can get source code from <a href="https://github.com/nitoyon/livereloadx">nitoyon/livereloadx - GitHub</a>. It would be a greate pleasure for me if you Star or send me a pull request.</p>
 ]]></description>
 		</item>
 

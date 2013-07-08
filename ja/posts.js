@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/07/09/symlink-dir-diff-on-windows/", title: "Windows でも git difftool --dir-diff でシンボリックリンクを使う方法"},
 	{url: "/ja/blog/2013/07/02/git-dir-diff/", title: "git difftool --dir-diff が便利すぎて泣きそうです"},
 	{url: "/ja/blog/2013/06/27/node-yield/", title: "Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話"},
 	{url: "/ja/blog/2013/06/25/jekyll-grunt/", title: "Jekyll で --watch の代わりに Grunt を使ってみるテスト"},
-	{url: "/ja/blog/2013/06/17/blog-tag/", title: "ブログのタグ機能が復活したよ"},
-	{url: "/ja/blog/2013/05/17/bugzilla-hack/", title: "Bugzilla に登録してあるバグをプログラムから更新する方法"}
+	{url: "/ja/blog/2013/06/17/blog-tag/", title: "ブログのタグ機能が復活したよ"}
 ];
 
 Site.archives.months = [
