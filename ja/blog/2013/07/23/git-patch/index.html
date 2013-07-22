@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Git にパッチを送って取り込まれた話 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Git にパッチを送って取り込まれた話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Git の挙動に変なところを見つけたので、パッチを作って Git のメーリングリストに投げてみたところ、何度かのレビューを経て、無事に取り込まれた。Git に貢献したい人とか、オープンソース開発の流れに興味がある人もいるだろうから、作業の流れを書いておくことにする。1. バグを発見する何はともあれ、修正したいところを見つけるところから。先日、git difftool --dir-diff が便利すぎて泣きそうです という記事を書いたが、difftool --dir-diff の挙動を調べているうちに、一時ファイル書き戻し条件が変なことに気づいた。手元のバージョンが古いのかとも思ったが、m..."/>
+	<meta property="og:image" content="http://farm8.staticflickr.com/7340/9342092023_050db3dbec_o.jpg"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年07月23日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/git/">Git</a></div>
+
+<h1>Git にパッチを送って取り込まれた話</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" class="hatena-bookmark-button" data-hatena-bookmark-title="Git にパッチを送って取り込まれた話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" data-lang="ja" data-size="horizontal" data-text="Git にパッチを送って取り込まれた話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Git の挙動に変なところを見つけたので、パッチを作って Git のメーリングリストに投げてみたところ、何度かのレビューを経て、無事に<a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5">取り込まれた</a>。</p>
+
+<p><a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5"><center><img src="http://farm8.staticflickr.com/7305/9342092085_b197aaf53e.jpg" width="500" height="368"></center></a></p>
+
+<p>Git に貢献したい人とか、オープンソース開発の流れに興味がある人もいるだろうから、作業の流れを書いておくことにする。</p>
+
+<h1>1. バグを発見する</h1>
+
+<p>何はともあれ、修正したいところを見つけるところから。</p>
+
+<p>先日、<a href="/ja/blog/2013/07/02/git-dir-diff/">git difftool --dir-diff が便利すぎて泣きそうです</a> という記事を書いたが、<code>difftool --dir-diff</code> の挙動を調べているうちに、一時ファイル書き戻し条件が変なことに気づいた。</p>
+
+<p>手元のバージョンが古いのかとも思ったが、<code>master</code> ブランチでも再現したので、ちょっくら深入りしてみた。<code>git difftool</code> は Perl スクリプトだったので、ソースコードに <code>print</code> を追加しつつ挙動を探っていった。しばらく調べていると、コードの流れも分かってきて、<code>--no-symlinks</code> が指定されたとき (Windows ではこれがデフォルト) にのみ動作がおかしいことに気づいた。</p>
+
+<p>マニアックなオプションで、しかも、Windows でしか発生しないバグ・・・ということで発見されてなかったのだろう。ちょっと修正したら期待通りの結果になったので、これはパッチを送ってみるチャンスである、と思い立った。</p>
+
+<p>パッチを作るための手順は <a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> に記載されている。この手順に従って、パッチを送ってみることにした。</p>
+
+<h1>2. テストコードを修正する</h1>
+
+<p><a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> を読んでいると、テストコードも一緒に修正しろ、とある。</p>
+
+<p>Windows 上でテスト環境を作ろうとしたが、修羅の道っぽかったのですぐに諦めた。次に、レンタルサーバーを借りている sakura の FreeBSD 上で試そうとしたが、これも罠にハマって解決能力がないので諦めた。</p>
+
+<p>結局、素直に仮想端末に CentOS を突っ込んだ。<code>yum</code> でいろいろインストールしたら、あっさりテストまで実行できる環境ができあがった。</p>
+
+<p>テストはシェルスクリプトで記述されている。シェルスクリプトは不慣れなのだが、しばらく読んでるうちに作法が分かってきたので、真似をして修正した。</p>
+
+<h1>3. コミットログを書く</h1>
+
+<p>これが一番難しかった。</p>
+
+<p><a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> を読むと、「修正前は何がおかしかったのか」「修正によって正しくなった理由」を説明することを求められている。もちろん英語で。</p>
+
+<p>実際に、Git プロジェクトのコミットログを読んでみると、どれもコミットログが長くて、しっかりと修正の内容が説明されている。</p>
+
+<p>しかし、自分には英語力がないので、言いたいことをうまく伝えられない。</p>
+
+<p>第一稿では、同一ファイルへの過去のコミットログを切り貼りしつつ、なんとかそれっぽく書き上げたつもりになった (これが後々、「分かりにくいぞ」とツッコミを受けてしまうのだが・・・)。</p>
+
+<p>あとは、コミットログの末尾に <code>Signed-off-by:</code> として自分の名前を書かなきゃいけない。「本名を書け」とあるので、名前を出したくない人にとっては厳しい関門かもしれない。</p>
+
+<h1>4. メーリングリストにパッチを投げる</h1>
+
+<p>Git の議論やパッチのレビューはすべてメーリングリスト上で行われている。ということで、次にすべきはパッチを <a href="http://vger.kernel.org/vger-lists.html#git">Git ML</a> に投げることである。間違っても、GitHub 上で pull リクエストを出してはいけない。</p>
+
+<p>メールを送付する手順も <a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> に書いてある。</p>
+
+<p>まずは、<code>git format-patch</code> でパッチを作成する。作成したパッチはメール形式になっているので、これをそのままメールとして送る必要がある。</p>
+
+<p>自分は GMail を使いたかったので、<a href="https://www.kernel.org/pub/software/scm/git/docs/git-format-patch.html">git-format-patch(1)</a> の MUA-SPECIFIC HINTS に従って、<code>git send-email</code> コマンドを使って送信した。事前に <code>.gitconfig</code> の <code>[sendemail]</code> に色々と設定を書くのだけど、最初、<code>[sendmail]</code> に設定を書いてしまってうまくいかずにしばらく悩んだのは、今となってはいい思い出。</p>
+
+<h1>5. レビュー結果に従う</h1>
+
+<p>しばらく待っているとメーリングリストに返事が届いた。</p>
+
+<p>今回の修正では、コードについては文句が出なかったが、コミットログが分かりにくい、という注文がついた。</p>
+
+<p>1 回目は John さんから、2 回目はメンテナの濱野さんから。</p>
+
+<ul>
+<li><a href="http://www.spinics.net/lists/git/msg208473.html">Re: [PATCH] difftool --dir-diff: copy back all files matching the working tree -- Git</a></li>
+<li><a href="http://www.spinics.net/lists/git/msg208598.html">Re: [PATCH v2] difftool --dir-diff: always use identical working tree file -- Git</a></li>
+</ul>
+
+<p>結局、2 回、コミットログのみを書き換えてパッチを再送信した。</p>
+
+<p>三度目の正直、v3 で OK をもらえた。</p>
+
+<ul>
+<li><a href="http://www.spinics.net/lists/git/msg208794.html">Re: [PATCH v3] difftool --dir-diff: allow changing any clean working tree file -- Git</a></li>
+</ul>
+
+<h1>6. ブランチを昇格していく</h1>
+
+<p>OK をもらったコミットは <code>pu</code> (Proposed Update) ブランチに取り込まれる。</p>
+
+<p>しばらく経って異論が出なければ <code>next</code> ブランチにマージされて、最後に <code>master</code> ブランチにマージされる。</p>
+
+<p>最終的に自分の<a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5">コミット</a> が v1.8.3.2 で取り込まれてリリースされた。<a href="https://github.com/git/git/blob/master/Documentation/RelNotes/1.8.3.2.txt">リリースノート</a>の末尾にも自分のパッチの情報が書いてあった。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text"> * &quot;difftool --dir-diff&quot; did not copy back changes made by the
+   end-user in the diff tool backend to the working tree in some
+   cases.
+</code></pre></div>
+<p>めでたい。</p>
+
+<h1>まとめ</h1>
+
+<p>以上でパッチを送ってから取り込まれるまでの流れを振り返った。</p>
+
+<p>印象的だったのは、コミットログをしっかり書かせる文化である、ということ。今回の自分のコミットは「ソースコードの行数 &lt; コミットログの行数」だった。ソースコード上のコメントは少なくても、コミットログにしっかりと歴史や意図が刻まれている。</p>
+
+<p>あとは、英語をなんとかしたい・・・。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" class="hatena-bookmark-button" data-hatena-bookmark-title="Git にパッチを送って取り込まれた話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" data-lang="ja" data-size="horizontal" data-text="Git にパッチを送って取り込まれた話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年07月23日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-07-23-git-patch.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/git/">Git</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/07/02/git-dir-diff/">git difftool --dir-diff が便利すぎて泣きそうです</a></li>
+
+<li><a href="/ja/blog/2013/01/11/github-clone-http/">GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速</a></li>
+
+<li><a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li>
+
+<li><a href="/ja/blog/2013/03/29/git-new-workdir/">Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</a></li>
+
+<li><a href="/ja/blog/2013/05/02/git-commit-amend/">git commit --amend を省力化する方法</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/07/09/symlink-dir-diff-on-windows/" rel="previous"><b>&laquo;</b><span class="title">Windows でも git difftool --dir-diff でシンボリックリンクを使う方法</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
