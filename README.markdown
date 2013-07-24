@@ -21,17 +21,17 @@ Initialize
 How to Build
 ------------
 
-Generate only modified pages.
-
-    $ grunt
-
 Generate only modified pages when file is modified.
 
     $ grunt watch
 
+Generate only modified pages.
+
+    $ grunt build
+
 Generate all pages.
 
-    $ jekyll build --watch
+    $ jekyll rebuild
 
 * Post and Page are generated when source file is modified.
 * Archive and Lang are generated when page's yaml front matter or post's yaml front matter is modified.
