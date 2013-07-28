@@ -41,7 +41,7 @@ cgi = CGI.new
 langs = get_accept_languages
 is_ja = is_ja(langs)
 url = is_ja ? '/ja/' : '/en/'
-url += "about/" if cgi.query_string == "about"
+url += "about/" if cgi.query_string == "about" || cgi.query_string == "contact"
 
 print cgi.header({
   'status' => '302 Found',
