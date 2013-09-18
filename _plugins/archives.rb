@@ -25,6 +25,11 @@ module Jekyll
       end
       
       posts.each do |post|
+        if post.class != Post then
+          puts "#{post} is not Post (#{post.class})"
+          next
+        end
+
         d = post.date
         years[d.year] << post
         months[d.year][d.month] << post 
