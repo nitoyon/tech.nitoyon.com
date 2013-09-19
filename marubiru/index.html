@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+<title>MARUBIRU RSS Reader</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<script src="swfobject.js" type="text/javascript"></script>
+<script type="text/javascript">
+<!--
+var ja = (navigator.language == "ja" || navigator.browserLanguage == "ja");
+
+var $ = function(id){
+	return document.getElementById(id);
+}
+
+window.onload = function(){
+	var post = $("post");
+	var f = document.forms[0];
+	var q = $("q");
+	var hc = $("headercontainer");
+	var header = $("header");
+
+	// lang
+	for(var i = 0; i < header.childNodes.length; i++)
+	{
+		var elm = header.childNodes[i];
+		if(!ja && elm.className && elm.className.substr(0, 2) == "ja"){elm.style.display = "none"}
+		if( ja && elm.className && elm.className.substr(0, 2) == "en"){elm.style.display = "none"}
+	}
+	if(ja)
+	{
+		document.title = "丸ビル RSS リーダー";
+	}
+
+	// init css
+	document.body.style.background = "url('marubiru.jpg') no-repeat";
+	hc.style.display = "block";
+	post.style.width = (post.clientWidth + 20) + "px";
+	post.style.height = (q.clientHeight) + "px";
+	post.style.right = "10px";
+
+	updateWidth();
+
+	// event
+	if(f) {
+		f.onsubmit = function() {
+			applyToSwf();
+			return false;
+		}
+	}
+
+	header.onclick = function(event) {
+		event = event || window.event;
+		var target = event.target || event.srcElement;
+		if(target && target.tagName == "A") {
+			var url = target.hash.substr(1);
+			q.value = url;
+			applyToSwf();
+		}
+	}
+}
+
+function applyToSwf() {
+	var q = $("q");
+	if(q.value.match(/http:\/\//)) {
+		$("swf").loadRss(q.value);
+	}
+	else {
+		$("swf").setSentence(q.value);
+	}
+	location.hash = q.value;
+}
+
+window.onresize = function(){
+	updateWidth();
+}
+
+function updateWidth(){
+	var hc = $("headercontainer");
+	var q = $("q");
+	var post = $("post");
+	var w = Math.min(getBrowserWidth(), 976);
+	hc.style.width = w + "px";
+
+	q.style.width = (w - post.offsetWidth - 30) + "px";
+}
+
+function getBrowserWidth(){
+	if(window.innerWidth) return window.innerWidth; // Mozilla, Opera, NN4
+	if(document.documentElement && document.documentElement.clientWidth){ // 以下 IE
+		return document.documentElement.clientWidth;
+	}
+		else if(document.body && document.body.clientWidth){
+		return document.body.clientWidth;
+	}
+	return 0;
+}
+//-->
+</script>
+<style type="text/css">
+<!--
+html, body{
+	overflow: hidden;
+}
+
+#swfcontainer {
+	z-index: 10;
+}
+
+#headercontainer {
+	position: absolute;
+	bottom: 0px;
+	width: 976px;
+	height: 105px;
+	display: none;
+}
+
+#headerbg{
+	width: 100%;
+	height: 105px;
+	background: white;
+	-moz-opacity: 0.85;
+	filter:alpha(opacity=85);
+	opacity:0.85;
+}
+
+#header {
+	position: absolute;
+	margin-top: 5px;
+	width: 100%;
+}
+
+#header form {
+	width: 100%;
+	margin: 0;
+}
+
+#header input#q {
+	font-size: 30px;
+	margin-left: 10px;
+	color: #999;
+}
+
+#header input#post {
+}
+
+#header p {
+	margin: 5px 10px;
+}
+
+#header label {
+	font-weight: bold;
+}
+
+#header p.example {
+	font-size: small;
+}
+
+body {
+	margin: 0;
+}
+-->
+</style>
+</head>
+
+<body>
+
+<div id="swfcontainer">
+<div style="margin: 2em; background: white;">
+<p>このサービスを利用するためには Flash Player 9 以降が必要です。</p>
+<p>→ <a href="http://www.adobe.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">インストールする</a></p>
+<hr>
+<p>This site requires Flash Player 9 or later.</p>
+<p>→ <a href="http://www.adobe.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">Please click here to download Flash Player 9</a></p>
+</div>
+</div>
+
+<div id="headercontainer">
+	<div id="header">
+		<p class="ja"><label for="q">ブログのURLやニュースサイトのURLを入力してください：</label></p>
+		<p class="en"><label for="q">Please input URL of any blog or news site.:</label></p>
+		<form method="get" action="./">
+			<input type="text" id="q" value="">
+			<input type="submit" id="post" value="SUBMIT">
+		</form>
+		<p class="ja example">(例) <a href="#http://www.asahi.com/">アサヒコム</a>、<a href="#http://komachi-rss.yomiuri.co.jp/f/komachi_rss">発言小町</a>、<a href="#http://weather.livedoor.com/">livedoor天気予報</a>、<a href="#http://ameblo.jp/shinji-takehara/">竹原慎二 オフィシャルブログ</a>、<a href="#http://b.hatena.ne.jp/hotentry">はてなブックマーク 人気エントリ</a></p>
+		<p class="en example">(ex) <a href="#http://www.cnn.com/">CNN.com</a>、<a href="#http://digg.com/">digg</a>、<a href="#http://del.icio.us/popular/">Popular pages on del.icio.us</a></p>
+	</div>
+	<div id="headerbg"></div>
+</div>
+
+
+<script type="text/javascript">
+<!--
+var url;
+if(location.hash.length > 1) {
+	url = location.hash.substr(1);
+} else {
+	url  = (ja ? "http://www.asahi.com/" : "http://www.cnn.com/");
+}
+$("q").value = url;
+
+var so = new SWFObject("Marubiru.swf", "swf", "100%", "300", "9", "#ffffff");
+so.addParam("wmode", "transparent");
+so.addParam("allowScriptAccess", "always");
+if(url.match(/^http:\/\//)) {
+	so.addVariable("url", url);
+} else {
+	so.addVariable("q", url);
+}
+so.write("swfcontainer");
+//-->
+</script>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+
+</html>

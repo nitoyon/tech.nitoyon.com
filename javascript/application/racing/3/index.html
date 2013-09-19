@@ -1,0 +1,227 @@
+<html>
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>『googlemapでドラクエ』でドラクエ</title>
+	<!--
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:foaf="http://xmlns.com/foaf/0.1/">
+<rdf:Description rdf:about="http://tech.nitoyon.com/javascript/application/racing/1.html">
+	<foaf:maker rdf:parseType="Resource">
+		<foaf:holdsAccount>
+			<foaf:OnlineAccount foaf:accountName="nitoyon">
+				<foaf:accountServiceHomepage rdf:resource="http://www.hatena.ne.jp/" />
+			</foaf:OnlineAccount>
+		</foaf:holdsAccount>
+	</foaf:maker>
+</rdf:Description>
+</rdf:RDF>
+	-->
+<script src="http://maps.google.com/maps?file=api&v=2&key=ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg" type="text/javascript" charset="UTF-8"></script>
+
+<script type="text/javascript">
+<!--
+var g_map;
+var lat = -76.009504;
+var lng = 58.4625;
+
+var x = 28, y = 32;
+
+var dot = "                   1111     111                     \n"
++"                 1111111   11111111                 \n"
++"            11111111111111111111111111              \n"
++"         1111111111111111111111111111111            \n"
++"        1111111111111111111111111111111111          \n"
++"       111111111111111111111111111111111111         \n"
++"      1111111111111111111111111111111111111         \n"
++"     111111111111111111111111111111111111111        \n"
++"    1111111111111111111111111111111111111111        \n"
++"    11111111111111111111111111111111111111111       \n"
++"    11111111111111111111111111111111111111111       \n"
++"    11111111111111111111111111111111111111111       \n"
++"    111111111111111111111111111111111111111111      \n"
++"  111111111111111111111111111111111111111111111     \n"
++"  111111111111111111111111111111111111111111111     \n"
++" 1111111111111111111111111111111111111111111        \n"
++"111111111111111111      111111111111111111          \n"
++"11111111111111111          111       1111           \n"
++"11111111111111111                     11            \n"
++"1111111111111111111  111              11            \n"
++" 1111111111111111111111111     11111111             \n"
++" 11111111111111111111111111   111111111      111    \n"
++" 11111111111111111111111111    111111111     111    \n"
++"  111111111111111111111111  11  111111111    111    \n"
++"  11111111111111111111111  111   111111111    1     \n"
++" 11111111111111111111111  11111  1111111111   1     \n"
++"  111111111111111111111111111111  111111111   1     \n"
++"  111111111111111111111  1111111   1111111111111    \n"
++"   111111111111111      11111111    1111111111111   \n"
++"   111111111111         11111111    1111111111111   \n"
++"    1111111111      11  11111111   11111111111111   \n"
++"    111111111      1111  1111111    111111111111    \n"
++"     11111111      1111  1111111    11111111111     \n"
++"      1111111       111  1111111    1111111111      \n"
++"       1111111           1111111     11             \n"
++"        1111111         11111111                    \n"
++"         1111111        1111111                     \n"
++"          1111111     11111111                      \n"
++"             1111   111111111                       \n"
++"                   111111111                        \n"
++"                    1111111                         ";
+
+
+function init() {
+	var customTileLayer = (function(){
+		// GTileLayer 実装クラス
+		var dataLayer = new GTileLayer(new GCopyrightCollection(""), 0, 5);
+		dataLayer.getOpacity = function(){return 1.0;};
+		dataLayer.isPng = function(){return true;};
+		dataLayer.getTileUrl = function(tile) {
+			var x = tile.x % Math.floor(32);
+			var y = tile.y % Math.floor(32);
+
+			return "http://www3.smartnetwork.co.jp/dqmap/dq3/tiles/5/" + x + "_" + y + ".gif";
+		}
+		return dataLayer;
+	})();
+ 
+	var mapCustom = new GMapType([customTileLayer], G_NORMAL_MAP.getProjection(), "dqmap");
+ 
+	g_map = new GMap2(document.getElementById("map"),
+			{mapTypes: [mapCustom]}
+	 );
+	g_map.setCenter(new GLatLng(lat, lng), 5);
+	g_map.disableDragging();
+
+	document.onkeydown = function(e){return keyHandler(e, true);};
+	document.onkeyup = function(e){return keyHandler(e, false);};
+	update();
+}
+
+var direction = 2;
+var pressing = false;
+function keyHandler(evt, flag)
+{
+	evt = evt ? evt : window.event;
+	var elm = evt.target || evt.srcElement;
+	var keyCode = evt.keyCode ? evt.keyCode : evt.which;
+
+	switch(keyCode)
+	{
+		case 37:
+		case 38:
+		case 39:
+		case 40:
+			var old_direction = direction;
+			var old_pressing = pressing;
+			var new_direction = (keyCode - 38 + 4) % 4;
+			var new_pressing = flag;
+
+			if((new Date()).getTime() - prev_move_time > 500){
+				direction = new_direction;
+				pressing = flag;
+				update(); // 即時update
+				return false;
+			}
+
+			direction = new_direction;
+			pressing = flag;
+			return false;
+		default:
+			return true;
+	}
+}
+
+var draw_direction = direction;
+var prev_move_time = null;
+var update_flag = false;
+var timer = 0;
+function update(){
+	clearTimeout(timer);
+
+	update_flag = !update_flag;
+	if(pressing){
+		var diff_x = (direction % 2 == 1 ?  -(direction - 2) : 0);
+		var diff_y = (direction % 2 == 0 ?  (direction - 1) : 0);
+		var new_x = diff_x + x;
+		var new_y = diff_y + y;
+
+		var type;
+		try{
+			type = dot.split("\n")[new_y].charAt(new_x);
+		}
+		catch(e){}
+		if(type == "1"){
+			g_map.enableDragging();
+			g_map.panBy(new GSize(-diff_x * 32, -diff_y * 32));
+			g_map.disableDragging();
+			x = new_x; y = new_y;
+		}
+
+		prev_move_time = (new Date()).getTime();
+		draw_direction = direction;
+	}
+
+	var index = draw_direction * 2 + (update_flag ? 1 : 0);
+	document.getElementById("character").childNodes[0].style.top = (-index * 32) + "px";
+
+	timer = setTimeout(update, 500);
+}
+//-->
+</script>
+
+<style>
+div#game_main{
+	position :relative;
+}
+
+div#map{
+	width: 500px;
+	height: 400px;
+}
+
+
+
+#character{position:absolute; left:234px; top:184px; width: 32px; height: 32px; z-index:99; overflow: hidden}
+#character img{position: relative;}
+</style>
+
+</head>
+<body onload="init()" onunload="GUnload()">
+
+<h2>『googlemapでドラクエ』でドラクエ</h2>
+
+<p><a href="http://www3.smartnetwork.co.jp/dqmap/">googlemapでドラクエ</a> がおもしろかったので、フィールドを歩けるようにしてみました。</p>
+
+<p>敵も出ないし、村にも城にも入れませんが、キャラクターを配置するだけで、それっぽくなってびっくり。</p>
+
+<h3>関連</h3>
+<ul>
+<li><a href="http://tech.nitoyon.com/javascript/application/racing/1/">Google Maps で鈴鹿サーキット試走</a></li>
+<li><a href="http://d.hatena.ne.jp/nitoyon/20070712/google_maps_dq">『googlemapでドラクエ』でドラクエ 公開</a>
+</ul>
+
+<noscript>
+<font size="+3" color="red">JavaScript を有効にしてください</font>
+</noscript>
+
+<div id="game_main">
+<div id="character"><img src="valiant.gif" width="32" height="256"></div>
+<div id="overlay"></div>
+<div id="map"></div>
+</div>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>
+

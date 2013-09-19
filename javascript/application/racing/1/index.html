@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Google Maps で鈴鹿サーキット試走</title>
+	<!--
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:foaf="http://xmlns.com/foaf/0.1/">
+<rdf:Description rdf:about="http://tech.nitoyon.com/javascript/application/racing/1.html">
+	<foaf:maker rdf:parseType="Resource">
+		<foaf:holdsAccount>
+			<foaf:OnlineAccount foaf:accountName="nitoyon">
+				<foaf:accountServiceHomepage rdf:resource="http://www.hatena.ne.jp/" />
+			</foaf:OnlineAccount>
+		</foaf:holdsAccount>
+	</foaf:maker>
+</rdf:Description>
+</rdf:RDF>
+	-->
+<script src="http://maps.google.com/maps?file=api&v=2&key=ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg" type="text/javascript" charset="UTF-8"></script>
+<script>
+window.onload = onloadHandler;
+document.onkeydown = onkeydownHandler;
+document.onkeyup = onkeyupHandler;
+
+var map = null;
+var map_x =136.54028131980896, map_y = 34.84339127807875;
+var accelerating = false;
+var key_left = false;
+var key_right = false;
+var velocity = 0;
+var max_velocity = 0.000020;
+var angle = 135;
+var geocoder = null;;
+
+function onloadHandler()
+{
+	map = new GMap2(document.getElementById("map"));
+	map.setCenter(new GLatLng(map_y, map_x), 17);
+	map.disableDragging();
+	geocoder = new GClientGeocoder();
+
+	timer();
+}
+
+function onkeydownHandler(e){return keyHandler(e, true);}
+function onkeyupHandler(e){return keyHandler(e, false);}
+
+function keyHandler(e, flag)
+{
+	var evt = e ? e : window.event;
+	var elm = evt.target || evt.srcElement;
+	var keyCode = evt.keyCode ? evt.keyCode : evt.which;
+
+	if(elm && elm.tagName == "INPUT") return true;
+
+	switch(keyCode)
+	{
+		case 32: accelerating = flag; break;
+		case 37: key_left = flag; break;
+		case 39: key_right = flag; break;
+		default: return true;
+	}
+	return false;
+}
+
+function timer()
+{
+	if(!map) return;
+	window.setTimeout("timer();", 20);
+
+	var prev_v = velocity;
+	velocity += (accelerating ? 1 : -2) * 0.0000001;
+	velocity = velocity < 0 ? 0 : velocity > max_velocity ? max_velocity : velocity;
+	if(prev_v == max_velocity && velocity == max_velocity) velocity = max_velocity - 0.0000001; // トップスピード時のゆらぎ
+
+	if(velocity != 0)
+	{
+		angle += (key_right ? 1 : key_left ? -1 : 0) * (accelerating + 1) * (max_velocity * 4 - velocity * 3) / max_velocity;
+		angle = (angle >= 360 ? angle - 360 : angle <= 0 ? angle + 360 : angle);
+
+		map_x += velocity * Math.sin(angle * 3.14 / 180);
+		map_y += velocity * Math.cos(angle * 3.14 / 180);
+		map.setCenter(new GLatLng(map_y, map_x));
+	}
+
+	var icon = Math.round(angle / 15) * -15;
+	icon = (icon <= -360 ? 0 : icon);
+	document.getElementById("car").childNodes[0].style.top = icon + "px";
+
+	var km = Math.round(velocity * 8200000) + "km/h";
+	var elm = document.getElementById("speed_meter");
+	if(elm.innerHTML != km)
+		elm.innerHTML = km;
+}
+
+var searching = false;
+function moveto(){
+	var address = document.forms[0].address.value;
+	if(!geocoder) return;
+
+	geocoder.getLatLng(address, function(point){
+		if(point){
+			map.setCenter(point);
+			map_x = point.x;
+			map_y = point.y;
+		}
+		searching = false;
+	});
+	searching = true;
+}
+</script>
+<style>
+#game_window{position: relative; width: 300px; height:300px; float: left;}
+#speed_meter{position: absolute; background-color: #fff; border: 1px solid black; width: 4.5em; text-align: right; left: 5px; top: 5px; color: #f90; font-weight: bold; z-index: 99;}
+#car{position:absolute; left:143px; top:143px; width: 15px; height: 15px; z-index:99; overflow: hidden}
+#car img{position: relative;}
+#map{width:300px; height:300px; position:relative; left:0; top:0;}
+#info_ge{width:250px; position:relative; margin: 10px;padding: 10px;border:2px solid #ccc; background: #eee;}
+
+#game_description{margin-left: 320px;}
+
+body,td{font-size: small; font-family: "ＭＳ Ｐゴシック", Osaka, sans-serif, serif;}
+h1{width:553px; height:84px; background:url('title.gif')}
+h1 span{display:none;}
+h2{font-size:110%; color:#f90; margin:1em 0 1em 0; padding:0;}
+p{margin:.7em 0 .7em 0;}
+table{border-collapse: collapse; margin-left: 3em;}
+td, th{border: 1px solid #999;}
+th{background-color: yellow;}
+.content{margin-bottom:2em;}
+</style>
+</head>
+
+<body onunload="GUnload()">
+<h1><span>Google Maps で鈴鹿サーキット試走</span></h1>
+<div id="game_window">
+<div id="speed_meter"></div>
+<div id="car"><img src="car.gif"></div>
+<div id="map"></div>
+<!--<div>ADDRESS: <input type="text" name="address"><input type="button" value="Jump" onclick="moveto();"></div>-->
+<div id="info_ge"><span style="color:red">New!!</span>「<a href="../2.html">Google Earth でもドライブ</a>」</div>
+</div>
+
+<div id="game_description">
+<h2>はじめに</h2>
+<div class="content">
+<p>Google Maps API を利用した便利なサービスが数々発表されているけど、別に遊びのために活用してもいいよね。</p>
+
+<p>そんな思いから作ってみた、レーシングゲームです。</p>
+
+<p>地図データを元に走るので、ゲーム史上いまだかつてないコースの再現性があります。</p>
+
+<p>ただ、作者に車の知識があまりないため、車の走行に関してはかなりいい加減ですがご容赦ください。一応、ゲームバランスは調節したつもりです。</p>
+</div>
+
+<h2>推奨環境</h2>
+<p>以下の環境で動作チェックを行っています。</p>
+<ul>
+<li>Windows 版 Internet Explorer 6.0 (JavaScript有効)
+<li>Windows 版 Firefox 1.0 (JavaScript有効)
+</ul>
+
+<h2>遊び方</h2>
+<div class="content">
+<p>矢印の左右とスペースキーのみの簡単操作。ブレーキはありませんが、アクセルを離すと減速します。急カーブ前にはしっかり減速しましょう。</p>
+
+<table>
+<tr><th>キー</th><th>動作</th></tr>
+<tr><td>Space</td><td>アクセル</td></tr>
+<tr><td>Left, Right</td><td>ハンドル</td></tr>
+</table>
+
+<p>道路からはみ出しても何も起こりませんが、なるべく道路からはみ出さないように走ってみてください。</p>
+<p>時間計測もありませんが、あくまで鈴鹿サーキットの試走を楽しむ、という気持ちで遊んでやってください。</p>
+<p>自分の家の周辺で走ってみたい人は <a href="http://d.hatena.ne.jp/secondlife/20051111/1131678512">2nd life</a> さんのブログを参考にしてワープしましょう。(2005/11/16追記)</p>
+
+<h2>動作原理</h2>
+<p><a href="../car_anime.html">動作原理を説明するエントリを書いてみました</a>。気になる人は読んでみてくださいませ。</p>
+</div>
+
+<p>JavaScriptのお勧め勉強ページ→→→ <a Href="http://ck.jp.ap.valuecommerce.com/servlet/referral?sid=2102799&pid=871121915" target="_blank" ><img Src="http://ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=2102799&pid=871121915" height="1" width="1" Border="0">All About　JavaScript</a></p>
+<IFRAME frameBorder="0" allowTransparency="true" height="60" width="468" marginHeight="0" scrolling="no" src="http://ad.jp.ap.valuecommerce.com/servlet/htmlbanner?sid=2102799&pid=870765979" MarginWidth="0"><script Language="javascript" Src="http://ad.jp.ap.valuecommerce.com/servlet/jsbanner?sid=2102799&pid=870765979"></script><noscript><a Href="http://ck.jp.ap.valuecommerce.com/servlet/referral?sid=2102799&pid=870765979" target="_blank" ><img Src="http://ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=2102799&pid=870765979" height="60" width="468" Border="0"></a></noscript></IFRAME>
+</div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>

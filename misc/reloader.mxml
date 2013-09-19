@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" title="reloader"
+	applicationComplete="init()">
+	<mx:Script>
+	<![CDATA[
+		import flash.filesystem.*;
+		import flash.desktop.*;
+
+		private var modificationDate:Date;
+
+		private function init():void
+		{
+			preview.useApplicationDomain = ApplicationDomain.currentDomain;
+			preview.addEventListener(flash.events.NativeDragEvent.NATIVE_DRAG_ENTER, onDragIn);
+			preview.addEventListener(flash.events.NativeDragEvent.NATIVE_DRAG_DROP, onDragComplete);
+			Shell.shell.addEventListener(InvokeEvent.INVOKE, onInvoke);
+
+			var timer:Timer = new Timer(1000);
+			timer.addEventListener(flash.events.TimerEvent.TIMER, onTick);
+			timer.start();
+		}
+
+		private function GetSingleDroppedFile(event:NativeDragEvent):File
+		{
+			var t:TransferableData = event.transferable;
+			if(t.hasFormat(TransferableFormats.FILE_LIST_FORMAT))
+			{
+				var files:Array = t.dataForFormat(TransferableFormats.FILE_LIST_FORMAT) as Array;
+				if(files.length == 1)
+				{
+					return files[0] as File;
+				}
+			}
+			return null;
+		}
+		
+		private function onDragIn(event:NativeDragEvent):void
+		{
+			if(GetSingleDroppedFile(event))
+			{
+				trace("accept");
+				DragManager.acceptDragDrop(preview);
+			}
+		}
+
+		private function onDragComplete(event:NativeDragEvent):void
+		{
+			var file:File = GetSingleDroppedFile(event);
+			if(file)
+			{
+				DragManager.dropAction = DragActions.NONE;
+				trace(file.nativePath);
+				preview.location = file.nativePath;
+			}
+		}
+
+		private function onInvoke(invokeEvent:InvokeEvent):void
+		{
+			if(invokeEvent.arguments.length > 0)
+			{
+				trace(invokeEvent.arguments[0]);
+				preview.location = invokeEvent.arguments[0];
+			}
+		}
+		
+		private function reload():void
+		{
+			preview.htmlControl.reload();
+		}
+
+		private function onTick(e:Event):void
+		{
+			if(autoReload.selected)
+			{
+				checkReload();
+			}
+			checkTrace();
+		}
+
+		private function checkReload():void
+		{
+			var file:File = new File(preview.location);
+			if(file.exists)
+			{
+				if(!modificationDate)
+				{
+					modificationDate = file.modificationDate;
+				}
+				else if(modificationDate.getTime() < file.modificationDate.getTime())
+				{
+					modificationDate = file.modificationDate;
+					reload();
+				}
+			}
+		}
+
+		private function checkTrace():void
+		{
+			var file:File = File.documentsDirectory.parent;
+			if(file.nativePath.match(/^[a-z]:/i))
+			{
+				// windows
+				file = new File(file.nativePath + "\\Application Data\\Macromedia\\Flash Player\\Logs\\flashlog.txt");
+			}
+			else
+			{
+				return;
+			}
+
+			if(!file.exists) return;
+
+			var fs:FileStream = new FileStream();
+			fs.open(file, FileMode.READ);
+			var ret:String = fs.readUTFBytes(fs.bytesAvailable);
+			fs.close();
+
+			tracePreview.text = ret;
+		}
+	]]>
+	</mx:Script>
+
+	<mx:HBox>
+		<mx:Button label="Reload" click="reload()"/>
+		<mx:CheckBox id="autoReload" label="Auto reload"/>
+		<mx:CheckBox id="alwaysInFront" label="Always on top" click="window.alwaysInFront=alwaysInFront.selected"/>
+	</mx:HBox>
+	<mx:VDividedBox width="100%" top="40" bottom="0">
+		<mx:HTML id="preview" width="100%"/>
+		<mx:TextArea id="tracePreview" width="100%" height="60"/>
+	</mx:VDividedBox>
+</mx:WindowedApplication>
