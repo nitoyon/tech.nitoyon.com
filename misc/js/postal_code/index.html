@@ -1,0 +1,118 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>郵便番号マップ</title>
+<style>
+div#draw_canvas{
+	position: relative;
+}
+
+span{
+	font-size: 80%;
+	filter: alpha(opacity=80);
+	-moz-opacity:0.8;
+	opacity:0.8;
+}
+
+span.a0{color: #cc0000}
+span.a1{color: #cc7a00}
+span.a2{color: #a3cc00}
+span.a3{color: #28cc00}
+span.a4{color: #00cc51}
+span.a5{color: #00cccc}
+span.a6{color: #0051cc}
+span.a7{color: #2800cc}
+span.a8{color: #a300cc}
+span.a9{color: #cc007a}
+
+div#popup{
+	font-size: small;
+	position: absolute;
+	margin-left: 30px;
+	background: #ffffff;
+	border: 1px solid #cccccc;
+	padding: 5px;
+	z-index: 999;
+	filter: alpha(opacity=80);
+	-moz-opacity:0.80;
+	opacity:0.80;
+}
+</style>
+<script src="postal.js" charset="utf-8"></script>
+<script>
+window.onload = function(){
+	var select_area = document.getElementById("select_area");
+	select_area.onchange = function(){set_area(select_area.selectedIndex - 1)};
+	set_area(-1);
+}
+
+WIDTH = 600;
+function set_area(area){
+	canvas = document.getElementById("draw_canvas");
+	while(canvas.childNodes.length)
+		canvas.removeChild(canvas.firstChild);
+
+	var popup = document.createElement("div");
+	popup.id = "popup";
+	popup.style.display = "none"
+	canvas.appendChild(popup);
+	var timer = 0;
+
+	var latmin = 9999, latmax = 0, lngmin = 9999, lngmax = 0;
+	for(var i = 0, len = postal.length; i < len; i++){
+		var p = postal[i];
+		if(area == -1 || p.code.charAt(0) == area){
+			if(latmin > p.lat) latmin = p.lat;
+			if(latmax < p.lat) latmax = p.lat;
+			if(lngmin > p.lng) lngmin = p.lng;
+			if(lngmax < p.lng) lngmax = p.lng;
+		}
+	}
+	var ratio = WIDTH / (lngmax - lngmin);
+
+	for(var i = 0, len = postal.length; i < len; i++){
+		var p = postal[i];
+		if(area != -1 && p.code.charAt(0) != area) continue;
+
+		var pos = document.createElement("span");
+		pos.className = "a" + p.code.substr(0, 1);
+		pos.style.position = "absolute";
+		pos.style.top = ((latmax - p.lat) * ratio * 1.2) + 'px';
+		pos.style.left = ((p.lng - lngmin) * ratio) + 'px';
+		pos.appendChild(document.createTextNode(p.code));
+		pos.onmouseover = (function(pos, p){
+			return function(){
+				if(timer != 0){clearTimeout(timer); timer = 0;}
+				popup.style.display = "block";
+				popup.style.top = pos.style.top;
+				popup.style.left = pos.style.left;
+				popup.innerHTML = p.code + " " + p.name;
+			}
+		})(pos, p);
+		pos.onmouseout = function(){
+			timer = setTimeout(function(){popup.style.display = 'none';}, 100);
+		}
+		canvas.appendChild(pos);
+	}
+}
+</script>
+</head>
+<body>
+<img src="title.png" width="321" height="57">
+表示範囲：<select id="select_area">
+	<option>---</option>
+	<option>0--</option>
+	<option>1--</option>
+	<option>2--</option>
+	<option>3--</option>
+	<option>4--</option>
+	<option>5--</option>
+	<option>6--</option>
+	<option>7--</option>
+	<option>8--</option>
+	<option>9--</option>
+</select> → <a href="http://d.hatena.ne.jp/nitoyon/20090316/postal_map">詳しくはこちら</a>
+<div id="draw_canvas"></div>
+<noscript><font size="+3" color="red">Please enable JavaScript!!!</font></noscript>
+</body>
+</html>

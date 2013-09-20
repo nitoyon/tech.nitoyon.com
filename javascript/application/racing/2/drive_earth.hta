@@ -1,0 +1,575 @@
+<html>
+<head>
+<hta:application innerborder="no" singleinstance="yes" border="thin" contextmenu="no">
+<title>drive around the earth!</title>
+<script>
+window.resizeTo(330, 100);
+window.moveTo(10, 10);
+
+window.onload = function(){
+	GoogleEarth.initialize(googleEarth, function(existing){
+		KeyListener.initialize();
+		YourKml.initialize();
+		Dashboard.initialize();
+
+		Car.initialize(existing);
+		Car.start();
+	});
+}
+
+
+var KeyListener = {
+	engine : 0, // 0 : none, 1 : accelerating, 2 : braking
+	tilt : 0,
+	direction : 0,
+
+	initialize : function(){
+		document.onkeydown = KeyListener.onkeydown;
+		document.onkeyup = KeyListener.onkeyup;
+	},
+
+	onkeydown : function(){
+		switch(window.event.keyCode){
+			case 90: KeyListener.engine = 1; break; // Z key
+			case 88: KeyListener.engine = 2; break; // X key
+			case 67: KeyListener.engine = 3; break; // C key
+			case 65: KeyListener.tilt = 1; break;   // A key
+			case 83: KeyListener.tilt = -1; break;  // S key
+			case 37: KeyListener.direction = 1; break;
+			case 38: KeyListener.direction = 2; break;
+			case 39: KeyListener.direction = 3; break;
+			case 40: KeyListener.direction = 4; break;
+		}
+	},
+
+	onkeyup : function(){
+		switch(window.event.keyCode){
+			case 90: KeyListener.engine = 0; break; // Z key
+			case 88: KeyListener.engine = 0; break; // X key
+			case 67: KeyListener.engine = 0; break; // C key
+			case 65: KeyListener.tilt = 0; break;   // A key
+			case 83: KeyListener.tilt = 0; break;   // S key
+			case 37: KeyListener.direction = 0; break;
+			case 38: KeyListener.direction = 0; break;
+			case 39: KeyListener.direction = 0; break;
+			case 40: KeyListener.direction = 0; break;
+		}
+	}
+};
+
+
+function bound(v, min, max){
+	return (v < min ? min : v > max ? max : v);
+}
+
+function toRad(x){
+	return x / 180 * Math.PI;
+}
+function fromRad(x){
+	return x / Math.PI * 180;
+}
+
+var Car = {
+	initialize : function(existing){
+		this.base = 0.000000001;
+		this.speed = 0;
+		this.accel = 10;
+		this.range = [30, 50, 100, 200, 400, 800, 1500, 2500, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 4096000, 8192000]; // height
+		this.range_index = 6;
+		this.max_speed = 400;
+		this.min_speed = -60;
+		this.azimuth = 0;
+		this.max_azimuth_speed = 3;
+		this.azimuth_speed = 0; // direction speed
+		this.tilt = 60;
+		this.default_tilt = 60;
+
+		var camera = GoogleEarth.getCamera();
+		if(!existing){
+			camera.FocusPointLatitude = 35.508031;
+			camera.FocusPointLongitude = 138.713381;
+			camera.Range = 8000;
+			camera.Tilt = 60;
+			camera.Azimuth = 171;
+			GoogleEarth.setCamera(camera, 10);
+		}
+
+		// get range_index from current camera
+		for(var i = 0; i < this.range.length; i++){
+			if(Math.floor(camera.Range) <= this.range[i]){
+				this.range_index = i;
+				break;
+			}
+		}
+	},
+
+	start : function(){
+		this.tick();
+	},
+
+	tick : function(){
+		Car.update();
+		setTimeout("Car.tick()", 100);
+	},
+
+	update : function(){
+		var camera = GoogleEarth.getCamera();
+
+		Car.speed += KeyListener.engine == 1 ? Car.accel : KeyListener.engine > 1 ? -30 : -Car.accel;
+		Car.speed = bound(Car.speed, KeyListener.engine == 3 ? this.min_speed : 0, this.max_speed, camera.FocusPointLongitude);
+
+		switch(KeyListener.direction){
+			case 2: Car.range_index++; break;
+			case 4: Car.range_index--; break;
+		}
+		Car.range_index = bound(Car.range_index, 0, Car.range.length - 1);
+		var range = camera.Range = Car.range[Car.range_index];
+
+		Car.tilt += KeyListener.tilt * 3;
+		camera.Tilt = Car.tilt = bound(Car.tilt, 0, 80);
+
+		switch(KeyListener.direction){
+			case 1: Car.azimuth_speed--; break;
+			case 3: Car.azimuth_speed++; break;
+			default: Car.azimuth_speed > 0 ? Car.azimuth_speed-- : Car.azimuth_speed < 0 ? Car.azimuth_speed++ : 0; break;
+		}
+		Car.azimuth_speed = bound(Math.floor(Car.azimuth_speed), -Car.max_azimuth_speed, Car.max_azimuth_speed);
+		Car.azimuth = camera.Azimuth;
+		Car.azimuth += Car.azimuth_speed;
+		camera.Azimuth = Car.azimuth;
+
+		Car.ground_speed = Car.base * Car.speed * (range);
+		camera.FocusPointLatitude  += Car.ground_speed * Math.cos(toRad(camera.Azimuth));
+		camera.FocusPointLongitude += Car.ground_speed * Math.sin(toRad(camera.Azimuth));
+		GoogleEarth.setCamera(camera, 10);
+
+		Dashboard.update();
+	}
+};
+
+
+var Dashboard = {
+	initialize : function(){
+		this.dashboardElm = document.getElementById("dashboard_content");
+		this.speedElm = document.getElementById("speed_meter");
+		this.directionElm = document.getElementById("direction_meter");
+		this.heightElm = document.getElementById("height_meter");
+		this.tiltElm = document.getElementById("tilt_meter");
+	},
+	
+	update : function(){
+		this.speedElm.innerHTML = "hoge";
+		if(this.dashboardElm.style.display == "none"){
+			return;
+		}
+
+		var speed = Math.floor(toRad(Car.ground_speed) * 63781.5 * 3600 * 10 + (Car.ground_speed != 0 ? Math.random() * 5 : 0)) / 10;
+		if((speed * 10) % 10 == 0) speed += ".0";
+		this.speedElm.innerHTML = speed + "km/h";
+		this.directionElm.innerHTML = Math.floor(Car.azimuth * 10) / 10;
+		this.heightElm.innerHTML = Car.range[Car.range_index] + "m";
+		this.tiltElm.innerHTML = Car.tilt;
+	}
+};
+
+var YourKml = {
+	initialize : function(){
+		var str = this.getOverlayKml();
+		try{
+			GoogleEarth.LoadKmlData(str);
+		}
+		catch(e){
+		}
+	},
+
+	getOverlayKml : function(){
+		var str = "";
+		str += '<?xml version="1.0" encoding="UTF-8"?>';
+		str += '<kml xmlns="http://earth.google.com/kml/2.1">';
+		str += '<ScreenOverlay id="my_position">';
+		str += "  <description>This is your car.</description>";
+		str += "  <name>Your car</name>";
+		str += "  <Icon>";
+		str += "    <href>root://icons/palette-4.png</href>";
+		str += "    <x>192</x>";
+		str += "    <y>0</y>";
+		str += "    <w>32</w>";
+		str += "    <h>32</h>";
+		str += "  </Icon>";
+		str += '  <overlayXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>';
+		str += '  <screenXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>';
+		str += '  <size x="0" y="0" xunits="fraction" yunits="fraction"/>';
+		str += "</ScreenOverlay>";
+		str += "</kml>";
+		return str;
+	}
+};
+
+var GoogleEarth = {
+	initialize : function(ge, onInitialized){
+		this.ge = ge;
+		this.onInitialized = onInitialized;
+		this.existing = true;
+
+		// Is Google Earth installed?
+		try{
+			this.ge.IsInitialized();
+		}
+		catch(e){
+			alert("Cannot initialize this application.\nThe latest version of Google Earth must be installed.");
+			return;
+		}
+		
+		if(typeof onInitialized == "function"){
+			this.waitInitialized();
+		}
+	},
+
+	waitInitialized : function(){
+		if(GoogleEarth.ge.IsInitialized() && typeof GoogleEarth.onInitialized == "function"){
+			GoogleEarth.onInitialized(this.existing);
+		}
+		else{
+			this.existing = false;
+			setTimeout("GoogleEarth.waitInitialized()", 100);
+		}
+	},
+
+	getVersion : function(){
+		// 4.0.2080 (5)
+		return this.ge.VersionMajor + "." + this.ge.VersionMinor + "." + this.ge.VersionBuild + " (" + this.ge.VersionAppType + ")";
+	},
+
+	screenShot : function(path, qualty){
+		this.ge.SaveScreenShot(path, quality);
+	},
+
+	loadKmlData : function(text){
+		this.ge.LoadKmlData(text);
+	},
+
+	getCamera : function(){
+		return this.ge.GetCamera(1);
+	},
+
+	setCamera : function(camera, speed){
+		this.ge.SetCamera(camera, speed || 1);
+	},
+	
+	setCameraParams : function(lat, long, alt, altMode, range, tilt, azimuth, speed){
+		this.ge.SetCameraParams(lat, long, alt, altMode, range, tilt, azimuth, speed);
+	},
+
+	getPlace : function(){
+		var places = this.ge.GetLayersDatabases();
+		alert(places.Item(1).name);
+	},
+
+	LoadKmlData : function(str){
+		this.ge.LoadKmlData(str);
+	}
+};
+
+
+// UI
+function Effect(callback){
+	this.callback = callback;
+	this.count = 0;
+
+	this.tick();
+}
+Effect.prototype = {
+	tick : function(){
+		this.count += 0.1;
+		if(this.count >= 1){
+			this.count = 1;
+		}
+		this.callback(Math.sin(this.count * Math.PI / 2));
+
+		if(this.count < 1){
+			var _self = this;
+			Effect.timer = window.setTimeout(function(){_self.tick()}, 10);
+		}
+	}
+}
+
+document.onclick = function(){
+	var event = window.event;
+	var elm = event.srcElement;
+
+	if(Menu.resizing) return;
+	if(elm.tagName == "A" && (elm.id == "help" || elm.id == "about" || elm.id == "dashboard")){
+		if(elm.className != "select"){
+			Menu.open(elm.id);
+		}
+		else{
+			Menu.close();
+		}
+	}
+	else if(elm.className == "close"){
+		Menu.close();
+	}
+	else{
+		while(elm){
+			if(elm.tagName == "DIV" && elm.className == "content"){
+				return;
+			}
+			elm = elm.parentNode;
+		}
+		
+		Menu.close();
+	}
+}
+
+var Menu = {
+	cur : null,
+	resizing : false,
+	
+	open : function(name){
+		var elm = document.getElementById(name);
+		if(!elm) return;
+
+		if(this.cur) Menu._close(Menu.cur);
+
+		Menu.resizing = true;
+		elm.className = "select";
+		elm.style.width = "100px";
+		document.getElementById(name + "_content").style.display = "block";
+		new Effect(function(p){
+			try{
+				window.resizeTo(330 + p * 350, 100);
+			}
+			catch(e){}
+			if(p == 1){
+				Menu.resizing = false;
+			}
+		});
+
+		Menu.cur = name;
+	},
+
+	close : function(name){
+		name = name || Menu.cur;
+		var elm = document.getElementById(name);
+		if(!elm) return;
+
+		Menu.resizing = true;
+		new Effect(function(p){
+			try{
+				window.resizeTo(330 + 350 - p * 350, 100);
+			}
+			catch(e){}
+			if(p == 1){
+				Menu._close(name);
+				Menu.resizing = false;
+			}
+		});
+
+		Menu.cur = null;
+	},
+
+	_close : function(name){
+		var elm = document.getElementById(name);
+		if(!elm) return;
+
+		elm.className = "";
+		elm.style.width = "80px";
+		document.getElementById(name + "_content").style.display = "none";
+	}
+}
+</script>
+</head>
+<style>
+*{
+	margin:0;
+	padding:0;
+}
+
+div#title{
+ filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=1,startColorStr=#ff9999ff,endColorStr=#ffffff);
+ width: 250px;
+ height: 150px;
+}
+
+div#title span{
+ font-family: Arial;
+ font-weight: bold;
+ position: absolute;
+}
+div#title span#title_do{
+ display:block;
+ top: 5px;
+ left: 10px;
+ font-family: Arial;
+ color: #6666ff;
+ font-size: 22px;
+}
+div#title span#title_ge{
+ top: 20px;
+ left: 5px;
+ display:block;
+ font-family: Arial;
+ color: #0000ff;
+ font-size: 30px;
+}
+
+div#menu{
+ position:absolute;
+ left: 230px;
+ top: 3px;
+}
+
+div#menu a{
+ display: block;
+ width: 80px;
+ height: 18px;
+ background: #ccc;
+ margin: 2px;
+ padding: 1px;
+ color: #fff;
+ text-decoration: none;
+ text-align: center;
+ font-size: 12px;
+ font-family: sans-serif;
+}
+
+div#menu a#dashboard:hover, div#menu a#dashboard.select{
+ background: #800;
+}
+
+div.content{
+ position: absolute;
+ left: 320px;
+ top: 0px;
+ width: 355px;
+ padding: 5px 5px 5px 7px;
+ height: 100px;
+ font-size: 12px;
+}
+
+div.content h3{
+ font-size: 16px;
+ color: white;
+ margin-bottom: 3px;
+}
+
+div.content table{
+ background: white;
+ font-size: 12px;
+}
+
+div.content th{
+ text-align: left;
+ font-family: 'Verdana';
+ padding-right: 5px;
+}
+div.content td{
+ font-family: 'Verdana';
+}
+
+div#dashboard_content{
+ background: #800;
+ color: black;
+}
+
+div#dashboard_content table{
+ float: left;
+ margin-right: 10px;
+}
+div#dashboard_content td{
+ width: 80px;
+ text-align: right;
+}
+table#db1 td{width: 110px;}
+table#db2 td{width: 50px;}
+
+div#menu a#help:hover, div#menu a#help.select{
+ background: #c93;
+}
+
+div#help_content{
+ background: #c93;
+ color: black;
+}
+
+#help_content ul{
+	background: white;
+	margin-right: 42px;
+	padding: 5px;
+	list-style-type: none;
+}
+
+div#menu a#about:hover, div#menu a#about.select{
+ background: #696;
+}
+
+div#about_content{
+ background: #696;
+ color: white;
+}
+
+div#about_content table{
+ width: 300px;
+}
+
+div#about_content table tr{
+ height: 18px;
+}
+
+div#about_content table tr th{
+ width: 80px;
+}
+
+div.close{
+ float: right;
+ color: white;
+ text-decoration: underline;
+ cursor: hand;
+}
+</style>
+<body scroll="no" onselectstart="return false">
+ <div id="title">
+  <span id="title_do">Drive on</span>
+  <span id="title_ge">Google Earth</span>
+ </div>
+ <div id="menu">
+  <a href="#" id="dashboard">dashboard</a>
+  <a href="#" id="help">help</a>
+  <a href="#" id="about">about</a>
+ </div>
+
+ <div id="dashboard_content" class="content" style="display:none">
+  <div class="close">close</div>
+  <h3>Dashboard</h3>
+  <table id="db1">
+   <tr><th>Speed:</th><td id="speed_meter"></td></tr>
+   <tr><th>Height:</th><td id="height_meter"></td></tr>
+  </table>
+  <table id="db2">
+   <tr><th>Direction:</th><td id="direction_meter"></td></tr>
+   <tr><th>Tilt:</th><td id="tilt_meter"></td></tr>
+  </table>
+ </div>
+
+ <div id="help_content" class="content" style="display:none">
+  <div class="close">close</div>
+  <ul>
+  <li>Press 'Z' to accelerate, 'X' to brake and 'C' to back.
+  <li>Press 'Right' to turn right, and 'Left' to turn left.
+  <li>Press 'Up' to zoom up, and 'Down' to zoom down.
+  <li>Press 'A' and 'S' to change camera angle.
+  </ul>
+ </div>
+
+ <div id="about_content" class="content" style="display:none">
+  <div class="close">close</div>
+  <h3>About</h3>
+  <table>
+   <tr><th>Version:</th><td>Build 0.1</td></tr>
+   <tr><th>Homepage:</th><td><a href="http://tech.nitoyon.com/javascript/application/racing/2_en.html">tech.nitoyon.com</a></td></tr>
+  </table>
+ </div>
+
+ <object classid="clsid:8097D7E9-DB9E-4AEF-9B28-61D82A1DF784" id="googleEarth"></object>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>ãûìsÉoÉXàƒì‡ (ÉfÉÇ)</title>
+<script src="jquery.js"></script>
+<script>
+var lines = ["001", "003", "004", "005", "006", "008", "009", "010", 
+	"011", "012", "013", "015", "016", "017", "018", "019", "020", 
+	"022", "026", "027", "028", "029", "031", "032", "033", "037", 
+	"042", "043", "046", "050", "051", "055", "059", "065", "067", 
+	"069", "071", "073", "075", "078", "080", "081", "084", "091", 
+	"093", "100", "101", "102", "201", "202", "203", "204", "205", 
+	"206", "207", "208", "K009", "K202", "K205", "M001", "N001", "N003", 
+	"N008", "R", "R013", "RS05", "RW02", "S001", "S002", "S003", "S005", 
+	"S008", "T013", "T018", "T033", "T081", "TS01", "TS02", "TW03", "W001", 
+	"W002", "W003", "W004", "W005", "W006", "W008"
+	];
+var lines_prefix = {K : "âıë¨", M : "M", N : "ñk", R : "ó’", "RS" : "ó’ìÏ",
+	RW : "ó’êº", S : "ìÏ", T : "ì¡", TS : "ì¡ìÏ", TW : "ì¡êº", W : "êº"};
+
+var pipes = "http://pipes.yahoo.com/nitoyon/kyoto_busstop?_render=json";
+
+$(function(){
+	var sel = document.getElementById("sel");
+	for(var i in lines){
+		var s = lines[i];
+		if(s.match(/^([A-Z]*)0*(.*)/)){
+			s = (RegExp.$1 != "" ? lines_prefix[RegExp.$1] : "") + RegExp.$2 + "çÜånìù";
+		}
+		sel.options[sel.length] = new Option(s, lines[i]);
+	}
+
+	function onchange(){
+		$("#output").html("loading...");
+		$.ajax({
+			url : pipes,
+			dataType : "jsonp",
+			jsonp : "_callback",
+			data : {
+				num : $("#sel").val()
+			},
+			success : function(feed){
+				try{
+					var html = "";
+					$("#output").html("");
+					jQuery.each(feed.value.items, function(){
+						$("#output")
+							.append(
+								$("<h3></h3>").append(
+									$("<a></a>")
+										.text(this.title)
+										.attr('href', this.link)
+								)
+							)
+							.append($(this.description.replace(/script/igm, "")))
+					});
+				}
+				catch(e){
+				}
+			},
+			error : function(){
+				alert('error!!!');
+			}
+		});
+		
+	}
+	$("#sel").change(onchange);
+
+	sel.selectedIndex = 0;
+	onchange();
+});
+</script>
+<style>
+html, body{
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+div#header{
+	position: absolute;
+	width: 100%;
+	height: 110px;
+	background: white;
+	z-index: 99;
+	margin-right: 16px;
+	right: 0;
+}
+
+div#header img{
+	position: relative;
+	left: 32px;
+}
+
+div#wrapper{
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+}
+
+div#wrapper div#output{
+	margin-top: 110px;
+	padding-right: 10px;
+}
+
+form{
+	position: absolute;
+	top: 110px;
+	z-index: 100;
+}
+
+form select{
+	width: 200px;
+}
+
+div#output{
+	margin-left: 220px;
+}
+
+h3{
+	background: #000080;
+	padding: .5em;
+	margin: 1em 0 0 0;
+}
+
+h3 a{
+	color: white;
+}
+
+small{
+	float:right;
+}
+
+ul{
+	clear: both;
+}
+
+div.spot{
+	background: #eeeeee;
+	margin: 1em 2em 1em 2em;
+	padding: .8em 0 .2em .8em;
+	font-size: 90%;
+}
+
+div.spot p{
+	margin: 0;
+	font-weight: bold;
+	color: #996600;
+}
+
+div.spot ul{
+	margin-top: .5em;
+}
+
+</style>
+</head>
+<body>
+<div id="header">
+<img src="bus.png">
+</div>
+<form>
+	<select id="sel" size="30">
+	</select>
+</form>
+
+<div id="wrapper">
+<div id="output">
+</div>
+</div>
+
+</body>
+</html>

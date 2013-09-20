@@ -1,0 +1,1765 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css; charset=utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript; charset=utf-8" />
+<title>ActionScript and Flex layouting (ActionScript と Flex のレイアウト)</title>
+<script type="text/javascript" src="s6.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+
+s6.css('html', {
+    width: '100%',
+    height: '100%',
+    padding: '0',
+    margin: '0',
+    overflow: 'hidden',
+    backgroundColor: 'black'
+});
+
+s6.css('.page span.small', {
+    fontSize: '70%'
+});
+
+s6.css('.s6 .page .en', {
+    fontSize: '70%'
+});
+
+s6.css('.comment', {
+    color: '#008000'
+});
+
+s6.css('strong', {
+    color: 'yellow'
+});
+
+
+var presentation;
+s6.attach(s6, 'ready', function() {
+    var html = document.documentElement;
+
+    var height = html.offsetHeight;
+    var width = html.offsetWidth;
+    var top = 0;
+    var left = 0;
+
+    if (height / width < 0.75) {
+        var originalWidth = width;
+        width = height / 0.75;
+        left = (originalWidth - width) / 2 + 'px';
+    }
+    else {
+        var originalHeight = height;
+        height = width * 0.75;
+        top = (originalHeight - height) / 2 + 'px';
+    }
+
+    var result;
+    if (result = document.cookie.match(/page=(\d+)/)) {
+        var startIndex = +result[1];
+    }
+    presentation = new s6.Presentation({ element: document.body, width: width, height: height, startIndex: startIndex });
+    presentation.style.left = left;
+    presentation.style.top = top;
+    presentation.start();
+
+    var indexNoOutline = false;
+    presentation.funcPages.index.attach('click', function(i, element, wrapper) {
+        indexNoOutline = true;
+        setTimeout(function() {
+            indexNoOutline =false
+        }, 1000);
+        wrapper.style.background = '';
+        presentation.go(i);
+    });
+
+    presentation.funcPages.index.attach('mouseover', function(i, element, wrapper) {
+        if (indexNoOutline) return;
+        wrapper.style.background = 'gray';
+    });
+    
+    presentation.funcPages.index.attach('mouseout', function(i, element, wrapper) {
+        wrapper.style.background = '';
+    });
+
+    s6.attach(document, 'keypress', function(e) {
+        switch(e.keyCode) {
+            case 63235:
+            case 39:
+                presentation.step();
+                break;
+            case 63234:
+            case 37:
+                presentation.prev();
+                break;
+            case 63232:
+            case 38:
+                presentation.go('index');
+                break;
+            case 63233:
+            case 40:
+                presentation.back();
+                break;
+        }
+        document.cookie = 'page=' + presentation.index;
+    });
+
+    // added by nitoyon
+    s6.attach(window, 'resize', function(e) {
+        var height = html.offsetHeight;
+        var width = html.offsetWidth;
+        if (height / width < 0.75) {
+            var originalWidth = width;
+            width = height / 0.75;
+            left = (originalWidth - width) / 2 + 'px';
+        }
+        else {
+            var originalHeight = height;
+            height = width * 0.75;
+            top = (originalHeight - height) / 2 + 'px';
+        }
+
+        var style = presentation.element.style;
+        presentation.width = width;
+        presentation.height = height;
+        presentation.fontSize = height * 0.1; // options.fontSize を決めうち
+        style.width  = width + 'px';
+        style.height = height + 'px';
+        style.fontSize = presentation.fontSize + 'px';
+        style.left = left;
+        style.top = top;
+    });
+
+});
+// ]]>
+</script>
+</head>
+<body>
+
+ <!-- ===================================================== -->
+
+  <div>
+   <h1>ActionScript <span class="small">と</span><br>Flex <span class="small">の</span>レイアウト</h1>
+   <h1>ActionScript and Flex layouting</h1>
+   <p>有限会社 CO-CONV</p>
+   <p>最田健一</p>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'custom',
+         styles: [
+             { textAlign: "center", width: '100%', fontSize: '150%', top: '15%'},
+             { textAlign: "center", width: '100%', fontSize: '80%', top: '55%'},
+             { top: '80%', left:'60%', fontSize: '40%'},
+             { top: '85%', left:'60%', fontSize: '70%'}
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h2>自己紹介</h2>
+    <p>にとよん と申します。</p>
+    <p class="en">Hello, my name is 'nitoyon'.</p>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'takahashi',
+          styles: [
+              { fontSize: '150%', top: '15.5%' },
+              { fontSize: '100%', top: '50.5%' },
+              { fontSize: '80%', top: '70.5%' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>「<a href="http://tech.nitoyon.com/">てっく煮</a>」というサイトを<br>やってます。</p>
+    <p class="en"><a href="http://tech.nitoyon.com/">This</a> is my homepage.</p>
+    <img src="techni.jpg" width="408" height="302">
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'takahashi',
+          styles: [
+              { fontSize: '100%', top: '5.5%' },
+              { fontSize: '80%', top: '28.5%' },
+              { fontSize: '80%', top: '40.5%', left: '5%', width: '90%', height: '80%' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h2>ActionScript <span class="small">での</span><br>レイアウト</h2>
+   <h2 class="en">How to layout <br>ActionScript applications.</h2>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '25.5%' },
+             { fontSize: '80%', top: '65.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h2>三角を描画する<br><span class="en">Draw triangle.</span></h2>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>ActionScript 2.0</h3>
+   <pre>createEmptyMovieClip("mc", 0);
+
+mc.beginFill(0xff0000);
+mc.moveTo(50, 0);
+mc.lineTo(100, 100);
+mc.lineTo(0, 100);
+mc.endFill();</pre>
+   <script type="text/javascript">
+     s6.page({
+         effect: 'slide'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>ActionScript 3.0</h3>
+   <pre>
+package {
+   import flash.display.*;
+
+   public class Test extends Sprite {
+     public function Test() {
+       <span class="comment">// details are on the next page...</span>
+     }
+   }
+}</pre>
+   <script type="text/javascript">
+     s6.page({
+         effect: 'slide'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>ActionScript 3.0 <span class="small">(constructor)</span></h3>
+   <pre>
+       var mc:MovieClip = new MovieClip();
+       addChild(mc);
+
+       mc.graphics.beginFill(0xff0000);
+       mc.graphics.moveTo(50, 0);
+       mc.graphics.lineTo(100, 100);
+       mc.graphics.lineTo(0, 100);
+       mc.graphics.endFill();</pre>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>完成品</h3>
+   <img src="test1.gif">
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { display: 'none', width: '100%', textAlign: 'center', top: '5%' },
+             { top: '11%', left: '15%', width: '70%', height: '76%'}
+         ],
+         actions: [
+             [
+                 [0, 'fade in', {auto: true, wait: 300}],
+                 [1, 'move', 0.4, [15, 11], [15, 20]]
+             ]
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>AS 2.0</h3>
+   <pre>createEmptyMovieClip("mc", 0);
+
+
+mc.beginFill(0xff0000);
+mc.moveTo(50, 0);
+mc.lineTo(100, 100);
+mc.lineTo(0, 100);
+mc.endFill();</pre>
+
+   <h3>AS 3.0</h3>
+   <pre>var mc:MovieClip = new MovieClip();
+addChild(mc);
+
+mc.graphics.beginFill(0xff0000);
+mc.graphics.moveTo(50, 0);
+mc.graphics.lineTo(100, 100);
+mc.graphics.lineTo(0, 100);
+mc.graphics.endFill();</pre>
+
+   <div>trace(mc.x + "," + mc.y)</div>
+   <div>→　0,0</div>
+
+   <div>trace(mc.width + "," + mc.height)</div>
+   <div>→　100,100</div>
+
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '80%', position: "absolute", width: '45%', top: '15%', left: '0' },
+             { fontSize: '30%', position: "absolute", width: '45%', top: '30%', left: '0' },
+             { display: 'none', fontSize: '80%', position: "absolute", width: '45%', top: '15%', left: '50%' },
+             { display: 'none', fontSize: '30%', position: "absolute", width: '45%', top: '30%', left: '50%' },
+             { display: 'none', fontSize: '60%', position: "absolute", top: '70%', left:  '5%' },
+             { display: 'none', fontSize: '60%', position: "absolute", top: '70%', left: '70%', color: '#99f' },
+             { display: 'none', fontSize: '60%', position: "absolute", top: '80%', left:  '5%' },
+             { display: 'none', fontSize: '60%', position: "absolute", top: '80%', left: '70%', color: '#99f' }
+         ],
+         actions: [
+             [
+                 [[2, 3], 'fade in', 0.4]
+             ],
+             [
+                 [0, 'move', 0.4, [ 0, 15], [ 0,  0]],
+                 [1, 'move', 0.4, [ 0, 30], [ 0, 12]],
+                 [2, 'move', 0.4, [50, 15], [50,  0]],
+                 [3, 'move', 0.4, [50, 30], [50, 12]],
+                 [4, 'fade in', 0.4]
+             ],
+             [
+                 [5, 'fade in', 0.4]
+             ],
+             [
+                 [6, 'fade in', 0.4]
+             ],
+             [
+                 [7, 'fade in', 0.4]
+             ]
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>問題 1<br><span class="en">Question 1</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>Output of "trace" function?</h3>
+   <pre>
+var mc:MovieClip = new MovieClip();
+addChild(mc);
+
+mc.graphics.beginFill(0xff0000);
+mc.graphics.moveTo(100,  50);
+mc.graphics.lineTo(150, 150);
+mc.graphics.lineTo( 50, 150);
+mc.graphics.endFill();
+
+trace(mc.<strong>x</strong>, mc.<strong>y</strong>);</pre>
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             {marginBottom: 0, marginTop: 0}
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>Output of "trace" function?</h3>
+   <pre>
+var mc:MovieClip = new MovieClip();
+addChild(mc);
+
+mc.graphics.beginFill(0xff0000);
+mc.graphics.moveTo(100,  50);
+mc.graphics.lineTo(150, 150);
+mc.graphics.lineTo( 50, 150);
+mc.graphics.endFill();
+
+trace(mc.<strong>x</strong>, mc.<strong>y</strong>);</pre>
+   <img src="test2-1.gif">
+   <img src="test2-2.gif">
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             {marginBottom: 0, marginTop: 0},
+             {},
+             {position: 'absolute', left: '56%', top: '56%', width: '43%', height: '43%'},
+             {position: 'absolute', left: '56%', top: '56%', width: '43%', height: '43%', display: 'none'}
+         ],
+         actions: [
+             [
+                 [3, 'fade in', 0.4]
+             ]
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>答え<br><span class="en">Answer</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+          effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <pre>trace(mc.x, mc.y);
+&gt;&gt; <strong>0 0</strong></pre>
+    <p>x <span class="small">と</span> y <span class="small">の</span>デフォルト値<span class="small">は</span> 0</p>
+    <p class="en">The default value of 'x' and 'y' is 0.</p>
+    <script>
+      s6.page({
+          styles: [
+              { fontSize: '100%', top: '25%' },
+              { display: 'none', position: 'absolute', fontSize: '100%', top: '55.5%' },
+              { display: 'none', position: 'absolute', fontSize: '80%',  top: '70.5%' }
+          ],
+          actions: [
+              [
+                  [0, 'move', 0.4, [0, 25], [0, 10]],
+                  [[1, 2], 'fade in', 0.4]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>Example</h3>
+   <pre>
+mc.x = 0;
+mc.y = 0;</pre>
+
+   <img src="test2-4.gif">
+
+   <pre>
+mc.x = <strong>100</strong>;
+mc.y = <strong>100</strong>;</pre>
+   <img src="test2-3.gif">
+    <script>
+      s6.page({
+          styles: [
+              {},
+              { position: 'absolute', top: '20%', left:  '5%', width: '40%' },
+              { position: 'absolute', top: '50%', left:  '6%', width: '40%', height: '40%' },
+              { position: 'absolute', top: '20%', left: '55%', width: '40%', display: 'none' },
+              { position: 'absolute', top: '50%', left: '56%', width: '40%', height: '40%', display: 'none' },
+          ],
+          actions: [
+            [
+              [[3, 4], 'fade in', 0.4]
+            ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>問題 2<br><span class="en">Question 2</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>What about this?</h3>
+   <pre>
+mc.graphics.beginFill(0xff0000);
+mc.graphics.moveTo(100,  50);
+mc.graphics.lineTo(150, 150);
+mc.graphics.lineTo( 50, 150);
+mc.graphics.endFill();
+
+trace(mc.<strong>width</strong>, mc.<strong>height</strong>);</pre>
+   <img src="test2-2.gif">
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             {marginBottom: 0, marginTop: 0},
+             {},
+             {position: 'absolute', left: '56%', top: '55%', width: '42%', height: '42%'}
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>答え<br><span class="en">Answer</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+          effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <pre>trace(mc.width, mc.height);
+&gt;&gt; <strong>100 100</strong></pre>
+    <p>図形自体のサイズ<span class="small">を返す</span></p>
+    <p class="en">The size of bounding rectangle is returned.</p>
+    <script>
+      s6.page({
+          styles: [
+              { fontSize: '100%', top: '25%' },
+              { display: 'none', position: 'absolute', fontSize: '100%', top: '55.5%' },
+              { display: 'none', position: 'absolute', fontSize: '60%',  top: '70.5%' }
+          ],
+          actions: [
+              [
+                  [0, 'move', 0.4, [0, 25], [0, 10]],
+                  [[1, 2], 'fade in', 0.4]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>補足<br><span class="en">Complement</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+          effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>getBounds</h3>
+    <pre>trace(mc.getBounds(mc));
+&gt;&gt; <strong>(x=50, y=50, w=100, h=100)</strong></pre>
+    <img src="test2-2.gif">
+    <script>
+      s6.page({
+          styles: [
+            {},
+            {},
+            { top: '5%', left: '30%', width: '40%', height: '40%' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>Difference between Flash & AS</h3>
+    <img src="test2-5.gif">
+    <pre>FlashX = mc.x + mc.getBounds(mc).x;</pre>
+    <script>
+      s6.page({
+          styles: [
+            { fontSize: '90%' },
+            { width: '70%', height: '75%', left: '5%' },
+            { position: 'absolute', top: '80%', left: '0%', width: '100%', display: 'none' }
+          ],
+          actions: [
+            [
+              [ 2, 'fade in', 0.4 ]
+            ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>問題 3<br><span class="en">Question 3</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>Set 'width'. What happens?</h3>
+   <pre>
+mc.graphics.beginFill(0xff0000);
+mc.graphics.moveTo(100,  50);
+mc.graphics.lineTo(150, 150);
+mc.graphics.lineTo( 50, 150);
+mc.graphics.endFill();
+
+trace(mc.width);  <span class="comment">// 100</span>
+<strong>mc.width = 50;</strong></pre>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>Bad answer 1</h3>
+    <img src="test3-1.gif">
+    <img src="ng.gif" style="display: none">
+    <script>
+      s6.page({
+        styleBase: 'custom',
+        styles: [
+          { display: 'none' },
+          { left: '20%', top: '20%', width: '60%', height: '60%' },
+          { left: '10%', top: '10%', width: '80%', height: '80%' },
+        ],
+        actions: [
+          [
+            [2, 'fade in', 0.4]
+          ]
+        ],
+        effect: 'slide'
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>Bad answer 2</h3>
+    <img src="test3-2.gif">
+    <img src="ng.gif" style="display: none">
+    <script>
+      s6.page({
+        styleBase: 'custom',
+        styles: [
+          { display: 'none' },
+          { left: '20%', top: '20%', width: '60%', height: '60%' },
+          { left: '10%', top: '10%', width: '80%', height: '80%' },
+        ],
+        actions: [
+          [
+            [2, 'fade in', 0.4]
+          ]
+        ],
+        effect: 'slide'
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <script type="text/javascript">
+     s6.page({
+          effect: 'slide'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>答え<br><span class="en">Answer</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+          effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <img src="test3-3.gif">
+   <img src="test3-4.gif">
+   <pre>mc.width:  100 → <strong>50</strong></pre>
+   <pre>mc.width:  100 → <strong>50</strong>
+mc.xscale: 1.0 → <strong>0.5</strong></pre>
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             { position: 'absolute', top: '15%', left: '15%', width: '70%', height: '75%' },
+             { position: 'absolute', top: '15%', left: '15%', width: '70%', height: '75%', display: 'none' },
+             { position: 'absolute', top: '65%', left: '0%', width: '100%', display: 'none', fontSize: '70%'  },
+             { position: 'absolute', top: '65%', left: '0%', width: '100%', display: 'none', fontSize: '70%' }
+         ],
+         actions: [
+           [
+             [ 1, 'fade in', 0.4]
+           ],
+           [
+             [ 2, 'fade in', 0.4]
+           ],
+           [
+             [ 3, 'fade in', 0.4]
+           ]
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>width, height プロパティの修正は scale に影響する</p>
+    <p class="en">Setting 'width', 'height' property changes 'scale' property.</p>
+    <script>
+      s6.page({
+          styles: [
+            { position: 'absolute', top: '30%', textAlign: 'center' },
+            { position: 'absolute', top: '55%', textAlign: 'center', fontSize: '70%'}
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>まとめ<br><span class="en">Summary</span></h3>
+    <script>
+      s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%' }
+         ],
+         effect: 'fadeScaleFromUp'
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <p>Important parameters are:</p>
+   <ul>
+     <li>x, y</li>
+     <li>width, height</li>
+     <li>xscale, yscale</li>
+   </ul>
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             { marginBottom: 0 },
+             { margin: '.1em 0 0 2em'}
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h2>Flex <span class="small">での</span>レイアウト</h2>
+   <h2 class="en">How to layout Flex applications.</h2>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '80%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>自動配置<br><span class="en">Automatic positioning</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>HBox Example</h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;<strong>mx:HBox</strong> width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas width=&quot;200&quot; height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas width=&quot;100&quot; height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+
+&lt;/mx:Application&gt;
+</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>完成品</h3>
+   <img src="test5-1.gif">
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { display: 'none', width: '100%', textAlign: 'center', top: '5%' },
+             { top: '11%', left: '15%', width: '70%', height: '70%'}
+         ],
+         actions: [
+             [
+                 [0, 'fade in', {auto: true, wait: 300}],
+                 [1, 'move', 0.4, [15, 11], [15, 20]]
+             ]
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>問題 4<br><span class="en">Question 4</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>どうなる？ <span class="en">(What about this?)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas width=&quot;200&quot; height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>x="50" y="50"</strong>
+         width=&quot;100&quot; height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+&lt;/mx:Application&gt;
+</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <ol>
+      <li>変わらない <span class="en">(no move)</span>
+      <li>右に移動 <span class="en">(moves right)</span>
+      <li>下に移動 <span class="en">(moves down)</span>
+      <li>右下に移動 <span class="en">(moves down-right)</span>
+    </ol>
+    <img src="ok.gif" style="display: none">
+    <img src="ng.gif" style="display: none">
+    <img src="ng.gif" style="display: none">
+    <img src="ng.gif" style="display: none">
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { top: '25%', left: '10%' },
+             { position: 'absolute', left: '5%', top: '33%', width: '10%', height: '10%', display: 'none' },
+             { position: 'absolute', left: '5%', top: '45%', width: '10%', height: '10%', display: 'none' },
+             { position: 'absolute', left: '5%', top: '57%', width: '10%', height: '10%', display: 'none' },
+             { position: 'absolute', left: '5%', top: '69%', width: '10%', height: '10%', display: 'none' }
+         ],
+         actions: [
+             [ [1, 2, 3, 4], 'fade in', 0.4 ]
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>なぜでしょう？<br><span class="en">Why?</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p><strong>自動配置</strong>を使用するコンテナでは、x プロパティまたは y プロパティを直接設定しても、<strong>何も効果がない</strong><span class="small">か、効果があっても一時的に過ぎません</span>。</p>
+    <p style="text-align: right">(Flex 2 開発ガイドより)</p>
+    <p class="en">For containers that use <strong>automatic positioning</strong>, setting the x or y property directly has <strong>no effect</strong>, <span class="small">or only a temporary effect</span>,</p>
+    <p style="text-align: right">(Quoted from: Flex 2 Developer’s Guide)</p>
+    <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '70%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' },
+             { fontSize: '50%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' }
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>これは、これらのコンテナの x 位置が、指定値ではなく<strong>レイアウト計算</strong>によって設定されるためです。</p>
+    <p style="text-align: right">(Flex 2 開発ガイドより)</p>
+    <p class="en">because the <strong>layout calculations</strong> set the x position to the calculation result, not the specified value.</p>
+    <p style="text-align: right">(Quoted from: Flex 2 Developer’s Guide)</p>
+    <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '70%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' },
+             { fontSize: '50%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' }
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h2>2つ目のボックスを<br>右下にずらすには<br>どうすればよい？</h2>
+   <h2><span class="en">How can I move the 2nd box<br>down-right?</span></h2>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '120%', top: '18.5%' },
+             { fontSize: '100%', top: '58.5%' },
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>こうする 1 <span class="en">(Change like this #1)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas width=&quot;200&quot; height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    <strong>&lt;mx:Spacer width=&quot;50&quot;/&gt;</strong>
+    <strong>&lt;mx:VBox&gt;</strong>
+      <strong>&lt;mx:Spacer height=&quot;50&quot;/&gt;</strong>
+      &lt;mx:Canvas width=&quot;100&quot; height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+    <strong>&lt;/mx:VBox&gt;</strong>
+  &lt;/mx:HBox&gt;
+&lt;/mx:Application&gt;
+</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { fontSize: '80%', margin: '0 5%' },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>こうする 2 <span class="en">(Change like this #2)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;<strong>mx:Canvas</strong> width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas width=&quot;200&quot; height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>x=&quot;250&quot;</strong> y=&quot;50&quot;
+      width=&quot;100&quot; height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:Canvas&gt;
+
+&lt;/mx:Application&gt;
+</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { fontSize: '80%', margin: '0 5%' },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h2>&lt;mx:Canvas&gt;</h2>
+   <p>x y に設定したとおりに配置される唯一のコンテナ。</p>
+   <p class="en">The only container that lets you explicitly specify the location of its children within the container by using the x and y properties of each child. </p>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             {  },
+             {  },
+             { fontSize: '70%', lineHeight: 1.2 }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>パーセント指定<br><span class="en">Percentage-based sizing</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>percentage Example</h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas <strong>width=&quot;30%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;60%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+
+&lt;/mx:Application&gt;</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>完成品</h3>
+   <img src="test4-1.gif">
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { display: 'none', width: '100%', textAlign: 'center', top: '5%' },
+             { top: '11%', left: '5%', width: '90%', height: '63%'}
+         ],
+         actions: [
+             [
+                 [0, 'fade in', {auto: true, wait: 300}],
+                 [1, 'move', 0.4, [5, 11], [5, 20]]
+             ]
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>問題 5<br><span class="en">Question 5</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>どうなる？ <span class="en">(What happens?)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas <strong>width=&quot;60%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;60%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+
+&lt;/mx:Application&gt;</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>(1)</p>
+    <img src="test4-2.gif">
+    <p>(2)</p>
+    <img src="test4-3.gif">
+    <img src="ng.gif" style="display: none">
+    <img src="ok.gif" style="display: none">
+    <script type="text/javascript">
+      s6.page({
+         styleBase: 'custom',
+         styles: [
+             { top: '10%', left: '15%' },
+             { top: '10%', left: '30%', width: '50%', height: '40%' },
+             { top: '55%', left: '15%' },
+             { top: '55%', left: '30%', width: '50%', height: '40%' },
+             { top: '10%', left: '30%', width: '40%', height: '40%', display: 'none' },
+             { top: '55%', left: '30%', width: '40%', height: '40%', display: 'none' }
+         ],
+         actions : [
+           [ [4, 5], 'fade in', 0.4 ]
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>なぜでしょう？<br><span class="en">Why?</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>パーセント値の要求が残りの領域 <span class="small">(親コンテナのサイズ - すべての確保済み領域)</span>に収まらない場合は、指定されたパー
+セント値に従って<strong>残りの領域を比例配分</strong>します。</p>
+    <p style="text-align: right">(Flex 2 開発ガイドより)</p>
+    <p class="en">If available space <span class="small">(parent container size minus all reserved space, including borders,
+padding, and gaps)</span> cannot accommodate the percentage requests, <strong>divides the available
+space in proportion</strong> to the specified percentages.</p>
+    <p style="text-align: right">(Quoted from: Flex 2 Developer’s Guide)</p>
+    <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '70%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' },
+             { fontSize: '50%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' }
+         ]
+     });
+   </script>
+  </div>
+
+  <div>
+    <h3>SWF の横幅が 500px なら... <br><span class="en">(When SWF's width is 500px...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>492px</div>
+    <div>= 500px - 8px</div>
+    <div>8px : HBox内のコンポーネント間隔 <span class="en">(gap between each component)</span></div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>600px</div>
+    <div>= 500px * 60%<br>+ 500px * 60%</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>196px</div>
+    <div>196px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', textAlign: 'center', width: '41%', height: '10%', padding: '2.5% 0', background: '#666600' },
+            { top: '55%', left: '40%' },
+            { top: '85%', left: '5%', fontSize: '50%' },
+            { top: '60%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '50%', height: '10%', padding: '2.5% 0', background: '#666', display: 'none' },
+            { top: '75%', left: '40%', display: 'none' },
+            { top: '80%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '75%', left: '45%', textAlign: 'center', width: '20.5%', height: '10%', padding: '2.5% 0', background: '#ff3333', display: 'none'  },
+            { top: '75%', left: '65.5%', textAlign: 'center', width: '20.5%', height: '10%', padding: '2.5% 0', background: '#3333ff', display: 'none'  }
+          ],
+          actions: [
+              [
+                  [ [3, 4], 'fade out', 0.4 ], 
+                  [ [5, 6, 7], 'fade in', 0.4 ]
+              ],
+              [
+                  [ 7, 'fade out', 0.4 ],
+                  [ [8, 9, 10], 'fade in', 0.4 ]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>応用例<br><span class="en">Application</span></h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '35.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>どうなる？ <span class="en">(What happens?)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas <strong>width=&quot;300&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;yellow&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;20%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;10%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+
+&lt;/mx:Application&gt;</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 500px なら... <br><span class="en">(When SWF's width is 500px...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>184px</div>
+    <div>= 500px<br>- 300px<br>- 8px * 2</div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>150px</div>
+    <div>= 500px * 20%<br>+ 500px * 10%</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>100px</div>
+    <div>50px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', textAlign: 'center', width: '60%', height: '10%', padding: '2.5% 0', background: '#666600' },
+            { top: '55%', left: '40%' },
+            { top: '60%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '48.0%', height: '10%', padding: '2.5% 0', background: '#666', display: 'none' },
+            { top: '75%', left: '40%', display: 'none' },
+            { top: '80%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '75%', left: '45%', textAlign: 'center', width: '32.0%', height: '10%', padding: '2.5% 0', background: '#ff3333', display: 'none'  },
+            { top: '75%', left: '77%', textAlign: 'center', width: '16.0%', height: '10%', padding: '2.5% 0', background: '#3333ff', display: 'none'  }
+          ],
+          actions: [
+              [
+                  [ [3], 'fade out', 0.4 ], 
+                  [ [4, 5, 6], 'fade in', 0.4 ]
+              ],
+              [
+                  [ 6, 'fade out', 0.4 ],
+                  [ [7, 8, 9], 'fade in', 0.4 ]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 500px なら... <br><span class="en">(When SWF's width is 500px...)</span></h3>
+    <img src="test4-5.gif">
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '28%', left: '6%', width: '88%', height: '70%' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 400px なら... <br><span class="en">(When SWF's width is 400px...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>84px</div>
+    <div>= 400px<br>- 300px<br>- 8px * 2</div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>120px</div>
+    <div>= 400px * 20%<br>+ 400px * 10%</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>56px</div>
+    <div>28px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', textAlign: 'center', width: '26.8%', height: '10%', padding: '2.5% 0', background: '#666600' },
+            { top: '55%', left: '40%' },
+            { top: '60%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '38.4%', height: '10%', padding: '2.5% 0', background: '#666', display: 'none' },
+            { top: '75%', left: '40%', display: 'none' },
+            { top: '80%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '75%', left: '45%', textAlign: 'center', width: '17.8%', height: '10%', padding: '2.5% 0', background: '#ff3333', display: 'none'  },
+            { top: '75%', left: '62.8%', textAlign: 'center', width: '8.9%', height: '10%', padding: '2.5% 0', background: '#3333ff', display: 'none'  }
+          ],
+          actions: [
+              [
+                  [ [3], 'fade out', 0.4 ], 
+                  [ [4, 5, 6], 'fade in', 0.4 ]
+              ],
+              [
+                  [ 6, 'fade out', 0.4 ],
+                  [ [7, 8, 9], 'fade in', 0.4 ]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 400px なら... <br><span class="en">(When SWF's width is 400px...)</span></h3>
+    <img src="test4-4.gif">
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '28%', left: '15%', width: '70%', height: '70%' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 300px なら... <br><span class="en">(When SWF's width is 300px...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>0px</div>
+    <div>= 300px<br>- 300px<br>- 8px * 2</div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>90px</div>
+    <div>= 300px * 20%<br>+ 300px * 10%</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>0px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', height: '10%', padding: '2.5% 0' },
+            { top: '55%', left: '40%' },
+            { top: '60%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '48.0%', height: '10%', padding: '2.5% 0', background: '#666', display: 'none' },
+            { top: '75%', left: '40%', display: 'none' },
+            { top: '80%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '75%', left: '45%', height: '10%', padding: '2.5% 0', display: 'none'  }
+          ],
+          actions: [
+              [
+                  [ [3], 'fade out', 0.4 ], 
+                  [ [4, 5, 6], 'fade in', 0.4 ]
+              ],
+              [
+                  [ 6, 'fade out', 0.4 ],
+                  [ [7, 8], 'fade in', 0.4 ]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>どうなる？ 2 <span class="en">(What happens? #2)</span></h3>
+   <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+  paddingLeft=&quot;0&quot; paddingRight=&quot;0&quot;
+  paddingTop=&quot;0&quot;  paddingBottom=&quot;0&quot;&gt;
+
+  &lt;mx:HBox width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;mx:Canvas <strong>width=&quot;300&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;yellow&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;20%&quot;</strong> height=&quot;200&quot; backgroundColor=&quot;red&quot;/&gt;
+    &lt;mx:Canvas <strong>width=&quot;10%&quot; minWidth="100"</strong> height=&quot;200&quot;
+      backgroundColor=&quot;blue&quot;/&gt;
+  &lt;/mx:HBox&gt;
+&lt;/mx:Application&gt;</pre>
+    <script type="text/javascript">
+      s6.page({
+         styles: [
+             { },
+             { fontSize: '40%' }
+         ]
+     });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p><strong>計算値</strong>が最小または最大の高さまたは幅の指定と<strong>衝突</strong>する場合は、最小値または最大値の方を使用し、</p>
+    <p style="text-align: right">(Flex 2 開発ガイドより)</p>
+    <p class="en">If a minimum or maximum height or width specification <strong>conflicts</strong> with a <strong>calculated value</strong>,</p>
+    <p style="text-align: right">(Quoted from: Flex 2 Developer’s Guide)</p>
+    <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '80%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' },
+             { fontSize: '60%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' }
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>その他すべてのパーセント値ベースのコンポーネントを、少なくなった残りの領域に基づいて<strong>再計算</strong>します。</p>
+    <p style="text-align: right">(Flex 2 開発ガイドより)</p>
+    <p class="en">uses the minimum or maximum value, and <strong>recalculates</strong> all other percentage-based components based on the reduced available space.</p>
+    <p style="text-align: right">(Quoted from: Flex 2 Developer’s Guide)</p>
+    <script type="text/javascript">
+     s6.page({
+         styles: [
+             { fontSize: '80%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' },
+             { fontSize: '60%', marginBottom: '0' },
+             { fontSize: '40%', margin: '0 2em' }
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>SWF の横幅が 500px なら... <br><span class="en">(When SWF's width is 500px...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>184px</div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>150px</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>100px</div>
+    <div>50px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', textAlign: 'center', width: '60%', height: '10%', padding: '2.5% 0', background: '#666600' },
+            { top: '60%', left: '5%',  fontSize: '60%' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '48.0%', height: '10%', padding: '2.5% 0', background: '#666' },
+            { top: '80%', left: '5%',  fontSize: '60%' },
+            { top: '75%', left: '45%', textAlign: 'center', width: '32.0%', height: '10%', padding: '2.5% 0', background: '#ff3333'  },
+            { top: '75%', left: '77%', textAlign: 'center', width: '16.0%', height: '10%', padding: '2.5% 0', background: '#3333ff'  },
+            { top: '30%', width: '100%', color: 'black', padding: '5% 0', textAlign: 'center', background: 'white', display: 'none' },
+            { top: '50%', width: '100%', color: 'black', padding: '5% 0', textAlign: 'center', background: 'white', display: 'none' }
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <p>minWidth="100" &gt; <span style="background: blue">50px</span></p>
+    <p>width → <span style="background: blue; padding: 0 5%">100px</span></p>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom',
+          styles: [
+            { left: '5%', top: '30%', fontSize: '120%', textAlign: 'center'},
+            { left: '5%', top: '50%', fontSize: '120%', textAlign: 'center', display: 'none'}
+          ],
+          actions: [
+            [ 1, 'fade in', 0.4]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>再計算... <br><span class="en">(Calculate again...)</span></h3>
+    <div>残りの領域<br><span class="en">(available space)</span></div>
+    <div>84px</div>
+    <div>= 500px<br>- 300px<br>- <span style="background: blue">100px</span><br>- 8px * 2</div>
+    <div>パーセント値の要求<br><span class="en">(percent requests)</span></div>
+    <div>100px</div>
+    <div>= 500px * 20%</div>
+    <div>実際のサイズ<br><span class="en">(component size)</span></div>
+    <div>84px</div>
+    <script type="text/javascript">
+      s6.page({
+          styleBase: 'custom', 
+          styles: [
+            { top: '5%',  left: '5%' },
+            { top: '40%', left: '5%',  fontSize: '60%' },
+            { top: '35%', left: '45%', textAlign: 'center', width: '26.8%', height: '10%', padding: '2.5% 0', background: '#666600' },
+            { top: '55%', left: '40%' },
+            { top: '60%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '55%', left: '45%', textAlign: 'center', width: '32.0%', height: '10%', padding: '2.5% 0', background: '#666', display: 'none' },
+            { top: '75%', left: '40%', display: 'none' },
+            { top: '80%', left: '5%',  fontSize: '60%', display: 'none' },
+            { top: '75%', left: '45%', textAlign: 'center', width: '26.8%', height: '10%', padding: '2.5% 0', background: '#ff3333', display: 'none'  }
+          ],
+          actions: [
+              [
+                  [ [3], 'fade out', 0.4 ], 
+                  [ [4, 5, 6], 'fade in', 0.4 ]
+              ],
+              [
+                  [ 6, 'fade out', 0.4 ],
+                  [ [7, 8], 'fade in', 0.4 ]
+              ]
+          ]
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+    <h3>まとめ<br><span class="en">Summary</span></h3>
+    <script>
+      s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%' }
+         ],
+         effect: 'fadeScaleFromUp'
+      });
+    </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <p>Important parameters are:</p>
+   <ul>
+     <li>x, y</li>
+     <li>width, height</li>
+     <li>xscale, yscale</li>
+     <li><strong>percentWidth</strong>, <strong>percentHeight</strong></li>
+     <li><strong>left</strong>, <strong>right</strong>, <strong>top</strong>, <strong>bottom</strong></li>
+     <li><strong>min(max)Width</strong>, <strong>min(max)Height</strong></li>
+   </ul>
+   <script type="text/javascript">
+     s6.page({
+         styles: [
+             { marginBottom: 0 },
+             { margin: '0 0 0 2em'}
+         ]
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <h3>Thank you!!</h3>
+   <script type="text/javascript">
+     s6.page({
+         styleBase: 'takahashi',
+         styles: [
+             { fontSize: '150%', top: '40.5%' },
+             { fontSize: '100%', top: '60.5%' }
+         ],
+         effect: 'fadeScaleFromUp'
+     });
+   </script>
+  </div>
+
+  <!-- ===================================================== -->
+
+  <div>
+   <script type="text/javascript">
+     s6.page({
+         effect: 'fadeScale'
+     });
+   </script>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!-- DataGrid control example. -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" applicationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			private function init():void
+			{
+				var loader:URLLoader = new URLLoader();
+				loader.addEventListener("complete", complete);
+				loader.load(new URLRequest("xml/dump.xml"));
+			}
+
+			private function complete(event:*):void
+			{
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = XML(loader.data);
+
+				dg.dataProvider = xml..item;
+
+				parseTag(xml);
+			}
+
+			private function parseTag(xml:XML):void
+			{
+				var ns:Namespace = new Namespace("http://purl.org/dc/elements/1.1/");
+				var tags:Object = {};
+				for each(var tag:XML in xml..ns::subject)
+				{
+					tags[tag.toString()] = tags[tag.toString()] ? tags[tag.toString()]+ 1 : 1;
+				}
+				trace(tags);
+
+				var a:Array = [];
+				for(var id:String in tags)
+				{
+					trace(id + " " + tags[id]);
+				}
+			}
+
+			private function clickHandler():void
+			{
+				var url:String = dg.selectedItem.link.toString();
+				
+				navigateToURL(new URLRequest(url));
+			}
+
+
+			private function changeHandler():void
+			{
+				dg.dataProvider.filterFunction = function(item:Object):Boolean
+				{
+					return item.title.indexOf(q.text) != -1;
+				}
+				dg.dataProvider.refresh();
+				trace("change");
+			}
+		]]>
+	</mx:Script>
+
+			<mx:HBox>
+				<mx:Text text="検索"/>
+				<mx:TextInput id="q" change="changeHandler()"/>
+			</mx:HBox>
+
+      <mx:DataGrid id="dg" width="100%" height="100%" rowCount="5">
+          <mx:columns>
+              <mx:DataGridColumn dataField="title" headerText="title"/>
+              <mx:DataGridColumn dataField="description"/>
+          </mx:columns>
+      </mx:DataGrid>
+      <mx:Button label="open" click="clickHandler()"/>
+</mx:Application>

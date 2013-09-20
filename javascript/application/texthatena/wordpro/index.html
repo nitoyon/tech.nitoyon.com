@@ -1,0 +1,533 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" id="css" />
+	<script type="text/javascript" src="text-hatena.js"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>はてな記法ワープロ</title>
+<style>
+textarea#edit{
+	width:70%;
+	height:20em;
+	margin-left:5em;
+}
+
+select{
+	width:80%;
+}
+</style>
+<script>
+var edit, preview, preview_html, source, sel;
+var hatena;
+var realtime = true;
+
+window.onload = init;
+
+function init(){
+	edit = document.getElementById("edit");
+	preview = document.getElementById("preview");
+	preview_html = document.getElementById("preview_html");
+	source = document.getElementById("source");
+	sel = document.getElementById("css_switcher");
+
+	hatena = new TextHatena({sectionanchor : "■"});
+
+	edit.onkeyup = function(){if(realtime) convert();};
+
+	if(document.URL.match(/#(.*)/)){
+		var theme = RegExp.$1;
+		for(var i = 0; i < sel.options.length; i++){
+			if(theme == sel.options[i].value){
+				sel.selectedIndex = i;
+				break;
+			}
+		}
+	}
+
+	convert();
+	tab(1);
+	switchCSS();
+}
+
+function convert(){
+	if(edit == null || preview == null) return;
+
+	var unescapeHTML = function(s){
+		s = s.replace(/&amp;/g, "&");
+		s = s.replace(/&lt;/g, "<");
+		s = s.replace(/&gt;/g, ">");
+		s = s.replace(/&quot;/g, "\"");
+		return s;
+	}
+	var wiki = unescapeHTML(edit.value);
+	hatena.parse(wiki);
+	preview_html.innerHTML = hatena.html();
+}
+
+function tab(type){
+	edit.style.display = (type == 0 || type == 1 ? "block" : "none");
+	preview.style.display = (type == 1 || type == 2 ? "block" : "none");
+	source.innerHTML = (type == 3 ? "<pre>" + hatena.html().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</pre>" : "");
+	source.style.display = (type == 3 ? "block" : "none");
+	edit.style.height = (type == 0 ? "40em" : "20em");
+
+	var html = (type == 0 ? 'コード | ' : '<a href="javascript:tab(0)" accesskey="1">コード</a> | ');
+	html += (type == 1 ? '分割 | ' : '<a href="javascript:tab(1)" accesskey="2">分割</a> | ');
+	html += (type == 2 ? 'プレビュー | ' : '<a href="javascript:tab(2)" accesskey="3">プレビュー</a> | ');
+	html += (type == 3 ? 'ソース' : '<a href="javascript:tab(3)" accesskey="4">ソース</a>');
+	if(type == 1){
+		html += '<br><input type="checkbox" id="realtime" accesskey="R" onclick="rtclick()" ' + (realtime ? 'checked ' : '') + '/><label for="realtime">リアルタイムプレビュー</label> ';
+		html += '<input type="button" id="preview_button" value="プレビュー(P)" accesskey="P" ' + (realtime ? 'style="visibility:hidden;"' : '') + ' onclick="convert()">';
+	}
+	document.getElementById("tab").innerHTML = html;
+}
+
+function rtclick(){
+	realtime = document.getElementById("realtime").checked;
+	document.getElementById("preview_button").style.visibility = (realtime ? 'hidden' : 'visible');
+}
+
+function switchCSS(){
+	if(sel == null) return;
+	var theme = sel.options[sel.selectedIndex].value;
+	var css = "http://d.hatena.ne.jp/theme/" + theme + "/" + theme + ".css";
+	document.getElementById("css").href = css;
+
+	if(theme != "hatena"){
+		var url = document.URL;
+		url = url.replace(/#.*/, "");
+		document.location = url + "#" + theme;
+	}
+}
+</script>
+</head>
+<body>
+<h1>はてな記法ワープロ</h1>
+<div class="hatena-body">
+<div class="main">
+	<div class="calendar" id="tab"></div>	
+
+	<textarea cols="20" rows="15" id="edit">*はてな記法JavaScript
+はてな記法ワープロは JavaScript ならではの利点を生かしたダイナミックなワープロです。
+
+試しに色々入力してみてください。即座に出力画面が反映されます((Windows 版 IE6 および Firefox 1.0 でのみ確認しています))。
+
+はてな記法の変換は <a href="http://search.cpan.org/dist/Text-Hatena/">Text::Hatena</a> を JavaScript に移植した "text-hatena.js" を活用しています。
+
+**変更履歴
+|*2005/12/1|ソース機能追加 (HTMLソースを表示できます)|
+|*2005/11/21|はてな記法ワープロ完成|
+|*2005/11/13|text-hatena.js 移植開始|
+</textarea>
+
+	<div class="day" id="preview">
+		<h2><span class="title">プレビュー</span></h2>
+		<div class="body" id="preview_html"></div>
+	</div>
+	<div class="day" id="source"></div>
+</div>
+<div class="sidebar">
+	<div class="hatena-module">
+		<div class="hatena-moduletitle">このページについて</div>
+		<div class="hatena-modulebody">
+			<div class="hatena-profile">
+			<p><a href="http://hatenadiary.g.hatena.ne.jp/keyword/%E3%81%AF%E3%81%A6%E3%81%AA%E8%A8%98%E6%B3%95%E4%B8%80%E8%A6%A7">はてな記法</a>をリアルタイムに試験できます。</p>
+			<p>また、text-hatena.js のデモページでもあります。text-hatena.js については<a href="http://tech.nitoyon.com/javascript/application/texthatena/download.html">ブログのエントリ</a>へ。</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="hatena-module">
+		<div class="hatena-moduletitle">スタイルの切り替え</div>
+		<div class="hatena-modulebody">
+			<p>はてなの標準モジュールのCSSをテストできます。</p>
+			<form>
+<select name="theme" onchange="javascript:switchCSS()" id="css_switcher" accesskey="S">
+	<option value="">指定なし</option>
+	<option value="3minutes">3minutes</option>
+	<option value="3pink">3pink</option>
+	<option value="270b">270b</option>
+	<option value="270g">270g</option>
+	<option value="270or">270or</option>
+	<option value="270pk">270pk</option>
+	<option value="90">90</option>
+	<!-- <option value="ajisai">Ajisai</option> -->
+	<option value="alfa">Alfa</option>
+	<option value="another_blue">Another_blue</option>
+	<option value="aoikuruma">Aoikuruma</option>
+	<option value="apollo">Apollo</option>
+	<option value="aqua">Aqua</option>
+	<option value="artnouveau-blue">Artnouveau-blue</option>
+	<option value="artnouveau-green">Artnouveau-green</option>
+	<option value="artnouveau-red">Artnouveau-red</option>
+	<option value="asterisk-blue">Asterisk-blue</option>
+	<option value="asterisk-lightgray">Asterisk-lightgray</option>
+	<option value="asterisk-maroon">Asterisk-maroon</option>
+	<option value="asterisk-orange">Asterisk-orange</option>
+	<option value="asterisk-pink">Asterisk-pink</option>
+	<option value="arrow">Arrow</option>
+	<option value="autumn">Autumn</option>
+	<option value="babypink">Babypink</option>
+	<option value="bill">Bill</option>
+	<option value="bird">Bird</option>
+	<option value="bistro_menu">Bistro_menu</option>
+	<option value="black-lingerie">Black-lingerie</option>
+	<option value="black_mamba">Black_mamba</option>
+	<option value="blackboard">Blackboard</option>
+	<option value="blackbox">Blackbox</option>
+	<option value="blue-border">Blue-border</option>
+	<option value="blue-feather">Blue-feather</option>
+	<option value="bluegrad">Bluegrad</option>
+	<option value="bluely">Bluely</option>
+	<option value="book">Book</option>
+	<option value="book2-feminine">Book2-feminine</option>
+	<option value="book3-sky">Book3-sky</option>
+	<option value="bright-green">Bright-green</option>
+	<option value="britannian">Britannian</option>
+	<option value="brown">Brown</option>
+	<option value="bubble">Bubble</option>
+	<option value="candy">Candy</option>
+	<option value="cards">Cards</option>
+	<option value="cassis">Cassis</option>
+	<option value="cat">Cat</option>
+	<option value="check">Check</option>
+	<option value="cherry">Cherry</option>
+	<option value="chiffon_leafgreen">Chiffon_leafgreen</option>
+	<option value="chiffon_pink">Chiffon_pink</option>
+	<option value="chiffon_skyblue">Chiffon_skyblue</option>
+	<option value="choochoo">Choochoo</option>
+	<option value="christmas">Christmas</option>
+	<option value="citrus">Citrus</option>
+	<option value="city">City</option>
+	<option value="clover">Clover</option>
+	<option value="colorlabel">Colorlabel</option>
+	<option value="connect">Connect</option>
+	<option value="cool_ice">Cool_ice</option>
+	<option value="cosmos">Cosmos</option>
+	<option value="cross">Cross</option>
+	<option value="darkness-pop">Darkness-pop</option>
+	<option value="darkwhite">Darkwhite</option>
+	<option value="date">Date</option>
+	<option value="deepblue">Deepblue</option>
+	<option value="default">Default</option>
+	<option value="delta">Delta</option>
+	<option value="desert">Desert</option>
+	<option value="diamond_dust">Diamond_dust</option>
+	<option value="dice">Dice</option>
+	<option value="dog">Dog</option>
+	<option value="dot">Dot</option>
+	<option value="dotted_line-blue">Dotted_line-blue</option>
+	<option value="dotted_line-green">Dotted_line-green</option>
+	<option value="dotted_line-red">Dotted_line-red</option>
+	<option value="dot-lime">Dot-lime</option>
+	<option value="dot-orange">Dot-orange</option>
+	<option value="dot-pink">Dot-pink</option>
+	<option value="dot-sky">Dot-sky</option>
+	<option value="double">Double</option>
+	<option value="earth-brown">Earth-brown</option>
+	<option value="easy">Easy</option>
+	<option value="emboss">Emboss</option>
+	<option value="fine">Fine</option>
+	<option value="flower">Flower</option>
+	<option value="fluxbox">Fluxbox</option>
+	<option value="fluxbox2">Fluxbox2</option>
+	<option value="fluxbox3">Fluxbox3</option>
+	<option value="fri">Fri</option>
+	<option value="futaba">Futaba</option>
+	<option value="garden">Garden</option>
+	<option value="gardenia">Gardenia</option>
+	<option value="gear">Gear</option>
+	<option value="germany">Germany</option>
+	<option value="gingham-blue">Gingham-blue</option>
+	<option value="gingham-gray">Gingham-gray</option>
+	<option value="gingham-green">Gingham-green</option>
+	<option value="gingham-purple">Gingham-purple</option>
+	<option value="gingham-yellow">Gingham-yellow</option>
+	<option value="giza">Giza</option>
+	<option value="glass">Glass</option>
+	<option value="gold">Gold</option>
+	<option value="gothic-black">Gothic-black</option>
+	<option value="gothic-pink">Gothic-pink</option>
+	<option value="gothic-red">Gothic-red</option>
+	<option value="gothic-violet">Gothic-violet</option>
+	<option value="grape">Grape</option>
+	<option value="gray">Gray</option>
+	<option value="gray-note">Gray-note</option>
+	<option value="gray2">Gray2</option>
+	<option value="green-border">Green-border</option>
+	<option value="green-tea">Green-tea</option>
+	<option value="greentea3">Greentea3</option>
+	<option value="ha">Ha</option>
+	<option value="halloween">Halloween</option>
+	<option value="happa">Happa</option>
+	<option value="haru">Haru</option>
+	<option value="hatena" selected>Hatena</option>
+	<option value="hatena-black">Hatena-black</option>
+	<option value="hatena-brown">Hatena-brown</option>
+	<option value="hatena-darkgray">Hatena-darkgray</option>
+	<option value="hatena-green">Hatena-green</option>
+	<option value="hatena-lightblue">Hatena-lightblue</option>
+	<option value="hatena-lightgray">Hatena-lightgray</option>
+	<option value="hatena-lime">Hatena-lime</option>
+	<option value="hatena-orange">Hatena-orange</option>
+	<option value="hatena-pink">Hatena-pink</option>
+	<option value="hatena-purple">Hatena-purple</option>
+	<option value="hatena-red">Hatena-red</option>
+	<option value="hatena-sepia">Hatena-sepia</option>
+	<option value="hatena-tea">Hatena-tea</option>
+	<option value="hatena-test">Hatena-test</option>
+	<option value="hatena-white">Hatena-white</option>
+	<option value="hatena_christmas">Hatena_christmas</option>
+	<option value="hatena_cinnamon">Hatena_cinnamon</option>
+	<option value="hatena_japanese">Hatena_japanese</option>
+	<option value="hatena_leaf">Hatena_leaf</option>
+	<option value="hatena_leaf-red">Hatena_leaf-red</option>
+	<option value="hatena_note">Hatena_note</option>
+	<option value="hatena_rainyseason">Hatena_rainyseason</option>
+	<option value="hatena_ryukyu-black">Hatena_ryukyu-black</option>
+	<option value="hatena_ryukyu-blue">Hatena_ryukyu-blue</option>
+	<option value="hatena_ryukyu-green">Hatena_ryukyu-green</option>
+	<option value="hatena_savanna-blue">Hatena_savanna-blue</option>
+	<option value="hatena_savanna-green">Hatena_savanna-green</option>
+	<option value="hatena_savanna-red">Hatena_savanna-red</option>
+	<option value="hatena_savanna-white">Hatena_savanna-white</option>
+	<option value="hatena_simple-black">Hatena_simple-black</option>
+	<option value="hatena_simple-blue">Hatena_simple-blue</option>
+	<option value="hatena_simple-red">Hatena_simple-red</option>
+	<option value="hatena_sunflower">Hatena_sunflower</option>
+	<option value="hatena_water">Hatena_water</option>
+	<option value="hazakura">Hazakura</option>
+	<option value="hellali">Hellali</option>
+	<option value="himawari">Himawari</option>
+	<option value="husen">Husen</option>
+	<option value="hydrangea">Hydrangea</option>
+	<option value="iris">Iris</option>
+	<option value="jungler">Jungler</option>
+	<option value="kaeru">Kaeru</option>
+	<option value="kaizou">Kaizou</option>
+	<option value="kaki">Kaki</option>
+	<option value="kanban">Kanban</option>
+	<option value="kanshin">Kanshin</option>
+	<option value="karte">Karte</option>
+	<option value="kasumi">kasumi</option>
+	<option value="kitchen-classic">Kitchen-classic</option>
+	<option value="kitchen-french">Kitchen-french</option>
+	<option value="kitchen-natural">Kitchen-natural</option>
+	<option value="kotatsu">Kotatsu</option>
+	<option value="kurenai">Kurenai</option>
+	<!-- <option value="kurotokage">Kurotokage</option> -->
+	<option value="light-blue">Light-blue</option>
+	<option value="lightning">Lightning</option>
+	<option value="lime">Lime</option>
+	<option value="line">Line</option>
+	<option value="line-orange">Line-orange</option>
+	<option value="livly-brown">Livly-brown</option>
+	<option value="livly-green">Livly-green</option>
+	<option value="livly-orange">Livly-orange</option>
+	<option value="livly_and_peace-blue">Livly_and_peace-blue</option>
+	<option value="livly_and_peace-pink">Livly_and_peace-pink</option>
+	<option value="livly_and_peace-orange">Livly_and_peace-orange</option>
+	<option value="loose-leaf">Loose-leaf</option>
+	<option value="lovely">Lovely</option>
+	<option value="lovely_pink">Lovely_pink</option>
+	<option value="lr">Lr</option>
+	<option value="madrascheck">Madrascheck</option>
+	<option value="magic">Magic</option>
+	<option value="manuscript-brown">Manuscript-brown</option>
+	<option value="manuscript-green">Manuscript-green</option>
+	<option value="marguerite">Marguerite</option>
+	<option value="maroon">Maroon</option>
+	<option value="matcha">Matcha</option>
+	<option value="memo">Memo</option>
+	<option value="memo2">Memo2</option>
+	<option value="memo3">Memo3</option>
+	<option value="menu">Menu</option>
+	<option value="metal">Metal</option>
+	<option value="midnight">Midnight</option>
+	<option value="mini-g">Mini-g</option>
+	<option value="mini-p">Mini-p</option>
+	<option value="mintblue">Mintblue</option>
+	<option value="mirage">Mirage</option>
+	<option value="momonga">Momonga</option>
+	<option value="mono">Mono</option>
+	<option value="monotone">Monotone</option>
+	<option value="moo">Moo</option>
+	<option value="nachtmusik">Nachtmusik</option>
+	<option value="nabla">Nabla</option>
+	<option value="nahanaha">Nahanaha</option>
+	<option value="nande-ya-nen">Nande-ya-nen</option>
+	<option value="narrow">Narrow</option>
+	<option value="natural_gray">Natural_gray</option>
+	<option value="navy">Navy</option>
+	<option value="nebula">Nebula</option>
+	<option value="nenga">Nenga</option>
+	<option value="nippon">Nippon</option>
+	<option value="noel">Noel</option>
+	<option value="note">Note</option>
+	<option value="ocha">Ocha</option>
+	<option value="old-pavement">Old-pavement</option>
+	<option value="orange">Orange</option>
+	<option value="orange-blue">Orange-blue</option>
+	<option value="orange-border">Orange-border</option>
+	<option value="orangegrad">Orangegrad</option>
+	<option value="pain">Pain</option>
+	<option value="pale">Pale</option>
+	<option value="paper">Paper</option>
+	<option value="pastelpink">Pastelpink</option>
+	<option value="pearl">Pearl</option>
+	<option value="petith">Petith</option>
+	<option value="petith-b">Petith-b</option>
+	<option value="pettan">Pettan</option>
+	<option value="pict">Pict</option>
+	<option value="pink-border">Pink-border</option>
+	<option value="pinkgrad">Pinkgrad</option>
+	<option value="piyo-family">Piyo-family</option>
+	<option value="plum">Plum</option>
+	<option value="pokke-blue">Pokke-blue</option>
+	<option value="pokke-orange">Pokke-orange</option>
+	<option value="pool_side">Pool_side</option>
+	<option value="pudding">Pudding</option>
+	<option value="puppy">Puppy</option>
+	<option value="purple_sun">Purple_sun</option>
+	<option value="qualm">Qualm</option>
+	<option value="quiet_black">Quiet_black</option>
+	<option value="query000">Query000</option>
+	<option value="query011">Query011</option>
+	<option value="query101">Query101</option>
+	<option value="query110">Query110</option>
+	<option value="query111or">Query111or</option>
+	<option value="quirky">Quirky</option>
+	<option value="quirky2">Quirky2</option>
+	<option value="rain">Rain</option>
+	<option value="rainy-season">Rainy-season</option>
+	<option value="rasuta">Rasuta</option>
+	<option value="rectangle">Rectangle</option>
+	<option value="redgrid">Redgrid</option>
+	<option value="repro">Repro</option>
+	<option value="right">Right</option>
+	<option value="rim-daidaiiro">Rim-daidaiiro</option>
+	<option value="rim-fujiiro">Rim-fujiiro</option>
+	<option value="rim-mizuiro">Rim-mizuiro</option>
+	<option value="rim-sakurairo">Rim-sakurairo</option>
+	<option value="rim-tanpopoiro">Rim-tanpopoiro</option>
+	<option value="rim-wakabairo">Rim-wakabairo</option>
+	<option value="russet">Russet</option>
+	<option value="s-blue">S-blue</option>
+	<option value="s-pink">S-pink</option>
+	<option value="sagegreen">Sagegreen</option>
+	<option value="sakana">Sakana</option>
+	<option value="sakura">Sakura</option>
+	<option value="savanna">Savanna</option>
+	<option value="scarlet">Scarlet</option>
+	<option value="seam-line">Seam-line</option>
+	<option value="sepia">Sepia</option>
+	<option value="sheet-may">Sheet-may</option>
+	<option value="sidelight">Sidelight</option>
+	<option value="silver">Silver</option>
+	<option value="silver2">Silver2</option>
+	<option value="simple">Simple</option>
+	<option value="simpleblack">Simpleblack</option>
+	<option value="sky">Sky</option>
+	<option value="smoking_black">Smoking_black</option>
+	<option value="smoking_gray">Smoking_gray</option>
+	<option value="smoking_white">Smoking_white</option>
+	<option value="snake">Snake</option>
+	<option value="snow_man">Snow_man</option>
+	<option value="snowy">Snowy</option>
+	<option value="soda">Soda</option>
+	<!-- <option value="sodapop">Sodapop</option> -->
+	<option value="spring">Spring</option>
+	<option value="starlight">Starlight</option>
+	<option value="stripe">Stripe</option>
+	<option value="subdued">Subdued</option>
+	<option value="summer_wave">Summer_wave</option>
+	<option value="sunset">Sunset</option>
+	<option value="tag">Tag</option>
+	<option value="tdiary1">Tdiary1</option>
+	<option value="teacup">Teacup</option>
+	<option value="thin">Thin</option>
+	<option value="tile">Tile</option>
+	<option value="tinybox">Tinybox</option>
+	<option value="tinybox_green">Tinybox_green</option>
+	<option value="town">Town</option>
+	<option value="triple_gray">Triple_gray</option>
+	<option value="tuki">Tuki</option>
+	<option value="utsusemi">Utsusemi</option>
+	<option value="vi">Vi</option>
+	<option value="w2k_button">W2k_button</option>
+	<option value="wall1">Wall1</option>
+	<option value="wall2">Wall2</option>
+	<option value="wall3">Wall3</option>
+	<option value="wall4">Wall4</option>
+	<option value="wall5_tatami">Wall5_tatami</option>
+	<option value="wani">Wani</option>
+	<option value="white">White</option>
+	<option value="white-lingerie">White-lingerie</option>
+	<option value="whiteout">Whiteout</option>
+	<option value="widow">Widow</option>
+	<option value="widow_blackwidow">Widow_blackwidow</option>
+	<option value="will">Will</option>
+	<option value="windowz">Windowz</option>
+	<option value="wine">Wine</option>
+	<option value="winter">Winter</option>
+	<option value="wood">Wood</option>
+	<option value="xmas">Xmas</option>
+	<option value="xmastree">Xmastree</option>
+	<option value="xxx">Xxx</option>
+	<!-- <option value="yozora">Yozora</option> -->
+	<option value="ylt">Ylt</option>
+	<option value="ymck">Ymck</option>
+	<option value="yukon">Yukon</option>
+	<option value="zef">Zef</option>
+	<option value="zen-sumie">Zen-sumie</option>
+</select>
+		</form>
+		</div>
+	</div>
+
+	<div class="hatena-module">
+		<div class="hatena-moduletitle">対応している記法</div>
+		<div class="hatena-modulebody">
+			<ul class="hatena-antenna">
+				<li><span title="*～～">見出し記法</span>
+				<li><span title="*name*～～">name属性付き見出し記法</span>
+				<li><span title="**～～">小見出し記法</span>
+				<li><span title="***～～">小々見出し記法</span>
+				<li><span title="-～～, --～～, +～～, ++～～">リスト記法</span>
+				<li><span title=":～～:～～">定義リスト記法</span>
+				<li><span title="| ～～ | ～～ |, | *～～ |">表組み記法</span>
+				<li><span title=">> ～～ <<">引用記法</span>
+				<li><span title=">| ～～ |<">pre記法</span>
+				<li><span title=">|| ～～ ||<">スーパーpre記法</span>
+				<li><span title="(( ～～ ))">脚注記法</span>
+				<li><span title="(連続した空白の行2つ)">改行記法</span>
+				<li><span title=">< ～～ ><">pタグ停止記法</span>
+			</ul>
+		</div>
+	</div>
+
+	<div class="hatena-module">
+		<div class="hatena-moduletitle">リンク集</div>
+		<div class="hatena-modulebody">
+			<ul class="hatena-antenna">
+				<li><a href="http://tech.nitoyon.com/javascript/application/texthatena/download.html">text-hatena.js 公開</a></li>
+				<li><a href="http://github.com/nitoyon/text-hatena.js">nitoyon/text-hatena.js (GitHub)</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+</div>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>

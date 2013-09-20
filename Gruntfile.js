@@ -13,19 +13,23 @@ module.exports = function(grunt) {
       static: true,
       dir: '_site'
     },
-    watch: {
-      jekyll: {
-        files: ['_posts/**/*.md', '_layouts/*.html', '_includes/*.html', '_plugins/**/*.rb', 'stylesheets/*'],
-        tasks: ['shell:jekyll_build']
-      }
+    esteWatch: {
+      options: {
+        dirs: ['./', '_posts/*/', '_layouts', '_includes',
+               '_plugins/**/', 'stylesheets', 'javascripts'],
+        livereload: {
+          enabled: false
+        }
+      },
+      '*': function(filepath) { return 'shell:jekyll_build' }
     }
   });
 
   grunt.loadNpmTasks('grunt-shell-spawn');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-este-watch');
   grunt.loadNpmTasks('livereloadx');
 
-  grunt.registerTask('default', ['livereloadx', 'watch']);
+  grunt.registerTask('default', ['livereloadx', 'esteWatch']);
   grunt.registerTask('build', ['shell:jekyll_build']);
   grunt.registerTask('rebuild', ['shell:jekyll_rebuild']);
 };

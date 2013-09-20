@@ -4,6 +4,13 @@
 # How to use
 # ----------
 #
+# This tag enables you to create a link to a page or post by specifying
+# one of following
+#    * URL
+#    * category name and file name
+#    * file name
+#    * variable (name should be 'post')
+#
 # Embed with URL.
 #
 #     {% post_link /category/2012/01/02/article-name.html %}
@@ -25,6 +32,10 @@
 #     {% post_link 2012-01-02-article-name, here %}
 #     => <a href="/2012/01/02/article-name.html">here</a>
 #
+# Use post variable: post variable (instance of Post class) should be defined
+#     {% post_link %}
+#     => <a href="/category/2012/01/02/article-name.html">Article Title</a>
+#
 # License
 # -------
 #
@@ -38,7 +49,7 @@ module Jekyll
 
   # PostCategoryComparer adds `categories` property to PostComparer
   # (defined in lib/jekyll/tags/post_url.rb).
-  # Not that Post#<=>() only checks `YYYY-MM-DD-slug` are equal
+  # Note that Post#<=>() only checks `YYYY-MM-DD-slug` are equal
   class PostCategoryComparer
     MATCHER = /^(.+\/)*(\d+-\d+-\d+)-(.*)$/
 
@@ -81,9 +92,9 @@ module Jekyll
         target_post = nil
       end
 
-      # Find post
+      # Find post or page
       post = nil
-      site.posts.each do |p|
+      (site.posts + site.pages).each do |p|
         if p.url == url
           # stop enumerating if url exactly matches
           post = p
