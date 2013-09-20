@@ -3,6 +3,11 @@ layout: post
 title: 公開して一週間の評判
 lang: ja
 date: 2005-11-15 00:00:00
+toc:
+- /javascript/application/racing/1.html
+- /javascript/application/racing/car_anime.html
+- /javascript/application/racing/1week_summary.html
+- /javascript/application/racing/2.html
 ---
 [Google Mapsで鈴鹿サーキット試走](/javascript/application/racing/1/) を公開してはや一週間がたったので、いろいろ考えてみました。
 
