@@ -16,6 +16,7 @@ module.exports = function(grunt) {
     esteWatch: {
       options: {
         dirs: ['./', '_posts/*/', '_layouts', '_includes',
+               'javascript/**/', 'apollo/tutorial',
                '_plugins/**/', 'stylesheets', 'javascripts'],
         livereload: {
           enabled: false
@@ -29,7 +30,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-este-watch');
   grunt.loadNpmTasks('livereloadx');
 
-  grunt.registerTask('default', ['livereloadx', 'esteWatch']);
+  grunt.registerTask('watch', ['esteWatch']);
+  grunt.registerTask('default', ['livereloadx', 'build', 'esteWatch']);
   grunt.registerTask('build', ['shell:jekyll_build']);
   grunt.registerTask('rebuild', ['shell:jekyll_rebuild']);
 };
