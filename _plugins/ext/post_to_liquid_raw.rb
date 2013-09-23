@@ -53,8 +53,8 @@ module Jekyll
     attr_accessor :original_content, :rendered_content
 
     # add 'raw' attribute
-    def to_liquid
-      self.to_liquid_orig.deep_merge({
+    def to_liquid(attrs = nil)
+      self.to_liquid_orig(attrs).deep_merge({
         "raw" => ToDrop.new(self)
       })
     end
@@ -71,8 +71,8 @@ module Jekyll
     alias :to_liquid_orig :to_liquid unless self.instance_methods.include?(:to_liquid_orig)
 
     # add 'raw' attribute
-    def to_liquid
-      self.to_liquid_orig.deep_merge({
+    def to_liquid(attrs = nil)
+      self.to_liquid_orig(attrs).deep_merge({
         "raw" => ToDrop.new(self)
       })
     end

@@ -22,9 +22,7 @@ module Jekyll
       @base = base
       @name = "index.html"
       @dir = "/#{lang}/blog/tags/#{tag_file_name}"
-
-      # quick hack for #1211
-      @url = "/#{lang}/blog/tags/#{CGI.escape(tag_file_name)}/"
+      @url = "/#{lang}/blog/tags/#{URI.escape(tag_file_name)}/"
 
       self.process(name)
       self.read_yaml(File.join(base, '_layouts'), 'tag.html')
@@ -38,6 +36,15 @@ module Jekyll
 
       self.data['title'] = Jekyll::Locales.translate(site.config, lang,
         'tag.title', 'Tag: $0', tag_display_name)
+    end
+
+    # quick hack for #1568
+    def destination(dest)
+      # The url needs to be unescaped in order to preserve the correct
+      # filename.
+      path = File.join(dest, URI.unescape(self.url))
+      path = File.join(path, "index.html") if self.url =~ /\/$/
+      path
     end
 
     def needs_render?

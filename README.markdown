@@ -21,6 +21,10 @@ Initialize
 How to Build
 ------------
 
+When file is modified, generate only modified pages and notify to browser (http://localhost:35729/).
+
+    $ grunt
+
 Generate only modified pages when file is modified.
 
     $ grunt watch
@@ -40,11 +44,11 @@ Generate all pages.
 Build Requirements
 ------------------
 
-* Node.js 0.8
+* Node.js 0.10.18
   * grunt-cli
 * Ruby 1.9.3
-  * Jekyll 1.0.3
+  * Jekyll 1.2.1
   * hparser
-  * Sass 3.2
+  * Sass 3.2.10
 * Python 2.7
   * Pygments
