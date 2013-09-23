@@ -34,6 +34,8 @@ def main(site_dir, target_dir, delete_time)
   file_count = 0
   text_count = 0
   Dir::glob("#{target_dir}/**/*.html").each { |f|
+    next if /misc\// =~ f
+
     c = update_timestamp(site_dir, f, delete_time)
     if c > 0
       file_count += 1
