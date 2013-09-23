@@ -1,21 +1,21 @@
 delete Object.prototype.extend;
 
-// WŒv•û–@
+// é›†è¨ˆæ–¹æ³•
 var analyzers = {
 	count : {
-		name : "Še1pt",
+		name : "å„1pt",
 		point : function(){return 1;},
 		pixelPerRatio : 16
 	},
 
 	fav : {
-		name : "”íFav”",
+		name : "è¢«Favæ•°",
 		point : function(hifav, fav, fromid, toid){return hifav},
 		pixelPerRatio : 0.16
 	},
 
 	fav_ratio : {
-		name : "”íFav” / Fav”",
+		name : "è¢«Favæ•° / Favæ•°",
 		point : function(hifav, fav, fromid, toid){return fav != 0 ? hifav / fav : 0},
 		pixelPerRatio : 1.6
 	}
@@ -210,7 +210,7 @@ var Graph = {
 	onClick : function(event){
 		var src = Event.element(event);
 
-		// ƒ[ƒhƒŠƒ“ƒN
+		// ãƒ­ãƒ¼ãƒ‰ãƒªãƒ³ã‚¯
 		if(src.tagName == "A" && src.hash && src.hash.substr(0, 1) == "#"){
 			JsonLoad.init(src.hash.substr(1), src.parentNode);
 			Event.stop(event);
@@ -218,7 +218,7 @@ var Graph = {
 			return;
 		}
 
-		// ƒJ[ƒh‚Ì•\¦ˆ—
+		// ã‚«ãƒ¼ãƒ‰ã®è¡¨ç¤ºå‡¦ç†
 		if(src.tagName == "SPAN" && src.className == "name_id"){
 			src = src.previousSibling;
 		}
@@ -227,7 +227,7 @@ var Graph = {
 			Tooltip.hide();
 		}
 		else{
-			// ‚»‚êˆÈŠO
+			// ãã‚Œä»¥å¤–
 			while(src){
 				if(src == this.card) return;
 				src = src.parentNode;
@@ -258,24 +258,24 @@ var Graph = {
 		a.appendChild(iconImg(id, true));
 		a.appendChild(TEXT(id));
 		head.appendChild(h2);
-		head.innerHTML += "<div class='cls'>" + (isOodanna(id) ? "‘å’U“ß (”í‚¨‹C‚É“ü‚è100ˆÈã)" : isDannashu(id) ? "’U“ßO (”í‚¨‹C‚É“ü‚è30`99)" : isWakadanna(id) ? "á’U“ß (”í‚¨‹C‚É“ü‚è25`29)" : "ŠK‹‰‚È‚µ (”í‚¨‹C‚É“ü‚è25–¢–)") + "</div></div>";
+		head.innerHTML += "<div class='cls'>" + (isOodanna(id) ? "å¤§æ—¦é‚£ (è¢«ãŠæ°—ã«å…¥ã‚Š100ä»¥ä¸Š)" : isDannashu(id) ? "æ—¦é‚£è¡† (è¢«ãŠæ°—ã«å…¥ã‚Š30ï½99)" : isWakadanna(id) ? "è‹¥æ—¦é‚£ (è¢«ãŠæ°—ã«å…¥ã‚Š25ï½29)" : "éšç´šãªã— (è¢«ãŠæ°—ã«å…¥ã‚Š25æœªæº€)") + "</div></div>";
 
 		var body = TAG("div", {className : "body"});
-		body.innerHTML = "<h3>”í‚¨‹C‚É“ü‚è (" + (oodanna[id] || dannashu[id] || wakadanna[id] || "|") + ")</h3>"
-		     + "<p>‚¤‚¿‘å’U“ß : " + (score && score.count || "|") + "</p>";
+		body.innerHTML = "<h3>è¢«ãŠæ°—ã«å…¥ã‚Š (" + (oodanna[id] || dannashu[id] || wakadanna[id] || "ï¼") + ")</h3>"
+		     + "<p>ã†ã¡å¤§æ—¦é‚£ : " + (score && score.count || "ï¼") + "</p>";
 		var p = TAG("p");
 		for(var i = 0; score && i < score.refer.length; i++){
 			var _id = score.refer[i];
 			p.appendChild(iconImg(_id));
 		}
 		body.appendChild(p);
-		body.innerHTML += "<h3>‚¨‹C‚É“ü‚è (" + (fav[id] ? fav[id].favorite.length : "|") + ")</h3>";
+		body.innerHTML += "<h3>ãŠæ°—ã«å…¥ã‚Š (" + (fav[id] ? fav[id].favorite.length : "ï¼") + ")</h3>";
 		var p = TAG("p");
 		for(var i = 0; fav[id] && i < fav[id].favorite.length; i++){
 			p.appendChild(iconImg(fav[id].favorite[i]));
 		}
 		body.appendChild(p);
-		body.innerHTML += '<h3>Å‹ß‚ÌƒuƒbƒNƒ}[ƒN</h3><div class="bkm"><a href="#' + id + '" style="font-size: 90%">Œ©‚Ä‚İ‚é</a></div>';
+		body.innerHTML += '<h3>æœ€è¿‘ã®ãƒ–ãƒƒã‚¯ãƒãƒ¼ã‚¯</h3><div class="bkm"><a href="#' + id + '" style="font-size: 90%">è¦‹ã¦ã¿ã‚‹</a></div>';
 
 		this.card.appendChild(head);
 		this.card.appendChild(body);
@@ -333,7 +333,7 @@ Cond = {
 		var index = this.form.score.selectedIndex;
 		this.score = this.form.score.options[index].value;
 		if(!this.score in analyzers){
-			alert("’è‹`‚³‚ê‚Ä‚¢‚È‚¢WŒv•û–@‚Å‚·");
+			alert("å®šç¾©ã•ã‚Œã¦ã„ãªã„é›†è¨ˆæ–¹æ³•ã§ã™");
 			this.score = "fav";
 		}
 
@@ -464,7 +464,7 @@ window.onload = function(){
 
 		onProgress : function(remaining, id){
 			remaining = Math.floor((1-remaining) * 1000) / 10;
-			$("message").innerHTML = "ŒvZ’†F" + remaining + "%";
+			$("message").innerHTML = "è¨ˆç®—ä¸­ï¼š" + remaining + "%";
 		}
 	});
 }
