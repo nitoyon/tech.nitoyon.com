@@ -5,7 +5,7 @@ lang: ja
 date: 2007-03-22 23:26:52
 toc:
 - /apollo/tutorial/html-js.html
-- /apollo/tutorial/as-apollo.html
+- /apollo/tutorial/as_apollo.html
 ---
 Apollo 開発の方法を丁寧に説明していく予定です。第１回目は HTML+JavaScript で Apollo アプリを作ってみます。
 
@@ -208,4 +208,4 @@ Apollo α１は開発者向けのプレビュー版であり、セキュリテ�
 次回予告
 ========
 
-<a href="as-apollo.html">ActionScript 版 Apollo アプリを作ってみる</a>、をお届けします。
+<a href="as_apollo.html">ActionScript 版 Apollo アプリを作ってみる</a>、をお届けします。
