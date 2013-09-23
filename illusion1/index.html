@@ -1,0 +1,321 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Color Illusion Generator</title>
+<style>
+*{
+	margin: 0;
+	padding: 0;
+}
+
+body{
+	font-size: 130%;
+	text-align: center;
+}
+
+input{
+	font-size: 120%;
+}
+
+h1{
+	margin: 20px 0 20px 0;
+}
+
+h1 a{
+	font-size: 1px;
+	color: white;
+	display: block;
+	height: 40px;
+	background: url('title.png');
+}
+
+div#container{
+	width: 500px;
+	margin: 0 auto;
+	text-align: left;
+}
+
+div#input_form{
+	width: 480px;
+	padding: 10px;
+	margin: 0 0 10px 0;
+	background: #eeeeee;
+	border: 1px solid #cccccc;
+}
+
+div#input_form h2{
+	font-size: 120%;
+}
+
+div#input_form p{
+	margin: 5px 0 0 20px;
+}
+
+div#input_form input#url{
+	width: 450px;
+	height: 1.5em;
+	color: #666;
+}
+
+
+div#input_form hr{
+	margin: 20px 0 10px 0;
+	border: 1px solid #ccc;
+}
+
+div#input_form a img{
+	border: 3px solid #aaa;
+}
+
+div#preview_arrow{
+	display: none;
+	margin: 0 0 5px 0;
+}
+
+div#preview{
+	display: none;
+}
+
+div#preview_link{
+	margin-top: .5em;
+}
+
+div#create_new{
+	display: none;
+	text-align: right;
+	margin: 20px 0 5px 0;
+}
+
+div#create_new a img{
+	border: 0;
+}
+
+div#embed{
+	display: none;
+}
+
+div#embed dl{
+	margin: 30px 0 0 0;
+	padding: 10px;
+	border: 1px solid #ccc;
+	background: #eee;
+	font-size: 80%;
+}
+
+div#embed dl dt{
+	color: #666;
+	font-weight: bold;
+}
+
+div#embed dl dd{
+	margin-bottom: 5px;
+}
+
+div#embed dl dd input{
+	width: 460px;
+	color: #666;
+	font-size: 80%;
+	background: white;
+}
+
+div#footer{
+	margin-top: 100px;
+	text-align: center;
+}
+
+strong{
+	font-size: 150%;
+	color: red;
+}
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
+<script>
+$(function(){
+	var BASE_URL = "http://tech.nitoyon.com/illusion1/";
+	var ja = (navigator.language == "ja" || navigator.browserLanguage == "ja");
+
+	if(ja){
+		$("#input_form h2:nth(0)").text("画像のURLを入力してください:");
+		$("#input_form h2:nth(1)").text("サンプル:");
+		$("#preview_btn").val("プレビュー");
+		$("#submit_btn").val("作成");
+		$("#create_new img").attr("src", "create_new_ja.png");
+	}
+
+	if(location.href.match(/\?url=([^&]+)/)){
+		// detail
+		var url = decodeURIComponent(RegExp.$1);
+		showIllusion(url, 480, 360);
+		showEmbed(url);
+		$("#create_new").css("display", "block");
+		$("#input_form").css("display", "none");
+		return;
+	}
+	else{
+		// form
+		$("#input_form").css("display", "block");
+
+		var updateButtons = function(){
+			$("#preview_btn,#submit_btn").attr("disabled", $("#url").val() != "" ? "" : "disabled");
+		}
+		$("#url").keyup(updateButtons);
+		$("#url").change(updateButtons);
+		updateButtons();
+
+		// samples
+		$("#input_form a").click(function(event){
+			var a = event.target;
+			if(a.tagName == "IMG"){
+				a = a.parentNode;
+			}
+			var url = a.href;
+			url = url.replace(/^[^#]+#/, "");
+
+			$("#url").val(url);
+			updateButtons();
+			preview(url);
+			return false;
+		});
+
+		// preview
+		$("#preview_btn").click(function(event){
+			var url = $("#url").val();
+			preview(url);
+		});
+		$("form").submit(function(event){
+			var url = "?url=" + encodeURIComponent($("#url").val());
+			location.href = url;
+			return false;
+		});
+	}
+
+	function preview(url){
+		showIllusion(url, 480, 360);
+		$("#preview_arrow").css("display", "block");
+
+		$("#preview_link a")
+			.text("ja" ? "この Illusion へのリンク" : "Link to this illusion")
+			.attr("href", "?url=" + encodeURIComponent(url));
+	}
+
+	function getSwfEmbedHtml(url, width, height){
+		var param = "url=" + encodeURIComponent(url);
+		url = BASE_URL + "Illusion.swf?" + (new Date()).getTime();
+
+		return '<object'
+			+ ' classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"'
+			+ ' codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0"'
+			+ ' width="' + width + '" height="' + height + '"'
+			+ ' allowscriptaccess="always"'
+			+ ' id="__illsion1_swf' + (new Date()).getTime() + '">' // ExternalInterface bug fix for IE
+			+ ' <param name="movie" value="' + url + '">'
+			+ ' <param name="bgcolor" value="#000000">'
+			+ ' <param name="loop" value="false">'
+			+ ' <param name="allowscriptaccess" value="always">'
+			+ ' <param name="quality" value="high">'
+			+ ' <param name="flashVars" value="' + param + '">'
+			+ '<embed src="' + url + '" width="' + width + '" height="' + height + '" bgcolor="#000000"'
+			+ '   pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?p1_prod_version=shockwaveflash"'
+			+ '   type="application/x-shockwave-flash" flashVars="' + param + '"></embed>'
+		  + '</object>';
+	}
+
+	function showIllusion(url, width, height){
+		width = width || 480;
+		height = height || 360;
+
+		var html = getSwfEmbedHtml(url, width, height);
+
+		$("#preview")
+			.empty()
+			.append($(html))
+			.css({
+				display: "block",
+				"border": "10px solid #999",
+				width: width + "px",
+				height: height + "px"
+			});
+	}
+
+	function showEmbed(url){
+		$("#embed").css("display", "block");
+		$("#embed_html").val(getSwfEmbedHtml(url, 360, 240));
+		$("#embed_google_html").val('<scr' + 'ipt src="http://gmodules.com/ig/ifr?url=http://tech.nitoyon.com/illusion1/illusion.xml&amp;up_url='
+			+ encodeURIComponent(url) + '&amp;synd=open&amp;w=320&amp;h=240&amp;title=Color+Illusion+Generator&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"></sc' + 'ript>');
+		$("#embed_url").val(location.href);
+
+		$("#embed input").focus(function(){
+			this.select();
+		});
+		$("#embed input").click(function(){
+			this.select();
+		});
+	}
+});
+</script>
+</head>
+<body>
+
+<div id="container">
+	<h1><a href="./">Color Illusion Generator</a></h1>
+
+	<noscript><strong>(Flash Player 9 or later required)</strong></noscript>
+
+	<div id="create_new"><a href="./"><img src="create_new.png"></a></div>
+
+	<div id="input_form">
+		<h2>Enter Image URL:</h2>
+		<form>
+			<p><input id="url" type="text"></p>
+			<p>
+				<input id="preview_btn" type="button" value="Preview">
+				<input id="submit_btn" type="submit" value="Generate">
+			</p>
+		</form>
+
+		<hr>
+
+		<h2>Sample:</h2>
+		<p>
+			<a href="#http://tech.nitoyon.com/illusion1/sample3.jpg"><img src="sample3_thumbnail.jpg" width="75" height="75"></a>
+			<a href="#http://tech.nitoyon.com/illusion1/sample2.jpg"><img src="sample2_thumbnail.jpg" width="78" height="75"></a>
+			<a href="#http://farm1.static.flickr.com/221/500073630_4eb28dc46a.jpg"><img src="http://farm1.static.flickr.com/221/500073630_4eb28dc46a_s.jpg" width="75" height="75"></a>
+		</p>
+	</div>
+
+	<div id="preview_arrow"><center><img src="arrow.png"></center></div>
+
+	<div id="preview"></div>
+
+	<div id="preview_link"><a href="#"></a></div>
+
+	<div id="embed">
+		<dl>
+			<dt>Embed:</dt>
+			<dd><input type="text" id="embed_html" readonly="readonly"></dd>
+			<dt>Embed as Google Gadget:</dt>
+			<dd><input type="text" id="embed_google_html" readonly="readonly"></dd>
+			<dt>URL:</dt>
+			<dd><input type="text" id="embed_url" readonly="readonly"></dd>
+		</dl>
+	</div>
+
+	<div id="footer">
+		&copy; <a href="http://tech.nitoyon.com/about.html">nitoyon</a> 2008, all rights reserved.
+	</div>
+</div>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>

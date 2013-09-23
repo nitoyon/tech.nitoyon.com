@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>走っているように見える仕組み</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="走っているように見える仕組み"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/javascript/application/racing/car_anime.html"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Google Mapsで鈴鹿サーキット試走 で使っているテクニックを紹介します。ゲームのソースを見てみてください。なんと、JavaScript 部分は70行ほどです。かなり少ないですよね。たった、70行でゲームを作れてしまうのは、これから説明するような単純な方法で実装しているからなんです。実は動いていない車ゲームをプレイしているといかにもドライブしているような感覚になりますが、実は車は回転するだけで、車の表示位置は変わっていません。動いているのは背景の地図だけなのです。車の表示位置は動いていないのに、走っている感覚になるんですね。こういう表現って、8ビットゲーム機時代にはよくありました。..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/" id="logo-ja"">てっく煮" src="/images/logo-ja.png" id="logo_img"></a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2005年11月07日</div>
+
+
+
+<h1>走っているように見える仕組み</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/application/racing/car_anime.html" class="hatena-bookmark-button" data-hatena-bookmark-title="走っているように見える仕組み - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/application/racing/car_anime.html" data-lang="ja" data-size="horizontal" data-text="走っているように見える仕組み - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/application/racing/car_anime.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p><a href="./1/">Google Mapsで鈴鹿サーキット試走</a> で使っているテクニックを紹介します。</p>
+
+<p>ゲームのソースを見てみてください。なんと、JavaScript 部分は70行ほどです。かなり少ないですよね。たった、70行でゲームを作れてしまうのは、これから説明するような単純な方法で実装しているからなんです。</p>
+
+<h1>実は動いていない車</h1>
+
+<p>ゲームをプレイしているといかにもドライブしているような感覚になりますが、実は車は回転するだけで、車の表示位置は変わっていません。動いているのは背景の地図だけなのです。</p>
+
+<p>車の表示位置は動いていないのに、走っている感覚になるんですね。こういう表現って、8ビットゲーム機時代にはよくありました。たとえば、スーパーマリオでも、マリオが全速力で走っているときは、マリオの画面中の表示位置は変わらないまま、背景が動いているだけでした。</p>
+
+<p>では、車はどうやって回転させているのでしょう。</p>
+
+<h1>バッファリング方式で回転する車</h1>
+
+<p>車は回転にあわせて１パターンごとに15度ずつ回転させた24種類の画像を用意しました。24種類ものファイルをサーバー上に置くということは、ページを１回開くごとに、サーバーへのアクセスが少なくとも24回発生してしまうということになります。これではサーバーの負荷となりかねません。</p>
+
+<p>そこで、24種類の車を縦に並べて、<a href="1/car.gif">１つの縦長の画像</a>にしてしまいました。</p>
+
+<p><center><img src="car_anime.gif" width="145" height="300" alt="車の画像"></center></p>
+
+<p>これで、24種類の車の回転パターンを一度にダウンロードすることができます。</p>
+
+<p>１枚の長い画像をどうやって回転しているように見せているかというと、この画像を 15px×15px の <code>div</code> タグの中に格納してます。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;style&gt;</span>
+<span class="nf">#car</span>
+<span class="p">{</span>
+    <span class="k">width</span><span class="o">:</span> <span class="m">15px</span><span class="p">;</span> <span class="k">height</span><span class="o">:</span> <span class="m">15px</span><span class="p">;</span>
+    <span class="k">overflow</span><span class="o">:</span> <span class="k">hidden</span><span class="p">;</span>
+    <span class="k">z-index</span><span class="o">:</span><span class="m">99</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">&lt;/style&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;car&quot;</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">&quot;car.gif&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+</code></pre></div>
+<p>これで、車１つ分だけが 15px×15px の <code>div</code> タグから顔を出すことになります。</p>
+
+<p>たとえば、車の画像を <code>15px</code> 上にずらせば、車が 15 度分だけ傾きます。<code>30px</code> 上にずらせばさらに 15 度傾きます。同様にして、 n ×15 度回転させるには次のようにしています。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;car&quot;</span><span class="p">).</span><span class="nx">childNodes</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">style</span><span class="p">.</span><span class="nx">top</span> <span class="o">=</span> <span class="p">(</span><span class="nx">n</span> <span class="o">*</span> <span class="o">-</span><span class="mi">15</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;px&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>これで車が回転しているように見えるわけです。</p>
+
+<p><center><img src="car_anime2.gif" width="300" height="194" alt="レイヤー図"></center></p>
+
+<p>昔の２Ｄゲームでは、裏バッファにキャラクタのアニメーション素材を用意しておいて、それを順次、表の画面に出力してアニメーションしているように見せていました。ここでも、その手法を踏襲しつつ、サーバーの負荷を転送量を抑えることに成功しているわけです。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/application/racing/car_anime.html" class="hatena-bookmark-button" data-hatena-bookmark-title="走っているように見える仕組み - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/application/racing/car_anime.html" data-lang="ja" data-size="horizontal" data-text="走っているように見える仕組み - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/application/racing/car_anime.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2005年11月07日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/javascript/application/racing/car_anime.md">編集履歴</a></span></div>
+
+
+</div>
+
+
+<div class="toc">
+<h4>目次</h4>
+<ul>
+
+<li><a href="/javascript/application/racing/1.html">Google Mapsでレーシング公開！</a></li>
+
+<li>走っているように見える仕組み</li>
+
+<li><a href="/javascript/application/racing/1week_summary.html">公開して一週間の評判</a></li>
+
+<li><a href="/javascript/application/racing/2.html">Google Earth でもドライビング！</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

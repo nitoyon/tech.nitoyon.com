@@ -7,10 +7,6 @@ var Site = {
 
 
 
-
-
-
-
 Site.archives.posts = [
 	{url: "/ja/blog/2013/07/29/livereloadx0-3-0/", title: "LiveReloadX を Grunt から使えるようにした"},
 	{url: "/ja/blog/2013/07/23/git-patch/", title: "Git にパッチを送って取り込まれた話"},

@@ -1,0 +1,334 @@
+<slide><![CDATA[
+
+閲覧方法
+
+:Right, SPACE：:Next page
+:Left：:Prev page
+
+----
+
+*Tetris<br>+<br>ActionScript3
+
+----
+
+**自己紹介
+Self-introduction
+
+----
+
+にとよん と申します
+
+My name is nitoyon.
+
+----
+
+「てっく煮」というサイトをやってます
+This is my homepage.
+><center><img src="images/techni.jpg"></center><
+
+http://tech.nitoyon.com/
+
+----
+
+代表作
+
+><center><img src="images/gmap.gif"></center><
+
+----
+
+**今日はテトリスを作ってみます
+
+Tetris!!! Tetris!!! Tetris!!!
+
+----
+
+専門用語
+
+Technical terms:
+
+----
+
+><center><img src="images/tetrimino.gif" width="76" height="56"></center><
+
+テトリミノ
+
+Tetrimino.
+
+----
+
+**いきなり設計
+Architecture
+
+----
+
+***Tetrimino.as
+-テトリミノの場所や種類を保持
+-ブロックの種類ごとの並べ順を取得
+
+----
+
+***Field.as
+-テトリミノの位置を管理
+-ブロックの位置を保持
+-入力を受け取ってテトリミノを移動、衝突判定
+
+----
+***FieldView.as
+-Field を作成し、Field の状況を毎フレーム描画
+
+----
+
+**完成
+
+----
+:Right, Left: Move tetrimino
+:Z, X: Rotate tetrimino
+:Down: Drop tetrimino
+
+----
+
+><center><flash src="FieldView.swf" width="300" height="450"></center><
+
+----
+
+**かっこよくしたい
+More cool!
+
+----
+
+drawBlock method(FieldView.as)
+><img src="images/block1.gif" width="267" height="114"><
+>|
+// draw block
+protected function drawBlock(bitmap:BitmapData, kind:String):void
+{
+    var size:int = SIZE - 1;
+
+    var color:int = Tetrimino.colorList[kind];
+    var rect:Rectangle = new Rectangle(0, 0, size, size);
+    bitmap.fillRect(rect, color | 0xff000000);
+}
+|<
+
+----
+
+**Apply BevelFilter!!
+
+----
+>|
+protected function drawBlock(bitmap:BitmapData, kind:String):void
+{
+    var size:int = SIZE - 1;
+
+    var color:int = Tetrimino.colorList[kind];
+    var rect:Rectangle = new Rectangle(0, 0, size, size);
+    bitmap.fillRect(rect, color | 0xff000000);
+
+    var filter:BevelFilter = new BevelFilter(
+        2, 45, 0xffffff, 0.5, 0x000000, 0.5, 2, 2);
+    bitmap.applyFilter(bitmap, bitmap.rect, 
+        new Point(0, 0), filter);
+}
+|<
+
+----
+BevelFilter details
+>|
+new BevelFilter(2, 45, 0xffffff, 0.5, 0x000000, 0.5, 2, 2);
+                |   |     |       |       |      |   |  |
+                |   |     |    highlight  |   shadow |  |
+                |   |     |      alpha    |    alpha |  |
+                |   |  highlight        shadow       |  |
+                |   |   color            color       | blurY
+                |  angle                             |
+              distance                             blurX
+|<
+
+----
+
+><center><flash src="FieldViewExt.swf" width="300" height="450"></center><
+
+----
+
+**その他の例
+Other examples
+
+----
+***iPhone Tetris
+
+----
+
+><center><flash src="FieldViewIPhone.swf" width="420" height="630"></center><
+
+----
+>|
+[Embed(source="images/iphone-button.png")]
+private var iphone:Class;
+
+override protected function drawBlock(bitmap:BitmapData, kind:String):void
+{
+    var color:int = Tetrimino.colorList[kind];
+
+    var sprite:Sprite = new Sprite();
+    sprite.graphics.beginFill(color);
+    sprite.graphics.drawRoundRect(0, 0, 29, 29, 6, 6);
+    sprite.graphics.endFill();
+
+    bitmap.draw(sprite);
+    bitmap.draw(Bitmap(new iphone));
+}
+|<
+
+----
+
+***Adobe CS3 Tetris
+
+----
+
+><center><flash src="FieldViewAdobe.swf" width="420" height="630"></center><
+
+----
+
+>|
+// images
+[Embed(source="images/adobe-aqua.png")]
+private var aqua:Class;
+[Embed(source="images/adobe-blue.png")]
+private var blue:Class;
+[Embed(source="images/adobe-green.png")]
+private var green:Class;
+[Embed(source="images/adobe-logo.png")]
+private var logo:Class;
+[Embed(source="images/adobe-orange.png")]
+private var orange:Class;
+[Embed(source="images/adobe-purple.png")]
+private var purple:Class;
+[Embed(source="images/adobe-red.png")]
+private var red:Class;
+[Embed(source="images/adobe-white.png")]
+private var white:Class;
+[Embed(source="images/adobe-yellow.png")]
+private var yellow:Class;
+|<
+
+----
+
+**Add animation
+
+----
+Animation (Tweener)
+>|
+private function onDisapear(event:DynamicEvent):void
+{
+    // ...
+
+    field.pause();
+    Tweener.addTween(bmpEffect, {
+        alpha : 0, 
+        time : .5,
+        transition : "easeinbounce",
+        onComplete : function():void
+        {
+            field.play();
+        }
+    });
+|<
+
+----
+
+><center><flash src="FieldViewExt2.swf" width="300" height="450"></center><
+
+----
+
+**One more thing!!
+
+----
+
+**TETRI3D
+
+----
+
+***Tetris + 3D
+
+powered by
+PaperVision3D
+
+----
+
+><center><flash src="FieldView3D.swf" width="300" height="450"></center><
+
+Drag to change angle!
+
+----
+Performance Problem
+>|
+public function FieldView3D()
+{
+    stage.addEventListener("enterFrame", redraw);
+}
+
+private function redraw():void
+{
+    // draw blocks here
+    // ....
+
+    moveCamera();
+    scene.renderCamera(camera);
+}
+|<
+----
+
+CPU 40~50%
+
+----
+>|
+private function redraw():void
+{
+    var changed:Boolean = false;
+    if(need_to_draw) {
+        changed = true;
+
+        // draw blocks here
+        // ....
+    }
+
+    if(mouse_is_down) {
+        changed = true;
+        moveCamera();
+    }
+
+    if(changed) {
+        scene.renderCamera(camera);
+    }
+}
+|<
+
+----
+
+CPU 2~3%
+
+----
+
+**結論
+Conclusion
+
+----
+
+-Filter：簡単に見た目変更
+-Tweener：簡単アニメーション
+-PV3D：簡単3D
+
+----
+
+ActionScript は
+ゲームプログラミングに最適！
+
+----
+
+Thank you!
+
+<a href="http://tech.nitoyon.com/misc/tetris_as3/tetris.zip">Download source</a>
+
+
+]]>
+</slide>

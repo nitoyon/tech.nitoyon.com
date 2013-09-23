@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>ActionScript版 Apollo アプリを作ってみる</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="ActionScript版 Apollo アプリを作ってみる"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/apollo/tutorial/as-apollo.html"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="第２回は ActionScript で Apollo アプリを作ってみます。ActionScript を触ったことがない人にも分かりやすく書いたつもりですので、ActionScript が初めての人も恐れずに読んでみてください。第１回 の HTML＋JavaScript で作るときはHTML+JavaScript の作成ADF の作成実行パッケージ化 (.air の作成)という手順でしたが、今回はActionScript の作成コンパイル (.as→.swf の生成)ADF の作成実行パッケージ化 (.air の作成)とコンパイルの手順が増えます。では、さっそく具体的に説明していきましょ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/" id="logo-ja"">てっく煮" src="/images/logo-ja.png" id="logo_img"></a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2007年04月02日</div>
+
+
+
+<h1>ActionScript版 Apollo アプリを作ってみる</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/apollo/tutorial/as-apollo.html" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript版 Apollo アプリを作ってみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/apollo/tutorial/as-apollo.html" data-lang="ja" data-size="horizontal" data-text="ActionScript版 Apollo アプリを作ってみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/apollo/tutorial/as-apollo.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>第２回は ActionScript で Apollo アプリを作ってみます。</p>
+
+<p>ActionScript を触ったことがない人にも分かりやすく書いたつもりですので、ActionScript が初めての人も恐れずに読んでみてください。</p>
+
+<p><a href="http://tech.nitoyon.com/apollo/tutorial/html-js.html">第１回</a> の HTML＋JavaScript で作るときは</p>
+
+<ol>
+<li>HTML+JavaScript の作成</li>
+<li>ADF の作成</li>
+<li>実行</li>
+<li>パッケージ化 (.air の作成)</li>
+</ol>
+
+<p>という手順でしたが、今回は</p>
+
+<ol>
+<li>ActionScript の作成</li>
+<li><strong>コンパイル (.as→.swf の生成)</strong></li>
+<li>ADF の作成</li>
+<li>実行</li>
+<li>パッケージ化 (.air の作成)</li>
+</ol>
+
+<p>とコンパイルの手順が増えます。</p>
+
+<p>では、さっそく具体的に説明していきましょう。</p>
+
+<h1>ActionScript の作成</h1>
+
+<p>単に丸を描くだけの ActionScript です。<code>Test.as</code> として保存します。</p>
+<div class="highlight"><pre><code class="actionscript language-actionscript" data-lang="actionscript"><span class="kd">package</span><span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+        <span class="kd">function</span> <span class="nx">Test</span><span class="p">(){</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>各行の意味について簡単に説明します。</p>
+
+<ul>
+<li>1行目: <code>package</code> は、ひとまずはおまじないだと思ってください。</li>
+<li>2行目: <code>import</code> で <code>flash.display</code> に含まれる <code>Sprite</code> クラスを利用することを宣言しています。<code>flash</code> パッケージというのは Flash 実行環境に ActionScript に初めから備わっている基本的なクラス群です。</li>
+<li>4行目: <code>Sprite</code> というのは、ActionScript だけで SWF を作るときに必ず継承するクラスです。ここでは、<code>Sprite</code> を継承した <code>Test</code> クラスを宣言しています。</li>
+<li>5行目: <code>Test</code> クラスのコンストラクタを宣言しています。</li>
+<li>6～8行目: <code>graphics</code> オブジェクトを使って円を書いています。このあたりは、C# や Java で描画をしたことがある人ならば理解できるのではないでしょうか。<code>graphics</code> は <code>Sprite</code> クラスのプロパティです。
+
+<ul>
+<li>6行目: ブラシの色を設定しています。第1引数の <code>0xff0000</code> は <code>rgb(255,0,0)</code> すなわち赤をあらわします。第2引数はα値です。0～1 の範囲で、0 が透明、1 が不透明となります。</li>
+<li>7行目: 円を描きます。引数はそれぞれ、x, y, 半径 をあらわします。</li>
+<li>8行目: <code>beginFill()</code> で設定した内容にもとづいて描画を行います。</li>
+</ul></li>
+</ul>
+
+<p>コードだけを見ると、Java っぽい、と思う人も多いかもしれませんね。でも、言語仕様的には ActionScript は JavaScript をベースにしています。JavaScript に Java のオブジェクト指向を足した感じでしょうか。JavaScript に似ているところは、このページの後半で説明します。</p>
+
+<h1>コンパイル</h1>
+
+<p>Apollo アプリとして動かすためには ActionScript のままではだめです。コンパイラを使って SWF 形式のファイルにします。</p>
+
+<p>Flash Player で再生する SWF を作る場合は <code>mxmlc</code> というコマンドを使うのですが、Apollo アプリ用の SWF を作るときは <code>amxmlc</code> という別のコンパイラを使います。</p>
+
+<p>コマンドラインから次のように実行します。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> amxmlc Test.as
+</code></pre></div>
+<p>次のように表示されれば成功です。<code>Test.as</code> と同じ場所に <code>Test.swf</code> が生成されます。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Loading configuration file C:\apollo\frameworks\apollo-config.xml
+c:\....\Test.swf (619 bytes)
+</code></pre></div>
+<p><code>Test.swf</code> は今のところブラウザで開くことができますが、Apoolo API を使うと実行時の参照エラーになってしまいます。</p>
+
+<h1>ADF の準備</h1>
+
+<p>次に、アプリケーションの情報を記載する ADF を作ります。前回とほとんど同じです。<code>rootContent</code> の中が違っているぐらいです。</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;application</span> <span class="na">appId=</span><span class="s">&quot;com.nitoyon.tech.test&quot;</span> <span class="na">version=</span><span class="s">&quot;0.1&quot;</span> <span class="na">xmlns=</span><span class="s">&quot;http://ns.adobe.com/apollo/application/1.0.M3&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;properties&gt;</span>
+    <span class="nt">&lt;name&gt;</span>Test<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;publisher&gt;</span>nitoyon<span class="nt">&lt;/publisher&gt;</span>
+    <span class="nt">&lt;description/&gt;</span>
+    <span class="nt">&lt;copyright/&gt;</span>
+  <span class="nt">&lt;/properties&gt;</span>
+  <span class="nt">&lt;rootContent</span> <span class="na">systemChrome=</span><span class="s">&quot;standard&quot;</span> <span class="na">visible=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>Test.swf<span class="nt">&lt;/rootContent&gt;</span>
+<span class="nt">&lt;/application&gt;</span>
+</code></pre></div>
+<p><code>Test-app.xml</code> として保存します。</p>
+
+<h1>ためしに実行</h1>
+
+<p>実行するにはコマンドラインから次のように入力します。このへんも前回と同じですね。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> adl Test-app.xml
+</code></pre></div>
+<p>ウインドウが表示されれば成功です。</p>
+
+<p><center><img src="as-test1.jpg" width="350" height="277" alt="テスト起動"></center></p>
+
+<p>ウインドウ枠が表示されるのがちょっとかっこ悪いです。そこで、 ADF の <code>rootContent</code> タグを修正します。</p>
+
+<p><center><img src="as-test2.jpg" width="450" height="184" alt="パラメータ比較"></center></p>
+
+<p>これ以降では、一番右の <code>systemChrome=&quot;none&quot; transparent=&quot;true&quot;</code> を指定したものとして説明していきます。これが一番それっぽいですよね。</p>
+
+<p>Windows のローカル アプリ開発では四角じゃないローカル アプリケーションを作るのは実はけっこう大変でなのですが、こんな簡単なソースコードでできてしまうんだから驚きです。</p>
+
+<p>ウインドウ枠がないとアプリケーションを終了させにくいかもしれませんが、Windows では Alt+F4 を押すか、タスクバーを右クリックして終了を選べば OK です。Mac の人は、それ相当の方法で終了させてください（すいません、Mac は分からないもので）。</p>
+
+<h1>ActionScript を修正してみる</h1>
+
+<p>ここまでくれば、あとは前回と同じようにやればパッケージ化も簡単です。</p>
+
+<p>そのままパッケージ化してしまってもつまらないので、<code>Test.as</code> を修正してみましょう。順を追って改造していきましょう。</p>
+
+<h2>1. 透明度を変える</h2>
+
+<p>まずは簡単な修正から。円の透明度を変えてみます。</p>
+<div class="highlight"><pre><code class="actionscript language-actionscript" data-lang="actionscript"><span class="kd">package</span><span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+        <span class="kd">function</span> <span class="nx">Test</span><span class="p">(){</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="o">,</span> <span class="mf">0.5</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>beginFill()</code> の第２引数に注目です。</p>
+
+<p>再度、<code>amxmlc</code> でコンパイルして、<code>adl</code> で実行してみましょう。</p>
+
+<p><center><img src="as-test3.jpg" width="200" height="152" alt="半透明に"></center></p>
+
+<p>半透明になってますね。</p>
+
+<h2>2. イベント ハンドリングを行う</h2>
+
+<p>GUI アプリケーションの実装で欠かせないのが、イベントハンドリングです。</p>
+
+<p>ActionScript のイベント登録は <code>addEventListener</code> 関数で行います。</p>
+<div class="highlight"><pre><code class="actionscript language-actionscript" data-lang="actionscript"><span class="kd">package</span><span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+        <span class="kd">function</span> <span class="nx">Test</span><span class="p">(){</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="o">,</span> <span class="mf">0.5</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">stage</span><span class="p">.</span><span class="nx">window</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>丸をクリックしたらアプリケーションが終了するようになりました。</p>
+
+<p><code>stage</code> という言葉がいきなり出てきてびっくりするかもしれませんが、これは SWF 全体を指し示す <code>DisplayObject</code> です。Flash の全ての表示オブジェクトは <code>DisplayObject</code> を継承していて、DOM ツリーのようなものを形成しています。<code>stage</code> は DOM ツリーのようなもののルートにあたる <code>DisplayObject</code> のことです。</p>
+
+<p>この <code>stage</code> の <code>addEventListener()</code> 関数を呼ぶことで、<code>stage</code> 上で発生したイベントを拾うことができるようになります。イベント発生時の処理は、無名関数で行っています。</p>
+
+<p>無名関数の中に出てくる <code>stage.window</code> というのはアプリケーションのウインドウのことです。ウインドウに対して close メソッドを呼び出しているので、アプリケーションは終了します。<code>stage.window</code> の他のメソッドやプロパティについては、Apollo マニュアルの <code>NativeWindow</code> クラスの項を参照してください。</p>
+
+<p><code>stage</code> や <code>stage.window</code> などがいきなり出てきてややこしいかもしれませんが、この部分を JavaScript ライクに書き直してみると、こうなります。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+<span class="p">},</span> <span class="kc">false</span><span class="p">);</span>
+</code></pre></div>
+<p>JavaScript に馴染みがある人にはしっくり来るんではないでしょうか。JavaScript では <code>addEventListener()</code> の第３引数は省略できません。また、IE では <code>addEventListener</code> が使えないので、このコードでは動かない点に注意してください。</p>
+
+<h2>タイマー処理を行う</h2>
+
+<p>最後に、タイマー処理を使って動きをつけてみましょう。タイマー処理には <code>setTimeout()</code> や <code>setInterval()</code> 関数が使えます。JavaScript と同じですね。</p>
+<div class="highlight"><pre><code class="actionscript language-actionscript" data-lang="actionscript"><span class="kd">package</span><span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*;</span>
+
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+        <span class="kd">function</span> <span class="nx">Test</span><span class="p">(){</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="o">,</span> <span class="mf">0.5</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="o">,</span> <span class="mi">50</span><span class="p">);</span>
+            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+
+            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">stage</span><span class="p">.</span><span class="nx">window</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+            <span class="p">});</span>
+
+            <span class="k">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+            <span class="nf">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">stage</span><span class="p">.</span><span class="nx">window</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">+</span> <span class="mi">200</span><span class="o">;</span>
+                <span class="nx">stage</span><span class="p">.</span><span class="nx">window</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">+</span> <span class="mi">200</span><span class="o">;</span>
+                <span class="nx">rad</span> <span class="o">+=</span> <span class="mi">5</span><span class="o">;</span>
+            <span class="p">}</span><span class="o">,</span> <span class="mi">50</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>50ミリ秒ごとに5度ずつ回転します。</p>
+
+<p><img src="as-test4.gif" width="320" height="240" alt="ぐるぐる回る"></p>
+
+<p>動きを工夫すれば鬼ごっこゲームが作れそうですね。</p>
+
+<p>先ほどと同じく JavaScript で書き直してみます。JavaScript には <code>window.x</code> がないので <code>window.moveTo()</code> を使ってみました。<code>window.moveTo()</code> 関数は広告フィルタなどでブロックされることが多いので、最近は実用的ではありませんが...</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">+</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">+</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
+<span class="p">},</span> <span class="mi">50</span><span class="p">);</span>
+</code></pre></div>
+<h2>4. 高性能に</h2>
+
+<p>ここまでは分かりやすくするために、動作速度や実行効率を犠牲にしています。</p>
+
+<p>そこで、ソースを書き直して性能を上げてみます。</p>
+<div class="highlight"><pre><code class="actionscript language-actionscript" data-lang="actionscript"><span class="kd">package</span><span class="p">{</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
+    <span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*;</span>
+
+    <span class="kd">public</span> <span class="kd">class</span> <span class="nx">Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">CIRCLE_RAD</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">const</span> <span class="nx">RAD</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="o">;</span>
+
+        <span class="kd">function</span> <span class="nx">Test</span><span class="p">(){</span>
+            <span class="k">var</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="o">,</span> <span class="mf">0.5</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">CIRCLE_RAD</span><span class="o">,</span> <span class="nx">CIRCLE_RAD</span><span class="o">,</span> <span class="nx">CIRCLE_RAD</span><span class="p">);</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">RAD</span> <span class="o">*</span> <span class="mi">2</span><span class="o">;</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">RAD</span><span class="o">;</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+
+            <span class="k">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+            <span class="nx">s</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="nx">RAD</span> <span class="o">+</span> <span class="nx">RAD</span><span class="o">;</span>
+                <span class="nx">s</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="nx">RAD</span> <span class="o">+</span> <span class="nx">RAD</span><span class="o">;</span>
+                <span class="nx">rad</span> <span class="o">+=</span> <span class="mi">5</span><span class="o">;</span>
+            <span class="p">});</span>
+
+            <span class="nx">s</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
+                <span class="nx">stage</span><span class="p">.</span><span class="nx">window</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>簡単に説明しておきます。</p>
+
+<ul>
+<li>マジックナンバーは嫌なので const として定義しました。</li>
+<li>ウインドウの位置を変更してアニメーションするのではなく、円を表示するための <code>Sprite</code> を用意し、それを移動させるようにした。これに伴い、コンパイル時のオプションとして <code>-default-size 500,500</code> を付け加えないと、円が下にきたときに欠けてしまいます。</li>
+<li>JavaScript との互換性を強調するために <code>setInterval()</code> を使っていましたが、凝ったアニメーションをするのなら <code>enterFrame</code> イベントをハンドリングしたほうが高速に動作します。<code>enterFrame</code> イベントは１フレームが描画されるごとに呼び出されます。デフォルト値は 24fps（１秒に24回）ですが、コンパイル時オプションの <code>-default-frame-rate</code> や <code>stage.frameRate</code> で変えられます。</li>
+</ul>
+
+<h1>まとめ</h1>
+
+<p>いかがだったでしょうか。Apollo アプリの書き方、というよりは、JavaScript が書ける人のための ActionScript 講座のようになってしまいましたが、分かりやすいと思っていただけたなら幸いです。</p>
+
+<p>ActionScript を勉強したい方は <a href="http://www.adobe.com/support/documentation/jp/flex/">Adobe - Flex： Flexドキュメンテーション</a> から公式のドキュメントをダウンロードしてみてください。下のほうにある「ドキュメンテーションzipファイル」から一括でダウンロードすることをお薦めします。ActionScript の使い方が事細かに解説された「ActionScript 3.0のプログラミング (prog_actionscript30.pdf)」や HTML のリファレンスガイドなど、参考になるファイルが盛りだくさんです。</p>
+
+<p>ActionScript 3.0 は、現在策定中の ECMAScript 第4版の基本になっていて、そのまま大きな仕様変更がないまま策定されそうです（参考：<a href="http://developer.mozilla.org/es4/clarification/adobe_as3.html">AS3 compatibility</a>）。さらに、Firefox の JavaScript 実行環境は ActionScript のバーチャルマシンである Tamarin のコードと統合されることも決定しています。ということで、将来的には Firefox で ActionScript 3.0 のように <code>package</code> や <code>class</code> といったキーワードを使って JavaScript を書ける日がくるのです。</p>
+
+<p>さぁ、ActionScript 3.0 と Apollo で遊んでみてはいかがでしょうか。</p>
+
+<h1>次回予告</h1>
+
+<p>次回は、SWF の中に HTML を表示させて連携させてみます。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/apollo/tutorial/as-apollo.html" class="hatena-bookmark-button" data-hatena-bookmark-title="ActionScript版 Apollo アプリを作ってみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/apollo/tutorial/as-apollo.html" data-lang="ja" data-size="horizontal" data-text="ActionScript版 Apollo アプリを作ってみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/apollo/tutorial/as-apollo.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2007年04月02日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/apollo/tutorial/as-apollo.md">編集履歴</a></span></div>
+
+
+</div>
+
+
+<div class="toc">
+<h4>目次</h4>
+<ul>
+
+<li><a href="/apollo/tutorial/html-js.html">HTML+JS版 Apollo アプリを作ってみる</a></li>
+
+<li>ActionScript版 Apollo アプリを作ってみる</li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

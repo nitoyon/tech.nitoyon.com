@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>HTML+JS版 Apollo アプリを作ってみる</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="HTML+JS版 Apollo アプリを作ってみる"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/apollo/tutorial/html-js.html"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Apollo 開発の方法を丁寧に説明していく予定です。第１回目は HTML+JavaScript で Apollo アプリを作ってみます。そこそこ実用的な例、ということでシンプルな RSS リーダーを作ることにします。Apollo での通信にはドメインの制約がない、という利点を体感することもできます。動作イメージはこんな感じです。開発環境のインストールがまだの方は、Adobe Apolloメモ や はじめてのApolloプログラミング を参考にして準備しておいてください（手抜き）。HTML と JavaScript の作成まずは HTML を準備します。rss-simple.html と..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/" id="logo-ja"">てっく煮" src="/images/logo-ja.png" id="logo_img"></a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2007年03月23日</div>
+
+
+
+<h1>HTML+JS版 Apollo アプリを作ってみる</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/apollo/tutorial/html-js.html" class="hatena-bookmark-button" data-hatena-bookmark-title="HTML+JS版 Apollo アプリを作ってみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/apollo/tutorial/html-js.html" data-lang="ja" data-size="horizontal" data-text="HTML+JS版 Apollo アプリを作ってみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/apollo/tutorial/html-js.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Apollo 開発の方法を丁寧に説明していく予定です。第１回目は HTML+JavaScript で Apollo アプリを作ってみます。</p>
+
+<p>そこそこ実用的な例、ということでシンプルな RSS リーダーを作ることにします。Apollo での通信にはドメインの制約がない、という利点を体感することもできます。動作イメージはこんな感じです。</p>
+
+<p><center><img src="rss-simple2.jpg" width="400" height="200" alt="rss-simple動作イメージ"></center></p>
+
+<p>開発環境のインストールがまだの方は、<a href="http://www.saturn.dti.ne.jp/~npaka/flash/apollo10/index.html">Adobe Apolloメモ</a> や <a href="http://zapanet.info/blog/item/953">はじめてのApolloプログラミング</a> を参考にして準備しておいてください（手抜き）。</p>
+
+<h1>HTML と JavaScript の作成</h1>
+
+<p>まずは HTML を準備します。<code>rss-simple.html</code> として保存します。味気ないですが、あえてシンプルにしてます。</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml"><span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+<span class="nt">&lt;title&gt;</span>Simple RSS<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;script</span> <span class="na">src=</span><span class="s">&quot;rss-simple.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;form&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">name=</span><span class="s">&quot;url&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;http://b.hatena.ne.jp/hotentry?mode=rss&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">value=</span><span class="s">&quot;OPEN&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;/form&gt;</span>
+
+  <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;output&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<p>次に、<code>rss-simple.js</code> を作成します。こちらも JavaScript が分かる人なら説明は不要なぐらいシンプルなソースにしたつもりです。<code>&lt;form&gt;</code> の <code>submit</code> イベントをハンドリングして、指定された URL を <code>XmlHttpRequest</code> で取得し、HTML で出力しています。Apollo アプリといっても、ネットワーク通信を行うだけなら、通常の JavaScript と同じように書くことができます。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">form</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">xmlhttp</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">();</span>
+
+<span class="c1">// イベント登録</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+  <span class="nx">form</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;form&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="nx">form</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;submit&quot;</span><span class="p">,</span> <span class="nx">onsubmit</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// フォームの送信時に呼ばれる</span>
+<span class="kd">function</span> <span class="nx">onsubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">){</span>
+  <span class="c1">// イベントの伝播をキャンセル</span>
+  <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+  <span class="nx">event</span><span class="p">.</span><span class="nx">stopPropagation</span><span class="p">();</span>
+
+  <span class="c1">// テキストボックスの中身を取得</span>
+  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">form</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+
+  <span class="c1">// Ajax でリクエスト</span>
+  <span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="nx">url</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+  <span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">onreadystatechange</span> <span class="o">=</span> <span class="nx">rssload</span><span class="p">;</span>
+  <span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Ajax イベント</span>
+<span class="kd">function</span> <span class="nx">rssload</span><span class="p">(){</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">readyState</span><span class="o">!=</span><span class="mi">4</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">);</span>
+
+  <span class="c1">// エラー処理</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">status</span> <span class="o">!=</span> <span class="mi">200</span>
+   <span class="o">||</span> <span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">responseXML</span> <span class="o">==</span> <span class="kc">null</span><span class="p">){</span>
+    <span class="nx">output</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span><span class="p">;</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">// RSS をパースして HTML を作成</span>
+  <span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s2">&quot;&lt;ol&gt;&quot;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="nx">xmlhttp</span><span class="p">.</span><span class="nx">responseXML</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">);</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">items</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">try</span><span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">items</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">firstChild</span><span class="p">.</span><span class="nx">nodeValue</span><span class="p">;</span>
+      <span class="nx">html</span> <span class="o">+=</span> <span class="s1">&#39;&lt;li&gt;&#39;</span> <span class="o">+</span> <span class="nx">escapeHTML</span><span class="p">(</span><span class="nx">title</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;/li&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">){}</span>
+  <span class="p">}</span>
+  <span class="nx">html</span> <span class="o">+=</span> <span class="s1">&#39;&lt;/ol&gt;&#39;</span><span class="p">;</span>
+
+  <span class="c1">// 書き出し</span>
+  <span class="nx">output</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">html</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// XSS 防止</span>
+<span class="kd">function</span> <span class="nx">escapeHTML</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&amp;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;amp;&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&quot;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;quot;&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&lt;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;lt;&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&gt;/g</span><span class="p">,</span> <span class="s2">&quot;&amp;gt;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>さて、HTML と JavaScript がそろいました。この２つのファイルをアップロードすれば同じドメインの RSS 限定の RSS リーダーとしては動きます。（IE では JavaScript エラーになりますが...）</p>
+
+<h1>ADF の準備</h1>
+
+<p>Apollo アプリとして実行するには ADF (Apollo Descriptor File) を作ります。<code>rss-simple-app.xml</code> として保存してください。</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;application</span> <span class="na">appId=</span><span class="s">&quot;com.nitoyon.tech.rss-simple&quot;</span> <span class="na">version=</span><span class="s">&quot;0.1&quot;</span> <span class="na">xmlns=</span><span class="s">&quot;http://ns.adobe.com/apollo/application/1.0.M3&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;properties&gt;</span>
+    <span class="nt">&lt;name&gt;</span>Simple RSS Reader<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;publisher&gt;</span>nitoyon<span class="nt">&lt;/publisher&gt;</span>
+    <span class="nt">&lt;description/&gt;</span>
+    <span class="nt">&lt;copyright/&gt;</span>
+  <span class="nt">&lt;/properties&gt;</span>
+  <span class="nt">&lt;rootContent</span> <span class="na">systemChrome=</span><span class="s">&quot;standard&quot;</span> <span class="na">visible=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>rss-simple.html<span class="nt">&lt;/rootContent&gt;</span>
+<span class="nt">&lt;/application&gt;</span>
+</code></pre></div>
+<p>おまじないがいろいろ書いてありますが、「<code>application</code> の <code>appId</code> 属性」は必ず設定しましょう。同じ <code>appId</code> のアプリケーションは同時起動できないので、他の ADF からコピーしてくると無駄に悩んでしまうかもしれません。独自のものをちゃんと設定しましょう。</p>
+
+<p>「<code>rootContent</code> の中身」も重要です。どのファイルを Apollo アプリとして使うのかを指定します。先ほど作った <code>rss-simple.html</code> を設定しています。</p>
+
+<p>動かすために必要なタグは以上ですが、いちおう他のタグについても説明しておきます。</p>
+
+<p><code>property</code> タグの中には作者情報を入力します。<code>C:\Documents and Settings\username\Program Files\[publisher]\[name]</code> にインストールされるので、アプリケーションを配布するなら真面目に設定しておきましょう。</p>
+
+<p><code>icon</code> タグを指定しているサンプルも多いですが、手順が複雑になるので略します。配布するときに必要になったら嫌でも調べますよね。</p>
+
+<h1>ためしに実行</h1>
+
+<p>さてさて、前置きが長くなりましたが、これで準備完了です。コマンドラインから次のように入力してみてください。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> adl rss-simple-app.xml
+</code></pre></div>
+<p>単純ですね。ウインドウが表示されれば成功です。</p>
+
+<p><center><img src="rss-simple1.jpg" width="400" height="200" alt="rss-simple起動"></center></p>
+
+<p>ボタンを押すと RSS を取りに行って一覧を出力します。ドメインの制約なしに、<code>XmlHttpRequest</code> でアクセスできるのが確認できます。</p>
+
+<p><center><img src="rss-simple2.jpg" width="400" height="204" alt="rss-simple取得"></center></p>
+
+<p>表示できない場合は次の順でトラブルシューティングしてみてください。</p>
+
+<ol>
+<li>adl が見つからない、認識されない
+
+<ul>
+<li>adl にパスが通っているか</li>
+<li>通っていない場合は、フルパスで入力してみる → adl は解凍したフォルダの bin の中にあります</li>
+</ul></li>
+<li>ADF が正しいか見直す
+
+<ul>
+<li>rootContent の中身が正しいか (次のようなエラーが表示されます：This application cannot be run; an error occurred loading the root content file: xxxxx)</li>
+<li>rootContent の visible 属性は true になっているか</li>
+<li>同じ appId の Apollo アプリが既に起動していないか</li>
+</ul></li>
+</ol>
+
+<h1>パッケージング</h1>
+
+<p>adl コマンドは SDK についていたものなので、このまま配布しても Apollo ランタイムをインストールしている人には使ってもらえません。他の人に使ってもらうためにはパッケージングする必要があります。</p>
+
+<p>パッケージングするには <code>adt</code> コマンドを使います。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> adt -package <span class="o">[</span>AIRファイル名<span class="o">]</span> <span class="o">[</span>ADF<span class="o">]</span> <span class="o">[</span>パッケージに含めるファイルやフォルダ<span class="o">]</span>
+</code></pre></div>
+<p>今回はこうなります。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> adt -package rss-simple.air rss-simple-app.xml rss-simple.html rss-simple.js
+</code></pre></div>
+<p><code>rss-simple.js</code> を忘れないようにしましょう。パッケージ化、といっても実際はランタイムが解釈できる形式で zip ファイルに固めているだけです。パッケージに含めるファイルやフォルダを最後に列挙する理由はこの辺にあります。</p>
+
+<p><code>rss-simple.air</code> が出力されるので、アップロードしたら世界中の人にインストールしてもらえるかもしれません。</p>
+
+<ul>
+<li>ソースコードのダウンロード：<a href="rss-simple-source.zip">rss-simple-source.zip</a></li>
+</ul>
+
+<h1>セキュリティ上の注意 (2007.3.24 2:00追記)</h1>
+
+<p>Apollo α1 では、Apollo アプリ中で開いた HTML はローカルファイルに対するアクセス権を持ちます。そのため、<strong>パッケージ外部の HTML へのリンクを作成することはセキュリティ上、大変危険です</strong>。</p>
+
+<p>本ページに掲載していました初期のサンプルにも同様の問題がありました。万が一インストールされた方がいらっしゃいましたら、直ちにアンインストールしていただくようお願いいたします。不十分な理解に基づきサンプルを作成したことをお詫びいたします。ご迷惑をおかけいたしました。</p>
+
+<p>Apollo α１は開発者向けのプレビュー版であり、セキュリティ上の問題は後回しにされている印象があります。そのため、実行する前にソースコードを確認する、自分でコンパイルした Apollo アプリしか実行しない、といった自衛の策をとることをお薦めいたします。</p>
+
+<h1>まとめ</h1>
+
+<p>いかがだったでしょうか。Ajax の知識だけでアプリケーションを作れるのが分かっていただけたでしょうか。</p>
+
+<p>サンプルアプリの見た目はかっこ悪いですが、HTML や CSS の知識があれば、いくらでもかっこよくできますね。JavaScript の知識があれば、機能をどんどん追加していけます。</p>
+
+<p>ただ、Apollo がα版のためか、ブラウザへのペーストや日本語入力ができないなど、不十分な点はいろいろあります。このあたりは正式リリースまでには解決すると信じましょう。</p>
+
+<h1>次回予告</h1>
+
+<p><a href="as-apollo.html">ActionScript 版 Apollo アプリを作ってみる</a>、をお届けします。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/apollo/tutorial/html-js.html" class="hatena-bookmark-button" data-hatena-bookmark-title="HTML+JS版 Apollo アプリを作ってみる - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/apollo/tutorial/html-js.html" data-lang="ja" data-size="horizontal" data-text="HTML+JS版 Apollo アプリを作ってみる - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/apollo/tutorial/html-js.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2007年03月23日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/apollo/tutorial/html-js.md">編集履歴</a></span></div>
+
+
+</div>
+
+
+<div class="toc">
+<h4>目次</h4>
+<ul>
+
+<li>HTML+JS版 Apollo アプリを作ってみる</li>
+
+<li><a href="/apollo/tutorial/as-apollo.html">ActionScript版 Apollo アプリを作ってみる</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

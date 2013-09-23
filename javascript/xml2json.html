@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>xml2json.cgi - ドメインを超えてXMLを読みこむ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="xml2json.cgi - ドメインを超えてXMLを読みこむ"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/javascript/xml2json.html"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Ajax の弱点は別ドメインのページを取得できないこと。そんな制限を取っ払って、別ドメインの XML を取得できる CGI を作ってみました。使い方XMLファイルの例:&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;yes&amp;quot;?&amp;gt;&amp;lt;items&amp;gt; &amp;lt;item&amp;gt; &amp;lt;jcity&amp;gt;千代田区&amp;lt;/jcity&amp;gt; &amp;lt;jlocal&amp;gt;千代田&amp;lt;/jlocal&amp;gt; &amp;lt;jpref&amp;gt;東京都&amp;lt;/jpref&amp;gt;..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/" id="logo-ja"">てっく煮" src="/images/logo-ja.png" id="logo_img"></a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2006年01月13日</div>
+
+
+
+<h1>xml2json.cgi - ドメインを超えてXMLを読みこむ</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/xml2json.html" class="hatena-bookmark-button" data-hatena-bookmark-title="xml2json.cgi - ドメインを超えてXMLを読みこむ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/xml2json.html" data-lang="ja" data-size="horizontal" data-text="xml2json.cgi - ドメインを超えてXMLを読みこむ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/xml2json.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Ajax の弱点は別ドメインのページを取得できないこと。そんな制限を取っ払って、別ドメインの XML を取得できる CGI を作ってみました。</p>
+
+<h1>使い方</h1>
+
+<p>XMLファイルの例:</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;</span>
+<span class="nt">&lt;items&gt;</span>
+  <span class="nt">&lt;item&gt;</span>
+    <span class="nt">&lt;jcity&gt;</span>千代田区<span class="nt">&lt;/jcity&gt;</span>
+    <span class="nt">&lt;jlocal&gt;</span>千代田<span class="nt">&lt;/jlocal&gt;</span>
+    <span class="nt">&lt;jpref&gt;</span>東京都<span class="nt">&lt;/jpref&gt;</span>
+    <span class="nt">&lt;pref_cd&gt;</span>13<span class="nt">&lt;/pref_cd&gt;</span>
+    <span class="nt">&lt;zip_cd&gt;</span>1000001<span class="nt">&lt;/zip_cd&gt;</span>
+  <span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/items&gt;</span>
+</code></pre></div>
+<h2>XMLファイルへのアクセス方法１（同期）</h2>
+
+<p>XML の URL は <a href="http://www.example.com/sample.xml">http://www.example.com/sample.xml</a> だと仮定します。XML を読み込むには次のようなタグを HTML に記述します。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;xml2json.cgi?url=http%3A%2F%2Fwww.example.com%2Fsample.xml&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>xml2json.cgi は自分のサーバーに設置します。</p>
+
+<p>上記の JavaScript は次のように展開されてインポートされます。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="k">if</span> <span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="nx">xml</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;undefined&#39;</span><span class="p">)</span> <span class="nx">xml</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nx">xml</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">items</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">item</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jcity</span><span class="o">:</span> <span class="s2">&quot;千代田区&quot;</span><span class="p">,</span>
+      <span class="nx">jlocal</span><span class="o">:</span> <span class="s2">&quot;千代田&quot;</span><span class="p">,</span>
+      <span class="nx">jpref</span><span class="o">:</span> <span class="s2">&quot;東京都&quot;</span><span class="p">,</span>
+      <span class="nx">pref_cd</span><span class="o">:</span> <span class="s2">&quot;13&quot;</span><span class="p">,</span>
+      <span class="nx">zip_cd</span><span class="o">:</span> <span class="s2">&quot;1000001&quot;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="nx">xml</span><span class="p">.</span><span class="nx">onload</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="nx">xml</span><span class="p">.</span><span class="nx">onload</span><span class="p">(</span><span class="nx">xml</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div>
+<p>たとえば、HTML からは次のようにして XML の情報を利用します。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;xml2json.cgi?url=http%3A%2F%2Fwww.example.com%2Fsample.xml&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script&gt;</span>
+<span class="nx">alert</span><span class="p">(</span><span class="nx">xml</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">][</span><span class="s2">&quot;item&quot;</span><span class="p">][</span><span class="s2">&quot;jcity&quot;</span><span class="p">];</span>
+<span class="nt">&lt;/script&gt;</span>
+</code></pre></div>
+<h2>XMLファイルへのアクセス方法２（非同期）</h2>
+
+<p>script タグでインポートしてしまうと、スクリプトのダウンロードが完了するまで、script タグ以降の HTML の表示がとまってしまいます。</p>
+
+<p>そこで、非同期に xml2json を呼び出す方法を示します。ここでは、<code>window.onload</code> イベントで読み込みを行っています。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nb">window</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;head&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">appendChild</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;script&quot;</span><span class="p">));</span>
+    <span class="nx">s</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;text/javascript&quot;</span><span class="p">;</span>
+    <span class="nx">s</span><span class="p">.</span><span class="nx">charset</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span><span class="p">;</span>
+    <span class="nx">s</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="s2">&quot;xml2json.cgi?url=http%3A%2F%2Fwww.example.com%2Fsample.xml&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">xml</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nx">xml</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+    <span class="c1">// 読み込み後の処理</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>XML2JSON のソースコード</h1>
+
+<p>分かりやすくするために、複雑なエラー処理がない単純なソースコードを示します。サーバー側で CGI として動作します。</p>
+
+<p><code>LWP::UserAgent</code> でダウンロードして <code>XML::Simple</code> で XML 解析して、<code>Data::Dumper</code> でダンプしています。Perl の Dump と JavaScript の JSON 形式が酷似しているため、処理はこれだけです（ダンプデータの <code>=&gt;</code> を <code>:</code> に置換するだけ・・・）。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl"><span class="c1">#!/usr/local/bin/perl</span>
+
+<span class="k">use</span> <span class="n">CGI</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">LWP::</span><span class="n">UserAgent</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">XML::</span><span class="n">Simple</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Data::</span><span class="n">Dumper</span><span class="p">;</span>
+
+<span class="k">my</span> <span class="nv">$q</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CGI</span><span class="p">;</span>
+
+<span class="c1"># param</span>
+<span class="k">my</span> <span class="nv">$var</span> <span class="o">=</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&#39;var&#39;</span><span class="p">);</span>
+<span class="nv">$var</span> <span class="o">=</span> <span class="s">&quot;xml&quot;</span> <span class="k">if</span> <span class="o">!</span><span class="nb">defined</span> <span class="nv">$var</span> <span class="ow">or</span> <span class="nv">$var</span><span class="o">!~</span><span class="sr">/^[a-zA-Z_]+$/</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$url</span> <span class="o">=</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">);</span>
+<span class="nb">die</span> <span class="k">if</span> <span class="o">!</span><span class="nb">defined</span> <span class="nv">$url</span> <span class="ow">or</span> <span class="nv">$url</span><span class="o">!~</span><span class="sr">m!^http://!</span><span class="p">;</span>
+
+<span class="c1"># request</span>
+<span class="k">my</span> <span class="nv">$ua</span> <span class="o">=</span> <span class="nn">LWP::</span><span class="n">UserAgent</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">;</span>
+<span class="nv">$ua</span><span class="o">-&gt;</span><span class="n">agent</span><span class="p">(</span><span class="s">&quot;XML2JSON/0.1 &quot;</span><span class="p">);</span>
+<span class="k">my</span> <span class="nv">$req</span> <span class="o">=</span> <span class="nn">HTTP::</span><span class="n">Request</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="n">GET</span> <span class="o">=&gt;</span> <span class="nv">$url</span><span class="p">);</span>
+<span class="k">my</span> <span class="nv">$res</span> <span class="o">=</span> <span class="nv">$ua</span><span class="o">-&gt;</span><span class="n">request</span><span class="p">(</span><span class="nv">$req</span><span class="p">);</span>
+<span class="nb">die</span> <span class="k">if</span> <span class="o">!</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">is_success</span><span class="p">;</span>
+<span class="nb">die</span> <span class="k">if</span> <span class="nv">$res</span><span class="o">-&gt;</span><span class="n">headers</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">)</span><span class="o">!~</span><span class="sr">m!/xml!</span><span class="p">;</span>
+
+<span class="c1"># XML Dump</span>
+<span class="nv">$</span><span class="nn">XML::Simple::</span><span class="nv">PREFERRED_PARSER</span> <span class="o">=</span> <span class="s">&#39;XML::Parser&#39;</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$xmlobj</span> <span class="o">=</span> <span class="n">XMLin</span><span class="p">(</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">content</span><span class="p">);</span>
+<span class="nv">$</span><span class="nn">Data::Dumper::</span><span class="nv">Indent</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nv">$</span><span class="nn">Data::Dumper::</span><span class="nv">Useqq</span> <span class="o">=</span> <span class="s">&quot;utf8&quot;</span><span class="p">;</span>
+<span class="nv">$json</span> <span class="o">=</span> <span class="n">Dumper</span><span class="p">(</span><span class="nv">$xmlobj</span><span class="p">);</span>
+
+<span class="nv">$json</span><span class="o">=~</span><span class="sr">s/^\$VAR1/$var.data/</span><span class="p">;</span>
+<span class="nv">$json</span><span class="o">=~</span><span class="sr">s/([^\\])&quot; =&gt; (&quot;|{|\[)/$1&quot; : $2/g</span><span class="p">;</span>
+
+<span class="c1"># output</span>
+<span class="k">print</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="o">-</span><span class="n">type</span> <span class="o">=&gt;</span> <span class="s">&quot;text/plain&quot;</span><span class="p">,</span> <span class="o">-</span><span class="n">charset</span> <span class="o">=&gt;</span> <span class="s">&quot;utf-8&quot;</span><span class="p">);</span>
+<span class="k">print</span> <span class="s">&quot;if (typeof($var) == &#39;undefined&#39;) $var = {};\n&quot;</span><span class="p">;</span>
+<span class="k">print</span> <span class="nv">$json</span><span class="o">.</span><span class="s">&quot;\n&quot;</span><span class="p">;</span>
+<span class="k">print</span> <span class="s">&quot;if (typeof($var.onload) == &#39;function&#39;) $var.onload($var.data);&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>毎回サーバーに取りに行くのは負荷が高いので、こんな風にキャッシュ機能をつけるとよいかもしれません。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl"><span class="c1">#!/usr/local/bin/perl</span>
+
+<span class="k">use</span> <span class="n">CGI</span><span class="p">;</span>
+<span class="k">use</span> <span class="n">Jcode</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">LWP::</span><span class="n">UserAgent</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">XML::</span><span class="n">Simple</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Digest::</span><span class="n">MD5</span> <span class="sx">qw(md5_hex)</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Data::</span><span class="n">Dumper</span><span class="p">;</span>
+
+<span class="k">my</span> <span class="nv">$cache_dir</span> <span class="o">=</span> <span class="s">&quot;../cache/&quot;</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$cache_lifetime</span> <span class="o">=</span> <span class="mi">600</span><span class="p">;</span> <span class="c1"># 10min</span>
+
+<span class="k">my</span> <span class="nv">$q</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CGI</span><span class="p">;</span>
+
+<span class="c1"># param</span>
+<span class="k">my</span> <span class="nv">$var</span> <span class="o">=</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&#39;var&#39;</span><span class="p">);</span>
+<span class="nv">$var</span> <span class="o">=</span> <span class="s">&quot;xml&quot;</span> <span class="k">if</span> <span class="o">!</span><span class="nb">defined</span> <span class="nv">$var</span> <span class="ow">or</span> <span class="nv">$var</span><span class="o">!~</span><span class="sr">/^[a-zA-Z_]+$/</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$url</span> <span class="o">=</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&#39;url&#39;</span><span class="p">);</span>
+<span class="o">&amp;</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;url is not set&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="o">!</span><span class="nb">defined</span> <span class="nv">$url</span> <span class="ow">or</span> <span class="nv">$url</span><span class="o">!~</span><span class="sr">m!^http://!</span><span class="p">;</span>
+
+<span class="k">my</span> <span class="nv">$json</span><span class="p">;</span>
+<span class="k">my</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="nv">$cache_dir</span><span class="o">.</span><span class="n">md5_hex</span><span class="p">(</span><span class="nv">$url</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="o">-</span><span class="n">f</span> <span class="nv">$cache</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nb">stat</span><span class="p">(</span><span class="nv">$cache</span><span class="p">))[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="nv">$cache_lifetime</span> <span class="o">&gt;</span> <span class="nb">time</span><span class="p">){</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">CACHE</span><span class="p">,</span> <span class="nv">$cache</span><span class="p">);</span>
+    <span class="nv">$json</span> <span class="o">=</span> <span class="nb">join</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="sr">&lt;CACHE&gt;</span><span class="p">);</span>
+    <span class="nb">close</span><span class="p">(</span><span class="n">CACHE</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">else</span><span class="p">{</span>
+    <span class="c1"># request</span>
+    <span class="k">my</span> <span class="nv">$ua</span> <span class="o">=</span> <span class="nn">LWP::</span><span class="n">UserAgent</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">;</span>
+    <span class="nv">$ua</span><span class="o">-&gt;</span><span class="n">agent</span><span class="p">(</span><span class="s">&quot;XML2JSON/0.1 &quot;</span><span class="p">);</span>
+    <span class="k">my</span> <span class="nv">$req</span> <span class="o">=</span> <span class="nn">HTTP::</span><span class="n">Request</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="n">GET</span> <span class="o">=&gt;</span> <span class="nv">$url</span><span class="p">);</span>
+    <span class="k">my</span> <span class="nv">$res</span> <span class="o">=</span> <span class="nv">$ua</span><span class="o">-&gt;</span><span class="n">request</span><span class="p">(</span><span class="nv">$req</span><span class="p">);</span>
+    <span class="o">&amp;</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;cannot get url&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="o">!</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">is_success</span><span class="p">;</span>
+    <span class="o">&amp;</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;cotnent is not xml (&quot;</span><span class="o">.</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">headers</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">)</span><span class="o">.</span><span class="s">&quot;)&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nv">$res</span><span class="o">-&gt;</span><span class="n">headers</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">)</span><span class="o">!~</span><span class="sr">m!/xml!</span><span class="p">;</span>
+
+    <span class="c1"># XML Dump</span>
+    <span class="nv">$</span><span class="nn">XML::Simple::</span><span class="nv">PREFERRED_PARSER</span> <span class="o">=</span> <span class="s">&#39;XML::Parser&#39;</span><span class="p">;</span>
+    <span class="k">my</span> <span class="nv">$xmlobj</span> <span class="o">=</span> <span class="n">XMLin</span><span class="p">(</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">content</span><span class="p">);</span>
+    <span class="nv">$</span><span class="nn">Data::Dumper::</span><span class="nv">Indent</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="nv">$</span><span class="nn">Data::Dumper::</span><span class="nv">Useqq</span> <span class="o">=</span> <span class="s">&quot;utf8&quot;</span><span class="p">;</span>
+    <span class="nv">$json</span> <span class="o">=</span> <span class="n">Dumper</span><span class="p">(</span><span class="nv">$xmlobj</span><span class="p">);</span>
+
+    <span class="c1"># Write cache</span>
+    <span class="k">my</span> <span class="nv">$cache</span> <span class="o">=</span> <span class="nv">$cache_dir</span><span class="o">.</span><span class="n">md5_hex</span><span class="p">(</span><span class="nv">$url</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">CACHE</span><span class="p">,</span> <span class="s">&quot;&gt;$cache&quot;</span><span class="p">)){</span>
+        <span class="k">print</span> <span class="n">CACHE</span> <span class="nv">$json</span><span class="p">;</span>
+        <span class="nb">close</span><span class="p">(</span><span class="n">CACHE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="nv">$json</span><span class="o">=~</span><span class="sr">s/^\$VAR1/$var.data/</span><span class="p">;</span>
+<span class="nv">$json</span><span class="o">=~</span><span class="sr">s/([^\\])&quot; =&gt; (&quot;|{|\[)/$1&quot; : $2/g</span><span class="p">;</span>
+
+<span class="c1"># output</span>
+<span class="k">print</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="o">-</span><span class="n">type</span> <span class="o">=&gt;</span> <span class="s">&quot;text/plain&quot;</span><span class="p">,</span> <span class="o">-</span><span class="n">charset</span> <span class="o">=&gt;</span> <span class="s">&quot;utf-8&quot;</span><span class="p">);</span>
+<span class="k">print</span> <span class="s">&quot;if (typeof($var) == &#39;undefined&#39;) $var = {};\n&quot;</span><span class="p">;</span>
+<span class="k">print</span> <span class="nv">$json</span><span class="o">.</span><span class="s">&quot;\n&quot;</span><span class="p">;</span>
+<span class="k">print</span> <span class="s">&quot;if (typeof($var.onload) == &#39;function&#39;) $var.onload($var.data);&quot;</span><span class="p">;</span>
+
+<span class="k">sub </span><span class="nf">error</span><span class="p">{</span>
+    <span class="k">print</span> <span class="nv">$q</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">(</span><span class="o">-</span><span class="n">type</span> <span class="o">=&gt;</span> <span class="s">&quot;text/plain&quot;</span><span class="p">,</span> <span class="o">-</span><span class="n">charset</span> <span class="o">=&gt;</span> <span class="s">&quot;utf-8&quot;</span><span class="p">);</span>
+    <span class="k">print</span> <span class="s">&quot;var $var = \&quot;$_[0]\&quot;;&quot;</span><span class="p">;</span>
+    <span class="nb">exit</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>思うこと</h1>
+
+<p>開発者的には RSS を XML で吐き出すのと同時に JSON で吐き出してくれるページが増えてくれたらうれしいなぁ。</p>
+
+<p>ただ、悪意のある JavaScript をインポートしてしまうと、訪問者の Cookie が漏れてしまうので、Cookie で個人情報を管理している場合は注意が必要です。信頼できる会社に XML2JSON なサービスをやってほしいところです。</p>
+
+<p>(追記) Yahoo! Pipes を使えば、外部サイトの内容を JSONP で取得できるようになりました。詳しくは <a href="/ja/blog/2007/12/12/pipes-page-fetch/">Yahoo! Pipes の Page Fetch モジュールでスクレイピングし放題</a> を見てください。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/xml2json.html" class="hatena-bookmark-button" data-hatena-bookmark-title="xml2json.cgi - ドメインを超えてXMLを読みこむ - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/xml2json.html" data-lang="ja" data-size="horizontal" data-text="xml2json.cgi - ドメインを超えてXMLを読みこむ - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/xml2json.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2006年01月13日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/javascript/xml2json.md">編集履歴</a></span></div>
+
+
+</div>
+
+
+
+<div id="pager">
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

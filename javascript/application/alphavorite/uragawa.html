@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>大旦那のお気に入りの裏側</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="大旦那のお気に入りの裏側"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="大旦那のお気に入りの技術的な側面に関して解説してみました。大旦那のお気に入りデータの取得まずは大旦那のお気に入りを調べるところから始めました。はてな ID からお気に入りを取得する部分は Perl の HTML::TreeBuilder::XPath を使って書いてみました。sub getFavorites{ my $id = shift; my $res = URI::Fetch-&amp;gt;fetch(sprintf &amp;#39;http://b.hatena.ne.jp/%s/favorite&amp;#39;, $id) or die URI::Fetch-&amp;gt;errstr; my $tr..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/" id="logo-ja"">てっく煮" src="/images/logo-ja.png" id="logo_img"></a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2006年11月08日</div>
+
+
+
+<h1>大旦那のお気に入りの裏側</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" class="hatena-bookmark-button" data-hatena-bookmark-title="大旦那のお気に入りの裏側 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" data-lang="ja" data-size="horizontal" data-text="大旦那のお気に入りの裏側 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p><a href="./">大旦那のお気に入り</a>の技術的な側面に関して解説してみました。</p>
+
+<h1>大旦那のお気に入りデータの取得</h1>
+
+<p>まずは大旦那のお気に入りを調べるところから始めました。はてな ID からお気に入りを取得する部分は Perl の <code>HTML::TreeBuilder::XPath</code> を使って書いてみました。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl"><span class="k">sub </span><span class="nf">getFavorites</span><span class="p">{</span>
+    <span class="k">my</span> <span class="nv">$id</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+    <span class="k">my</span> <span class="nv">$res</span> <span class="o">=</span> <span class="nn">URI::</span><span class="n">Fetch</span><span class="o">-&gt;</span><span class="n">fetch</span><span class="p">(</span><span class="nb">sprintf</span> <span class="s">&#39;http://b.hatena.ne.jp/%s/favorite&#39;</span><span class="p">,</span> <span class="nv">$id</span><span class="p">)</span>
+     <span class="ow">or</span> <span class="nb">die</span> <span class="nn">URI::</span><span class="n">Fetch</span><span class="o">-&gt;</span><span class="n">errstr</span><span class="p">;</span>
+
+    <span class="k">my</span> <span class="nv">$tree</span> <span class="o">=</span> <span class="nn">HTML::TreeBuilder::</span><span class="n">XPath</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">;</span>
+    <span class="nv">$tree</span><span class="o">-&gt;</span><span class="n">parse</span><span class="p">(</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">content</span><span class="p">);</span>
+    <span class="nv">$tree</span><span class="o">-&gt;</span><span class="nb">eof</span><span class="p">;</span>
+
+    <span class="c1"># /user1//user2//user3/</span>
+    <span class="k">my</span> <span class="nv">$favorites</span> <span class="o">=</span> <span class="nv">$tree</span><span class="o">-&gt;</span><span class="n">findvalue</span><span class="p">(</span><span class="s">&#39;/html//div[@class=&quot;favoritelist&quot;]//li/a[position()=1]/@href&#39;</span><span class="p">);</span>
+    <span class="nv">$favorites</span><span class="o">=~</span><span class="sr">m!/([^/]+)/!g</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>JSON 化</h1>
+
+<p>このデータを JavaScript で食えるように JSON 化してやったのが <code>data.js</code> です。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">fav</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">jkondo</span> <span class="o">:</span> <span class="p">{</span><span class="nx">count</span> <span class="o">:</span> <span class="mi">690</span><span class="p">,</span> <span class="nx">favorite</span> <span class="o">:</span> <span class="p">[</span><span class="s2">&quot;naoya&quot;</span><span class="p">,</span><span class="s2">&quot;umedamochio&quot;</span><span class="p">,</span><span class="s2">&quot;mkusunok&quot;</span><span class="p">,</span><span class="s2">&quot;miyagawa&quot;</span><span class="p">]},</span>
+    <span class="c1">// ...</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>旦那衆、若旦那の被お気に入り数のデータと合わせても 61KB。この程度なら、ページをロードするたびに読み込んでも問題ない、と判断して毎回クライアントに渡すことにしました。</p>
+
+<p>その結果、集計結果を切り替えても、アイコンをクリックして詳細を見ても、すべてブラウザ内で処理が可能になりました。サーバーにリクエストをする必要がなく、HTTP リクエストのラウンドトリップタイムがない分だけ、すばやくページ表示することができます。</p>
+
+<p>ただ、この方法は万能ではなくて、すべてクライアントで処理する必要があるため、必要なデータだけをサーバーからとってくる Ajax に比べて、メモリや CPU の消費量が増えてしまうという問題もあります。作成するシステムに応じて、どれだけをサーバーに任せて、どれだけをクライアントに任せるかを判断する必要があります。</p>
+
+<h1>条件の追加</h1>
+
+<p>今回、すべてのデータをクライアントに転送していることを利用して、１つ面白いことができます。集計条件の追加です。</p>
+
+<p><a href="alphavorite20061112.lzh">ソース一式</a>をダウンロードして、alphavorite.js をエディタで開いてみてください。先頭で analyzers というハッシュがあるのですが、ここで集計方法を定義しています。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">analyzers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">count</span> <span class="o">:</span> <span class="p">{</span>
+        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;各1pt&quot;</span><span class="p">,</span>
+        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span><span class="k">return</span> <span class="mi">1</span><span class="p">;},</span>
+        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mi">16</span>
+    <span class="p">},</span>
+
+    <span class="nx">fav</span> <span class="o">:</span> <span class="p">{</span>
+        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;被Fav数&quot;</span><span class="p">,</span>
+        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">hifav</span><span class="p">},</span>
+        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mf">0.16</span>
+    <span class="p">},</span>
+
+    <span class="nx">fav_ratio</span> <span class="o">:</span> <span class="p">{</span>
+        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;被Fav数 / Fav数&quot;</span><span class="p">,</span>
+        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">fav</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">?</span> <span class="nx">hifav</span> <span class="o">/</span> <span class="nx">fav</span> <span class="o">:</span> <span class="mi">0</span><span class="p">},</span>
+        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mf">1.6</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>この部分を修正することで、新たに集計方法を追加することができます。</p>
+
+<p>例えば、id が３文字の人でランキングをとるには次のようにします。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">    <span class="p">},</span>
+    <span class="nx">num</span> <span class="o">:</span> <span class="p">{</span>
+        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;3文字IDのみ&quot;</span><span class="p">,</span>
+        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span>
+            <span class="k">return</span> <span class="nx">toid</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">3</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">},</span>
+        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mi">16</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<p><img src="cap4.gif" width="239" height="310" alt="3文字ID"></p>
+
+<p>index.html をブラウザで開くだけで、3文字IDの集計をテストすることができます。データをすべて JavaScript が持っているおかげで、ローカル環境でも簡単にテストできるわけです。これこそ、<em>サーバーレス</em>と表現したおもしろさです。</p>
+
+<p>他にも、例えば、id に数字を含む、とか、はてなの社員だけ、とか、いろいろやって遊べるかもしれません。</p>
+
+<p>いちおうパラメータを解説。</p>
+
+<ul>
+<li><b>name</b>: 画面に表示する日本語名。</li>
+<li><b>point</b>: 大旦那が何点投票するかを示す値。</li>
+<li><b>hifav</b>: 大旦那の被Fav数。</li>
+<li><b>fav</b>: 大旦那のFav数。</li>
+<li><b>fromid</b>: 大旦那の id。</li>
+<li><b>toid</b>: 投票対象の id。</li>
+<li><b>pixelPerRatio</b>: １ポイントを何ピクセルで表示するか。画面幅に合わせて適当に変更すべし。</li>
+</ul>
+
+<h1>おまけ</h1>
+
+<p>蛇足を２つほど。</p>
+
+<p>最近のブックマークを取得する部分は、Drk7jp さんの <a href="http://www.drk7.jp/MT/archives/001011.html">XML を JSON に変換するサービス</a> を利用しています。</p>
+
+<p>もう１つの蛇足。擬似フレームっぽいデザインですが、JavaScript は使っていません。すべて CSS だけでデザインしました。CSS は <a href="http://jigen.aruko.net/">jigelog</a> さんのものを参考にさせてもらいながら作り上げました。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" class="hatena-bookmark-button" data-hatena-bookmark-title="大旦那のお気に入りの裏側 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" data-lang="ja" data-size="horizontal" data-text="大旦那のお気に入りの裏側 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2006年11月08日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/javascript/application/alphavorite/uragawa.md">編集履歴</a></span></div>
+
+
+</div>
+
+
+
+<div id="pager">
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

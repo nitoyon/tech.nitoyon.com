@@ -7,10 +7,6 @@ var Site = {
 
 
 
-
-
-
-
 Site.archives.posts = [
 	{url: "/en/blog/2013/07/09/symlink-dir-diff-on-windows/", title: "Use symlinks in git difftool --dir-diff on Windows"},
 	{url: "/en/blog/2013/06/25/jekyll-grunt/", title: "Jekyll: Use Grunt instead of --watch option"},

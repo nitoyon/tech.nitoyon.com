@@ -1,0 +1,359 @@
+<DOCTYPE HTML PUBLIC -//W3C//DTD HTML 4.01 Transitional//EN "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>はてブでタグクラウド</title>
+<script src="prototype.js"></script>
+<script src="nifty.js"></script>
+<script src="slider.js"></script>
+<script src="data.js" charset="utf-8"></script>
+<script src="htbcloud.js" type="text/javascript" charset="utf-8"></script>
+<script>
+function outputCloudJs(btn){
+	if(!btn) return;
+	var f = btn.form;
+	if(!f) return;
+
+	var monthList = hbc.monthKeys;
+	var s = "";
+	for(var i = 0; i < monthList.length; i++){
+		var m = monthList[i];
+		var mm = hbc.monthTags[m];
+		if(s != "") s += ",\r\n";
+		s += ' "' + m + '" : {entry:' + mm.entry + ',tag:' + mm.tag + ',tags:{';
+
+		var scores = mm.tags;
+		var flag = false;
+		for(tag in scores){
+			if(flag) s += ",";
+			s += '"' + tag.replace("\\", "\\\\").replace('"', "\\\"") + '":' + scores[tag];
+			flag = true;
+		}
+		s += "}}";
+	}
+
+	f.json.value = "var monthTags = {\r\n" + s + "\r\n};";
+}
+
+function loadMore(btn){
+	if(!btn) return;
+	var f = btn.form;
+	if(!f) return;
+
+	var entries = f.txt.value.split("<entry>");
+	var len = entries.length;
+	var index = 0;
+
+	f.txt.disabled = true;
+	f.load.disabled = true;
+	f.load_more.disabled = true;
+	f.txt.value = "";
+
+	var parseOne = function(){
+		$("msg").innerHTML = "処理中... " + Math.floor(index / len * 100) + "%";
+		var tags = [];
+
+		// 終了処理
+		if(index >= len){
+			f.txt.disabled = false;
+			f.txt.value = "";
+			f.load.disabled = false;
+			f.load_more.disabled = false;
+			$("msg").innerHTML = "";
+			hbc.update();
+			return;
+		}
+
+		var entry = entries[index++];
+		if(entry.match(/<issued>(\d+)-(\d+)/)){
+			var month = RegExp.$1 + RegExp.$2;
+			if(monthTags[month] == undefined){
+				monthTags[month] = {entry : 0, tag : 0, tags : {}};
+			}
+			var m = monthTags[month];
+			m.entry++;
+
+			var c = 0;
+			while(c < 20){
+				var i = entry.indexOf("<dc:subject>", i + 1);
+				if(i == -1) break;
+				i += 12;
+
+				var i2 = entry.indexOf("<", i);
+				var tag = entry.substr(i, i2 - i);
+
+				if(m.tags[tag] == undefined){
+					m.tags[tag] = 0;
+				}
+				m.tags[tag]++;
+				m.tag++;
+				c++;
+			}
+		}
+		setTimeout(parseOne, 10);
+	}
+
+	parseOne();
+	return;
+}
+
+function loadXml(btn){
+	monthTags = {};
+	hbc.id = "";
+	return loadMore(btn);
+}
+
+var hbc;
+Event.observe(window, "load", function(){
+	HatebuTagCloud.prototype.id = "nitoyon";
+	hbc = new HatebuTagCloud($("hatebucloud"));
+	
+	RoundedTop("div.box", "transparent", "#ccc");
+	RoundedBottom("div.box", "#fff", "#eee");
+});
+</script>
+<style>
+body{
+	margin:0;
+	background: url('background.gif') repeat-y #eee;
+	font-size: 80%;
+}
+
+/* round */
+.rtop, .rbottom{display:block}
+.rtop *, .rbottom *{display: block; height: 1px; overflow: hidden}
+.r1{margin: 0 5px}
+.r2{margin: 0 3px}
+.r3{margin: 0 2px}
+.r4{margin: 0 1px; height: 2px} 
+
+/* tagcloud */
+.track_box{
+	margin: 5px 0;
+	background: #D4D0C8;
+	width: 210px;
+}
+
+.track{
+	background: url('slider-bg.gif') #ccc;
+	width : 200px;
+	margin: 0 5px;
+	height : 28px;
+	cursor:move;
+}
+
+.slider{
+	width: 10px;
+	height: 28px;
+	background: url('slider.gif') #ccc;
+}
+
+div.about{
+	margin: 1em 1em 2em 2em;
+}
+
+#hatebucloud{
+	margin: 0 0 30px 0;
+}
+
+#hatebucloud h3{
+ font-size: 150%;
+ color: #069;
+ margin: 1em 0 0 0;
+}
+
+#hatebucloud h3 span.count{
+ font-size: 70%;
+ color: #69c;
+ font-weight: normal;
+ padding-left: 3em;
+}
+
+#hatebucloud .tagcloud{
+ clear: both;
+ background: #D0E4FF;
+ width: 400px;
+ height: 200px;
+ overflow: auto;
+}
+
+#hatebucloud .tagcloud a{
+	text-decoration: none;
+}
+
+em{
+	font-size: 150%;
+	color: red;
+	font-weight: bold;
+}
+
+/*---*/
+#main{
+	padding: 0 10px;
+	width: 410px;
+}
+
+#footer{
+	background: url('ground.gif') repeat-x;
+	width: 430px;
+	color: white;
+	margin:0;
+	padding: 0;
+	height: 71px;
+}
+
+#footer div{
+	padding: 49px 0 0 5px;
+}
+
+.notice{
+	margin: 3em 0 1em 3em;
+}
+
+div.box{
+	width: 400px;
+	margin: 1em 0 1em 0;
+}
+
+div.content{
+	background: #eee;
+	padding:0 10px;
+}
+
+div.box h2{
+ margin:0;
+ padding: 10px 30px;
+ background: #ccc url('info.gif') no-repeat 8px 8px;
+ font-size: 100%;
+ color: #666;
+}
+
+div.box ol{
+ margin:0;
+ padding:10px 0 0 2em;
+}
+div.box ol li{
+ margin: 3px 0 0 0;
+}
+
+div.box ul{
+ margin: 5px 0 0 0;
+ padding-left:20px;
+ list-style: circle;
+}
+div.box ul li{
+ margin-left:0px;
+ padding-left:0px;
+}
+
+div.box ul li h3{
+ color: #469;
+ font-weight: normal;
+ font-size: 100%;
+ margin:0;
+}
+
+
+div#import form{
+	margin: 10px 0 0 0;
+	padding: 10px 0 0 10px;
+	border-top: 3px dashed #ccc;
+}
+div.box textarea{
+	margin-bottom: 5px;
+	width: 90%;
+	height: 100px;
+	font-size: 88%;
+}
+div.box form button{
+	margin-right: 3px;
+}
+</style>
+</head>
+<body>
+<img src="title.gif" width="300" height="127" alt="タイトル">
+
+<div id="main">
+<div class="about">
+<p><a href="http://blog.bulknews.net/PMTagCloud/">日本の首相演説のタグクラウド</a> および <a href="http://chir.ag/phernalia/preztags/">US Presidential Speeches Tag Cloud</a> に触発されて、<a href="http://b.hatena.ne.jp/">はてなブックマーク</a>のタグを時系列で並べてみたらおもしろいかも！と思い、作ってみました。</p>
+
+<p>「あー、このころは、こんなことに夢中だったんだ」と、意外な再発見があるかもしれません。</p>
+
+<p>サンプルとして、私のタグクラウドを表示してます。自分のタグクラウドを表示させることもできますので、試してみてくださいね。</p>
+</div>
+
+<div id="hatebucloud">
+<div class="track_box"><div class="track"></div></div>
+<noscript><em>JavaScript を有効にしてください</em></noscript>
+</div>
+
+
+<div id="import" class="box">
+ <h2>自分の「はてブ タグクラウド」を作成しよう</h2>
+ <div class="content">
+  <ol>
+  <li>エクスポート用の <a href="http://b.hatena.ne.jp/dump">Atom フィード</a> をクリップボードにコピーします。
+  <li>下のテキストエリアに貼り付けて、読み込みボタンを押します。
+    <ul>
+      <li><h3>ちゃんとした XML である必要はありません</h3>ブラウザが出力する '-' などの記号が入っていても OK です。
+      <li><h3>ブックマークが1000以上ある人は1000個ずつぐらいに区切って貼り付け・変換したほうがいいかもしれません</h3>読み込みにはあまり時間がかかりませんが、大きな文章の貼り付けには時間かかってしまうようです(特に IE)。
+    </ul>
+  </li>
+  <li>集計結果が上のリストに表示されます。</li>
+  </ol>
+
+  <form>
+  <textarea name="txt" wrap="off"></textarea>
+
+  <button name="load" onclick="loadXml(this); return false;">読み込み</button><button name="load_more" onclick="loadMore(this);return false;" disabled>追加読み込み</button>
+  <span id="msg"></span>
+  </form>
+ </div>
+</div>
+
+
+<div class="box">
+ <h2>自分のホームページにも貼り付けられます</h2>
+ <div class="content">
+  <ol>
+  <li>「JSON 出力」ボタンを押して、中身を data.js として保存します。文字コードは UTF-8 にしてください。<br>
+  <form>
+  <textarea name="json" wrap="off"></textarea>
+  <button onclick="outputCloudJs(this); return false;">JSON 出力</button>
+  </form>
+
+  <li><a href="htbcloud.zip">htbcloud.zip</a> をダウンロードして解凍します。
+    <ul>
+      <li>htbtagcloud.js の冒頭の id に自分を設定すると、自分の はてブ ページへのリンクになります。また、タグクラウドのサイズも調整できます。</li>
+      <li>ページデザインにあわせて CSS を書き変えてみるのもいいかもしれません。</li>
+      <li>htbtagcloud.html はファイル名を変更しても動きます。別の HTML に該当部分のソースだけを貼り付けても OK です。prototype.js 1.4 のバージョンには注意。</li>
+    </ul>
+  </li>
+  <li>data.js と上記 htbcloud.zip の中身を同じフォルダにアップロードします。</li>
+  </ol>
+</div>
+</div>
+
+<ul class="notice">
+<li>同じくはてブ関連の作品、<a href="../alphavorite/">大旦那のお気に入り</a>もよろしく。</li>
+<li>このサイトのトップページはいちおう <a href="/">こちら</a>。</li>
+</div>
+</div>
+
+<div id="footer"><div>&copy; nitoyon 2006</div></div>
+</div>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "htt
+p://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.
+js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1616138-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>
