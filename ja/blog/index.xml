@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 29 Jul 2013 00:47:47 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 02 Oct 2013 00:46:59 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -14,9 +14,176 @@
 
 
 
+		<item>
+			<title>Node.js の fs.watch() と fs.watchFile() の違い</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/</guid>
+			<pubDate>Wed, 02 Oct 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Node.js のファイル監視の API には <code>fs.watch()</code> と <code>fs.watchFile()</code> の 2 つがある。</p>
 
+<p>微妙に機能がかぶっているし、使い分けが分かりにくかったので調べてみた。</p>
 
+<h1>公式情報を見る</h1>
 
+<p>まずは公式の<a href="http://nodejs.org/docs/v0.8.0/api/fs.html#fs_fs_watchfile_filename_options_listener">ドキュメント (v0.8.0)</a>を見てみた。</p>
+
+<blockquote>
+<h2>fs.watchFile(filename, [options], listener)</h2>
+
+<p>Stability: 2 - Unstable.  Use fs.watch instead, if available.</p>
+
+<p>Watch for changes on <code>filename</code>.</p>
+
+<h2>fs.watch(filename, [options], [listener])</h2>
+
+<p>Stability: 2 - Unstable.  Not available on all platforms.</p>
+
+<p>Watch for changes on <code>filename</code>, where <code>filename</code> is either a file or a directory.</p>
+</blockquote>
+
+<p>と書いてある。</p>
+
+<p>つまり</p>
+
+<ul>
+<li><code>fs.watch()</code> の利用を推奨している</li>
+<li><code>fs.watch()</code> は全てのプラットフォームで使えるわけではない</li>
+<li><code>fs.watch()</code> はファイルとディレクトリを監視できるが、<code>fs.watchFile()</code> はファイルしか監視できない</li>
+</ul>
+
+<p>ことが分かる。</p>
+
+<h1>歴史的見地から調べる</h1>
+
+<p>次に、過去をさかのぼるために <a href="https://github.com/joyent/node/blob/master/ChangeLog">ChangeLog</a> を見てみた。</p>
+
+<ul>
+<li><code>fs.watchFile()</code> は v0.1.18 で <code>process.watchFile()</code> として登場した古い API</li>
+<li><code>fs.watch()</code> は v0.5.9 で実装された新しい API</li>
+</ul>
+
+<p>だと分かった。</p>
+
+<p>しかし、これ以上の公式の情報が見つからなかったため、全体像が見えない。</p>
+
+<h1>ソースコードを見る</h1>
+
+<p>困ったらソースコードを見ろ、と昔の偉い人も言っている。いざ、コード リーディング！</p>
+
+<h2>fs.watch()</h2>
+
+<p>まずは、<code>fs.watch()</code> の実装をみてみよう。(ソースコードは執筆時点で最新の <a href="https://github.com/joyent/node/tree/v0.10.19">v0.10.19</a> を利用する)</p>
+
+<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/fs_event_wrap.cc#L102"><code>src/fs_event_wrap.cc</code></a> の順にたどっていくと、<code>uv_fs_event_init()</code> 関数が本丸だと分かった。</p>
+
+<p><code>uv</code> で始まる関数は libuv で定義されたもの。libuv は Node.js のプラットフォーム間の差を吸収するためのライブラリらしく、IO やスレッド、タイマーなどの処理が実装されているようだ。</p>
+
+<p>では、<code>uv_fs_event_init()</code> の実装を見てみる。<code>deps/uv/src</code> の下を grep してみると</p>
+
+<ul>
+<li>unix\aix.c</li>
+<li>unix\cygwin.c</li>
+<li>unix\kqueue.c</li>
+<li>unix\linux-inotify.c</li>
+<li>unix\sunos.c</li>
+<li>win\fs-event.c</li>
+</ul>
+
+<p>が引っかかった。プラットフォームごとに実装が異なっているようだ。</p>
+
+<p>ざっと読んでみると、</p>
+
+<table><thead>
+<tr>
+<th>プラットフォーム</th>
+<th>実装方法</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Linux</td>
+<td>inotify を利用</td>
+</tr>
+<tr>
+<td>MacOS、*BSD</td>
+<td>kqueue を利用</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>ReadDirectoryChangesW()</code> を利用</td>
+</tr>
+<tr>
+<td>Solaris</td>
+<td>Event Ports を利用</td>
+</tr>
+<tr>
+<td>AIX</td>
+<td>(未対応)</td>
+</tr>
+<tr>
+<td>Cygwin</td>
+<td>(未対応)</td>
+</tr>
+</tbody></table>
+
+<p>となっていた。</p>
+
+<p>つまり、<strong>fs.watch() はネイティブの監視処理を利用して、変更があったら OS から通知してもらっている</strong>ことが分かった。</p>
+
+<h2>fs.watchFile()</h2>
+
+<p>一方の <code>fs.watchFile()</code> を見てみる。Node.js には古くから実装されているが、現在では利用が推奨されていないほうの関数である。</p>
+
+<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a> の順にたどっていくと、<code>uv_fs_poll_start()</code> 関数が本丸だと分かった。</p>
+
+<p>あとは、<code>uv_fs_poll_start()</code> の流れをつかめばおしまい。<a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a> を見てみよう。なんとなくポーリングをしていそうな名前である。</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
+                     uv_fs_poll_cb cb,
+                     const char* path,
+                     unsigned int interval) {
+  // 初期化処理は省略
+
+  if (uv_fs_stat(loop, &amp;ctx-&gt;fs_req, ctx-&gt;path, poll_cb))
+    abort();
+</code></pre></div>
+<p>肝は <code>uv_fs_stat()</code> の呼び出し。この関数は、Node.js で言うところの <code>fs.stat()</code> 相当の処理だろう。ファイルの更新日時の取得を依頼して、取得が完了したら、<code>poll_cb()</code> が呼ばれる。</p>
+
+<p>その <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a> を見てみよう。</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
+  // 異常処理とか、前回と違ってたらイベント発行する処理とか
+
+  /* Reschedule timer, subtract the delay from doing the stat(). */
+  interval = ctx-&gt;interval;
+  interval -= (uv_now(ctx-&gt;loop) - ctx-&gt;start_time) % interval;
+
+  if (uv_timer_start(&amp;ctx-&gt;timer_handle, timer_cb, interval, 0))
+    abort();
+}
+</code></pre></div>
+<p>実行結果の解析が終わったら、<code>interval</code> 後に <code>timer_cb()</code> が呼ばれるようにタイマーを開始している。</p>
+
+<p><code>timer_cb()</code> では、再度 <code>uv_fs_stat()</code> を実行している。つまり、定期的に <code>fs.stat()</code> を実行している。</p>
+
+<p>つまり、<strong>fs.watchFile() は定期的に fs.stat() をポーリングで実行して、変更されたらイベントを発行している</strong> ことが分かった。非常に原始的な実装になっている。</p>
+
+<h1>まとめ</h1>
+
+<p><code>fs.watch()</code>:</p>
+
+<ul>
+<li>新しい API、利用が推奨されている</li>
+<li>push 型 (OS の監視機能を利用しているので、待機中に CPU を消費しない)</li>
+<li>一部のプラットフォーム (AIX、Cygwin) では利用できない</li>
+</ul>
+
+<p><code>fs.watchFile()</code>:</p>
+
+<ul>
+<li>古い API、あまり使ってほしくなさそう</li>
+<li>poll 型 (定期的に stat を実行する)</li>
+<li>どのプラットフォームでも動く</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>LiveReloadX を Grunt から使えるようにした</title>
@@ -382,165 +549,6 @@ cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
 <h1>まとめ</h1>
 
 <p><code>difftool --dir-diff</code> で快適な Git 生活を！</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/06/27/node-yield/</guid>
-			<pubDate>Thu, 27 Jun 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Node.js の次のメジャーバージョン 0.12 で <code>yield</code> が使えるようになります。</p>
-
-<p>そのおかげで、JavaScript のコールバック地獄に光が差し込むのです。ああ、さようなら、コールバック地獄。</p>
-
-<h1>7 年ごしで実現した yield</h1>
-
-<p>2006 年、Firefox 2 のリリースと同時に <code>yield</code> は JavaScript 界に<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/New_in_JavaScript/1.7">登場</a>しました。随分と前の話ですね。</p>
-
-<p>登場した当時は JavaScript 界隈でけっこう話題になっていました。</p>
-
-<ul>
-<li><a href="http://d.hatena.ne.jp/amachang/20060805/1154743229">JavaScript 1.7 の yield が凄すぎる件について - IT戦記</a></li>
-<li><a href="http://piro.sakura.ne.jp/latest/blosxom/webtech/javascript/2006-08-07_yield.htm">Latest topics &gt; JavaScript 1.7のyield文ってなんじゃらほ - outsider reflex</a></li>
-<li><a href="http://nanto.asablo.jp/blog/2006/08/12/481381">JavaScript 1.7 の新機能: Days on the Moon</a></li>
-</ul>
-
-<p>登場したときにはインパクト大きかったものの、結局 Firefox でしか使えない <code>yield</code> さんは忘れ去られていたわけです。</p>
-
-<p>それがここにきて、<a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">ECMAScript 6 に yield が入る</a>ことが決定して、V8 に実装されました。となれば、V8 を使ってる Node.js でも自動的に利用できるようになった、という流れであります。</p>
-
-<p>7 年の月日を経て、日の目を見たわけで胸が熱くなります。何はともあれ、Node.js の次のバージョンに <code>yield</code> がやってくるのであります。ヤァヤァヤァ。</p>
-
-<h1>さようなら！ コールバック地獄</h1>
-
-<p>ということで、Node.js の話です。</p>
-
-<p>脱出する前に、皆さんに地獄を見てもらいましょう。</p>
-
-<h2>これが地獄絵図だ！</h2>
-
-<p>サンプルとして、簡単なスクリプトを書いてみました。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">var fs = require(&#39;fs&#39;);
-
-// カレント ディレクトリーのファイル一覧を取得する
-fs.readdir(&#39;.&#39;, function(err, files) {
-    // 先頭のファイルの中身を読み取る
-    fs.readFile(files[0], &#39;utf-8&#39;, function(err, data) {
-        // 読み取った結果を出力する
-        console.log(data);
-    });
-});
-</code></pre></div>
-<p>ああ、美しきコールバック地獄。たった 3 つの処理をするだけなのに、コールバックが 2 つもあるわけです。</p>
-
-<p>といっても、Node.js には <code>fs.readdirSync()</code> や <code>fs.readFileSync()</code> といった同期処理をする関数も用意されておりますが、コールバック地獄を再現するために、あえて非同期版を使っております。</p>
-
-<h2>Deferred にすがりつく</h2>
-
-<p>こういうコールバック地獄から逃げるための今までの定石は Deferred だったわけです。jQuery にも実装されてるアレです。</p>
-
-<p>Node.js で Deferred といえば <a href="https://github.com/kriskowal/q">Q</a> が有名らしいので、Q を使って書き直してみました。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">var fs = require(&#39;fs&#39;);
-var Q = require(&#39;q&#39;);
-
-Q.nfcall(fs.readdir, &#39;.&#39;)
-.then(function(files) {
-    return Q.nfcall(fs.readFile, files[0], &#39;utf-8&#39;);
-})
-.then(function(data) {
-    console.log(data);
-})
-.done();
-</code></pre></div>
-<p>確かにコールバックの階層は押さえられたのですが、かえって読みにくくなったようにも感じます。Deferred をマスターしてしまえば極楽なのかもしれませんが、Deferred は学習コストがそこそこ高いと思うわけです。</p>
-
-<p>また、コードもいまいちすっきりしません。<code>then()</code> でコールバックを繋げるために deferred を返しているのが、何とも読みにくい構造になっています。</p>
-
-<p>Deferred にすがりつくと、一見、幸せになりそうなんだけど、数ヶ月後にソースを読んだときに、ただのコールバック地獄よりも一層深い奈落の底に叩き落される恐れすらあるわけです。</p>
-
-<h2>yield の恩恵を体験する</h2>
-
-<p>で、<code>yield</code> です。</p>
-
-<p>生で <code>yield</code> を扱うのは面倒なので、ライブラリーの力を借りましょう。</p>
-
-<p>Node.js 界で数々の著名モジュールを作ってる TJ Holowaychuk (visionmedia) さんが、さっそく <code>yield</code> を活用するための <a href="https://github.com/visionmedia/co/">co</a> というモジュールを作ってるので使わせてもらいます。</p>
-
-<p>こうなるんだぜ。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">var co = require(&#39;co&#39;);
-var fs = require(&#39;fs&#39;);
-
-co(function *() {
-  var files = yield co.wrap(fs.readdir)(&#39;.&#39;);
-  var data = yield co.wrap(fs.readFile)(files[0], &#39;utf-8&#39;);
-  console.log(data);
-});
-</code></pre></div>
-<p>同期処理っぽく書いていますが、実はコールバック地獄版と同じ処理になっています。</p>
-
-<p>それぞれの処理で失敗したときには例外が飛ぶので、エラー処理もばっちりです。</p>
-
-<p>ああ、幸せですね。夢が広がりんぐです。いままで面倒だった非同期処理がとっても気楽に書けるのであります。C# の <code>await</code> みたいなことができます。</p>
-
-<p>あ、いちおう細かな点について触れときます。</p>
-
-<ul>
-<li>上のソースを実行するには、<a href="http://jenkins.nodejs.org/html/nightlies.html">Node.js の Nightlies builds</a> から v0.11 のバイナリーを拾ってきて、<code>node --harmony-generators foo.js</code> として実行する必要がある。</li>
-<li>co の最新のソース (<a href="https://github.com/visionmedia/co/commit/5bd0169604e82c8f9900ad7b6edf95a5cb23df53">co@5bd0169</a>) は 48 行目の <code>gen.send(res);</code> でエラーになるので、<code>gen.next(res);</code> に書き換える必要がある。</li>
-</ul>
-
-<h1>yield について簡単に説明するよ</h1>
-
-<p>いちおう <code>yield</code> が何か、という話を簡単に触れておきます。詳しくは <a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">harmony:generators [ES Wiki]</a> を見てください (ちょっと情報が古いようですが…)。</p>
-
-<p>シンプルな例を書いてみました。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">function* N() {
-    console.log(&quot;start&quot;);
-    yield 1;
-    console.log(&quot;after 1&quot;);
-    yield 2;
-    console.log(&quot;after 2&quot;);
-    return 3;
-}
-</code></pre></div>
-<p>まず、<code>yield</code> を使う関数は <code>function</code> ではなく <code>function*</code> で宣言します。(Firefox の先行実装と少し違います)</p>
-
-<p>で、この関数を呼んでみます。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">var g = N();
-console.log(g);
-// {}
-</code></pre></div>
-<p><code>function*</code> な関数を呼んでも、関数の処理は始まりません。変わりに関数の処理を開始させるためのジェネレーターが返ってきます。</p>
-
-<p>では、ジェネレーターを使ってみましょう。ジェネレーターの <code>next()</code> を呼ぶと、関数の処理を開始できます。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
-// start
-// { value: 1, done: false }
-</code></pre></div>
-<p><code>yield</code> は <code>return</code> みたいなもので戻り値を返します。ここでは、戻り値の <code>1</code> が <code>value</code> として返ってきています。</p>
-
-<p><code>yield</code> と <code>return</code> の違い、それは、<code>yield</code> は続きから処理を再開できるところにあります。そう、<code>g.next()</code> を呼べばね。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
-// after 1
-// { value: 2, done: false }
-</code></pre></div>
-<p><code>after 1</code> から処理が再開して、<code>2</code> を返して、再び、関数は中断しました。もう一度 <code>g.next()</code> を呼んでみます。</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js">console.log(g.next());
-// after 2
-// { value: 3, done: true }
-</code></pre></div>
-<p><code>return</code> で関数が終わったので、<code>done</code> が <code>true</code> になりました。(この戻り値も Firefox の先行実装と異なります)</p>
-
-<p>こんな感じで、<code>yield</code> を使えば、関数の処理を途中で中断しておくことができます。で、上の co を使ったサンプルを見たら・・・なんとなく実現できそうな気がしてきましたか？</p>
-
-<h1>まとめ</h1>
-
-<ul>
-<li>ECMAScript 6 に <code>yield</code> が入った → V8 に実装 → Node.js 0.12 で使える</li>
-<li><code>yield</code> を使えばコールバック地獄から脱出できる。</li>
-<li>この記事では <a href="https://github.com/visionmedia/co/">co</a> を紹介したけど、便利ライブラリーはまだまだ登場しそう。</li>
-</ul>
 ]]></description>
 		</item>
 

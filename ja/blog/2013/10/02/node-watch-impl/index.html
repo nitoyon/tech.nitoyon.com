@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Node.js の fs.watch() と fs.watchFile() の違い - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Node.js の fs.watch() と fs.watchFile() の違い"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Node.js のファイル監視の API には fs.watch() と fs.watchFile() の 2 つがある。微妙に機能がかぶっているし、使い分けが分かりにくかったので調べてみた。公式情報を見るまずは公式のドキュメント (v0.8.0)を見てみた。fs.watchFile(filename, [options], listener)Stability: 2 - Unstable. Use fs.watch instead, if available.Watch for changes on filename.fs.watch(filename, [options], [lis..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2013/10/02/node-watch-impl/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/</span>.</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">2013年10月02日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a></div>
+
+<h1>Node.js の fs.watch() と fs.watchFile() の違い</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" class="hatena-bookmark-button" data-hatena-bookmark-title="Node.js の fs.watch() と fs.watchFile() の違い - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" data-lang="ja" data-size="horizontal" data-text="Node.js の fs.watch() と fs.watchFile() の違い - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Node.js のファイル監視の API には <code>fs.watch()</code> と <code>fs.watchFile()</code> の 2 つがある。</p>
+
+<p>微妙に機能がかぶっているし、使い分けが分かりにくかったので調べてみた。</p>
+
+<h1>公式情報を見る</h1>
+
+<p>まずは公式の<a href="http://nodejs.org/docs/v0.8.0/api/fs.html#fs_fs_watchfile_filename_options_listener">ドキュメント (v0.8.0)</a>を見てみた。</p>
+
+<blockquote>
+<h2>fs.watchFile(filename, [options], listener)</h2>
+
+<p>Stability: 2 - Unstable.  Use fs.watch instead, if available.</p>
+
+<p>Watch for changes on <code>filename</code>.</p>
+
+<h2>fs.watch(filename, [options], [listener])</h2>
+
+<p>Stability: 2 - Unstable.  Not available on all platforms.</p>
+
+<p>Watch for changes on <code>filename</code>, where <code>filename</code> is either a file or a directory.</p>
+</blockquote>
+
+<p>と書いてある。</p>
+
+<p>つまり</p>
+
+<ul>
+<li><code>fs.watch()</code> の利用を推奨している</li>
+<li><code>fs.watch()</code> は全てのプラットフォームで使えるわけではない</li>
+<li><code>fs.watch()</code> はファイルとディレクトリを監視できるが、<code>fs.watchFile()</code> はファイルしか監視できない</li>
+</ul>
+
+<p>ことが分かる。</p>
+
+<h1>歴史的見地から調べる</h1>
+
+<p>次に、過去をさかのぼるために <a href="https://github.com/joyent/node/blob/master/ChangeLog">ChangeLog</a> を見てみた。</p>
+
+<ul>
+<li><code>fs.watchFile()</code> は v0.1.18 で <code>process.watchFile()</code> として登場した古い API</li>
+<li><code>fs.watch()</code> は v0.5.9 で実装された新しい API</li>
+</ul>
+
+<p>だと分かった。</p>
+
+<p>しかし、これ以上の公式の情報が見つからなかったため、全体像が見えない。</p>
+
+<h1>ソースコードを見る</h1>
+
+<p>困ったらソースコードを見ろ、と昔の偉い人も言っている。いざ、コード リーディング！</p>
+
+<h2>fs.watch()</h2>
+
+<p>まずは、<code>fs.watch()</code> の実装をみてみよう。(ソースコードは執筆時点で最新の <a href="https://github.com/joyent/node/tree/v0.10.19">v0.10.19</a> を利用する)</p>
+
+<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/fs_event_wrap.cc#L102"><code>src/fs_event_wrap.cc</code></a> の順にたどっていくと、<code>uv_fs_event_init()</code> 関数が本丸だと分かった。</p>
+
+<p><code>uv</code> で始まる関数は libuv で定義されたもの。libuv は Node.js のプラットフォーム間の差を吸収するためのライブラリらしく、IO やスレッド、タイマーなどの処理が実装されているようだ。</p>
+
+<p>では、<code>uv_fs_event_init()</code> の実装を見てみる。<code>deps/uv/src</code> の下を grep してみると</p>
+
+<ul>
+<li>unix\aix.c</li>
+<li>unix\cygwin.c</li>
+<li>unix\kqueue.c</li>
+<li>unix\linux-inotify.c</li>
+<li>unix\sunos.c</li>
+<li>win\fs-event.c</li>
+</ul>
+
+<p>が引っかかった。プラットフォームごとに実装が異なっているようだ。</p>
+
+<p>ざっと読んでみると、</p>
+
+<table><thead>
+<tr>
+<th>プラットフォーム</th>
+<th>実装方法</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Linux</td>
+<td>inotify を利用</td>
+</tr>
+<tr>
+<td>MacOS、*BSD</td>
+<td>kqueue を利用</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>ReadDirectoryChangesW()</code> を利用</td>
+</tr>
+<tr>
+<td>Solaris</td>
+<td>Event Ports を利用</td>
+</tr>
+<tr>
+<td>AIX</td>
+<td>(未対応)</td>
+</tr>
+<tr>
+<td>Cygwin</td>
+<td>(未対応)</td>
+</tr>
+</tbody></table>
+
+<p>となっていた。</p>
+
+<p>つまり、<strong>fs.watch() はネイティブの監視処理を利用して、変更があったら OS から通知してもらっている</strong>ことが分かった。</p>
+
+<h2>fs.watchFile()</h2>
+
+<p>一方の <code>fs.watchFile()</code> を見てみる。Node.js には古くから実装されているが、現在では利用が推奨されていないほうの関数である。</p>
+
+<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a> の順にたどっていくと、<code>uv_fs_poll_start()</code> 関数が本丸だと分かった。</p>
+
+<p>あとは、<code>uv_fs_poll_start()</code> の流れをつかめばおしまい。<a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a> を見てみよう。なんとなくポーリングをしていそうな名前である。</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c"><span class="kt">int</span> <span class="nf">uv_fs_poll_start</span><span class="p">(</span><span class="kt">uv_fs_poll_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+                     <span class="n">uv_fs_poll_cb</span> <span class="n">cb</span><span class="p">,</span>
+                     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
+                     <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">interval</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// 初期化処理は省略</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">uv_fs_stat</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">fs_req</span><span class="p">,</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">path</span><span class="p">,</span> <span class="n">poll_cb</span><span class="p">))</span>
+    <span class="n">abort</span><span class="p">();</span>
+</code></pre></div>
+<p>肝は <code>uv_fs_stat()</code> の呼び出し。この関数は、Node.js で言うところの <code>fs.stat()</code> 相当の処理だろう。ファイルの更新日時の取得を依頼して、取得が完了したら、<code>poll_cb()</code> が呼ばれる。</p>
+
+<p>その <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a> を見てみよう。</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c"><span class="k">static</span> <span class="kt">void</span> <span class="nf">poll_cb</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// 異常処理とか、前回と違ってたらイベント発行する処理とか</span>
+
+  <span class="cm">/* Reschedule timer, subtract the delay from doing the stat(). */</span>
+  <span class="n">interval</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">interval</span><span class="p">;</span>
+  <span class="n">interval</span> <span class="o">-=</span> <span class="p">(</span><span class="n">uv_now</span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">loop</span><span class="p">)</span> <span class="o">-</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">start_time</span><span class="p">)</span> <span class="o">%</span> <span class="n">interval</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">timer_handle</span><span class="p">,</span> <span class="n">timer_cb</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">abort</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>実行結果の解析が終わったら、<code>interval</code> 後に <code>timer_cb()</code> が呼ばれるようにタイマーを開始している。</p>
+
+<p><code>timer_cb()</code> では、再度 <code>uv_fs_stat()</code> を実行している。つまり、定期的に <code>fs.stat()</code> を実行している。</p>
+
+<p>つまり、<strong>fs.watchFile() は定期的に fs.stat() をポーリングで実行して、変更されたらイベントを発行している</strong> ことが分かった。非常に原始的な実装になっている。</p>
+
+<h1>まとめ</h1>
+
+<p><code>fs.watch()</code>:</p>
+
+<ul>
+<li>新しい API、利用が推奨されている</li>
+<li>push 型 (OS の監視機能を利用しているので、待機中に CPU を消費しない)</li>
+<li>一部のプラットフォーム (AIX、Cygwin) では利用できない</li>
+</ul>
+
+<p><code>fs.watchFile()</code>:</p>
+
+<ul>
+<li>古い API、あまり使ってほしくなさそう</li>
+<li>poll 型 (定期的に stat を実行する)</li>
+<li>どのプラットフォームでも動く</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" class="hatena-bookmark-button" data-hatena-bookmark-title="Node.js の fs.watch() と fs.watchFile() の違い - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" data-lang="ja" data-size="horizontal" data-text="Node.js の fs.watch() と fs.watchFile() の違い - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年10月02日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-10-02-node-watch-impl.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/06/27/node-yield/">Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</a></li>
+
+<li><a href="/ja/blog/2013/06/25/jekyll-grunt/">Jekyll で --watch の代わりに Grunt を使ってみるテスト</a></li>
+
+<li><a href="/ja/blog/2013/04/17/jekyll-pluralize/">Jekyll のカテゴリーとタグの指定方法 3 パターン</a></li>
+
+<li><a href="/ja/blog/2013/02/19/node-source-map/">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/07/29/livereloadx0-3-0/" rel="previous"><b>&laquo;</b><span class="title">LiveReloadX を Grunt から使えるようにした</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

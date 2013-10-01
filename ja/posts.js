@@ -8,15 +8,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/10/02/node-watch-impl/", title: "Node.js の fs.watch() と fs.watchFile() の違い"},
 	{url: "/ja/blog/2013/07/29/livereloadx0-3-0/", title: "LiveReloadX を Grunt から使えるようにした"},
 	{url: "/ja/blog/2013/07/23/git-patch/", title: "Git にパッチを送って取り込まれた話"},
 	{url: "/ja/blog/2013/07/09/symlink-dir-diff-on-windows/", title: "Windows でも git difftool --dir-diff でシンボリックリンクを使う方法"},
-	{url: "/ja/blog/2013/07/02/git-dir-diff/", title: "git difftool --dir-diff が便利すぎて泣きそうです"},
-	{url: "/ja/blog/2013/06/27/node-yield/", title: "Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話"}
+	{url: "/ja/blog/2013/07/02/git-dir-diff/", title: "git difftool --dir-diff が便利すぎて泣きそうです"}
 ];
 
 Site.archives.months = [
-  "201307"
+  "201310"
+, "201307"
 , "201306"
 , "201305"
 , "201304"

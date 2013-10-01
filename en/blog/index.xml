@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 09 Jul 2013 01:42:40 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 02 Oct 2013 00:37:18 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -14,9 +14,164 @@
 
 
 
+		<item>
+			<title>Difference between fs.watch() and fs.watchFile()</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/</guid>
+			<pubDate>Wed, 02 Oct 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Node.js has two functions for file watching. <code>fs.watch()</code> and <code>fs.watchFile()</code>.</p>
 
+<p>These functions look similar. What&#39;s the difference?</p>
 
+<h1>Official Document</h1>
 
+<p>According to official <a href="http://nodejs.org/docs/v0.8.0/api/fs.html#fs_fs_watchfile_filename_options_listener">document (v0.8.0)</a>,</p>
+
+<blockquote>
+<h2>fs.watchFile(filename, [options], listener)</h2>
+
+<p>Stability: 2 - Unstable.  Use fs.watch instead, if available.</p>
+
+<p>Watch for changes on <code>filename</code>.</p>
+
+<h2>fs.watch(filename, [options], [listener])</h2>
+
+<p>Stability: 2 - Unstable.  Not available on all platforms.</p>
+
+<p>Watch for changes on <code>filename</code>, where <code>filename</code> is either a file or a directory.</p>
+</blockquote>
+
+<p>we can say</p>
+
+<ul>
+<li><code>fs.watch()</code> is recommended.</li>
+<li><code>fs.watch()</code> is not available on all platforms.</li>
+<li><code>fs.watch()</code> watches a file or a directory. <code>fs.watchFile()</code> watches a file.</li>
+</ul>
+
+<h1>ChangeLog</h1>
+
+<p>According to <a href="https://github.com/joyent/node/blob/master/ChangeLog">ChangeLog</a>, I found that</p>
+
+<ul>
+<li><code>fs.watchFile()</code> is older API which is implemented on v0.1.18 as <code>process.watchFile()</code>.</li>
+<li><code>fs.watch()</code> is newer API which is implemented on v0.5.9.</li>
+</ul>
+
+<h1>Source Code</h1>
+
+<p>I cannot found official information any more, so I looked at source code for more understanding.</p>
+
+<h2>fs.watch()</h2>
+
+<p>Let&#39;s look at implementation of <code>fs.watch()</code>. (We use source code for <a href="https://github.com/joyent/node/tree/v0.10.19">v0.10.19</a>)</p>
+
+<p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/fs_event_wrap.cc#L102"><code>src/fs_event_wrap.cc</code></a>, I found <code>fs.watch()</code> is implemented by <code>uv_fs_event_init()</code> function.</p>
+
+<p>The functions whose name start with <code>uv</code> is defined by libuv. libuv is multi-platform support library for Node.js. It has features like asynchronous IO, thread pool, timer and so on.</p>
+
+<p>So, look at <code>uv_fs_event_init()</code> function. I grepped under <code>deps/uv/src</code>. The results are as follows:</p>
+
+<ul>
+<li>unix\aix.c</li>
+<li>unix\cygwin.c</li>
+<li>unix\kqueue.c</li>
+<li>unix\linux-inotify.c</li>
+<li>unix\sunos.c</li>
+<li>win\fs-event.c</li>
+</ul>
+
+<p>Each file has implementation for different platforms.</p>
+
+<table><thead>
+<tr>
+<th>Platform</th>
+<th>How to implement</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Linux</td>
+<td>inotify</td>
+</tr>
+<tr>
+<td>MacOS、*BSD</td>
+<td>kqueue</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>ReadDirectoryChangesW()</code></td>
+</tr>
+<tr>
+<td>Solaris</td>
+<td>Event Ports</td>
+</tr>
+<tr>
+<td>AIX</td>
+<td>(Not supported)</td>
+</tr>
+<tr>
+<td>Cygwin</td>
+<td>(Not supported)</td>
+</tr>
+</tbody></table>
+
+<p>Conclusion: <strong>fs.watch() uses native API</strong>.</p>
+
+<h2>fs.watchFile()</h2>
+
+<p>Let&#39;s look at <code>fs.watchFile()</code>.</p>
+
+<p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a>, I found <code>fs.watchFile()</code> is implemented by <code>uv_fs_poll_start()</code> function.</p>
+
+<p>OK. Let&#39;s read <code>uv_fs_poll_start()</code> defined in <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a>.</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
+                     uv_fs_poll_cb cb,
+                     const char* path,
+                     unsigned int interval) {
+  // snip initialization
+
+  if (uv_fs_stat(loop, &amp;ctx-&gt;fs_req, ctx-&gt;path, poll_cb))
+    abort();
+</code></pre></div>
+<p>The point is <code>uv_fs_stat()</code>. This function executes  asynchronous <code>stat()</code>. The callback <code>poll_cb</code> is called when it completes.</p>
+
+<p>Next, <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a>.</p>
+<div class="highlight"><pre><code class="c language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
+  // snip: trigger event, error handling, and so on
+
+  /* Reschedule timer, subtract the delay from doing the stat(). */
+  interval = ctx-&gt;interval;
+  interval -= (uv_now(ctx-&gt;loop) - ctx-&gt;start_time) % interval;
+
+  if (uv_timer_start(&amp;ctx-&gt;timer_handle, timer_cb, interval, 0))
+    abort();
+}
+</code></pre></div>
+<p>First it analyzes the stat result, and then it starts next timer so that <code>timer_cb()</code> will be called <code>interval</code> later.</p>
+
+<p><code>timer_cb()</code> calls <code>uv_fs_stat()</code> again. I got it! <code>fs.stat()</code> is called periodically.</p>
+
+<p>Conclusion: <strong>fs.watchFile() periodically executes fs.stat()</strong>.</p>
+
+<h1>Conclusion</h1>
+
+<p><code>fs.watch()</code>:</p>
+
+<ul>
+<li>is newer API and recommended.</li>
+<li>uses native watching functions supported by OS, so doesn&#39;t waste CPU on waiting.</li>
+<li>doesn&#39;t support all platforms such as AIX and Cygwin.</li>
+</ul>
+
+<p><code>fs.watchFile()</code>:</p>
+
+<ul>
+<li>is old API and not recommended.</li>
+<li>calls stat periodically, so uses CPU even when nothing changes.</li>
+<li>runs on any platforms.</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>Use symlinks in git difftool --dir-diff on Windows</title>
@@ -316,31 +471,6 @@ tags: [Bar Baz, AAA]
     array || []
   end
 </code></pre></div>]]></description>
-		</item>
-
-		<item>
-			<title>LiveReloadX 0.2.0 Released: try include/exclude filter</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/03/25/livereloadx0-2-0/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/03/25/livereloadx0-2-0/</guid>
-			<pubDate>Mon, 25 Mar 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><a href="http://nitoyon.github.com/livereloadx/">LiveReloadX</a> 0.2.0 is released.</p>
-
-<p>If you want to install, type <code>npm install -g livereloadx</code>. If you have installed older versions, run <code>npm update -g livereloadx</code>.</p>
-
-<p>With older version, if you modifying any files under the monitored directory, browsers are reloaded. It means that running <code>git commit</code> made browsers reloaded.</p>
-
-<p>So, I add a command line options to specify include/exclude filter.</p>
-
-<p>For example, if you want to <code>cache</code> directory not to be watched, specify as follows:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">$ livereloadx --exclude cache
-</code></pre></div>
-<p>And more, LiveReloadX 0.2.0 monitors files with extension such as html, shtml, css, js, jpg, gif, png, cgi, php... If you want to watch files with extension <code>ini</code>, run following:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">$ livereloadx --include &quot;*.ini&quot;
-</code></pre></div>
-<p>Iinclude/exclude options works like rsync. See FILTER RULES section of rsync manual for details.</p>
-
-<p>Try it now!!</p>
-]]></description>
 		</item>
 
 	</channel>
