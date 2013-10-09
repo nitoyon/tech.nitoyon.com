@@ -1,6 +1,6 @@
 ---
 layout: post
-title: fs.watch() と fs.watchFile() の違い
+title: Node.js の fs.watch() と fs.watchFile() の違い
 tags: Node.js
 lang: ja
 alternate:
