@@ -6,13 +6,121 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 02 Oct 2013 00:37:18 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 10 Oct 2013 00:23:58 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+		<item>
+			<title>When grunt-contrib-watch uses too much CPU, try grunt-este-watch</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/10/10/grunt-watch-slow/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/10/10/grunt-watch-slow/</guid>
+			<pubDate>Thu, 10 Oct 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>I used <a href="http://gruntjs.com/">Grunt</a> and <a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> in my project. </p>
+
+<p>Although <code>grunt-contrib-watch</code> works fine when the number of files is small, but as it grows up, <code>grunt-contrib-watch</code> starts using too much CPU. For example, when <code>grunt-contrib-watch</code> is watching about 1,000 files, node always uses 10% of my CPU.</p>
+
+<p>This is known issue. Look at the <a href="https://github.com/gruntjs/grunt-contrib-watch/#why-is-the-watch-devouring-all-my-memorycpu">FAQ</a>:</p>
+
+<blockquote>
+<p>Another reason if you&#39;re watching a large number of files could be the low default <code>interval</code>. Try increasing with <code>options: { interval: 5007 }</code>. Please see issues <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/35">#35</a> and <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/145">#145</a> for more information.</p>
+</blockquote>
+
+<h1>What causes high CPU usage?</h1>
+
+<p><code>grunt-contrib-watch</code> uses <a href="https://github.com/shama/gaze"><code>gaze</code></a> module to watch files.</p>
+
+<p>This module uses not only <code>fs.watch()</code> (native API) but also <code>fs.watchFile()</code> which periodically executes <code>fs.statSync()</code> (read <a href="/en/blog/2013/10/02/node-watch-impl/">Difference between fs.watch() and fs.watchFile()</a> for details).</p>
+
+<p>Why does <code>gaze</code> use <code>fs.watchFile()</code>? <a href="https://github.com/paulmillr/chokidar">chokidar/README.md</a> says <code>fs.watch()</code> had many problems.</p>
+
+<blockquote>
+<p>Node.js <code>fs.watch</code>:</p>
+
+<ul>
+<li>Doesn&#39;t report filenames on mac.</li>
+<li>Doesn&#39;t report events at all when using editors like TextMate2 on mac.</li>
+<li>Sometimes report events twice.</li>
+<li>Has only one non-useful event: <code>rename</code>.</li>
+<li>Has <a href="https://github.com/joyent/node/search?q=fs.watch&amp;type=Issues">a lot of other issues</a></li>
+</ul>
+</blockquote>
+
+<h1>How do I avoid it?</h1>
+
+<p>Use <a href="https://github.com/steida/grunt-este-watch/"><code>grunt-este-watch</code></a> instead of <a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a>.</p>
+
+<p>Let&#39;s read <a href="https://github.com/steida/grunt-este-watch/blob/master/README.md"><code>grunt-este-watch/README.md</code></a>.</p>
+
+<blockquote>
+<p><em>What&#39;s wrong with official grunt-contrib-watch?</em></p>
+
+<p>It&#39;s slow and buggy, because it uses combination fs.fileWatch and fs.watch, for
+historical reason. From Node 0.9.2+, fs.watch is ok.</p>
+
+<p><a href="http://github.com/steida/este">github.com/steida/este</a> Needs maximum performance and
+stability, so that&#39;s why I had to create yet another Node.js file watcher.
+This watcher is continuously tested on Mac, Linux, Win platforms.</p>
+</blockquote>
+
+<p>I&#39;m using <code>grunt-este-watch</code> now. It uses no CPU when watching. Nice!</p>
+
+<h2>Example</h2>
+
+<p>Here is my <a href="https://github.com/nitoyon/tech.nitoyon.com/blob/b1fd0f12a6318b200390d8a2934d5cb66e46d454/Gruntfile.js"><code>Gruntfile.js</code></a>:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">module.exports = function(grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON(&#39;package.json&#39;),
+    shell: {
+      jekyll_build: {
+        command: &#39;jekyll build&#39;
+      },
+      // snip
+    },
+    // snip
+    esteWatch: {
+      options: {
+        dirs: [&#39;./&#39;, &#39;_posts/*/&#39;, &#39;_layouts&#39;, &#39;_includes&#39;,
+               &#39;javascript/**/&#39;, &#39;apollo/tutorial&#39;,
+               &#39;_plugins/**/&#39;, &#39;stylesheets&#39;, &#39;javascripts&#39;],
+        livereload: {
+          enabled: false
+        }
+      },
+      &#39;*&#39;: function(filepath) { return &#39;shell:jekyll_build&#39; }
+    }
+  });
+</code></pre></div>
+<p><code>grunt-este-watch</code>&#39;s configuration is quite different from <code>grunt-contrib-watch</code>&#39;s.</p>
+
+<p><code>grunt-este-watch</code> requires directory list to watch. When any file under watched directory is modified, callback function is called.</p>
+
+<p>My callback function returns <code>&#39;shell:jekyll_build&#39;</code>, so <code>grunt</code> executes <code>shell:jekyll_build</code> when watched files are modified. We can check <code>filepath</code> argument to determine the tasks returned.</p>
+
+<p><code>&#39;*&#39;</code> means all extensions. We can register callback to specified extension. There is a good example on <a href="https://github.com/steida/grunt-este-watch/blob/master/README.md">grunt-este-watch/README.md</a>.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">    coffee: function(filepath) {
+      var files = [{
+        expand: true,
+        src: filepath,
+        ext: &#39;.js&#39;
+      }];
+      grunt.config([&#39;coffee&#39;, &#39;app&#39;, &#39;files&#39;], files);
+      grunt.config([&#39;coffee2closure&#39;, &#39;app&#39;, &#39;files&#39;], files);
+      return [&#39;coffee:app&#39;, &#39;coffee2closure:app&#39;];
+    },
+    // snip
+    css: function(filepath) {
+      if (grunt.option(&#39;stage&#39;)) {
+        return &#39;cssmin:app&#39;;
+      }
+    }
+</code></pre></div>
+<p>Enjoy!</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Difference between fs.watch() and fs.watchFile()</title>
@@ -384,93 +492,6 @@ sub update_bug {
 <li>I&#39;m using undocumented module, <code>Bugzilla::Bug</code>. At first, I tried to use <code>Bugzilla::WebService::Bug</code> (documented), but it depends on <code>Test/Taint</code> module and my server doesn&#39;t have the module.</li>
 </ul>
 ]]></description>
-		</item>
-
-		<item>
-			<title>3 ways to specify categories and tags in Jekyll</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/04/17/jekyll-pluralize/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/04/17/jekyll-pluralize/</guid>
-			<pubDate>Wed, 17 Apr 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>To specify categories and tags, you should write in <a href="https://github.com/mojombo/jekyll/wiki/yaml-front-matter">YAML front matter</a>. It&#39;s so complicated because there are 3 ways to specify it.</p>
-
-<p>This article is targeted on Jekyll 0.12.0.</p>
-
-<h1>(1) Use singular key</h1>
-
-<p>Use singular key (such as <code>category</code> or <code>tag</code>), then we can specify at most 1 category or tag.</p>
-<div class="highlight"><pre><code class="yaml language-yaml" data-lang="yaml">---
-category: Foo
-tag: Bar
-</code></pre></div>
-<p>In the above example, we specify a category named <code>Foo</code> and a tag named <code>Bar</code>.</p>
-
-<p>Even if we write as follows:</p>
-<div class="highlight"><pre><code class="yaml language-yaml" data-lang="yaml">---
-category: Foo Bar
-tag: Bar, Baz
-</code></pre></div>
-<p>we&#39;ll get a tag named <code>Foo Bar</code> and a category named <code>Bar, Baz</code>.</p>
-
-<h1>(2) Use string with plural key</h1>
-
-<p>Use plural key (such as <code>categories</code> or <code>tags</code>) and a space-separated string value.</p>
-<div class="highlight"><pre><code class="yaml language-yaml" data-lang="yaml">---
-categories: Foo Bar
-tags: Bar Baz
-</code></pre></div>
-<p>In the above example, we get 2 categories (<code>Foo</code> and <code>Bar</code>) and 2 tags (<code>Bar</code> and <code>Baz</code>).</p>
-
-<p>We cannot specify name which contains a space character. If you wants, use the next pattern &quot;plural + string array&quot;.</p>
-
-<h1>(3) Use an array of string with plural key</h1>
-
-<p>Use plural key (such as <code>categories</code> and `tags) and an array of string value.</p>
-<div class="highlight"><pre><code class="yaml language-yaml" data-lang="yaml">---
-categories:
-- Foo Bar
-- AA,BBB
-tags:
-- Bar
-- Baz, AAA
-</code></pre></div>
-<p>In the above example, we get 2 categories (<code>Foo Bar</code> and <code>AA,BBB</code>) and 2 tags (<code>Bar Baz</code> and <code>AAA</code>).</p>
-
-<p>We can specify following, but in this case, we cannot specify name which contains a comma character.</p>
-<div class="highlight"><pre><code class="yaml language-yaml" data-lang="yaml">---
-categories: [Foo Bar, AABBB]
-tags: [Bar Baz, AAA]
-</code></pre></div>
-<h1>Read Jekyll&#39;s source code</h1>
-
-<p>To understand this complecated specification, reading the source code would be helpful.</p>
-
-<p>See <code>Hash#pluralized_array</code> method in <a href="https://github.com/mojombo/jekyll/blob/9d814a4eb7b59ce617569b40a19c3c183fecda33/lib/jekyll/core_ext.rb">lib/jekyll/core_ext.rb</a>.</p>
-
-<p>This method is called like <code>self.data.pluralized_array(&quot;tag&quot;, &quot;tags&quot;)</code>.</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">class Hash
-
-  # Read array from the supplied hash favouring the singular key
-  # and then the plural key, and handling any nil entries.
-  #   +hash+ the hash to read from
-  #   +singular_key+ the singular key
-  #   +plural_key+ the singular key
-  #
-  # Returns an array
-  def pluralized_array(singular_key, plural_key)
-    hash = self
-    if hash.has_key?(singular_key)
-      array = [hash[singular_key]] if hash[singular_key]
-    elsif hash.has_key?(plural_key)
-      case hash[plural_key]
-      when String
-        array = hash[plural_key].split
-      when Array
-        array = hash[plural_key].compact
-      end
-    end
-    array || []
-  end
-</code></pre></div>]]></description>
 		</item>
 
 	</channel>

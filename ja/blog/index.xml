@@ -6,13 +6,148 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 02 Oct 2013 00:46:59 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 10 Oct 2013 00:28:17 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+		<item>
+			<title>grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/</guid>
+			<pubDate>Thu, 10 Oct 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>最近、<a href="http://gruntjs.com/">Grunt</a> と <a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> を使っているのだけど、<code>grunt-contrib-watch</code> が CPU を消費しがちである。</p>
+
+<p>watch 対象のファイルが少ないうちは <code>grunt-contrib-watch</code> は問題なく動くんだけども、ファイル数が増えてくると CPU の消費量が増えてくる。自分の環境では、1,000 個ぐらいのファイルを監視していると、常時 10% 程度 CPU を消費している。</p>
+
+<p>この問題は既知であり、<a href="https://github.com/gruntjs/grunt-contrib-watch/#why-is-the-watch-devouring-all-my-memorycpu">FAQ</a> には次のように書いている。</p>
+
+<blockquote>
+<p>たくさんのファイルを監視している場合、デフォルトの <code>interval</code> の値が小さすぎるかもしれない。<code>options: { interval: 5007 }</code> のようにして増やしてみてほしい。詳しくは issues <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/35">#35</a> と <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/145">#145</a> を参照のこと (※日本語訳は私によるもの)</p>
+
+<blockquote>
+<p>Another reason if you&#39;re watching a large number of files could be the low default <code>interval</code>. Try increasing with <code>options: { interval: 5007 }</code>. Please see issues <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/35">#35</a> and <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/145">#145</a> for more information.</p>
+</blockquote>
+</blockquote>
+
+<h1>なぜ CPU を消費するのか？</h1>
+
+<p><code>grunt-contrib-watch</code> はファイルの監視に <a href="https://github.com/shama/gaze"><code>gaze</code></a> というモジュールを使用している。</p>
+
+<p><code>gaze</code> さんがファイルを監視するときには、ネイティブな監視 API の <code>fs.watch()</code> だけでなく、<code>fs.watchFile()</code> を併用している。<code>fs.watchFile()</code> は定期的に <code>fs.stat()</code> を実行しているだけであり、監視対象のファイルに変化がなくても CPU を消費する (詳しくは <a href="/ja/blog/2013/10/02/node-watch-impl/">Node.js の fs.watch() と fs.watchFile() の違い</a> をご覧あれ)。そのため、ファイルが増えるに従って、CPU の消費も激しくなるのである。</p>
+
+<p>なんで <code>gaze</code> は CPU 負荷が高くなる <code>fs.watchFile()</code> を利用しているのだろうか。それには歴史的な理由があるらしく、<a href="https://github.com/paulmillr/chokidar">chokidar/README.md</a> に <code>fs.watch()</code> についての愚痴が書いてある。</p>
+
+<blockquote>
+<p>Node.js の <code>fs.watch</code> は...</p>
+
+<ul>
+<li>Mac でファイル名を報告してくれない。</li>
+<li>Mac で TextMate2 のようなエディターで編集したときに何もイベントが発生しない</li>
+<li>ときどき、2 重にイベントを報告する。</li>
+<li>利用価値のない <code>rename</code> イベントしかない。</li>
+<li><a href="https://github.com/joyent/node/search?q=fs.watch&amp;type=Issues">他にもたくさんの問題</a>がある。</li>
+</ul>
+
+<p>(※日本語訳は私によるもの)</p>
+
+<blockquote>
+<p>Node.js <code>fs.watch</code>:</p>
+
+<ul>
+<li>Doesn&#39;t report filenames on mac.</li>
+<li>Doesn&#39;t report events at all when using editors like TextMate2 on mac.</li>
+<li>Sometimes report events twice.</li>
+<li>Has only one non-useful event: <code>rename</code>.</li>
+<li>Has <a href="https://github.com/joyent/node/search?q=fs.watch&amp;type=Issues">a lot of other issues</a></li>
+</ul>
+</blockquote>
+</blockquote>
+
+<h1>どうやって回避したか</h1>
+
+<p>CPU 負荷が耐えられなくなったので、<code>grunt-contrib-watch</code> を諦めてみることにした。</p>
+
+<p>検索して探したところ、<a href="https://github.com/steida/grunt-este-watch/"><code>grunt-este-watch</code></a> が便利そうであった。<a href="https://github.com/steida/grunt-este-watch/blob/master/README.md"><code>grunt-este-watch/README.md</code></a> には次のように書いてあった。</p>
+
+<blockquote>
+<p><em>公式の grunt-contrib-watch の問題点は何か？</em></p>
+
+<p>遅い、そして、バグがある。というのも、公式のものは歴史的な理由で fs.watchFile と fs.watch を組み合わせて使っている。
+Node の 0.9.2 以降では、fs.watch には問題はない。</p>
+
+<p><a href="http://github.com/steida/este">github.com/steida/este</a> では最大限のパフォーマンスと安定性が必要だったので、新しい Node.js の file watcher を作る必要があった。この watcher は Mac, Linux, Windows で継続的にテストしている (※日本語訳は私によるもの)。</p>
+
+<blockquote>
+<p><em>What&#39;s wrong with official grunt-contrib-watch?</em></p>
+
+<p>It&#39;s slow and buggy, because it uses combination fs.fileWatch and fs.watch, for
+historical reason. From Node 0.9.2+, fs.watch is ok.</p>
+
+<p><a href="http://github.com/steida/este">github.com/steida/este</a> Needs maximum performance and
+stability, so that&#39;s why I had to create yet another Node.js file watcher.
+This watcher is continuously tested on Mac, Linux, Win platforms.</p>
+</blockquote>
+</blockquote>
+
+<p>この作者が試す限り問題はないようなので、それを信じて試してみた。</p>
+
+<h2>設定例</h2>
+
+<p>ためしにこのブログのビルド環境に組み込んでみた。<a href="https://github.com/nitoyon/tech.nitoyon.com/blob/b1fd0f12a6318b200390d8a2934d5cb66e46d454/Gruntfile.js"><code>Gruntfile.js</code></a> がこちら。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">module.exports = function(grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON(&#39;package.json&#39;),
+    shell: {
+      jekyll_build: {
+        command: &#39;jekyll build&#39;
+      },
+      // snip
+    },
+    // snip
+    esteWatch: {
+      options: {
+        dirs: [&#39;./&#39;, &#39;_posts/*/&#39;, &#39;_layouts&#39;, &#39;_includes&#39;,
+               &#39;javascript/**/&#39;, &#39;apollo/tutorial&#39;,
+               &#39;_plugins/**/&#39;, &#39;stylesheets&#39;, &#39;javascripts&#39;],
+        livereload: {
+          enabled: false
+        }
+      },
+      &#39;*&#39;: function(filepath) { return &#39;shell:jekyll_build&#39; }
+    }
+  });
+</code></pre></div>
+<p><code>grunt-este-watch</code> の設定は <code>grunt-contrib-watch</code> とかなり違う点に注意。</p>
+
+<p><code>grunt-este-watch</code> は監視するディレクトリの一覧を記述する。ディレクトリ配下のファイルが変更されたら、コールバック関数が呼び出される。</p>
+
+<p>自分のコールバック関数では、単純に <code>&#39;shell:jekyll_build&#39;</code> と返しているので、ファイルが更新されたら <code>grunt</code> は <code>shell:jekyll_build</code> タスクを実行してくれる。その気になれば <code>filepath</code> 引数に応じて、返すタスク名を変えることもできる。</p>
+
+<p><code>&#39;*&#39;</code> ってのは「すべての拡張子」を意味する。特定の拡張子を指定することもできる。<a href="https://github.com/steida/grunt-este-watch/blob/master/README.md">grunt-este-watch/README.md</a> のサンプルを見ると分かりやすい。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">    coffee: function(filepath) {
+      var files = [{
+        expand: true,
+        src: filepath,
+        ext: &#39;.js&#39;
+      }];
+      grunt.config([&#39;coffee&#39;, &#39;app&#39;, &#39;files&#39;], files);
+      grunt.config([&#39;coffee2closure&#39;, &#39;app&#39;, &#39;files&#39;], files);
+      return [&#39;coffee:app&#39;, &#39;coffee2closure:app&#39;];
+    },
+    // snip
+    css: function(filepath) {
+      if (grunt.option(&#39;stage&#39;)) {
+        return &#39;cssmin:app&#39;;
+      }
+    }
+</code></pre></div>
+<p><a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> の CPU 負荷が高くて困っている人はぜひ試してみてほしい。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Node.js の fs.watch() と fs.watchFile() の違い</title>
@@ -397,158 +532,6 @@ cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
     d = difftool -d --symlinks
 </code></pre></div>
 <p>どうぞご利用ください。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>git difftool --dir-diff が便利すぎて泣きそうです</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/07/02/git-dir-diff/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/07/02/git-dir-diff/</guid>
-			<pubDate>Tue, 02 Jul 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><center><img src="http://farm3.staticflickr.com/2869/9194395890_e02e5eae04_o.jpg" width="550" height="244"></center></p>
-
-<p>Git の 1.7.11 から <code>git difftool</code> コマンドに <code>--dir-diff</code> というオプションが追加されたのですが、これがライフ チェンジングだと思ったので紹介します。</p>
-
-<p><code>--dir-diff</code> 登場以前の <code>git difftool</code> は「ファイルごとに順番に差分を表示していく」ことしかできず、使い勝手はいまいちでした。それが、<code>--dir-diff</code> オプションの登場で状況が一変したわけです。</p>
-
-<h1>こんな感じの使い心地だよ</h1>
-
-<p>ある Git レポジトリーで <code>dir1/a.txt</code> と <code>dir2/c.txt</code> を編集したとしましょう。</p>
-
-<p>この状態で <code>git difftool --dir-diff</code> または <code>git difftool -d</code>  を実行してみると・・・。</p>
-
-<p><center><img src="http://farm6.staticflickr.com/5339/9190948901_e8af0e9b5d.jpg" width="500" height="366"></center></p>
-
-<p>はい、差分のあるファイルが一覧で表示されました。</p>
-
-<p>(difftool に WinMerge を設定して、メニューから [ツリー表示] を有効にしたときの表示例です。設定方法は後述します)</p>
-
-<h2>個別のファイルの diff を見る</h2>
-
-<p><code>a.txt</code> を選択すると、新しいタブが開いて、<code>a.txt</code> の差分が表示されます。</p>
-
-<p><center><img src="http://farm6.staticflickr.com/5477/9193747196_ebd8033182.jpg" width="500" height="366"></center></p>
-
-<p>カラフルに色分けされているし、ショートカットキーで前後の差分に移動できるので便利です (WinMerge の場合は Alt + ↑ と Alt + ↓)。</p>
-
-<p>当然、タブを移動して差分一覧に戻れば、<code>c.txt</code> の差分も表示できます。</p>
-
-<p>コマンドラインの <code>git diff</code> に比べて、</p>
-
-<ul>
-<li>確認するファイルを選びやすい</li>
-<li>差分間の移動がキーボードでやりやすい</li>
-<li>ファイル全体が表示されているので、差分から前後に好きなだけたどっていける</li>
-</ul>
-
-<p>といったところが嬉しいですね。</p>
-
-<p>おっと、ここまでなら、GUI な Git クライアントでも同じようなことはできますね。便利なのはこの次です。</p>
-
-<h2>ファイル編集も！</h2>
-
-<p>なんと、右側のファイルを編集して保存すると、<strong>ワーキング ディレクトリーに反映される</strong>のです (ただし、右側のファイルがワーキング ディレクトリーのファイルと同じ内容のときのみ)。</p>
-
-<p>これがとてつもなく便利です。</p>
-
-<p>差分を見ながら、「この差分は不要」とか「typo 発見」とか気づいたときに、その場で修正ができちゃうわけです。</p>
-
-<h2>比較対象は無限大</h2>
-
-<p><code>git difftool</code> で比較対象を指定する方法は <code>git diff</code> とまったく同じです。</p>
-
-<p>たとえば、<code>git difftool -d master...topic</code> として、トピックブランチでの変更点をまとめて閲覧したりもできるわけです。<code>git difftool -d --cached</code> としてインデックスとの差分を確認できるわけです。任意のコミット間の差分も確認できるわけです。タグがうってあれば、特定のバージョン間の差分も確認できるわけです</p>
-
-<p>うれしいですね。</p>
-
-<h1>裏側で起こっていること</h1>
-
-<p><code>git difftool -d</code> を実行したときに、裏側で何が起こっているのでしょうか。</p>
-
-<p>内部的に <code>git diff</code> を呼び出して、出てきたファイルを一時ディレクトリーにチェックアウトしています。</p>
-
-<p>たとえば、先ほどの例でいうと</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Temp/git-difftool.VoxJJ/
-    left/
-        dir1/
-            a.txt
-        dir2/
-            c.txt
-    right/
-        dir1/
-            a.txt
-        dir2/
-            c.txt
-</code></pre></div>
-<p>といった構造になります。中身が同一なファイルはチェックアウトされないので、大きなレポジトリーでも安心です。</p>
-
-<p>さらに、Mac や Linux では、<code>right</code> のファイルがワーキング ディレクトリーと同じなら、「ワーキング ディレクトリーへのシンボリックリンク」になっています。その結果、<code>right</code> のファイルを書き換えると、即時にワーキング ディレクトリーに反映されるわけです。</p>
-
-<p>Windows の場合は、difftool を終了したときに、ワーキング ディレクトリーに一時ファイルを書き戻す動作になっています。ちょっと不便なので、シンボリックリンクを使うように改造したいところです。(追記) 改造しました!! <a href="/ja/blog/2013/07/09/symlink-dir-diff-on-windows/">Windows でも git difftool --dir-diff でシンボリックリンクを使う方法</a></p>
-
-<h1>使えるようにするまでの準備</h1>
-
-<p>便利なのは分かってもらえたと思うので、使えるように準備してみましょう！</p>
-
-<h2>最新の git-difftool を取得しておく</h2>
-
-<p>先ほど書いた通り、<code>git difftool --dir-diff</code> は 1.7.11 から追加されています。ただ、最近になっていくつか大きなバグが修正されているので、なるべく新しいヤツ (Linux なら 1.8.3、Windows なら 1.8.3.2 ) を利用するのがオススメです。</p>
-
-<p>Git 全体を更新するのが面倒な場合は、git-difftool だけを</p>
-
-<ul>
-<li><a href="https://github.com/git/git/blob/master/git-difftool.perl">GitHub (git/git-difftool.perl at master)</a></li>
-</ul>
-
-<p>から落としてきて、<code>libexec/git-core/git-difftool</code> に上書きすれば、よほど古いバージョンじゃなければ動く・・・と思います。</p>
-
-<h2>difftool の設定: WinMerge 篇</h2>
-
-<p>Windows で WinMerge を使う場合は、<code>.gitconfig</code> に次のように書きます (Git for Windows の場合)。</p>
-<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
-    tool = winmerge
-[difftool winmerge]
-    path = C:/Program Files (x86)/WinMerge/winmergeu.exe
-    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;
-</code></pre></div>
-<p>インストール先が異なる場合は適宜修正してください。</p>
-
-<p>コマンドライン オプションの意味は次の通りです。</p>
-
-<ul>
-<li><code>-r</code>: 再帰的に比較する</li>
-<li><code>-u</code>: 最近開いた一覧に追加しない</li>
-</ul>
-
-<p>人によっては <code>-e</code> を追加して ESC で WinMerge を閉じられるようにしているようですが、複数タブを開いてるときに ESC を押して WinMerge が閉じてしまうと困るので私は設定していません。</p>
-
-<h2>difftool の設定: meld 篇</h2>
-
-<p>Mac や Linux で meld を利用する場合は、<code>.gitconfig</code> に次のように書きます。</p>
-<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
-    tool = meld
-</code></pre></div>
-<p>簡単ですね。</p>
-
-<p>Git 本体に meld のコマンドラインオプションの情報が入ってるので、これで動くようです。</p>
-
-<p>(手元に Mac がないので動作確認はできませんでしたが、<a href="http://stackoverflow.com/questions/2006032/view-differences-of-branches-with-meld#answer-12815806">git - View differences of branches with meld? - Stack Overflow</a> に同じ手順が書いてあって、プラス評価がついてるので正しいはずです)</p>
-
-<p>Pro Git には <a href="http://git-scm.com/book/ja/Git-%E3%81%AE%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA-Git-%E3%81%AE%E8%A8%AD%E5%AE%9A#%E5%A4%96%E9%83%A8%E3%81%AE%E3%83%9E%E3%83%BC%E3%82%B8%E3%83%84%E3%83%BC%E3%83%AB%E3%81%8A%E3%82%88%E3%81%B3-Diff-%E3%83%84%E3%83%BC%E3%83%AB">P4Merge を使う手順</a> が書いてあるんだけど、P4Merge はディレクトリーの比較に対応してないので、<code>--dir-diff</code> には活用できません。</p>
-
-<h2>エイリアスを設定する</h2>
-
-<p>このあたりは好みですが、<code>.gitconfig</code> でエイリアスを設定しておくと便利でしょう。</p>
-<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[alias]
-    d = difftool -d
-    dc = difftool -d --cached
-    dp = difftool -d HEAD~
-</code></pre></div>
-<p><code>git d &lt;branch&gt;</code> とか <code>git d HEAD</code> のように入力するだけで、difftool が <code>--dir-diff</code> で立ち上がるようになります。</p>
-
-<h1>まとめ</h1>
-
-<p><code>difftool --dir-diff</code> で快適な Git 生活を！</p>
 ]]></description>
 		</item>
 

@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="最近、Grunt と grunt-contrib-watch を使っているのだけど、grunt-contrib-watch が CPU を消費しがちである。watch 対象のファイルが少ないうちは grunt-contrib-watch は問題なく動くんだけども、ファイル数が増えてくると CPU の消費量が増えてくる。自分の環境では、1,000 個ぐらいのファイルを監視していると、常時 10% 程度 CPU を消費している。この問題は既知であり、FAQ には次のように書いている。たくさんのファイルを監視している場合、デフォルトの interval の値が小さすぎるかもしれない。optio..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2013/10/10/jekyll-watch-slow/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2013/10/10/jekyll-watch-slow/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2013/10/10/jekyll-watch-slow/</span>.</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">2013年10月10日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a></div>
+
+<h1>grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" class="hatena-bookmark-button" data-hatena-bookmark-title="grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" data-lang="ja" data-size="horizontal" data-text="grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>最近、<a href="http://gruntjs.com/">Grunt</a> と <a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> を使っているのだけど、<code>grunt-contrib-watch</code> が CPU を消費しがちである。</p>
+
+<p>watch 対象のファイルが少ないうちは <code>grunt-contrib-watch</code> は問題なく動くんだけども、ファイル数が増えてくると CPU の消費量が増えてくる。自分の環境では、1,000 個ぐらいのファイルを監視していると、常時 10% 程度 CPU を消費している。</p>
+
+<p>この問題は既知であり、<a href="https://github.com/gruntjs/grunt-contrib-watch/#why-is-the-watch-devouring-all-my-memorycpu">FAQ</a> には次のように書いている。</p>
+
+<blockquote>
+<p>たくさんのファイルを監視している場合、デフォルトの <code>interval</code> の値が小さすぎるかもしれない。<code>options: { interval: 5007 }</code> のようにして増やしてみてほしい。詳しくは issues <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/35">#35</a> と <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/145">#145</a> を参照のこと (※日本語訳は私によるもの)</p>
+
+<blockquote>
+<p>Another reason if you&#39;re watching a large number of files could be the low default <code>interval</code>. Try increasing with <code>options: { interval: 5007 }</code>. Please see issues <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/35">#35</a> and <a href="https://github.com/gruntjs/grunt-contrib-watch/issues/145">#145</a> for more information.</p>
+</blockquote>
+</blockquote>
+
+<h1>なぜ CPU を消費するのか？</h1>
+
+<p><code>grunt-contrib-watch</code> はファイルの監視に <a href="https://github.com/shama/gaze"><code>gaze</code></a> というモジュールを使用している。</p>
+
+<p><code>gaze</code> さんがファイルを監視するときには、ネイティブな監視 API の <code>fs.watch()</code> だけでなく、<code>fs.watchFile()</code> を併用している。<code>fs.watchFile()</code> は定期的に <code>fs.stat()</code> を実行しているだけであり、監視対象のファイルに変化がなくても CPU を消費する (詳しくは <a href="/ja/blog/2013/10/02/node-watch-impl/">Node.js の fs.watch() と fs.watchFile() の違い</a> をご覧あれ)。そのため、ファイルが増えるに従って、CPU の消費も激しくなるのである。</p>
+
+<p>なんで <code>gaze</code> は CPU 負荷が高くなる <code>fs.watchFile()</code> を利用しているのだろうか。それには歴史的な理由があるらしく、<a href="https://github.com/paulmillr/chokidar">chokidar/README.md</a> に <code>fs.watch()</code> についての愚痴が書いてある。</p>
+
+<blockquote>
+<p>Node.js の <code>fs.watch</code> は...</p>
+
+<ul>
+<li>Mac でファイル名を報告してくれない。</li>
+<li>Mac で TextMate2 のようなエディターで編集したときに何もイベントが発生しない</li>
+<li>ときどき、2 重にイベントを報告する。</li>
+<li>利用価値のない <code>rename</code> イベントしかない。</li>
+<li><a href="https://github.com/joyent/node/search?q=fs.watch&amp;type=Issues">他にもたくさんの問題</a>がある。</li>
+</ul>
+
+<p>(※日本語訳は私によるもの)</p>
+
+<blockquote>
+<p>Node.js <code>fs.watch</code>:</p>
+
+<ul>
+<li>Doesn&#39;t report filenames on mac.</li>
+<li>Doesn&#39;t report events at all when using editors like TextMate2 on mac.</li>
+<li>Sometimes report events twice.</li>
+<li>Has only one non-useful event: <code>rename</code>.</li>
+<li>Has <a href="https://github.com/joyent/node/search?q=fs.watch&amp;type=Issues">a lot of other issues</a></li>
+</ul>
+</blockquote>
+</blockquote>
+
+<h1>どうやって回避したか</h1>
+
+<p>CPU 負荷が耐えられなくなったので、<code>grunt-contrib-watch</code> を諦めてみることにした。</p>
+
+<p>検索して探したところ、<a href="https://github.com/steida/grunt-este-watch/"><code>grunt-este-watch</code></a> が便利そうであった。<a href="https://github.com/steida/grunt-este-watch/blob/master/README.md"><code>grunt-este-watch/README.md</code></a> には次のように書いてあった。</p>
+
+<blockquote>
+<p><em>公式の grunt-contrib-watch の問題点は何か？</em></p>
+
+<p>遅い、そして、バグがある。というのも、公式のものは歴史的な理由で fs.watchFile と fs.watch を組み合わせて使っている。
+Node の 0.9.2 以降では、fs.watch には問題はない。</p>
+
+<p><a href="http://github.com/steida/este">github.com/steida/este</a> では最大限のパフォーマンスと安定性が必要だったので、新しい Node.js の file watcher を作る必要があった。この watcher は Mac, Linux, Windows で継続的にテストしている (※日本語訳は私によるもの)。</p>
+
+<blockquote>
+<p><em>What&#39;s wrong with official grunt-contrib-watch?</em></p>
+
+<p>It&#39;s slow and buggy, because it uses combination fs.fileWatch and fs.watch, for
+historical reason. From Node 0.9.2+, fs.watch is ok.</p>
+
+<p><a href="http://github.com/steida/este">github.com/steida/este</a> Needs maximum performance and
+stability, so that&#39;s why I had to create yet another Node.js file watcher.
+This watcher is continuously tested on Mac, Linux, Win platforms.</p>
+</blockquote>
+</blockquote>
+
+<p>この作者が試す限り問題はないようなので、それを信じて試してみた。</p>
+
+<h2>設定例</h2>
+
+<p>ためしにこのブログのビルド環境に組み込んでみた。<a href="https://github.com/nitoyon/tech.nitoyon.com/blob/b1fd0f12a6318b200390d8a2934d5cb66e46d454/Gruntfile.js"><code>Gruntfile.js</code></a> がこちら。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">grunt</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+    <span class="nx">pkg</span><span class="o">:</span> <span class="nx">grunt</span><span class="p">.</span><span class="nx">file</span><span class="p">.</span><span class="nx">readJSON</span><span class="p">(</span><span class="s1">&#39;package.json&#39;</span><span class="p">),</span>
+    <span class="nx">shell</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">jekyll_build</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">command</span><span class="o">:</span> <span class="s1">&#39;jekyll build&#39;</span>
+      <span class="p">},</span>
+      <span class="c1">// snip</span>
+    <span class="p">},</span>
+    <span class="c1">// snip</span>
+    <span class="nx">esteWatch</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">dirs</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="s1">&#39;_posts/*/&#39;</span><span class="p">,</span> <span class="s1">&#39;_layouts&#39;</span><span class="p">,</span> <span class="s1">&#39;_includes&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;javascript/**/&#39;</span><span class="p">,</span> <span class="s1">&#39;apollo/tutorial&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;_plugins/**/&#39;</span><span class="p">,</span> <span class="s1">&#39;stylesheets&#39;</span><span class="p">,</span> <span class="s1">&#39;javascripts&#39;</span><span class="p">],</span>
+        <span class="nx">livereload</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">enabled</span><span class="o">:</span> <span class="kc">false</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s1">&#39;*&#39;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">filepath</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="s1">&#39;shell:jekyll_build&#39;</span> <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+</code></pre></div>
+<p><code>grunt-este-watch</code> の設定は <code>grunt-contrib-watch</code> とかなり違う点に注意。</p>
+
+<p><code>grunt-este-watch</code> は監視するディレクトリの一覧を記述する。ディレクトリ配下のファイルが変更されたら、コールバック関数が呼び出される。</p>
+
+<p>自分のコールバック関数では、単純に <code>&#39;shell:jekyll_build&#39;</code> と返しているので、ファイルが更新されたら <code>grunt</code> は <code>shell:jekyll_build</code> タスクを実行してくれる。その気になれば <code>filepath</code> 引数に応じて、返すタスク名を変えることもできる。</p>
+
+<p><code>&#39;*&#39;</code> ってのは「すべての拡張子」を意味する。特定の拡張子を指定することもできる。<a href="https://github.com/steida/grunt-este-watch/blob/master/README.md">grunt-este-watch/README.md</a> のサンプルを見ると分かりやすい。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">    <span class="nx">coffee</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">filepath</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="nx">expand</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">src</span><span class="o">:</span> <span class="nx">filepath</span><span class="p">,</span>
+        <span class="nx">ext</span><span class="o">:</span> <span class="s1">&#39;.js&#39;</span>
+      <span class="p">}];</span>
+      <span class="nx">grunt</span><span class="p">.</span><span class="nx">config</span><span class="p">([</span><span class="s1">&#39;coffee&#39;</span><span class="p">,</span> <span class="s1">&#39;app&#39;</span><span class="p">,</span> <span class="s1">&#39;files&#39;</span><span class="p">],</span> <span class="nx">files</span><span class="p">);</span>
+      <span class="nx">grunt</span><span class="p">.</span><span class="nx">config</span><span class="p">([</span><span class="s1">&#39;coffee2closure&#39;</span><span class="p">,</span> <span class="s1">&#39;app&#39;</span><span class="p">,</span> <span class="s1">&#39;files&#39;</span><span class="p">],</span> <span class="nx">files</span><span class="p">);</span>
+      <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;coffee:app&#39;</span><span class="p">,</span> <span class="s1">&#39;coffee2closure:app&#39;</span><span class="p">];</span>
+    <span class="p">},</span>
+    <span class="c1">// snip</span>
+    <span class="nx">css</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">filepath</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">grunt</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="s1">&#39;stage&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="s1">&#39;cssmin:app&#39;</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p><a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> の CPU 負荷が高くて困っている人はぜひ試してみてほしい。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" class="hatena-bookmark-button" data-hatena-bookmark-title="grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" data-lang="ja" data-size="horizontal" data-text="grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/10/grunt-watch-slow/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年10月10日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-10-10-grunt-watch-slow.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/node.js/">Node.js</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/10/02/node-watch-impl/">Node.js の fs.watch() と fs.watchFile() の違い</a></li>
+
+<li><a href="/ja/blog/2013/06/25/jekyll-grunt/">Jekyll で --watch の代わりに Grunt を使ってみるテスト</a></li>
+
+<li><a href="/ja/blog/2013/04/17/jekyll-pluralize/">Jekyll のカテゴリーとタグの指定方法 3 パターン</a></li>
+
+<li><a href="/ja/blog/2013/02/27/livereloadx/">ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/10/02/node-watch-impl/" rel="previous"><b>&laquo;</b><span class="title">Node.js の fs.watch() と fs.watchFile() の違い</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
