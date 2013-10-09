@@ -5,7 +5,7 @@ tags: Node.js
 lang: en
 alternate:
   lang: ja_JP
-  url: /ja/blog/2013/10/10/jekyll-watch-slow/
+  url: /ja/blog/2013/10/10/grunt-watch-slow/
 seealso:
 - en/2013-10-02-node-watch-impl
 - en/2013-06-25-jekyll-grunt
