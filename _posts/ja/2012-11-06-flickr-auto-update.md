@@ -18,7 +18,7 @@ lang: ja
 
 ということで、Flickr の API とにらめっこしながら作ってみました。
 
-{% highlight ruby %}
+```ruby
 require 'flickraw'
 require 'date'
 require 'set'
@@ -138,7 +138,7 @@ rescue SystemExit
 rescue Exception => e
   log("exception #{e.inspect}\n#{e.backtrace.join("\n")}")
 end
-{% endhighlight %}
+```
 
 
 使い方
@@ -150,9 +150,9 @@ end
 
 その状態で、シェルから
 
-{% highlight bash %}
+```bash
 $ ruby update_flickr.rb [set_id]
-{% endhighlight %}
+```
 
 のように実行してやると、`2012-11-06` というセット内の写真を列挙して、コマンドライン引数で指定した `[set_id]` のセットの先頭に追加してくれます。作業が完了すれば `2012-11-06` というセットは消えます。
 
