@@ -88,7 +88,7 @@ GitHub 上に生成結果の HTML をコミットしている
 
 この付与処理を実現するのが、次のスクリプトです。
 
-  * [update_js_css_url.rb](https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/update_js_css_url.rb)
+  * [`update_js_css_url.rb`](https://github.com/nitoyon/tech.nitoyon.com/blob/master/_scripts/update_js_css_url.rb)
 
 だいぶアクロバティックですが、静的生成の大原則を守りつつ、生成結果のレポジトリ上の diff が大きくなりすぎないように工夫してみました。
 
