@@ -30,7 +30,7 @@ watch 対象のファイルが少ないうちは `grunt-contrib-watch` は問題
 
 `gaze` さんがファイルを監視するときには、ネイティブな監視 API の `fs.watch()` だけでなく、`fs.watchFile()` を併用している。`fs.watchFile()` は定期的に `fs.stat()` を実行しているだけであり、監視対象のファイルに変化がなくても CPU を消費する (詳しくは {% post_link ja/2013-10-02-node-watch-impl %} をご覧あれ)。そのため、ファイルが増えるに従って、CPU の消費も激しくなるのである。
 
-なんで `gaze` は CPU 負荷が高くなる `fs.watchFile()` を利用しているのだろうか。それには歴史的な理由があるらしく、[chokidar/README.md](https://github.com/paulmillr/chokidar) に `fs.watch()` についての愚痴が書いてある。
+なんで `gaze` はわざわざ CPU 負荷が高くなる `fs.watchFile()` を利用しているのだろうか。それには歴史的な理由があるらしく、[chokidar/README.md](https://github.com/paulmillr/chokidar) に `fs.watch()` についての愚痴が書いてある。
 
 > Node.js の `fs.watch` は...
 > 
@@ -75,7 +75,7 @@ CPU 負荷が耐えられなくなったので、`grunt-contrib-watch` を諦め
 >> stability, so that's why I had to create yet another Node.js file watcher.
 >> This watcher is continuously tested on Mac, Linux, Win platforms.
 
-この作者が試す限り問題はないようなので、それを信じて試してみた。
+この作者が試す限り問題はないようだ。信じて試してみたところ、**待機中に CPU を消費しなくなくなった**。万歳。
 
 
 設定例
