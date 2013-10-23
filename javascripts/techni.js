@@ -82,7 +82,8 @@ _gaq.push(['_setAccount', 'UA-1616138-1']);
 _gaq.push(['_trackPageview']);
 (function(d,e){
 	var js,
-	fjs=d.getElementsByTagName(e)[0],
+	jss=d.getElementsByTagName(e),
+	fjs=jss[jss.length-1],
 	add = function(src, id){
 		if(d.getElementById(id)) return;
 		js = d.createElement(e);
@@ -92,7 +93,7 @@ _gaq.push(['_trackPageview']);
 		fjs.parentNode.insertBefore(js,fjs);
 	};
 
-	add(('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js');
+	add(('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js', 'ga_embed');
 
 	if ($("div.share").length) {
 		add('//platform.twitter.com/widgets.js', 'twitter-wjs');
