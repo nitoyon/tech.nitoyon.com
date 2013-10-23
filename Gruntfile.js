@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     esteWatch: {
       options: {
         dirs: ['./', '_posts/*/', '_layouts', '_includes',
-               'javascript/**/', 'apollo/tutorial',
+               'javascript/**/', 'ja/**/', 'en/**/',
                '_plugins/**/', 'stylesheets', 'javascripts'],
         livereload: {
           enabled: false
