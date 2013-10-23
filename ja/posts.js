@@ -8,11 +8,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/10/24/d3js/", title: "D3.js の Data-Driven な DOM 操作がおもしろい"},
 	{url: "/ja/blog/2013/10/10/grunt-watch-slow/", title: "grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった"},
 	{url: "/ja/blog/2013/10/02/node-watch-impl/", title: "Node.js の fs.watch() と fs.watchFile() の違い"},
 	{url: "/ja/blog/2013/07/29/livereloadx0-3-0/", title: "LiveReloadX を Grunt から使えるようにした"},
-	{url: "/ja/blog/2013/07/23/git-patch/", title: "Git にパッチを送って取り込まれた話"},
-	{url: "/ja/blog/2013/07/09/symlink-dir-diff-on-windows/", title: "Windows でも git difftool --dir-diff でシンボリックリンクを使う方法"}
+	{url: "/ja/blog/2013/07/23/git-patch/", title: "Git にパッチを送って取り込まれた話"}
 ];
 
 Site.archives.months = [

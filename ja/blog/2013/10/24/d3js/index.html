@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>D3.js の Data-Driven な DOM 操作がおもしろい - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="D3.js の Data-Driven な DOM 操作がおもしろい"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="ここんところ D3.js を触ってみているんだけど、これがなかなか面白い。D3.js は「ビジュアライズ用のライブラリー」だと紹介されがちなんだけども、意外にも D3.js にはグラフを描画する機能がない。D3.js のトップページには次のように書いてある。D3.js はデータからドキュメントを生成するためのライブラリーです。D3 は HTML, SVG, CSS を使ってデータに命を吹き込みます。Web 標準を重要視しているので、独占的なフレームワークに縛られません。強力なビジュアライズ用のコンポーネントと data-driven な DOM 操作手順を組み合わすことで、モダン ブラウ..."/>
+	<meta property="og:image" content="http://farm4.staticflickr.com/3767/10434503954_f41fb09ca6_o.jpg"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年10月24日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/visualize/">ビジュアライズ</a></div>
+
+<h1>D3.js の Data-Driven な DOM 操作がおもしろい</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/24/d3js/" class="hatena-bookmark-button" data-hatena-bookmark-title="D3.js の Data-Driven な DOM 操作がおもしろい - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/" data-lang="ja" data-size="horizontal" data-text="D3.js の Data-Driven な DOM 操作がおもしろい - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>ここんところ <a href="http://d3js.org/">D3.js</a> を触ってみているんだけど、これがなかなか面白い。</p>
+
+<p><a href="http://d3js.org/"><center><img src="http://farm4.staticflickr.com/3767/10434503954_88b88529ce.jpg" width="500" height="313"></center></a></p>
+
+<p>D3.js は「ビジュアライズ用のライブラリー」だと紹介されがちなんだけども、意外にも D3.js にはグラフを描画する機能がない。</p>
+
+<p><a href="http://d3js.org/">D3.js</a> のトップページには次のように書いてある。</p>
+
+<blockquote>
+<p>D3.js はデータからドキュメントを生成するためのライブラリーです。D3 は HTML, SVG, CSS を使ってデータに命を吹き込みます。Web 標準を重要視しているので、独占的なフレームワークに縛られません。強力な<strong>ビジュアライズ用のコンポーネントと data-driven な DOM 操作手順</strong>を組み合わすことで、モダン ブラウザーの能力を最大限に活用できます。</p>
+
+<blockquote>
+<p>D3.js is a JavaScript library for manipulating documents based on data. D3 helps you bring data to life using HTML, SVG and CSS. D3’s emphasis on web standards gives you the full capabilities of modern browsers without tying yourself to a proprietary framework, combining <strong>powerful visualization components and a data-driven approach to DOM manipulation</strong>.</p>
+</blockquote>
+</blockquote>
+
+<p>曰く、</p>
+
+<ul>
+<li>ビジュアライズ用のコンポーネント</li>
+<li>data-driven な DOM 操作手順</li>
+</ul>
+
+<p>がウリらしい。</p>
+
+<p>順番に見ていこう。</p>
+
+<h1>ビジュアライズ用のコンポーネントの役割</h1>
+
+<p>「ビジュアライズ用のコンポーネント」は<strong>「データ」と「チャートの種類」から「どこに描画すればいいか」を計算する</strong>機能だけを実装している。</p>
+
+<h2>バブルチャートの例</h2>
+
+<p><a href="(https://github.com/mbostock/d3/wiki/Gallery)">ギャラリー</a> の <a href="(http://bl.ocks.org/mbostock/4063269)">Bubble Chart</a> をみてみよう。</p>
+
+<p><a href="http://bl.ocks.org/mbostock/4063269"><center><img src="http://farm8.staticflickr.com/7392/10442561554_9e73c2565b.jpg" width="500" height="259"></center></a></p>
+
+<p>このチャートでは <a href="https://github.com/mbostock/d3/wiki/Pack-Layout"><code>d3.layout.pack()</code></a> という Pack Layout コンポーネントを利用している。</p>
+
+<p>この例では、描画するノードの情報を、こんな形の JavaScript 配列をコンポーネントに渡している。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;AgglomerativeCluster&quot;</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">3938</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;CommunityStructure&quot;</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">3812</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;HierarchicalCluster&quot;</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">6714</span>
+  <span class="p">},</span>
+  <span class="c1">//...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>これを <code>pack.nodes()</code> 関数に渡すと、<code>value</code> の値を元に計算して、ノードの位置情報をこんな感じで返す。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">[</span>
+  <span class="p">{</span> <span class="cm">/* root node の情報 */</span> <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;AgglomerativeCluster&quot;</span><span class="p">,</span>
+    <span class="nx">depth</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span>
+    <span class="nx">parent</span><span class="o">:</span> <span class="p">{</span> <span class="cm">/* root node */</span> <span class="p">},</span>
+    <span class="nx">r</span><span class="o">:</span> <span class="mf">22.159142384561406</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">3938</span><span class="p">,</span>
+    <span class="nx">x</span><span class="o">:</span> <span class="mf">489.9621260527267</span><span class="p">,</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="mf">532.5795625707091</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;CommunityStructure&quot;</span><span class="p">,</span>
+    <span class="nx">depth</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+    <span class="nx">parent</span><span class="o">:</span> <span class="p">{</span> <span class="cm">/* root node */</span> <span class="p">},</span>
+    <span class="nx">r</span><span class="o">:</span> <span class="mf">21.80175917979169</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">3812</span><span class="p">,</span>
+    <span class="nx">x</span><span class="o">:</span> <span class="mf">535.3554715791261</span><span class="p">,</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="mf">532.5795625707091</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="nx">HierarchicalCluster</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="nx">depth</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">packageName</span><span class="o">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+    <span class="nx">parent</span><span class="o">:</span> <span class="p">{</span> <span class="cm">/* root node */</span> <span class="p">},</span>
+    <span class="nx">r</span><span class="o">:</span> <span class="mf">28.933819019424202</span><span class="p">,</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="mi">6714</span><span class="p">,</span>
+    <span class="nx">x</span><span class="o">:</span> <span class="mf">513.070926102582</span><span class="p">,</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="mf">485.410700287188</span>
+  <span class="p">},</span>
+  <span class="c1">// ...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>いろんなプロパティーが追加されているけど、表示位置 (<code>x</code>, <code>y</code>) と半径 (<code>r</code>) の情報が返ってきている点に注目！</p>
+
+<p>このように、ビジュアライズ用のコンポーネントは「データ」と「チャートの種類」から「どこに描画すればいいか」を計算するだけである。</p>
+
+<h2>描画するには...</h2>
+
+<p>この情報をどう画面に落とし込むかは実装側に任されている。</p>
+
+<p>と聞くと、面倒そうに思えるかもしれないけど、<a href="(http://bl.ocks.org/mbostock/4063269)">Bubble Chart</a> のソースを見ると、描画処理はたったの 15 行。</p>
+
+<p>それだけ簡単に描画できてしまうのは、D3.js の「data-driven な DOM 操作手順」を使って SVG を生成しているのが大きい。</p>
+
+<h1>Data-Driven な DOM 操作を実感してみよう</h1>
+
+<p><a href="http://d3js.org/">D3.js</a> には jQuery ライクな DOM 操作やイベント・アニメーション関係の API が用意されてる。jQuery を使ったことがある人なら簡単にマスターできるだろう。</p>
+
+<p>jQuery にはないユニークな機能が <code>data()</code>・<code>enter()</code>・<code>exit()</code> 関数である。この関数の使い方を簡単なサンプルでみていこう。</p>
+
+<p>JavaScript 上にこんな配列が定義されているとする。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">shiritori</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;りんご&#39;</span><span class="p">,</span> <span class="s1">&#39;ゴリラ&#39;</span><span class="p">,</span> <span class="s1">&#39;ラッパ&#39;</span><span class="p">];</span>
+</code></pre></div>
+<p>HTML には入れ物の <code>&lt;ul&gt;</code> タグだけを用意しておく。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;ul</span> <span class="na">id=</span><span class="s">&quot;shiritori_list&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+</code></pre></div>
+<p><code>&lt;ul&gt;</code> タグの中に <code>shiritori</code> 配列の中身を表示してみよう、というのがお題である。</p>
+
+<h2>DOM の作成処理は data()＋enter()</h2>
+
+<p>配列の中身を <code>&lt;ul&gt;</code> に追加するには、D3.js では次のように書く。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// ul#shiritori_list を選択</span>
+<span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;ul#shiritori_list&#39;</span><span class="p">)</span>
+  <span class="c1">// その下の &lt;li&gt; を列挙</span>
+  <span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">)</span>
+  <span class="c1">// それぞれに shiritori 配列の要素を割り当てる</span>
+  <span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">shiritori</span><span class="p">)</span>
+  <span class="c1">// data より &lt;li&gt; が少ない場合は、足りない分について</span>
+  <span class="p">.</span><span class="nx">enter</span><span class="p">()</span>
+  <span class="c1">// &lt;li&gt; を追加する</span>
+  <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">)</span>
+  <span class="c1">// &lt;li&gt; の中身の文字を設定する</span>
+  <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;番目は&#39;</span> <span class="o">+</span> <span class="nx">d</span><span class="p">;</span> <span class="p">});</span>
+</code></pre></div>
+<p>これを実行すると、HTML はこうなる (なりそうですよね？　ね？)。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;ul</span> <span class="na">id=</span><span class="s">&quot;shiritori_list&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;li&gt;</span>1番目はりんご<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li&gt;</span>2番目はゴリラ<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li&gt;</span>3番目はラッパ<span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+</code></pre></div>
+<p>再度同じ JavaScript 処理を走らせるとどうなるだろう。<code>&lt;li&gt;</code> は 6 個になるだろうか。答えは「ならない」だ。</p>
+
+<p>というのも、<code>enter()</code> 以降の処理は「<code>shiritori</code> 配列に対応する <code>&lt;li&gt;</code> がないとき」のみ実行される。「<code>&lt;li&gt;</code> の個数 ≦ <code>shiritori</code> 配列の要素数」である限りは何度実行しても <code>enter()</code> 以降は実行されない。</p>
+
+<p>では、<code>shiritori.push(&#39;パイナップル&#39;)</code> として配列側を増やしてから、再度、上の JavaScript を走らせてみるとどうなるだろう。</p>
+
+<p>そうすると、新規追加分の <code>&#39;パイナップル&#39;</code> に対してだけ、<code>enter()</code> 以降の処理が実行される。つまり、HTML は</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;ul</span> <span class="na">id=</span><span class="s">&quot;shiritori_list&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;li&gt;</span>1番目はりんご<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li&gt;</span>2番目はゴリラ<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li&gt;</span>3番目はラッパ<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li&gt;</span>4番目はパイナップル<span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+</code></pre></div>
+<p>となる。</p>
+
+<p><code>enter()</code> は配列の増加分に対して、DOM を生成してくれるわけだ。</p>
+
+<h2>DOM の削除処理は data()＋exit()</h2>
+
+<p>次は、<code>shiritori</code> 配列が HTML より小さくなったときに対応しよう。</p>
+
+<p><code>exit()</code> で削除方法を書く。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// ul#shiritori_list を選択</span>
+<span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;ul#shiritori_list&#39;</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;ul#shiritori_list&#39;</span><span class="p">)</span>
+  <span class="c1">// その下の &lt;li&gt; を列挙</span>
+  <span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">)</span>
+  <span class="c1">// それぞれに shiritori 配列の要素を割り当てる</span>
+  <span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">shiritori</span><span class="p">)</span>
+  <span class="c1">// data の数よりも多い &lt;li&gt; については</span>
+  <span class="p">.</span><span class="nx">exit</span><span class="p">()</span>
+  <span class="c1">// 削除する</span>
+  <span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+</code></pre></div>
+<p>はい。これで終わり。</p>
+
+<p><code>shiritori</code> が減ってないときは何も起こらないし、<code>shiritori.pop();</code> してから実行すると末尾の <code>&lt;li&gt;</code> は消える。<code>shiritori = [];</code> してから実行すると <code>&lt;li&gt;</code> は消えてなくなる。</p>
+
+<h2>DOM の更新処理は data()</h2>
+
+<p>最後に更新処理。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// ul#shiritori_list を選択</span>
+<span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;ul#shiritori_list&#39;</span><span class="p">)</span>
+  <span class="c1">// その下の &lt;li&gt; を列挙</span>
+  <span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">)</span>
+  <span class="c1">// それぞれに shiritori 配列の要素を割り当てる</span>
+  <span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">shiritori</span><span class="p">)</span>
+  <span class="c1">// &lt;li&gt; の中身の文字を設定する</span>
+  <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;番目は&#39;</span> <span class="o">+</span> <span class="nx">d</span><span class="p">;</span> <span class="p">});</span>
+</code></pre></div>
+<p><code>enter()</code> や <code>exit()</code> なしにすれば、更新時の処理になる。</p>
+
+<p>データが与えられたときに、それぞれの要素をどのように表示すべきかを記述している。配列を書き換えて、この処理を実行すると、中身の文字が適切に更新される。</p>
+
+<p>ここでは <code>text()</code> しか使ってないが、jQuery 的な <code>attr()</code> や <code>style()</code> を活用すれば、柔軟な指定が可能である。</p>
+
+<h2>全部まとめる</h2>
+
+<p>生成・削除・更新の処理をまとめてみる。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">update_shiritori</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;ul#shiritori_list&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">shiritori</span><span class="p">);</span>
+
+  <span class="c1">// 作成</span>
+  <span class="nx">s</span><span class="p">.</span><span class="nx">enter</span><span class="p">().</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">);</span>
+
+  <span class="c1">// 削除</span>
+  <span class="nx">s</span><span class="p">.</span><span class="nx">exit</span><span class="p">().</span><span class="nx">remove</span><span class="p">();</span>
+
+  <span class="c1">// 更新</span>
+  <span class="nx">s</span><span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;番目は&#39;</span> <span class="o">+</span> <span class="nx">d</span><span class="p">;</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>(「作成」のところで <code>text()</code> を実行しなくなっているが、そのあとの「更新」のところでまとめて設定できるのでご安心を)</p>
+
+<p>完成したソースを改めて見てみると、</p>
+
+<ul>
+<li>作成: 増えたデータに対して DOM を追加</li>
+<li>削除: 減ったデータに対して DOM を削除</li>
+<li>更新: データに対応する表示に更新</li>
+</ul>
+
+<p>という処理がシンプルに書けているのが嬉しい。</p>
+
+<p>同じような書き方を jQuery でやるのは難しい。たぶん「毎回 DOM ツリーを作り直す」という富豪的な手順をとると思う。それだと効率が悪いし、次の例にあるような増減に関係したアニメーションを実現するのは困難である。</p>
+
+<h1>Data-Driven なアニメーション</h1>
+
+<p>今度は、少し色気を加えて、アニメーションさせる。</p>
+
+<div>
+<svg id="sample2" width="300" height="300" style="background: white; border: .3em solid #ccc;"></svg>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<script src="d3js-enter-exit.js" charset="utf-8"></script>
+
+<p><button style="padding: .5em .8em" onclick="change()">random</button>
+<button style="padding: .5em .8em" onclick="add()">push</button>
+<button style="padding: .5em .8em" onclick="del()">pop</button></p>
+
+<h2>使い方</h2>
+
+<ul>
+<li>初期状態では 10 個の要素を持った配列を表示している。</li>
+<li>横軸が配列のインデックス、縦軸が要素の値 (0～1) をあらわす。</li>
+<li>[random] ボタンを押すと、配列の中身がランダムな値で置き換わる。</li>
+<li>[push] ボタンを押すと、配列の末尾に要素を追加する。</li>
+<li>[pop] ボタンを押すと、配列の末尾から要素を取り除く。</li>
+</ul>
+
+<p>ボタンを押すと、アニメーションつきで見た目が変更するのを確認していただけるだろうか (SVG をサポートしてる必要があるので、モダンではないブラウザーでは表示できない)。</p>
+
+<h2>コンソールからの変更にも対応</h2>
+
+<p>このページを開いている状態であれば、JavaScript コンソールで直接</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">];</span>
+<span class="nx">update</span><span class="p">();</span>
+</code></pre></div>
+<p>と入力しても、アニメーションつきで配列が反映されるはずだ。</p>
+
+<h2>更新部分のソースコード</h2>
+
+<p>では、その <code>update()</code> 関数をみてみよう。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">update</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// 配列の個数を n に代入</span>
+  <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">values</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+
+  <span class="c1">// &lt;svg&gt; の中の &lt;circle&gt; を列挙して、values を割り当てる</span>
+  <span class="kd">var</span> <span class="nx">circles</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;svg#sample2&quot;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;circle&#39;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="nx">values</span><span class="p">);</span>
+
+  <span class="c1">// 作成: 足りない &lt;circle&gt; を追加する</span>
+  <span class="nx">circles</span><span class="p">.</span><span class="nx">enter</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;circle&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">/</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="c1">// 削除: 余分な &lt;circle&gt; はアニメーションつきで削除</span>
+  <span class="nx">circles</span><span class="p">.</span><span class="nx">exit</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+
+  <span class="c1">// 更新: アニメーションで正しい位置とサイズに移動</span>
+  <span class="nx">circles</span>
+    <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">/</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">);</span>
+
+  <span class="c1">// 線の位置も調整する</span>
+  <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;svg#sample2 polyline&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="nx">values</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">(</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">/</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">d</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">+</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="p">}).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>画面の描画は SVG で行っている。</p>
+
+<p>削除と更新のときに <code>transition()</code> でアニメーションを指定してる点に注目。これがアニメーションの肝である。</p>
+
+<p>円の大きさのアニメーションを例に説明する。</p>
+
+<p>「追加」のときには <code>&lt;circle&gt;</code> の半径を <code>0</code> で初期化している。そのあとの「更新」で <code>6</code> にしてる。その結果、追加時には徐々に大きくなりながら画面に現れる。</p>
+
+<p>ソースが長くなって、多少複雑になったが、「追加」「削除」「更新」の基本は変わっていない。</p>
+
+<h1>まとめ</h1>
+
+<p><a href="http://d3js.org/">D3.js</a> の Data-Driven な DOM 操作を説明した。入力されたデータに対して、「追加」「削除」「更新」の処理を分けて書くことで、驚くほどシンプルに記述できることが分かった。</p>
+
+<p>基礎が分かったら、<a href="(https://github.com/mbostock/d3/wiki/Gallery)">ギャラリー</a> と <a href="(https://github.com/mbostock/d3/wiki/API-Reference)">API リファレンス</a> を見比べれば、いろんな使い方が分かってくることだろう。あと、SVG の知識も必要にはなってくる。</p>
+
+<p>D3.js は「表示機能がない」という異色のビジュアライズ用のライブラリーだけども、表示処理を自由に操れるということは、見た目のカスタマイズをやりやすくなる。この手のライブラリーで一番苦労するのが、ちょっとしたカスタマイズをやりにくいところなので、こういう設計は実はありがたいのかもしれない。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/10/24/d3js/" class="hatena-bookmark-button" data-hatena-bookmark-title="D3.js の Data-Driven な DOM 操作がおもしろい - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/" data-lang="ja" data-size="horizontal" data-text="D3.js の Data-Driven な DOM 操作がおもしろい - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年10月24日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-10-24-d3js.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/visualize/">ビジュアライズ</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/06/27/node-yield/">Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</a></li>
+
+<li><a href="/ja/blog/2013/02/15/viewport/">これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ</a></li>
+
+<li><a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2009/03/16/postal-map/">郵便番号マップを作ってみた</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/10/10/grunt-watch-slow/" rel="previous"><b>&laquo;</b><span class="title">grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
