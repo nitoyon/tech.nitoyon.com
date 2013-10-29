@@ -6,13 +6,183 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 24 Oct 2013 01:52:29 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 29 Oct 2013 09:31:30 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+		<item>
+			<title>D3.js の d3.svg.line() を試してみた</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/10/29/d3js-svg-line/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/10/29/d3js-svg-line/</guid>
+			<pubDate>Tue, 29 Oct 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>１つ前の記事 <a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> のサンプルコードではシンプルにするために、座標計算の処理を泥臭く書いていた。</p>
+
+<p>たとえば</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  circles.enter()
+    .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })
+</code></pre></div>
+<p>のような座標を計算する関数が何箇所かに散らばっていた。</p>
+
+<p>これ、<code>d3.svg.line()</code> を使ったらまとめられるし、便利な <code>interpolate</code> の機能も使えるよ、というのが今回のお話。</p>
+
+<h1>d3.svg.line() の使い方</h1>
+
+<p>たとえば</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var line = d3.svg.line()
+  .x(function(d, i) { return i; })
+  .y(function(d, i) { return d * d; });
+</code></pre></div>
+<p>としておくことにする。<code>line.x()</code> とすると <code>function(d, i) { return i; }</code> を返してくれるので、関数を再利用してコードが読みやすくなる。<code>line.y()</code> も同様。</p>
+
+<p>さらに、<code>line([5,2,4])</code> のようにして配列を渡すと <code>&quot;M0,25L1,4L2,16&quot;</code> を返す。これは <code>(1, 5*5)</code>、<code>(2, 2*2)</code>, <code>(3, 4*4)</code> を結んだ線を表す SVG である。</p>
+
+<p>ま、これだけならちょっと便利かなぁ、というぐらいだけども、<code>line.interpolate(&quot;cardinal&quot;)</code> を実行しておくと、<code>line([5,2,4])</code> は <code>&quot;M0,25Q0.7999999999999999,4.9,1,4Q1.2,3.1,2,16&quot;</code> を返す。</p>
+
+<p>これは、座標を曲線で結んだ SVG をあらわす。うまいこと計算してくれている。</p>
+
+<h1>今回のサンプル</h1>
+
+<p>というわけで、前回のサンプルを少し改善しつつ、各種の <code>interpolate</code> を試せるようにしたものを置いておく。</p>
+
+<div>
+<svg id="sample" width="300" height="300"
+  style="background: white; border: .3em solid #ccc;"></svg>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<p><button onclick="random()">random</button>
+<button onclick="push()">push</button>
+<button onclick="pop()">pop</button>
+<select id="line-interpolate">
+  <option>linear</option>
+  <option>linear-closed</option>
+  <option>step</option>
+  <option>step-before</option>
+  <option>step-after</option>
+  <option>basis</option>
+  <option>basis-open</option>
+  <option>basis-closed</option>
+  <option>bundle</option>
+  <option selected>cardinal</option>
+  <option>cardinal-open</option>
+  <option>cardinal-closed</option>
+  <option>monotone</option>
+</select>
+<script src="d3js-svg-line.js" charset="utf-8"></script></p>
+
+<h2>使い方</h2>
+
+<ul>
+<li>初期状態では 10 個の要素を持った配列を表示している。</li>
+<li>横軸が配列のインデックス、縦軸が要素の値 (0～1) をあらわす。</li>
+<li>[random] ボタンを押すと、配列の中身がランダムな値で置き換わる。</li>
+<li>[push] ボタンを押すと、配列の末尾に要素を追加する。</li>
+<li>[pop] ボタンを押すと、配列の末尾から要素を取り除く。</li>
+<li>選択欄で <code>interpolate</code> の値を変更できる。</li>
+</ul>
+
+<p>ボタンを押すと、アニメーションつきで見た目が変更するのを確認していただけるだろうか (SVG をサポートしてる必要があるので、モダンではないブラウザーでは表示できない)。</p>
+
+<h2>HTML のソース</h2>
+<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;div&gt;
+&lt;svg id=&quot;sample&quot; width=&quot;300&quot; height=&quot;300&quot;
+  style=&quot;background: white; border: .3em solid #ccc;&quot;&gt;&lt;/svg&gt;
+&lt;/div&gt;
+&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+&lt;button onclick=&quot;random()&quot;&gt;random&lt;/button&gt;
+&lt;button onclick=&quot;push()&quot;&gt;push&lt;/button&gt;
+&lt;button onclick=&quot;pop()&quot;&gt;pop&lt;/button&gt;
+&lt;select id=&quot;line-interpolate&quot;&gt;
+  &lt;option&gt;linear&lt;/option&gt;
+  &lt;option&gt;linear-closed&lt;/option&gt;
+  &lt;option&gt;step&lt;/option&gt;
+  &lt;option&gt;step-before&lt;/option&gt;
+  &lt;option&gt;step-after&lt;/option&gt;
+  &lt;option&gt;basis&lt;/option&gt;
+  &lt;option&gt;basis-open&lt;/option&gt;
+  &lt;option&gt;basis-closed&lt;/option&gt;
+  &lt;option&gt;bundle&lt;/option&gt;
+  &lt;option&gt;cardinal&lt;/option&gt;
+  &lt;option&gt;cardinal-open&lt;/option&gt;
+  &lt;option&gt;cardinal-closed&lt;/option&gt;
+  &lt;option&gt;monotone&lt;/option&gt;
+&lt;/select&gt;
+&lt;script src=&quot;d3js-svg-line.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+</code></pre></div>
+<h2>d3js-svg-line.js のソース</h2>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var svg = d3.select(&quot;svg#sample&quot;)
+  .attr(&#39;width&#39;, 300).attr(&#39;height&#39;, 300)
+  .style(&#39;display&#39;, &#39;block&#39;);
+var polyline = svg.append(&#39;path&#39;)
+  .attr(&#39;stroke&#39;, &#39;red&#39;)
+  .attr(&#39;stroke-width&#39;, &#39;1&#39;)
+  .attr(&#39;fill&#39;, &#39;transparent&#39;);
+
+var values = [];
+for (var i = 0; i &lt; 10; i++) {
+  values.push(Math.random());
+}
+d3.select(&#39;#line-interpolate&#39;).on(&#39;change&#39;, update);
+
+function update() {
+  var n = values.length;
+
+  var s = d3.select(&#39;#line-interpolate&#39;)[0][0];
+  var interpolate = s.options[s.selectedIndex].value;
+
+  var line = d3.svg.line()
+    .x(function(d, i) { return (i + 1) * 300 / (n + 1); })
+    .y(function(d, i) { return d * 280 + 10; })
+    .interpolate(interpolate);
+
+  var circles = svg.selectAll(&#39;circle&#39;).data(values);
+  circles.enter()
+    .append(&#39;circle&#39;)
+    .attr(&#39;cx&#39;, line.x()).attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0);
+  circles.exit()
+    .transition()
+    .duration(300)
+    .attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0)
+    .remove();
+  circles
+    .attr(&#39;fill&#39;, &#39;red&#39;)
+    .transition()
+    .duration(300)
+    .attr(&#39;cx&#39;, line.x())
+    .attr(&#39;cy&#39;, line.y())
+    .attr(&#39;r&#39;, 6);
+  polyline
+    .transition()
+    .duration(300)
+    .attr(&#39;d&#39;, line(values));
+}
+
+function random() {
+  var n = values.length;
+  for (var i = 0; i &lt; n; i++) {
+    values[i] = Math.random();
+  }
+  update();
+}
+
+function push() {
+  values.push(Math.random());
+  update();
+}
+
+function pop() {
+  values.pop();
+  update();
+}
+
+update();
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>D3.js の Data-Driven な DOM 操作がおもしろい</title>
@@ -701,107 +871,6 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <p>このブログのソースコードは <a href="https://github.com/nitoyon/tech.nitoyon.com">nitoyon/tech.nitoyon.com - GitHub</a> を参照してほしい。</p>
 
 <p>理想のブログ環境に近づいてきた。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Git にパッチを送って取り込まれた話</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/07/23/git-patch/</guid>
-			<pubDate>Tue, 23 Jul 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Git の挙動に変なところを見つけたので、パッチを作って Git のメーリングリストに投げてみたところ、何度かのレビューを経て、無事に<a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5">取り込まれた</a>。</p>
-
-<p><a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5"><center><img src="http://farm8.staticflickr.com/7305/9342092085_b197aaf53e.jpg" width="500" height="368"></center></a></p>
-
-<p>Git に貢献したい人とか、オープンソース開発の流れに興味がある人もいるだろうから、作業の流れを書いておくことにする。</p>
-
-<h1>1. バグを発見する</h1>
-
-<p>何はともあれ、修正したいところを見つけるところから。</p>
-
-<p>先日、<a href="/ja/blog/2013/07/02/git-dir-diff/">git difftool --dir-diff が便利すぎて泣きそうです</a> という記事を書いたが、<code>difftool --dir-diff</code> の挙動を調べているうちに、一時ファイル書き戻し条件が変なことに気づいた。</p>
-
-<p>手元のバージョンが古いのかとも思ったが、<code>master</code> ブランチでも再現したので、ちょっくら深入りしてみた。<code>git difftool</code> は Perl スクリプトだったので、ソースコードに <code>print</code> を追加しつつ挙動を探っていった。しばらく調べていると、コードの流れも分かってきて、<code>--no-symlinks</code> が指定されたとき (Windows ではこれがデフォルト) にのみ動作がおかしいことに気づいた。</p>
-
-<p>マニアックなオプションで、しかも、Windows でしか発生しないバグ・・・ということで発見されてなかったのだろう。ちょっと修正したら期待通りの結果になったので、これはパッチを送ってみるチャンスである、と思い立った。</p>
-
-<p>パッチを作るための手順は <a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> に記載されている。この手順に従って、パッチを送ってみることにした。</p>
-
-<h1>2. テストコードを修正する</h1>
-
-<p><a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> を読んでいると、テストコードも一緒に修正しろ、とある。</p>
-
-<p>Windows 上でテスト環境を作ろうとしたが、修羅の道っぽかったのですぐに諦めた。次に、レンタルサーバーを借りている sakura の FreeBSD 上で試そうとしたが、これも罠にハマって解決能力がないので諦めた。</p>
-
-<p>結局、素直に仮想端末に CentOS を突っ込んだ。<code>yum</code> でいろいろインストールしたら、あっさりテストまで実行できる環境ができあがった。</p>
-
-<p>テストはシェルスクリプトで記述されている。シェルスクリプトは不慣れなのだが、しばらく読んでるうちに作法が分かってきたので、真似をして修正した。</p>
-
-<h1>3. コミットログを書く</h1>
-
-<p>これが一番難しかった。</p>
-
-<p><a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> を読むと、「修正前は何がおかしかったのか」「修正によって正しくなった理由」を説明することを求められている。もちろん英語で。</p>
-
-<p>実際に、Git プロジェクトのコミットログを読んでみると、どれもコミットログが長くて、しっかりと修正の内容が説明されている。</p>
-
-<p>しかし、自分には英語力がないので、言いたいことをうまく伝えられない。</p>
-
-<p>第一稿では、同一ファイルへの過去のコミットログを切り貼りしつつ、なんとかそれっぽく書き上げたつもりになった (これが後々、「分かりにくいぞ」とツッコミを受けてしまうのだが・・・)。</p>
-
-<p>あとは、コミットログの末尾に <code>Signed-off-by:</code> として自分の名前を書かなきゃいけない。「本名を書け」とあるので、名前を出したくない人にとっては厳しい関門かもしれない。</p>
-
-<h1>4. メーリングリストにパッチを投げる</h1>
-
-<p>Git の議論やパッチのレビューはすべてメーリングリスト上で行われている。ということで、次にすべきはパッチを <a href="http://vger.kernel.org/vger-lists.html#git">Git ML</a> に投げることである。間違っても、GitHub 上で pull リクエストを出してはいけない。</p>
-
-<p>メールを送付する手順も <a href="https://github.com/git/git/blob/master/Documentation/SubmittingPatches">Documentation/SubmittingPatches</a> に書いてある。</p>
-
-<p>まずは、<code>git format-patch</code> でパッチを作成する。作成したパッチはメール形式になっているので、これをそのままメールとして送る必要がある。</p>
-
-<p>自分は GMail を使いたかったので、<a href="https://www.kernel.org/pub/software/scm/git/docs/git-format-patch.html">git-format-patch(1)</a> の MUA-SPECIFIC HINTS に従って、<code>git send-email</code> コマンドを使って送信した。事前に <code>.gitconfig</code> の <code>[sendemail]</code> に色々と設定を書くのだけど、最初、<code>[sendmail]</code> に設定を書いてしまってうまくいかずにしばらく悩んだのは、今となってはいい思い出。</p>
-
-<h1>5. レビュー結果に従う</h1>
-
-<p>しばらく待っているとメーリングリストに返事が届いた。</p>
-
-<p>今回の修正では、コードについては文句が出なかったが、コミットログが分かりにくい、という注文がついた。</p>
-
-<p>1 回目は John さんから、2 回目はメンテナの濱野さんから。</p>
-
-<ul>
-<li><a href="http://www.spinics.net/lists/git/msg208473.html">Re: [PATCH] difftool --dir-diff: copy back all files matching the working tree -- Git</a></li>
-<li><a href="http://www.spinics.net/lists/git/msg208598.html">Re: [PATCH v2] difftool --dir-diff: always use identical working tree file -- Git</a></li>
-</ul>
-
-<p>結局、2 回、コミットログのみを書き換えてパッチを再送信した。</p>
-
-<p>三度目の正直、v3 で OK をもらえた。</p>
-
-<ul>
-<li><a href="http://www.spinics.net/lists/git/msg208794.html">Re: [PATCH v3] difftool --dir-diff: allow changing any clean working tree file -- Git</a></li>
-</ul>
-
-<h1>6. ブランチを昇格していく</h1>
-
-<p>OK をもらったコミットは <code>pu</code> (Proposed Update) ブランチに取り込まれる。</p>
-
-<p>しばらく経って異論が出なければ <code>next</code> ブランチにマージされて、最後に <code>master</code> ブランチにマージされる。</p>
-
-<p>最終的に自分の<a href="https://github.com/git/git/commit/32eaf1de7f79c4ba09f3de3261c84e52e0a67af5">コミット</a> が v1.8.3.2 で取り込まれてリリースされた。<a href="https://github.com/git/git/blob/master/Documentation/RelNotes/1.8.3.2.txt">リリースノート</a>の末尾にも自分のパッチの情報が書いてあった。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text"> * &quot;difftool --dir-diff&quot; did not copy back changes made by the
-   end-user in the diff tool backend to the working tree in some
-   cases.
-</code></pre></div>
-<p>めでたい。</p>
-
-<h1>まとめ</h1>
-
-<p>以上でパッチを送ってから取り込まれるまでの流れを振り返った。</p>
-
-<p>印象的だったのは、コミットログをしっかり書かせる文化である、ということ。今回の自分のコミットは「ソースコードの行数 &lt; コミットログの行数」だった。ソースコード上のコメントは少なくても、コミットログにしっかりと歴史や意図が刻まれている。</p>
-
-<p>あとは、英語をなんとかしたい・・・。</p>
 ]]></description>
 		</item>
 
