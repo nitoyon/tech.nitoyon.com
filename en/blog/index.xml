@@ -6,13 +6,62 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 10 Oct 2013 00:23:58 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 07 Nov 2013 01:32:22 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+		<item>
+			<title>Visualizing K-Means algorithm with D3.js</title>
+			<link>http://tech.nitoyon.com/en/blog/2013/11/07/k-means/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2013/11/07/k-means/</guid>
+			<pubDate>Thu, 07 Nov 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>The K-Means algorithm is a popular and simple clustering algorithm. This visualization shows you how it works.</p>
+
+<div id="kmeans">
+<div><svg></svg></div>
+<div><button id="step">Step</button> <button id="restart" disabled>Restart</button></div>
+<fieldset style="display: inline; margin: .8em 0 1em 0; border: 1px solid #999; padding: .5em">
+<div><label for="N">N (the number of node):</label><input type="number" id="N" min="2" max="1000" value="100"></div>
+<div><label for="K">K (the number of cluster):</label><input type="number" id="K" min="2" max="50" value="5"></div>
+<div><button id="reset">New</button></div>
+</fieldset>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<script src="/ja/blog/2013/11/07/k-means/k-means.js"></script>
+
+<ul>
+<li>Click figure or push [Step] button to go to next step.</li>
+<li>Push [Restart] button to go back to initialization step.</li>
+<li>Push [New] button to start new simulation with given <i>N</i> (the number of nodes) and <i>K</i> (the number of clusters).</li>
+<li>Requires modern browsers (tested on IE 10, Firefox 25 and Chrome 30).</li>
+</ul>
+
+<h1>What is K-Means</h1>
+
+<p>You can find a detail description at <a href="http://en.wikipedia.org/wiki/K-means_clustering">k-means clustering - Wikipedia, the free encyclopedia</a>, but it&#39;s too complecated to understand.</p>
+
+<p>Here is simpler steps:</p>
+
+<ol>
+<li><em>Initialization:</em> Create <i>N</i> nodes (circle) and randomly put initial <i>K</i> cluster (cross).</li>
+<li><em>Assignment step:</em> Assign each node (circle) to the nearest cluster (cross).</li>
+<li><em>Update step:</em> Each cluster (cross) move to the centroid of its nodes.</li>
+<li>Go to step 2.</li>
+</ol>
+
+<h1>D3.js and ActionScript 3</h1>
+
+<p>This visualization is JavaScript port of my past work -- <a href="/ja/blog/2009/04/09/kmeans-visualise/">Visualization of K-means algorithm with ActionScript 3 (Japanese only)</a> -- with <a href="http://d3js.org/">D3.js</a>.</p>
+
+<p>I like D3.js&#39;s powerful data binding and animation APIs. It makes my code simple. But Flash shows smoother animations.</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>When grunt-contrib-watch uses too much CPU, try grunt-este-watch</title>
@@ -435,62 +484,6 @@ cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
 <p>Oh!! Nothing changes...</p>
 
 <p>It seems that <code>fs.watch()</code> had many problems such as not reporting filenames on mac and executing <code>fs.stat()</code> became popular. Oh, hell!</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Bugzilla: Edit bug status using Perl script</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/05/17/bugzilla-hack/</guid>
-			<pubDate>Fri, 17 May 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>I wrote a perl script which adds a comment and modify status of bug in Bugzilla. This script is useful if you want to fix a bug automatically with a commit log.</p>
-<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib
-
-use strict;
-use Bugzilla;
-use Bugzilla::User;
-use Bugzilla::Status;
-use Bugzilla::Bug;
-use utf8;
-
-&amp;update_bug(1, &quot;ほげほげ&quot;);
-
-# API document: http://www.bugzilla.org/docs/4.2/en/html/api/
-sub update_bug {
-    my ($bug_id, $text) = @_;
-
-    # open bug
-    my $bug = Bugzilla::Bug-&gt;new($bug_id);
-    die $bug-&gt;error if defined $bug-&gt;error;
-
-    # get user
-    my $user = Bugzilla::User-&gt;new({name =&gt; &#39;admin@example.com&#39;});
-    die &#39;user not found!!!!&#39; unless defined $user;
-
-    # login
-    Bugzilla-&gt;set_user($user);
-
-    # comment to the bug
-    $bug-&gt;add_comment($text);
-
-    # FIXED
-    $bug-&gt;set_bug_status(Bugzilla::Status-&gt;new({name =&gt; &#39;RESOLVED&#39;}),
-                         {resolution =&gt; &#39;FIXED&#39;});
-
-    # save to database
-    $bug-&gt;update();
-}
-</code></pre></div>
-<p>Tested on Bugzilla 4.2.5.</p>
-
-<p>When you are using Git, call this subroutine from <code>post-receive</code> hook.</p>
-
-<p>Warnings:</p>
-
-<ul>
-<li>This script must be executed on the server Bugzilla installed.</li>
-<li>I&#39;m using undocumented module, <code>Bugzilla::Bug</code>. At first, I tried to use <code>Bugzilla::WebService::Bug</code> (documented), but it depends on <code>Test/Taint</code> module and my server doesn&#39;t have the module.</li>
-</ul>
 ]]></description>
 		</item>
 

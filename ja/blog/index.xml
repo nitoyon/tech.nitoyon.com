@@ -6,13 +6,100 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 29 Oct 2013 09:31:30 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 07 Nov 2013 01:36:05 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+		<item>
+			<title>K-means 法を D3.js でビジュアライズしてみた</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/</guid>
+			<pubDate>Thu, 07 Nov 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>クラスタリングの定番アルゴリズム K-means 法（K平均法）の動作原理を理解するために、<a href="http://d3js.org/">D3.js</a> を使って可視化してみました。</p>
+
+<div id="kmeans">
+<div><svg></svg></div>
+<div><button id="step">ステップ</button> <button id="restart" disabled>最初から</button></div>
+<fieldset style="display: inline; margin: .8em 0 1em 0; border: 1px solid #999; padding: .5em">
+<div><label for="N">N (ノード数):</label><input type="number" id="N" min="2" max="1000" value="100"></div>
+<div><label for="K">K (クラスター数):</label><input type="number" id="K" min="2" max="50" value="5"></div>
+<div><button id="reset">新規作成</button></div>
+</fieldset>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<script src="k-means.js"></script>
+
+<ul>
+<li>図をクリックするか [ステップ] ボタンを押すと、1ステップずつ処理を行います</li>
+<li>[最初から] ボタンを押すと、最初の状態に戻ります</li>
+<li>[新規作成] ボタンを押すと、<i>N</i> (ノード数) と <i>K</i> (クラスタ数) の値で新しく初期化します</li>
+<li>古いブラウザーではうまく表示できない可能性があります (IE 10、Firefox 25、Chrome 30 で動作確認しています)</li>
+</ul>
+
+<h1>K-Means 法とは</h1>
+
+<p>英語版 Wikipedia の <a href="http://en.wikipedia.org/wiki/K-means_clustering">k-means clustering - Wikipedia, the free encyclopedia</a> の手順に沿って実装しています。</p>
+
+<p>英語版の手順をザックリと書くとこんなイメージになります。</p>
+
+<ol>
+<li><em>初期化:</em> <i>N</i> 個のノード (丸印) と <i>K</i> 個のクラスター (×印) を作成する</li>
+<li><em>Assignment ステップ:</em> 各ノードを一番近いクラスターに所属させる</li>
+<li><em>Update ステップ:</em> クラスターをノードの重心に移動させる</li>
+<li>ステップ 2 に戻る</li>
+</ol>
+
+<p>最初は 1 の状態で表示していて、クリックするごとに、ステップ 2 とステップ 3 を実行していきます。</p>
+
+<p>ステップを繰り返すにしたがって、クラスターの重心 (×印) が移動しながら、塊ができていく様子を確認できると思います。</p>
+
+<h1>D3.js と ActionScript 3</h1>
+
+<p>ここからはプログラミングの話です。</p>
+
+<p>お気づきの方もいるかもしれませんが、このビジュアライズは 4 年ほど前に ActionScript 3 で作った <a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a> の焼き直しです。</p>
+
+<p>同じものを D3.js と ActionScript 3 で実装してみて気づいたことがいくつかあります。</p>
+
+<h2>実装のしやすさ</h2>
+
+<p>ActionScript 版にくらべて、D3.js 版では</p>
+
+<ul>
+<li>クラスタが変わるときの色の変化のアニメーション</li>
+<li>重心が移動するときの線のアニメーション</li>
+<li>新規作成のときのアニメーション</li>
+</ul>
+
+<p>を追加しています。</p>
+
+<p>D3.js の <code>data()</code> や <code>enter()</code> といった API を活用すれば、このようなアニメーションが簡単に実現できました。ActionScript で同じことを実現するのは、かなり面倒です。<code>data()</code> や <code>enter()</code> の嬉しいところについては、<a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> で書いているので、興味があれば読んでください。</p>
+
+<p>ただ、D3.js で作る場合は、<code>data()</code> などの API にあわせてデータ構造を作りあげる必要があるので、少し慣れが必要でした。</p>
+
+<h2>表示速度</h2>
+
+<p>やっぱり Flash は速い。</p>
+
+<p>D3.js 版では、ノードが増えたときのコマ落ちが目立ちます。このあたりは、ブラウザーの将来の進化に期待したいところです。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>K means 法をビジュアライズしてみたよ</li>
+<li>D3.js 便利</li>
+<li>ブラウザーの進化に期待</li>
+</ul>
+
+<p>JavaScript のソースは <a href="k-means.js">k-means.js</a> においてます。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>D3.js の d3.svg.line() を試してみた</title>
@@ -824,53 +911,6 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <li>poll 型 (定期的に stat を実行する)</li>
 <li>どのプラットフォームでも動く</li>
 </ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>LiveReloadX を Grunt から使えるようにした</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/07/29/livereloadx0-3-0/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/07/29/livereloadx0-3-0/</guid>
-			<pubDate>Mon, 29 Jul 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><a href="http://nitoyon.github.io/livereloadx/">LiveReloadX</a> に少し手を入れて <a href="http://gruntjs.com/">Grunt</a> のタスクとして動作させられるようにした。</p>
-
-<p>今回のバージョンは 0.3.0。新規インストールするなら今まで通り <code>npm install -g livereloadx</code> で、バージョンアップするなら <code>npm update -g livereloadx</code> でどうぞ。</p>
-
-<p>設定手順は <a href="http://nitoyon.github.io/livereloadx/">LiveReloadX</a> の「Run as a Grunt Task」あたりを参照してもらうとして、この記事では実装した背景を説明しておこう。</p>
-
-<h1>Grunt に対応させる価値</h1>
-
-<p><a href="http://gruntjs.com/">Grunt</a> は、サイトの生成にあたっての必要な処理をひとまとめにできるのでとても便利である。そこに live reload する機能まで含んでいればさらに便利そうである。</p>
-
-<p>といっても、実は、公式の <a href="https://github.com/gruntjs/grunt-contrib-watch#optionslivereload">grunt-contrib-watch</a> プラグインに live reload 機能はついている。</p>
-
-<p>じゃあ、公式でよさそうなのだけど、公式を使うためには「HTML に JavaScript のスニペットを埋め込む」か「ブラウザ拡張を導入する」必要がある。<code>grunt-contrib-watch</code> のページに <a href="https://github.com/intesso/connect-livereload">connect-livereload</a> を使う方法も紹介されてるが、そっちは少し煩雑そうだった。</p>
-
-<p><a href="http://nitoyon.github.io/livereloadx/">LiveReloadX</a> の一番のウリが static モードと proxy モードで、JavaScript スニペットの埋め込みを Web サーバー側でやってくれる。この機能を使いたかったので、<a href="http://nitoyon.github.io/livereloadx/">LiveReloadX</a> 自体を <a href="http://gruntjs.com/">Grunt</a> に組み込んでみた。</p>
-
-<p>組み込むにあたっては、Grunt のドキュメントを見たり、各種プラグインのソースを見たりすれば、だいたいの方法は分かったので、比較的簡単に対応できた。</p>
-
-<h1>ブログ書くのがさらに手軽になった</h1>
-
-<p>個人的には、今回の機能によって、ブログを書くのがとても楽になった。</p>
-
-<p>いままでは、このブログを書くにあたって、<code>jekyll</code> と <code>livereloadx</code> を個別に実行していた。</p>
-
-<p>以前、<a href="/ja/blog/2013/06/25/jekyll-grunt/">Jekyll で --watch の代わりに Grunt を使ってみるテスト</a> で書いたとおり、<a href="https://github.com/mojombo/jekyll">Jekyll</a> を <a href="http://gruntjs.com/">Grunt</a> から使うことには成功していた。今回、<a href="http://nitoyon.github.io/livereloadx/">LiveReloadX</a> も組み合わせられるようになった。</p>
-
-<p>つまり、<code>grunt</code> と実行するだけで</p>
-
-<ul>
-<li>Web サーバーが起動して、Jekyll のビルド結果を確認できる</li>
-<li>Markdown 記法の記事をテキストエディターから編集したら、<code>jekyll</code> が走って HTML を生成する。</li>
-<li>表示しているページの HTML や画像が生成されたら、自動でブラウザーがリロードされる</li>
-</ul>
-
-<p>という環境が整った。</p>
-
-<p>このブログのソースコードは <a href="https://github.com/nitoyon/tech.nitoyon.com">nitoyon/tech.nitoyon.com - GitHub</a> を参照してほしい。</p>
-
-<p>理想のブログ環境に近づいてきた。</p>
 ]]></description>
 		</item>
 

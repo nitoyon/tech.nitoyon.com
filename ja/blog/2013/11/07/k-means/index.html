@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>K-means 法を D3.js でビジュアライズしてみた - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="K-means 法を D3.js でビジュアライズしてみた"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="クラスタリングの定番アルゴリズム K-means 法（K平均法）の動作原理を理解するために、D3.js を使って可視化してみました。ステップ 最初からN (ノード数):K (クラスター数):新規作成図をクリックするか [ステップ] ボタンを押すと、1ステップずつ処理を行います[最初から] ボタンを押すと、最初の状態に戻ります[新規作成] ボタンを押すと、N (ノード数) と K (クラスタ数) の値で新しく初期化します古いブラウザーではうまく表示できない可能性があります (IE 10、Firefox 25、Chrome 30 で動作確認しています)K-Means 法とは英語版 Wikip..."/>
+	<meta property="og:image" content="http://farm8.staticflickr.com/7316/10710273026_68972312f0_o.jpg"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2013/11/07/k-means/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2013/11/07/k-means/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2013/11/07/k-means/</span>.</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">2013年11月07日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/visualize/">ビジュアライズ</a></div>
+
+<h1>K-means 法を D3.js でビジュアライズしてみた</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/07/k-means/" class="hatena-bookmark-button" data-hatena-bookmark-title="K-means 法を D3.js でビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/" data-lang="ja" data-size="horizontal" data-text="K-means 法を D3.js でビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>クラスタリングの定番アルゴリズム K-means 法（K平均法）の動作原理を理解するために、<a href="http://d3js.org/">D3.js</a> を使って可視化してみました。</p>
+
+<div id="kmeans">
+<div><svg></svg></div>
+<div><button id="step">ステップ</button> <button id="restart" disabled>最初から</button></div>
+<fieldset style="display: inline; margin: .8em 0 1em 0; border: 1px solid #999; padding: .5em">
+<div><label for="N">N (ノード数):</label><input type="number" id="N" min="2" max="1000" value="100"></div>
+<div><label for="K">K (クラスター数):</label><input type="number" id="K" min="2" max="50" value="5"></div>
+<div><button id="reset">新規作成</button></div>
+</fieldset>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+<script src="k-means.js"></script>
+
+<ul>
+<li>図をクリックするか [ステップ] ボタンを押すと、1ステップずつ処理を行います</li>
+<li>[最初から] ボタンを押すと、最初の状態に戻ります</li>
+<li>[新規作成] ボタンを押すと、<i>N</i> (ノード数) と <i>K</i> (クラスタ数) の値で新しく初期化します</li>
+<li>古いブラウザーではうまく表示できない可能性があります (IE 10、Firefox 25、Chrome 30 で動作確認しています)</li>
+</ul>
+
+<h1>K-Means 法とは</h1>
+
+<p>英語版 Wikipedia の <a href="http://en.wikipedia.org/wiki/K-means_clustering">k-means clustering - Wikipedia, the free encyclopedia</a> の手順に沿って実装しています。</p>
+
+<p>英語版の手順をザックリと書くとこんなイメージになります。</p>
+
+<ol>
+<li><em>初期化:</em> <i>N</i> 個のノード (丸印) と <i>K</i> 個のクラスター (×印) を作成する</li>
+<li><em>Assignment ステップ:</em> 各ノードを一番近いクラスターに所属させる</li>
+<li><em>Update ステップ:</em> クラスターをノードの重心に移動させる</li>
+<li>ステップ 2 に戻る</li>
+</ol>
+
+<p>最初は 1 の状態で表示していて、クリックするごとに、ステップ 2 とステップ 3 を実行していきます。</p>
+
+<p>ステップを繰り返すにしたがって、クラスターの重心 (×印) が移動しながら、塊ができていく様子を確認できると思います。</p>
+
+<h1>D3.js と ActionScript 3</h1>
+
+<p>ここからはプログラミングの話です。</p>
+
+<p>お気づきの方もいるかもしれませんが、このビジュアライズは 4 年ほど前に ActionScript 3 で作った <a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a> の焼き直しです。</p>
+
+<p>同じものを D3.js と ActionScript 3 で実装してみて気づいたことがいくつかあります。</p>
+
+<h2>実装のしやすさ</h2>
+
+<p>ActionScript 版にくらべて、D3.js 版では</p>
+
+<ul>
+<li>クラスタが変わるときの色の変化のアニメーション</li>
+<li>重心が移動するときの線のアニメーション</li>
+<li>新規作成のときのアニメーション</li>
+</ul>
+
+<p>を追加しています。</p>
+
+<p>D3.js の <code>data()</code> や <code>enter()</code> といった API を活用すれば、このようなアニメーションが簡単に実現できました。ActionScript で同じことを実現するのは、かなり面倒です。<code>data()</code> や <code>enter()</code> の嬉しいところについては、<a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> で書いているので、興味があれば読んでください。</p>
+
+<p>ただ、D3.js で作る場合は、<code>data()</code> などの API にあわせてデータ構造を作りあげる必要があるので、少し慣れが必要でした。</p>
+
+<h2>表示速度</h2>
+
+<p>やっぱり Flash は速い。</p>
+
+<p>D3.js 版では、ノードが増えたときのコマ落ちが目立ちます。このあたりは、ブラウザーの将来の進化に期待したいところです。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li>K means 法をビジュアライズしてみたよ</li>
+<li>D3.js 便利</li>
+<li>ブラウザーの進化に期待</li>
+</ul>
+
+<p>JavaScript のソースは <a href="k-means.js">k-means.js</a> においてます。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/07/k-means/" class="hatena-bookmark-button" data-hatena-bookmark-title="K-means 法を D3.js でビジュアライズしてみた - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/" data-lang="ja" data-size="horizontal" data-text="K-means 法を D3.js でビジュアライズしてみた - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/07/k-means/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年11月07日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-11-07-k-means.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/visualize/">ビジュアライズ</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2009/03/03/dp/">アルゴリズムイントロダクション輪講 動的計画法の発表資料</a></li>
+
+<li><a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a></li>
+
+<li><a href="/ja/blog/2013/10/29/d3js-svg-line/">D3.js の d3.svg.line() を試してみた</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/10/29/d3js-svg-line/" rel="previous"><b>&laquo;</b><span class="title">D3.js の d3.svg.line() を試してみた</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

@@ -8,15 +8,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/11/07/k-means/", title: "K-means 法を D3.js でビジュアライズしてみた"},
 	{url: "/ja/blog/2013/10/29/d3js-svg-line/", title: "D3.js の d3.svg.line() を試してみた"},
 	{url: "/ja/blog/2013/10/24/d3js/", title: "D3.js の Data-Driven な DOM 操作がおもしろい"},
 	{url: "/ja/blog/2013/10/10/grunt-watch-slow/", title: "grunt-contrib-watch が重いので grunt-este-watch を試したら幸せになった"},
-	{url: "/ja/blog/2013/10/02/node-watch-impl/", title: "Node.js の fs.watch() と fs.watchFile() の違い"},
-	{url: "/ja/blog/2013/07/29/livereloadx0-3-0/", title: "LiveReloadX を Grunt から使えるようにした"}
+	{url: "/ja/blog/2013/10/02/node-watch-impl/", title: "Node.js の fs.watch() と fs.watchFile() の違い"}
 ];
 
 Site.archives.months = [
-  "201310"
+  "201311"
+, "201310"
 , "201307"
 , "201306"
 , "201305"
