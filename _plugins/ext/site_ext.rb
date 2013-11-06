@@ -61,7 +61,7 @@ module Jekyll
 
   class Site
     def is_modified_only
-      !self.future
+      self.future
     end
 
     # Render the site to the destination.

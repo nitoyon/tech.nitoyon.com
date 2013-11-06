@@ -3,10 +3,10 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     shell: {
       jekyll_build: {
-        command: 'jekyll build'
+        command: 'jekyll build --future'
       },
       jekyll_rebuild: {
-        command: 'jekyll build --future'
+        command: 'jekyll build'
       }
     },
     livereloadx: {
