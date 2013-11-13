@@ -5,11 +5,11 @@ lang: ja
 tags: Jekyll Windows
 thumbnail: http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png
 seealso:
-- 2012-09-20-moved-completed
-- 2013-06-25-jekyll-grunt
-- 2013-04-17-jekyll-pluralize
-- 2012-12-25-jekyll-0-12-0
-- 2012-10-15-static-site-js-css-cache
+- ja/2012-09-20-moved-completed
+- ja/2013-06-25-jekyll-grunt
+- ja/2013-04-17-jekyll-pluralize
+- ja/2012-12-25-jekyll-0-12-0
+- ja/2012-10-15-static-site-js-css-cache
 ---
 [Jekyll] を Windows で動かそうとすると、いくつか難関がある。今回、自分の環境を新しく作り直したキッカケがあったので、導入までの手順をメモしておく。
 
