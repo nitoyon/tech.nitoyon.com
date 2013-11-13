@@ -3,6 +3,7 @@ layout: post
 title: 'Jekyll で --watch の代わりに Grunt を使ってみるテスト'
 tags: Jekyll Ruby Node.js
 lang: ja
+thumbnail: http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png
 alternate:
   lang: en_US
   url: /en/blog/2013/06/25/jekyll-grunt/

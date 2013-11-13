@@ -3,6 +3,7 @@ layout: post
 title: 3 ways to specify categories and tags in Jekyll
 tags: Jekyll
 lang: en
+thumbnail: http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png
 alternate:
   lang: ja_JP
   url: /ja/blog/2013/04/17/jekyll-pluralize/

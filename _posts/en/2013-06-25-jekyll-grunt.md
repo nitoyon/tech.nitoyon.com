@@ -3,6 +3,7 @@ layout: post
 title: 'Jekyll: Use Grunt instead of --watch option'
 tags: Jekyll Ruby Node.js
 lang: en
+thumbnail: http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png
 alternate:
   lang: ja_JP
   url: /ja/blog/2013/06/25/jekyll-grunt/

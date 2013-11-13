@@ -3,6 +3,7 @@ layout: post
 title: Jekyll のカテゴリーとタグの指定方法 3 パターン
 tags: Jekyll
 lang: ja
+thumbnail: http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png
 alternate:
   lang: en_US
   url: /en/blog/2013/04/17/jekyll-pluralize/
