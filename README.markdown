@@ -12,6 +12,7 @@ Initialize
     $ git clone https://github.com/nitoyon/tech.nitoyon.com.git
     $ cd tech.nitoyon.com
     $ git new-workdir . _site html
+    $ git checkout .; git clean -d -f
     $ npm install
     $ npm install -g grunt-cli
 
@@ -46,9 +47,10 @@ Build Requirements
 
 * Node.js 0.10.18
   * grunt-cli
-* Ruby 1.9.3
-  * Jekyll 1.2.1
+* Ruby 2.0.0
+  * Jekyll 1.3.0
   * hparser
-  * Sass 3.2.10
+  * Compass 0.12.0
+  * Sass 3.2.12
 * Python 2.7
-  * Pygments
+  * Pygmentize 1.6
