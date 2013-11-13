@@ -93,7 +93,7 @@ d-r--     2004/08/19      9:56          スタート メニュー
 d----     2006/02/19     23:06          デスクトップ
 </pre></div>
 <p>alias の仕組みがあって、dir と ls はいずれも Get-ChildItem というコマンドの alias になってる。</p>
-<div class="highlight"><pre>PS&gt; get-alias | where <span class="o">{</span><span class="nv">$_</span>.Definition -eq <span class="s2">&quot;Get-Childitem&quot;</span><span class="o">}</span>
+<div class="highlight"><pre>PS&gt; get-alias <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.Definition -eq <span class="s2">&quot;Get-Childitem&quot;</span><span class="o">}</span>
 
 CommandType     Name                     Definition
 -----------     ----                     ----------
@@ -156,7 +156,7 @@ C:<span class="se">\D</span>ocuments and Settings<span class="se">\n</span>itoyo
 </pre></div>
 <h1>メソッド・プロパティの列挙</h1>
 <p>オブジェクトのメソッドやプロパティを知りたくなったら、get-member コマンドを実行するとよい。</p>
-<div class="highlight"><pre>PS&gt; ls | get-member
+<div class="highlight"><pre>PS&gt; ls <span class="p">|</span> get-member
 
    TypeName: System.IO.DirectoryInfo
 
@@ -168,7 +168,7 @@ CreateSubdirectory     Method        System.IO.DirectoryInfo CreateSubdi...
 Delete                 Method        System.Void Delete<span class="o">()</span>, System.Void D...
 Equals                 Method        System.Boolean Equals<span class="o">(</span>Object obj<span class="o">)</span>
   :                      :                   :
-FullName               Property      System.String FullName <span class="o">{</span>get;<span class="o">}</span>
+FullName               Property      System.String FullName <span class="o">{</span>get<span class="p">;</span><span class="o">}</span>
 LastAccessTime         Property      System.DateTime LastAccessTime <span class="o">{</span>get...
 LastAccessTimeUtc      Property      System.DateTime LastAccessTimeUtc <span class="o">{</span>...
   :                      :                   :
@@ -199,7 +199,7 @@ WindowsUpdate.log
 <p>パイプを使って、よりオブジェクト指向らしいプログラミングを実践してみよう。</p>
 <h2>where でフィルタリング</h2>
 <p>さっきの foreach のサンプルは手続き型っぽかったけど、これをかっこよく書き直してみた。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls | where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
+<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
 
     Directory: Microsoft.PowerShell.Core<span class="se">\F</span>ileSystem::C:<span class="se">\</span>
     WINDOWS
@@ -216,12 +216,12 @@ Mode             LastWriteTime    Length Name
 <h2>foreach で全ての要素に対して実行</h2>
 <p>今度は、パイプの受け口として foreach を使ってみる。</p>
 <p>いままで、ファイルのサンプルばかりだったので、次はプロセス情報を使ってみよう。起動中のメモ帳をばっさり閉じる例。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad | foreach <span class="o">{</span><span class="nv">$_</span>.kill<span class="o">()}</span>
+<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad <span class="p">|</span> foreach <span class="o">{</span><span class="nv">$_</span>.kill<span class="o">()}</span>
 </pre></div>
 <p>notepad.exe のプロセスを列挙して、それぞれについてプロセスオブジェクトの kill() メソッドを実行して殺している。</p>
 <p>とはいえ、kill コマンドもあって、プロセスの配列を処理できる。</p>
 <p>同じ処理は次のように書ける。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad | <span class="nb">kill</span>
+<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad <span class="p">|</span> <span class="nb">kill</span>
 </pre></div>
 <p>さらに、kill コマンドには -name フラグもあるので本当は１発で書けたりもする。</p>
 <div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; <span class="nb">kill</span> -name notepad
@@ -230,7 +230,7 @@ Mode             LastWriteTime    Length Name
 <h2>プロパティ名で sort</h2>
 <p>ソートも簡単。</p>
 <p>メモリ使用量が多いプロセス top 5 を調べてみる。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps | sort WS -Descending | <span class="k">select</span> -first 5
+<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps <span class="p">|</span> sort WS -Descending <span class="p">|</span> <span class="k">select</span> -first 5
 
 Handles   NPM<span class="o">(</span>K<span class="o">)</span>   PM<span class="o">(</span>K<span class="o">)</span>   WS<span class="o">(</span>K<span class="o">)</span> VM<span class="o">(</span>M<span class="o">)</span>   CPU<span class="o">(</span>s<span class="o">)</span>     Id ProcessName
 -------   ------   -----   ----- -----   ------     -- -----------
@@ -245,7 +245,7 @@ Handles   NPM<span class="o">(</span>K<span class="o">)</span>   PM<span class="
 <h1>関数を定義する</h1>
 <p>関数も作れるよ。</p>
 <p>メモリ使用量が多いプロセス top N を求める関数を作ってみた。</p>
-<div class="highlight"><pre>PS C:&gt; <span class="k">function </span>psmemory<span class="o">([</span>int<span class="o">]</span><span class="nv">$n</span> <span class="o">=</span> 5<span class="o">){</span>ps | sort WS -Descending | <span class="k">select</span> -first <span class="nv">$n</span><span class="o">}</span>
+<div class="highlight"><pre>PS C:&gt; <span class="k">function </span>psmemory<span class="o">([</span>int<span class="o">]</span><span class="nv">$n</span> <span class="o">=</span> 5<span class="o">){</span>ps <span class="p">|</span> sort WS -Descending <span class="p">|</span> <span class="k">select</span> -first <span class="nv">$n</span><span class="o">}</span>
 </pre></div>
 <p>呼び出したところ。</p>
 <div class="highlight"><pre>PS C:&gt; psmemory 1
@@ -256,7 +256,7 @@ Handles  NPM<span class="o">(</span>K<span class="o">)</span>    PM<span class="
 </pre></div>
 <p>引数に 1 を渡しているので、１つだけ表示される。psmemory(1) のように、括弧つきで呼び出すこともできる。パラメータを省略すると5個列挙されるように作ってる。</p>
 <p>ところで、勘のいい人なら既に気付いてるかもしれないけど、上で示したサンプル</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls | where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
+<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
 </pre></div>
 <p>の <strong>{$_.length -gt 1mb} の部分は関数</strong>なんです。Powershell では「スクリプトブロック」という名前がついてるんだけど、無名関数と言ったほうが分かりやすいかもしれない。Ruby に詳しい人は、ブロックと言い換えるとすっきりするはず。</p>
 <p>というわけで、このサンプルは、ls した結果を where で回して、無名関数でフィルタリングしてる。うわー、オブジェクト指向っぽい！</p>

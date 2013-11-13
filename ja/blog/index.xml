@@ -6,13 +6,196 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 07 Nov 2013 01:36:05 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 14 Nov 2013 01:05:03 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
 
 
 
+
+
+
+
+
+		<item>
+			<title>Windows で Jekyll 1.3 を動かすまでの手順</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/</guid>
+			<pubDate>Thu, 14 Nov 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p><a href="http://jekyllrb.com/">Jekyll</a> を Windows で動かそうとすると、いくつか難関がある。今回、自分の環境を新しく作り直したキッカケがあったので、導入までの手順をメモしておく。</p>
+
+<p>自分の環境は Windows 8 Pro x64。各種ツールのバージョンは次の通り。</p>
+
+<ul>
+<li>Jekyll 1.3.0</li>
+<li>Ruby 2.0.0 p247</li>
+<li>DevKit 4.7.2-20130224-1432</li>
+<li>Python 2.7.6</li>
+<li>Pygentize 1.6</li>
+</ul>
+
+<p>基本的には <a href="http://www.madhur.co.in/blog/2011/09/01/runningjekyllwindows.html">Running Jekyll on Windows &#8211; Madhur Ahuja</a> の手順に近いけど、Pygments の導入手順などは少し違っているのと、日本語独自の問題についても書いている。</p>
+
+<h1>1. Ruby 環境を整備する</h1>
+
+<p><a href="http://rubyinstaller.org/downloads/">RubyInstaller for Windows</a> から One-Click Ruby のインストーラーと Development Kit を導入する。</p>
+
+<p>Development Kit はネイティブな gem の導入に必要。</p>
+
+<p>今回導入したのは次のバージョン。</p>
+
+<ul>
+<li>Ruby 2.0.0-p247 (rubyinstaller-2.0.0-p247-x64.exe)</li>
+<li>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</li>
+</ul>
+
+<h2>Ruby インストーラーの実行</h2>
+
+<p>まず、Ruby のインストーラーを導入する。デフォルトで <code>C:\Ruby200-x64</code> にインストールされる。</p>
+
+<p>環境変数の <code>PATH</code> に <code>C:\Ruby200-x64\bin</code> を追加しておこう。</p>
+
+<h2>DevKit の導入</h2>
+
+<p><code>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</code> を実行すると、展開先を聞かれる。ここでは <code>C:\RubyDevKit</code> を選択した。</p>
+
+<p>次に設定する。コマンドプロンプトで <code>dk.rb</code> の <code>init</code> と <code>initialize</code> を実行する。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">c:\RubyDevKit&gt;ruby dk.rb init
+[INFO] found RubyInstaller v2.0.0 at C:/Ruby200-x64
+
+Initialization complete! Please review and modify the auto-generated
+&#39;config.yml&#39; file to ensure it contains the root directories to all
+of the installed Rubies you want enhanced by the DevKit.
+
+c:\RubyDevKit&gt;ruby dk.rb install
+[INFO] Updating convenience notice gem override for &#39;C:/Ruby200-x64&#39;
+[INFO] Installing &#39;C:/Ruby200-x64/lib/ruby/site_ruby/devkit.rb&#39;
+</code></pre></div>
+<p>ここまでで Ruby のセットアップは完了。</p>
+
+<h1>2. Jekyll を導入する</h1>
+
+<p>コマンドプロンプトから <code>gem install jekyll</code> を実行する。</p>
+
+<p>次の gem が導入される。</p>
+
+<ul>
+<li>classifier-1.3.3</li>
+<li>colorator-0.1</li>
+<li>commander-4.1.5</li>
+<li>fast-stemmer-1.0.2</li>
+<li>ffi-1.9.3-x64-mingw32</li>
+<li>highline-1.6.20</li>
+<li><strong>jekyll-1.3.0</strong></li>
+<li>liquid-2.5.4</li>
+<li>listen-1.3.1</li>
+<li>maruku-0.6.1</li>
+<li>posix-spawn-0.3.6</li>
+<li>pygments.rb-0.5.4</li>
+<li>rake-0.9.6</li>
+<li>rb-fsevent-0.9.3</li>
+<li>rb-inotify-0.9.2</li>
+<li>rb-kqueue-0.2.0</li>
+<li>rdoc-4.0.0</li>
+<li>redcarpet-2.3.0</li>
+<li>safe_yaml-0.9.7</li>
+<li>syntax-1.0.0</li>
+<li>test-unit-2.0.0.0</li>
+<li>yajl-ruby-1.1.0</li>
+</ul>
+
+<h2>pygments.rb のダウングレード</h2>
+
+<p>悲しいことに、<code>pygments.rb</code> の 0.5.1 以降は Windows では動作しない。(<a href="https://github.com/tmm1/pygments.rb/pull/90">pygments.rb #90</a> で Pull Request が出ているが、執筆時点でマージされていない)</p>
+
+<p>そのため、導入された <code>pygments.rb</code> をアンインストールして、0.5.0 を入れなおしておく。「Jekyll が依存してる」と文句いわれるけど、気にせずに作業しちゃう。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; gem uninstall pygments.rb --version &quot;&gt;0.5.0&quot;
+&gt; gem install pygments.rb --version &quot;=0.5.0&quot;
+</code></pre></div>
+<h2>UTF-8 対策</h2>
+
+<p>HTML や記事に日本語が含まれると、Jekyll の実行時に次のようなエラーが出る。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Liquid Exception: invalid byte sequence in Windows-31J in post.md/#excerpt
+error: invalid byte sequence in Windows-31J. Use --trace to view backtrace
+</code></pre></div>
+<p>Windows Ruby にありがちな FAQ で、ググると色々出てくる。</p>
+
+<p><code>set LANG=ja_JP.UTF-8</code> するとよい、と書いてある記事もあったが Ruby 2.0 では効かないらしい。</p>
+
+<p>Ruby 2.0 では環境変数の <code>RUBYOPT</code> を <code>-EUTF-8</code> にしておけば解決した (参考: <a href="http://sugamasao.hatenablog.com/entry/2013/08/24/224521">WindowsでEncoding.default_externalをUTF-8にするには - すがブロ</a>)。</p>
+
+<p>環境変数をいじるのが面倒なら、<code>C:\Ruby200-x64\bin\jekyll.bat</code> の 2 行目あたりに <code>set RUBYOPT=-EUTF-8</code> と書いてもいい。</p>
+
+<p>もしくは、<code>C:\Ruby200-x64\lib\ruby\gems\2.0.0\gems\jekyll-1.3.0\bin\jekyll</code> の冒頭 2 行目に</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">Encoding.default_external = &quot;utf-8&quot;
+</code></pre></div>
+<p>を追加して回避してもよいだろう。(改行コードが LF のみなので、メモ帳では追加できない点に注意)</p>
+
+<h1>3. Pygments を導入する</h1>
+
+<p>コードのハイライトを行うためには Pygments を導入する。</p>
+
+<h2>Python 2.7</h2>
+
+<p><a href="http://www.python.org/download/">Download Python</a> から 2.7 をダウンロードする。今回導入したのは Python 2.7.6 Windows X86-64 Installer (<code>python-2.7.6.amd64.msi</code>)。</p>
+
+<p>インストーラーを実行してデフォルトの設定でインストールする。インストール先は <code>C:\Python27</code> となる。</p>
+
+<p>環境変数の <code>PATH</code> に <code>C:\Python27</code> と <code>C:\Python27\Scripts</code> を追加しておく (<code>Scripts</code> フォルダーはこのあと自動で作成される)。</p>
+
+<h2>easy_install</h2>
+
+<p>次に、<a href="https://pypi.python.org/pypi/setuptools#windows">setuptools</a> から <a href="https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py"><code>ez_setup.py</code></a> をダウンロードする。</p>
+
+<p><code>ez_setup.py</code> を実行する。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; python easy_install.py
+   :
+Installing easy_install-script.py script to C:\Python27\Scripts
+Installing easy_install.exe script to C:\Python27\Scripts
+Installing easy_install-2.7-script.py script to C:\Python27\Scripts
+Installing easy_install-2.7.exe script to C:\Python27\Scripts
+
+Installed c:\python27\lib\site-packages\setuptools-1.3.2-py2.7.egg
+Processing dependencies for setuptools==1.3.2
+Finished processing dependencies for setuptools==1.3.2
+</code></pre></div>
+<h2>Pygments</h2>
+
+<p>いよいよ Pygments をインストール！</p>
+
+<p><code>easy_install pygments</code> を実行すればよい。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; easy_install pygments
+   :
+Adding Pygments 1.6 to easy-install.pth file
+Installing pygmentize-script.py script to C:\Python27\Scripts
+Installing pygmentize.exe script to C:\Python27\Scripts
+
+Installed c:\python27\lib\site-packages\pygments-1.6-py2.7.egg
+Processing dependencies for pygments
+Finished processing dependencies for pygments
+</code></pre></div>
+<h1>4. Jekyll が動くか確認する！</h1>
+
+<p>ここまでくれば導入は完了したはず。動作するかテストしてみよう。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt;jekyll new jekyll-test
+New jekyll site installed in path/to/jekyll-test.
+
+&gt;cd jekyll-test
+
+&gt;jekyll serve
+Configuration file: path/to/test-site/_config.yml
+            Source: path/to/test-site
+       Destination: path/to/test-site/_site
+      Generating... done.
+    Server address: http://0.0.0.0:4000
+  Server running... press ctrl-c to stop.```
+
+http://localhost:4000/ を開いて結果が出力されていれば成功。
+
+お疲れ様。
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>K-means 法を D3.js でビジュアライズしてみた</title>
@@ -740,177 +923,6 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
     }
 </code></pre></div>
 <p><a href="https://github.com/gruntjs/grunt-contrib-watch"><code>grunt-contrib-watch</code></a> の CPU 負荷が高くて困っている人はぜひ試してみてほしい。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Node.js の fs.watch() と fs.watchFile() の違い</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/10/02/node-watch-impl/</guid>
-			<pubDate>Wed, 02 Oct 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Node.js のファイル監視の API には <code>fs.watch()</code> と <code>fs.watchFile()</code> の 2 つがある。</p>
-
-<p>微妙に機能がかぶっているし、使い分けが分かりにくかったので調べてみた。</p>
-
-<h1>公式情報を見る</h1>
-
-<p>まずは公式の<a href="http://nodejs.org/docs/v0.8.0/api/fs.html#fs_fs_watchfile_filename_options_listener">ドキュメント (v0.8.0)</a>を見てみた。</p>
-
-<blockquote>
-<h2>fs.watchFile(filename, [options], listener)</h2>
-
-<p>Stability: 2 - Unstable.  Use fs.watch instead, if available.</p>
-
-<p>Watch for changes on <code>filename</code>.</p>
-
-<h2>fs.watch(filename, [options], [listener])</h2>
-
-<p>Stability: 2 - Unstable.  Not available on all platforms.</p>
-
-<p>Watch for changes on <code>filename</code>, where <code>filename</code> is either a file or a directory.</p>
-</blockquote>
-
-<p>と書いてある。</p>
-
-<p>つまり</p>
-
-<ul>
-<li><code>fs.watch()</code> の利用を推奨している</li>
-<li><code>fs.watch()</code> は全てのプラットフォームで使えるわけではない</li>
-<li><code>fs.watch()</code> はファイルとディレクトリを監視できるが、<code>fs.watchFile()</code> はファイルしか監視できない</li>
-</ul>
-
-<p>ことが分かる。</p>
-
-<h1>歴史的見地から調べる</h1>
-
-<p>次に、過去をさかのぼるために <a href="https://github.com/joyent/node/blob/master/ChangeLog">ChangeLog</a> を見てみた。</p>
-
-<ul>
-<li><code>fs.watchFile()</code> は v0.1.18 で <code>process.watchFile()</code> として登場した古い API</li>
-<li><code>fs.watch()</code> は v0.5.9 で実装された新しい API</li>
-</ul>
-
-<p>だと分かった。</p>
-
-<p>しかし、これ以上の公式の情報が見つからなかったため、全体像が見えない。</p>
-
-<h1>ソースコードを見る</h1>
-
-<p>困ったらソースコードを見ろ、と昔の偉い人も言っている。いざ、コード リーディング！</p>
-
-<h2>fs.watch()</h2>
-
-<p>まずは、<code>fs.watch()</code> の実装をみてみよう。(ソースコードは執筆時点で最新の <a href="https://github.com/joyent/node/tree/v0.10.19">v0.10.19</a> を利用する)</p>
-
-<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/fs_event_wrap.cc#L102"><code>src/fs_event_wrap.cc</code></a> の順にたどっていくと、<code>uv_fs_event_init()</code> 関数が本丸だと分かった。</p>
-
-<p><code>uv</code> で始まる関数は libuv で定義されたもの。libuv は Node.js のプラットフォーム間の差を吸収するためのライブラリらしく、IO やスレッド、タイマーなどの処理が実装されているようだ。</p>
-
-<p>では、<code>uv_fs_event_init()</code> の実装を見てみる。<code>deps/uv/src</code> の下を grep してみると</p>
-
-<ul>
-<li>unix\aix.c</li>
-<li>unix\cygwin.c</li>
-<li>unix\kqueue.c</li>
-<li>unix\linux-inotify.c</li>
-<li>unix\sunos.c</li>
-<li>win\fs-event.c</li>
-</ul>
-
-<p>が引っかかった。プラットフォームごとに実装が異なっているようだ。</p>
-
-<p>ざっと読んでみると、</p>
-
-<table><thead>
-<tr>
-<th>プラットフォーム</th>
-<th>実装方法</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Linux</td>
-<td>inotify を利用</td>
-</tr>
-<tr>
-<td>MacOS、*BSD</td>
-<td>kqueue を利用</td>
-</tr>
-<tr>
-<td>Windows</td>
-<td><code>ReadDirectoryChangesW()</code> を利用</td>
-</tr>
-<tr>
-<td>Solaris</td>
-<td>Event Ports を利用</td>
-</tr>
-<tr>
-<td>AIX</td>
-<td>(未対応)</td>
-</tr>
-<tr>
-<td>Cygwin</td>
-<td>(未対応)</td>
-</tr>
-</tbody></table>
-
-<p>となっていた。</p>
-
-<p>つまり、<strong>fs.watch() はネイティブの監視処理を利用して、変更があったら OS から通知してもらっている</strong>ことが分かった。</p>
-
-<h2>fs.watchFile()</h2>
-
-<p>一方の <code>fs.watchFile()</code> を見てみる。Node.js には古くから実装されているが、現在では利用が推奨されていないほうの関数である。</p>
-
-<p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a> の順にたどっていくと、<code>uv_fs_poll_start()</code> 関数が本丸だと分かった。</p>
-
-<p>あとは、<code>uv_fs_poll_start()</code> の流れをつかめばおしまい。<a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a> を見てみよう。なんとなくポーリングをしていそうな名前である。</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
-                     uv_fs_poll_cb cb,
-                     const char* path,
-                     unsigned int interval) {
-  // 初期化処理は省略
-
-  if (uv_fs_stat(loop, &amp;ctx-&gt;fs_req, ctx-&gt;path, poll_cb))
-    abort();
-</code></pre></div>
-<p>肝は <code>uv_fs_stat()</code> の呼び出し。この関数は、Node.js で言うところの <code>fs.stat()</code> 相当の処理だろう。ファイルの更新日時の取得を依頼して、取得が完了したら、<code>poll_cb()</code> が呼ばれる。</p>
-
-<p>その <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a> を見てみよう。</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
-  // 異常処理とか、前回と違ってたらイベント発行する処理とか
-
-  /* Reschedule timer, subtract the delay from doing the stat(). */
-  interval = ctx-&gt;interval;
-  interval -= (uv_now(ctx-&gt;loop) - ctx-&gt;start_time) % interval;
-
-  if (uv_timer_start(&amp;ctx-&gt;timer_handle, timer_cb, interval, 0))
-    abort();
-}
-</code></pre></div>
-<p>実行結果の解析が終わったら、<code>interval</code> 後に <code>timer_cb()</code> が呼ばれるようにタイマーを開始している。</p>
-
-<p><code>timer_cb()</code> では、再度 <code>uv_fs_stat()</code> を実行している。つまり、定期的に <code>fs.stat()</code> を実行している。</p>
-
-<p>つまり、<strong>fs.watchFile() は定期的に fs.stat() をポーリングで実行して、変更されたらイベントを発行している</strong> ことが分かった。非常に原始的な実装になっている。</p>
-
-<h1>まとめ</h1>
-
-<p><code>fs.watch()</code>:</p>
-
-<ul>
-<li>新しい API、利用が推奨されている</li>
-<li>push 型 (OS の監視機能を利用しているので、待機中に CPU を消費しない)</li>
-<li>一部のプラットフォーム (AIX、Cygwin) では利用できない</li>
-</ul>
-
-<p><code>fs.watchFile()</code>:</p>
-
-<ul>
-<li>古い API、あまり使ってほしくなさそう</li>
-<li>poll 型 (定期的に stat を実行する)</li>
-<li>どのプラットフォームでも動く</li>
-</ul>
 ]]></description>
 		</item>
 

@@ -7,6 +7,10 @@ var Site = {
 
 
 
+
+
+
+
 Site.archives.posts = [
 	{url: "/en/blog/2013/11/07/k-means/", title: "Visualizing K-Means algorithm with D3.js"},
 	{url: "/en/blog/2013/10/10/grunt-watch-slow/", title: "When grunt-contrib-watch uses too much CPU, try grunt-este-watch"},

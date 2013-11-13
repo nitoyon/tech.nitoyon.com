@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Windows で Jekyll 1.3 を動かすまでの手順 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Windows で Jekyll 1.3 を動かすまでの手順"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Jekyll を Windows で動かそうとすると、いくつか難関がある。今回、自分の環境を新しく作り直したキッカケがあったので、導入までの手順をメモしておく。自分の環境は Windows 8 Pro x64。各種ツールのバージョンは次の通り。Jekyll 1.3.0Ruby 2.0.0 p247DevKit 4.7.2-20130224-1432Python 2.7.6Pygentize 1.6基本的には Running Jekyll on Windows &amp;#8211; Madhur Ahuja の手順に近いけど、Pygments の導入手順などは少し違っているのと、日本語独自の問題..."/>
+	<meta property="og:image" content="http://farm4.staticflickr.com/3741/10839091955_4415c94104_o.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年11月14日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/jekyll/">Jekyll</a><span class="delimiter">, </span><a href="/ja/blog/tags/windows/">Windows</a></div>
+
+<h1>Windows で Jekyll 1.3 を動かすまでの手順</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows で Jekyll 1.3 を動かすまでの手順 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" data-lang="ja" data-size="horizontal" data-text="Windows で Jekyll 1.3 を動かすまでの手順 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p><a href="http://jekyllrb.com/">Jekyll</a> を Windows で動かそうとすると、いくつか難関がある。今回、自分の環境を新しく作り直したキッカケがあったので、導入までの手順をメモしておく。</p>
+
+<p>自分の環境は Windows 8 Pro x64。各種ツールのバージョンは次の通り。</p>
+
+<ul>
+<li>Jekyll 1.3.0</li>
+<li>Ruby 2.0.0 p247</li>
+<li>DevKit 4.7.2-20130224-1432</li>
+<li>Python 2.7.6</li>
+<li>Pygentize 1.6</li>
+</ul>
+
+<p>基本的には <a href="http://www.madhur.co.in/blog/2011/09/01/runningjekyllwindows.html">Running Jekyll on Windows &#8211; Madhur Ahuja</a> の手順に近いけど、Pygments の導入手順などは少し違っているのと、日本語独自の問題についても書いている。</p>
+
+<h1>1. Ruby 環境を整備する</h1>
+
+<p><a href="http://rubyinstaller.org/downloads/">RubyInstaller for Windows</a> から One-Click Ruby のインストーラーと Development Kit を導入する。</p>
+
+<p>Development Kit はネイティブな gem の導入に必要。</p>
+
+<p>今回導入したのは次のバージョン。</p>
+
+<ul>
+<li>Ruby 2.0.0-p247 (rubyinstaller-2.0.0-p247-x64.exe)</li>
+<li>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</li>
+</ul>
+
+<h2>Ruby インストーラーの実行</h2>
+
+<p>まず、Ruby のインストーラーを導入する。デフォルトで <code>C:\Ruby200-x64</code> にインストールされる。</p>
+
+<p>環境変数の <code>PATH</code> に <code>C:\Ruby200-x64\bin</code> を追加しておこう。</p>
+
+<h2>DevKit の導入</h2>
+
+<p><code>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</code> を実行すると、展開先を聞かれる。ここでは <code>C:\RubyDevKit</code> を選択した。</p>
+
+<p>次に設定する。コマンドプロンプトで <code>dk.rb</code> の <code>init</code> と <code>initialize</code> を実行する。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">c:\RubyDevKit&gt;ruby dk.rb init
+[INFO] found RubyInstaller v2.0.0 at C:/Ruby200-x64
+
+Initialization complete! Please review and modify the auto-generated
+&#39;config.yml&#39; file to ensure it contains the root directories to all
+of the installed Rubies you want enhanced by the DevKit.
+
+c:\RubyDevKit&gt;ruby dk.rb install
+[INFO] Updating convenience notice gem override for &#39;C:/Ruby200-x64&#39;
+[INFO] Installing &#39;C:/Ruby200-x64/lib/ruby/site_ruby/devkit.rb&#39;
+</code></pre></div>
+<p>ここまでで Ruby のセットアップは完了。</p>
+
+<h1>2. Jekyll を導入する</h1>
+
+<p>コマンドプロンプトから <code>gem install jekyll</code> を実行する。</p>
+
+<p>次の gem が導入される。</p>
+
+<ul>
+<li>classifier-1.3.3</li>
+<li>colorator-0.1</li>
+<li>commander-4.1.5</li>
+<li>fast-stemmer-1.0.2</li>
+<li>ffi-1.9.3-x64-mingw32</li>
+<li>highline-1.6.20</li>
+<li><strong>jekyll-1.3.0</strong></li>
+<li>liquid-2.5.4</li>
+<li>listen-1.3.1</li>
+<li>maruku-0.6.1</li>
+<li>posix-spawn-0.3.6</li>
+<li>pygments.rb-0.5.4</li>
+<li>rake-0.9.6</li>
+<li>rb-fsevent-0.9.3</li>
+<li>rb-inotify-0.9.2</li>
+<li>rb-kqueue-0.2.0</li>
+<li>rdoc-4.0.0</li>
+<li>redcarpet-2.3.0</li>
+<li>safe_yaml-0.9.7</li>
+<li>syntax-1.0.0</li>
+<li>test-unit-2.0.0.0</li>
+<li>yajl-ruby-1.1.0</li>
+</ul>
+
+<h2>pygments.rb のダウングレード</h2>
+
+<p>悲しいことに、<code>pygments.rb</code> の 0.5.1 以降は Windows では動作しない。(<a href="https://github.com/tmm1/pygments.rb/pull/90">pygments.rb #90</a> で Pull Request が出ているが、執筆時点でマージされていない)</p>
+
+<p>そのため、導入された <code>pygments.rb</code> をアンインストールして、0.5.0 を入れなおしておく。「Jekyll が依存してる」と文句いわれるけど、気にせずに作業しちゃう。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; gem uninstall pygments.rb --version &quot;&gt;0.5.0&quot;
+&gt; gem install pygments.rb --version &quot;=0.5.0&quot;
+</code></pre></div>
+<h2>UTF-8 対策</h2>
+
+<p>HTML や記事に日本語が含まれると、Jekyll の実行時に次のようなエラーが出る。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Liquid Exception: invalid byte sequence in Windows-31J in post.md/#excerpt
+error: invalid byte sequence in Windows-31J. Use --trace to view backtrace
+</code></pre></div>
+<p>Windows Ruby にありがちな FAQ で、ググると色々出てくる。</p>
+
+<p><code>set LANG=ja_JP.UTF-8</code> するとよい、と書いてある記事もあったが Ruby 2.0 では効かないらしい。</p>
+
+<p>Ruby 2.0 では環境変数の <code>RUBYOPT</code> を <code>-EUTF-8</code> にしておけば解決した (参考: <a href="http://sugamasao.hatenablog.com/entry/2013/08/24/224521">WindowsでEncoding.default_externalをUTF-8にするには - すがブロ</a>)。</p>
+
+<p>環境変数をいじるのが面倒なら、<code>C:\Ruby200-x64\bin\jekyll.bat</code> の 2 行目あたりに <code>set RUBYOPT=-EUTF-8</code> と書いてもいい。</p>
+
+<p>もしくは、<code>C:\Ruby200-x64\lib\ruby\gems\2.0.0\gems\jekyll-1.3.0\bin\jekyll</code> の冒頭 2 行目に</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="no">Encoding</span><span class="o">.</span><span class="n">default_external</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span>
+</code></pre></div>
+<p>を追加して回避してもよいだろう。(改行コードが LF のみなので、メモ帳では追加できない点に注意)</p>
+
+<h1>3. Pygments を導入する</h1>
+
+<p>コードのハイライトを行うためには Pygments を導入する。</p>
+
+<h2>Python 2.7</h2>
+
+<p><a href="http://www.python.org/download/">Download Python</a> から 2.7 をダウンロードする。今回導入したのは Python 2.7.6 Windows X86-64 Installer (<code>python-2.7.6.amd64.msi</code>)。</p>
+
+<p>インストーラーを実行してデフォルトの設定でインストールする。インストール先は <code>C:\Python27</code> となる。</p>
+
+<p>環境変数の <code>PATH</code> に <code>C:\Python27</code> と <code>C:\Python27\Scripts</code> を追加しておく (<code>Scripts</code> フォルダーはこのあと自動で作成される)。</p>
+
+<h2>easy_install</h2>
+
+<p>次に、<a href="https://pypi.python.org/pypi/setuptools#windows">setuptools</a> から <a href="https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py"><code>ez_setup.py</code></a> をダウンロードする。</p>
+
+<p><code>ez_setup.py</code> を実行する。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; python easy_install.py
+   :
+Installing easy_install-script.py script to C:\Python27\Scripts
+Installing easy_install.exe script to C:\Python27\Scripts
+Installing easy_install-2.7-script.py script to C:\Python27\Scripts
+Installing easy_install-2.7.exe script to C:\Python27\Scripts
+
+Installed c:\python27\lib\site-packages\setuptools-1.3.2-py2.7.egg
+Processing dependencies for setuptools==1.3.2
+Finished processing dependencies for setuptools==1.3.2
+</code></pre></div>
+<h2>Pygments</h2>
+
+<p>いよいよ Pygments をインストール！</p>
+
+<p><code>easy_install pygments</code> を実行すればよい。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; easy_install pygments
+   :
+Adding Pygments 1.6 to easy-install.pth file
+Installing pygmentize-script.py script to C:\Python27\Scripts
+Installing pygmentize.exe script to C:\Python27\Scripts
+
+Installed c:\python27\lib\site-packages\pygments-1.6-py2.7.egg
+Processing dependencies for pygments
+Finished processing dependencies for pygments
+</code></pre></div>
+<h1>4. Jekyll が動くか確認する！</h1>
+
+<p>ここまでくれば導入は完了したはず。動作するかテストしてみよう。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt;jekyll new jekyll-test
+New jekyll site installed in path/to/jekyll-test.
+
+&gt;cd jekyll-test
+
+&gt;jekyll serve
+Configuration file: path/to/test-site/_config.yml
+            Source: path/to/test-site
+       Destination: path/to/test-site/_site
+      Generating... done.
+    Server address: http://0.0.0.0:4000
+  Server running... press ctrl-c to stop.```
+
+http://localhost:4000/ を開いて結果が出力されていれば成功。
+
+お疲れ様。
+</code></pre></div>
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows で Jekyll 1.3 を動かすまでの手順 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" data-lang="ja" data-size="horizontal" data-text="Windows で Jekyll 1.3 を動かすまでの手順 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年11月14日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-11-14-jekyll-win.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/jekyll/">Jekyll</a><span class="delimiter">, </span><a href="/ja/blog/tags/windows/">Windows</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2012/09/20/moved-completed/">俺の最強ブログ システムが火を噴くぜ</a></li>
+
+<li><a href="/en/blog/2013/06/25/jekyll-grunt/">Jekyll: Use Grunt instead of --watch option</a></li>
+
+<li><a href="/en/blog/2013/04/17/jekyll-pluralize/">3 ways to specify categories and tags in Jekyll</a></li>
+
+<li><a href="/ja/blog/2012/12/25/jekyll-0-12-0/">Jekyll の 0.12.0 でシンタックス ハイライトが便利になった</a></li>
+
+<li><a href="/ja/blog/2012/10/15/static-site-js-css-cache/">静的サイトで JS/CSS のキャッシュを防ぎつつレポジトリをキレイに保つ</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/11/07/k-means/" rel="previous"><b>&laquo;</b><span class="title">K-means 法を D3.js でビジュアライズしてみた</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
