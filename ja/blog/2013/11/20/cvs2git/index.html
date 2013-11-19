@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>CVS レポジトリを Git に変換した手順とか注意点とか - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="CVS レポジトリを Git に変換した手順とか注意点とか"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="この前、10 年以上前に趣味で作っていたフリーソフトについてメールで質問が来た。もはや完全に記憶から消えているだけでなく、いま使っている PC にソースコードもない。何も分からない、答えられない。そのままでは古いソースコードも成仏しきれない。供養するために、古い HDD を引っ張り出して探したところ、自宅サーバーをやってた HDD の中に CVS レポジトリーが見つかった。せっかくなので、Git に変換して GitHub で公開してみた (その１, その２)。これで成仏できるだろう。そこで、この記事では CVS レポジトリーを Git に移行した手順をまとめておく。レガシーな CVS か..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年11月20日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/git/">Git</a></div>
+
+<h1>CVS レポジトリを Git に変換した手順とか注意点とか</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" class="hatena-bookmark-button" data-hatena-bookmark-title="CVS レポジトリを Git に変換した手順とか注意点とか - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" data-lang="ja" data-size="horizontal" data-text="CVS レポジトリを Git に変換した手順とか注意点とか - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>この前、10 年以上前に趣味で作っていたフリーソフトについてメールで質問が来た。もはや完全に記憶から消えているだけでなく、いま使っている PC にソースコードもない。何も分からない、答えられない。</p>
+
+<p>そのままでは古いソースコードも成仏しきれない。供養するために、古い HDD を引っ張り出して探したところ、自宅サーバーをやってた HDD の中に CVS レポジトリーが見つかった。せっかくなので、Git に変換して GitHub で公開してみた (<a href="https://github.com/nitoyon/mp3album">その１</a>, <a href="https://github.com/nitoyon/winamp-zipmp3plugin">その２</a>)。これで成仏できるだろう。</p>
+
+<p>そこで、この記事では CVS レポジトリーを Git に移行した手順をまとめておく。レガシーな CVS から Git に移行したい人の参考になるとうれしい。</p>
+
+<h1>git cvsimport の使い方</h1>
+
+<p>Git には <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> というコマンドがある。CVS の履歴を Git に変換してくれる。</p>
+
+<p>CVS はファイルごとに履歴を保存する構造になってるんだけど、<code>cvsps</code> というツールを組み合わせることで、同時に変更したファイルを 1 コミットとして扱ってくれるようになる。</p>
+
+<p>大きいレポジトリーだと結構時間かかる。cygwin だと超絶に時間がかかったので、UNIX 上で実行した。Git for Windows には <code>git-cvsimport</code> がない。</p>
+
+<p>自分は次のように実行した。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">git cvsimport -v -i -R -A author-conv-file.txt \
+-d :local:/path/to/CVS &lt;module&gt;
+</code></pre></div>
+<p>それぞれのパラメータの意味は次の通り。詳しくは <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> を参照のこと。</p>
+
+<ul>
+<li><code>-v</code>: 出力を verbose にする。</li>
+<li><code>-i</code>: インポートだけを行ってチェックアウトしない。</li>
+<li><code>-R</code>: 「CVS のリビジョン番号」と「それに対応する Git のコミット」の対応付けを <code>.git/cvs-revisions</code> に出力する。一応生成しておく。</li>
+<li><code>-A</code>: ユーザー名の変換テーブル。詳細は後述。</li>
+<li><code>-d</code>: CVSROOT のパス。cvs コマンドで <code>-d</code> に指定するやつ。もしくは、環境変数の <code>CVSROOT</code> に指定してるやつ。</li>
+<li><code>&lt;module&gt;</code>: モジュール名。サブディレクトリを指定することもできる。</li>
+</ul>
+
+<p><code>-d</code> で指定したパスに <code>CVSROOT</code> ディレクトリがないと <code>Expected Valid-requests from server, but got: E Cannot access /path/to/CVS</code> というエラーになる。ダミーでよいので <code>mkdir /path/to/CVS/CVSROOT</code> しておけば回避できた。</p>
+
+<h2>author-conv-file の書き方</h2>
+
+<p>author-conv-file には「CVS のユーザー名」から「Git の Author 名・メールアドレス」への対応を記述していく。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">user1=User 1 &lt;user1@example.com&gt;
+user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
+</code></pre></div>
+<p>1.8.1 からはタイムゾーンも指定できるようになっている。それ以前のバージョンだと、すべて UTC でのコミットとなってしまう。</p>
+
+<p>実行が終わったら <code>git log | grep Author: | sort | uniq</code> を実行して、author-conv-file に漏れがないか確認しておくといいだろう。</p>
+
+<h2>cvsps のキャッシュ</h2>
+
+<p>個人的に悩まされたのが、<code>cvsps</code> が結果を <code>~/.cvsps</code> にキャッシュすること。CVS レポジトリーを変更したあとに <code>git cvsimport</code> を実行しても反映されない。そういうときは、<code>rm -rf ~/.cvsps</code> して再実行するとよい。</p>
+
+<h2>文字コードの変換</h2>
+
+<p>いまなら「全部 UTF-8 でやっちゃえ」となるんだけど、CVS 全盛の時代は Windows は ShiftJIS で、UNIX 上では EUC-JP がまだまだ主流だった。</p>
+
+<p>コミットログやファイル名が UTF-8 でない場合は、ちょいとソースコードを修正する必要がある。</p>
+
+<p>以下は 1.7.3.1 の <code>git-cvsimport</code> に対する修正。</p>
+<div class="highlight"><pre><code class="diff language-diff" data-lang="diff"><span class="gd">--- /usr/local/libexec/git-core/git-cvsimport.bak</span>
+<span class="gi">+++ /usr/local/libexec/git-core/git-cvsimport</span>
+<span class="gu">@@ -722,6 +722,11 @@</span>
+ sub update_index (\@\@) {
+        my $old = shift;
+        my $new = shift;
+<span class="gi">+</span>
+<span class="gi">+       # file name</span>
+<span class="gi">+       use Encode qw/decode encode/;</span>
+<span class="gi">+       $_ = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_)) for @$old;</span>
+<span class="gi">+       $_-&gt;[2] = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_-&gt;[2])) for @$new;</span>
+<span class="gi">+</span>
+        open(my $fh, &#39;|-&#39;, qw(git update-index -z --index-info))
+                or die &quot;unable to open git update-index: $!&quot;;
+        print $fh
+<span class="gu">@@ -810,6 +816,11 @@</span>
+        substr($logmsg,32767) = &quot;&quot; if length($logmsg) &gt; 32767;
+        $logmsg =~ s/[\s\n]+\z//;
+
+<span class="gi">+       # commit log</span>
+<span class="gi">+       use Encode qw/encode decode/;</span>
+<span class="gi">+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $logmsg));</span>
+<span class="gi">+</span>
+        if (@skipped) {
+            $logmsg .= &quot;\n\n\nSKIPPED:\n\t&quot;;
+            $logmsg .= join(&quot;\n\t&quot;, @skipped) . &quot;\n&quot;;
+</code></pre></div>
+<p>ここではコミットログやファイル名が Shift_JIS だという前提で書いてある。</p>
+
+<p>自動判定したい場合は</p>
+<div class="highlight"><pre><code class="diff language-diff" data-lang="diff"><span class="gi">+       use Encode::Guess qw/euc-jp shiftjis/;</span>
+<span class="gi">+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;guess&#39;, $logmsg));</span>
+</code></pre></div>
+<p>のように書けばいける。</p>
+
+<h2>歴史の書き換え</h2>
+
+<p>push する前に、インポート結果を十分に確認しておきたい。次のような点に注意して作業した。</p>
+
+<p>コミットログを書き換えたいなら <code>git rebase -i</code> でやっちゃう。</p>
+
+<p>不要なファイルがあったら <code>git filter-branch --tree-filter &#39;rm -f passwords.txt&#39; HEAD</code> のようにして消しておく (参照: <a href="http://git-scm.com/book/ja/Git-%E3%81%AE%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%84%E3%83%BC%E3%83%AB-%E6%AD%B4%E5%8F%B2%E3%81%AE%E6%9B%B8%E3%81%8D%E6%8F%9B%E3%81%88">Git - 歴史の書き換え</a>)。</p>
+
+<p>一度でも歴史を書き換えたら、commit date が実行時刻になってしまうので、<code>git filter-branch --env-filter &#39;GIT_COMMITTER_DATE=$GIT_AUTHOR_DATE; export GIT_COMMITTER_DATE&#39;</code> で author date にそろえておく (参照: <a href="http://stackoverflow.com/questions/2973996/git-rebase-without-changing-commit-timestamps">git rebase without changing commit timestamps - Stack Overflow</a>)。</p>
+
+<p>このあたりは <code>git-cvsimport</code> の Tips というよりも、Git での歴史書き換えの Tips。</p>
+
+<h1>まとめ</h1>
+
+<p>負の遺産 CVS を捨てて、健全な Git ライフを送ろう！</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" class="hatena-bookmark-button" data-hatena-bookmark-title="CVS レポジトリを Git に変換した手順とか注意点とか - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" data-lang="ja" data-size="horizontal" data-text="CVS レポジトリを Git に変換した手順とか注意点とか - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年11月20日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-11-20-cvs2git.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/git/">Git</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/07/23/git-patch/">Git にパッチを送って取り込まれた話</a></li>
+
+<li><a href="/ja/blog/2013/07/02/git-dir-diff/">git difftool --dir-diff が便利すぎて泣きそうです</a></li>
+
+<li><a href="/ja/blog/2013/03/29/git-new-workdir/">Git で複数ブランチを同時に扱いたいなら git-new-workdir が便利</a></li>
+
+<li><a href="/ja/blog/2013/01/11/github-clone-http/">GitHub で clone するときは SSH じゃなく HTTP を使ったほうが高速</a></li>
+
+<li><a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/11/14/jekyll-win/" rel="previous"><b>&laquo;</b><span class="title">Windows で Jekyll 1.3 を動かすまでの手順</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
