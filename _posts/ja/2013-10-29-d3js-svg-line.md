@@ -138,7 +138,7 @@ d3.select('#line-interpolate').on('change', update);
 function update() {
   var n = values.length;
 
-  var s = d3.select('#line-interpolate')[0][0];
+  var s = d3.select('#line-interpolate').node();
   var interpolate = s.options[s.selectedIndex].value;
 
   var line = d3.svg.line()
