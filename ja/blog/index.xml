@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sun, 24 Nov 2013 00:01:21 +0000</lastBuildDate>
+		<lastBuildDate>Mon, 09 Dec 2013 01:00:30 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,108 @@
 
 
 
+
+		<item>
+			<title>Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/</guid>
+			<pubDate>Mon, 09 Dec 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Windows でたくさんのファイルの作成日時を変更したくなったときに、Perl・Ruby・Python などのスクリプト言語を使おうとしたんだけど、作成日時を変更するための関数がなくて困った。</p>
+
+<h1>そもそも UNIX にファイルの作成日時がない</h1>
+
+<p><a href="http://manpages.ubuntu.com/manpages/gutsy/en/man2/stat.2.html">stat(2)</a> で取得できる情報のうち時刻に関するものは次の 3 つがある。</p>
+
+<ul>
+<li><code>atime</code>: 最終アクセス日時 (access time)</li>
+<li><code>utime</code>: 最終更新日時 (modify time)</li>
+<li><code>ctime</code>: 最終変更日時 (change time)</li>
+</ul>
+
+<p>名前からすると <code>ctime</code> が作成日時 (creation time) っぽいけど、<code>ctime</code> はファイルを更新したときとか chmod や chown したときなどに自動的に現在時刻に更新されるようだ。</p>
+
+<p><code>atime</code> と <code>utime</code> は <a href="http://manpages.ubuntu.com/manpages/gutsy/en/man2/utime.2.html">utimes(2)</a> で任意の時刻に変更できるんだけど、<code>ctime</code> を変更する手段は表立っては用意されていない。</p>
+
+<p>ということで、UNIX 文化には「ファイルの作成日時」という概念がないので、UNIX 由来なスクリプト言語を使って「Windows のファイルの作成日時」を変更する公式の手法はない。</p>
+
+<p>ということで、これを何とかするための補助アプリケーション setctime.exe を作ってみた。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/setctime.exe">https://github.com/nitoyon/setctime.exe</a></li>
+</ul>
+
+<h1>setctime.exe の使い方</h1>
+
+<p>とてもシンプル。</p>
+
+<ul>
+<li>コマンドライン引数でファイル名を受け取る</li>
+<li>受け取ったファイルに設定されている更新日時を、作成日時にそろえる</li>
+<li>成功したときのみ exit code が 0 になる</li>
+</ul>
+
+<p>日時の指定方法って、言語ごとにロケールやらタイムゾーンやらフォーマットやらが色々あってややこしいので、<strong>更新日時を、作成日時にそろえる</strong>という機能だけを提供することにしてみた。</p>
+
+<p>こんだけシンプルにしたおかげで、いろんなスクリプト言語から使いやすくなってる。</p>
+
+<p>例をあげておく。</p>
+
+<h2>Perl</h2>
+
+<p>更新日時・作成日時を現在時刻にする Perl スクリプト。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">utime undef, 0, &#39;test.txt&#39;;
+system(&#39;setctime test.txt&#39;) == 0 or die &quot;failed&quot;;
+</code></pre></div>
+<p><code>utime()</code> してから、<code>setctime.exe</code> を呼び出すだけ。</p>
+
+<p>mtime も変わっちゃっうけど、嫌なら <code>stat()</code> で取得して、<code>utime()</code> で戻してやればよい。</p>
+
+<h2>Ruby</h2>
+
+<p>同じく、更新日時・作成日時を現在時刻にする Ruby スクリプト。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">t = Time.now
+File::utime(t, t, &#39;test.txt&#39;)
+system &#39;setctime.exe test.txt&#39; or abort &#39;failed&#39;
+</code></pre></div>
+<p><code>File::utime()</code> してから、<code>setctime.exe</code> を呼び出すだけ。Ruby では atime を省略できないらしいので、一時変数 <code>t</code> を使って atime も更新している。</p>
+
+<h2>Python</h2>
+
+<p>同じく、更新日時・作成日時を現在時刻にする Python スクリプト。</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python">import os
+import sys
+import time
+
+t = time.time()
+os.utime(&#39;test.txt&#39;, (t, t))
+if os.system(&#39;setctime.exe test.txt&#39;) != 0:
+    sys.exit(&#39;failed&#39;)
+</code></pre></div>
+<h1>実装詳細</h1>
+
+<p>50 行ほどの簡単な Windows プログラミングになっている。ファイルを開いて、<code>GetFileTime()</code> して <code>SetFileTime()</code> しているだけ。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/setctime.exe/blob/v1.0.0/src/main.cpp">https://github.com/nitoyon/setctime.exe/blob/v1.0.0/src/main.cpp</a></li>
+</ul>
+
+<p>開発は Visual C++ 2008 で行っている。もっと新しいやつでやってもいいんだけど、新しいやつで開いたら自動でプロジェクトファイルが変換されるので、手元にある一番古い Visual C++ で開発している。</p>
+
+<h2>Visual C++ 再頒布可能ランタイム問題</h2>
+
+<p>Visual C++ で開発すると、再頒布可能ランタイムの扱いをどうするかが悩ましい。</p>
+
+<p>静的リンクするとサイズが大きくなる。動的リンクすると開発者と同じバージョンの Visual C++ ランタイムが入ってないと、実行時にエラーになる。</p>
+
+<p>今回は小さなアプリケーションだったので、<code>libc.lib</code> をリンクしないようにした。<code>printf()</code> が使えなくなったり、<code>argc</code> <code>argv</code> が参照できなかったり、それなりに制限はあるけど Win32 のネイティブな API を使って回避できる。</p>
+
+<p>そんなアクロバットな努力の結果、実行ファイルのサイズが 4KB と小さくなって、ランタイムライブラリーのバージョン問題に悩まなくてよくなった。</p>
+
+<h1>まとめ</h1>
+
+<p>どうぞご利用ください。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>CVS レポジトリを Git に変換した手順とか注意点とか</title>
@@ -562,343 +664,6 @@ function pop() {
 
 update();
 </code></pre></div>]]></description>
-		</item>
-
-		<item>
-			<title>D3.js の Data-Driven な DOM 操作がおもしろい</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/10/24/d3js/</guid>
-			<pubDate>Thu, 24 Oct 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>ここんところ <a href="http://d3js.org/">D3.js</a> を触ってみているんだけど、これがなかなか面白い。</p>
-
-<p><a href="http://d3js.org/"><center><img src="http://farm4.staticflickr.com/3767/10434503954_88b88529ce.jpg" width="500" height="313"></center></a></p>
-
-<p>D3.js は「ビジュアライズ用のライブラリー」だと紹介されがちなんだけども、意外にも D3.js にはグラフを描画する機能がない。</p>
-
-<p><a href="http://d3js.org/">D3.js</a> のトップページには次のように書いてある。</p>
-
-<blockquote>
-<p>D3.js はデータからドキュメントを生成するためのライブラリーです。D3 は HTML, SVG, CSS を使ってデータに命を吹き込みます。Web 標準を重要視しているので、独占的なフレームワークに縛られません。強力な<strong>ビジュアライズ用のコンポーネントと data-driven な DOM 操作手順</strong>を組み合わすことで、モダン ブラウザーの能力を最大限に活用できます。</p>
-
-<blockquote>
-<p>D3.js is a JavaScript library for manipulating documents based on data. D3 helps you bring data to life using HTML, SVG and CSS. D3’s emphasis on web standards gives you the full capabilities of modern browsers without tying yourself to a proprietary framework, combining <strong>powerful visualization components and a data-driven approach to DOM manipulation</strong>.</p>
-</blockquote>
-</blockquote>
-
-<p>曰く、</p>
-
-<ul>
-<li>ビジュアライズ用のコンポーネント</li>
-<li>data-driven な DOM 操作手順</li>
-</ul>
-
-<p>がウリらしい。</p>
-
-<p>順番に見ていこう。</p>
-
-<h1>ビジュアライズ用のコンポーネントの役割</h1>
-
-<p>「ビジュアライズ用のコンポーネント」は<strong>「データ」と「チャートの種類」から「どこに描画すればいいか」を計算する</strong>機能だけを実装している。</p>
-
-<h2>バブルチャートの例</h2>
-
-<p><a href="(https://github.com/mbostock/d3/wiki/Gallery)">ギャラリー</a> の <a href="(http://bl.ocks.org/mbostock/4063269)">Bubble Chart</a> をみてみよう。</p>
-
-<p><a href="http://bl.ocks.org/mbostock/4063269"><center><img src="http://farm8.staticflickr.com/7392/10442561554_9e73c2565b.jpg" width="500" height="259"></center></a></p>
-
-<p>このチャートでは <a href="https://github.com/mbostock/d3/wiki/Pack-Layout"><code>d3.layout.pack()</code></a> という Pack Layout コンポーネントを利用している。</p>
-
-<p>この例では、描画するノードの情報を、こんな形の JavaScript 配列をコンポーネントに渡している。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">[
-  {
-    className: &quot;AgglomerativeCluster&quot;,
-    packageName: &quot;cluster&quot;,
-    value: 3938
-  },
-  {
-    className: &quot;CommunityStructure&quot;,
-    packageName: &quot;cluster&quot;,
-    value: 3812
-  },
-  {
-    className: &quot;HierarchicalCluster&quot;,
-    packageName: &quot;cluster&quot;,
-    value: 6714
-  },
-  //...
-]
-</code></pre></div>
-<p>これを <code>pack.nodes()</code> 関数に渡すと、<code>value</code> の値を元に計算して、ノードの位置情報をこんな感じで返す。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">[
-  { /* root node の情報 */ },
-  {
-    className: &quot;AgglomerativeCluster&quot;,
-    depth: 1,
-    packageName: &quot;cluster&quot;
-    parent: { /* root node */ },
-    r: 22.159142384561406,
-    value: 3938,
-    x: 489.9621260527267,
-    y: 532.5795625707091
-  },
-  {
-    className: &quot;CommunityStructure&quot;,
-    depth: 1,
-    packageName: &quot;cluster&quot;,
-    parent: { /* root node */ },
-    r: 21.80175917979169,
-    value: 3812,
-    x: 535.3554715791261,
-    y: 532.5795625707091
-  },
-  {
-    className: &quot;&quot;HierarchicalCluster&quot;&quot;,
-    depth: 1,
-    packageName: &quot;cluster&quot;,
-    parent: { /* root node */ },
-    r: 28.933819019424202,
-    value: 6714,
-    x: 513.070926102582,
-    y: 485.410700287188
-  },
-  // ...
-]
-</code></pre></div>
-<p>いろんなプロパティーが追加されているけど、表示位置 (<code>x</code>, <code>y</code>) と半径 (<code>r</code>) の情報が返ってきている点に注目！</p>
-
-<p>このように、ビジュアライズ用のコンポーネントは「データ」と「チャートの種類」から「どこに描画すればいいか」を計算するだけである。</p>
-
-<h2>描画するには...</h2>
-
-<p>この情報をどう画面に落とし込むかは実装側に任されている。</p>
-
-<p>と聞くと、面倒そうに思えるかもしれないけど、<a href="(http://bl.ocks.org/mbostock/4063269)">Bubble Chart</a> のソースを見ると、描画処理はたったの 15 行。</p>
-
-<p>それだけ簡単に描画できてしまうのは、D3.js の「data-driven な DOM 操作手順」を使って SVG を生成しているのが大きい。</p>
-
-<h1>Data-Driven な DOM 操作を実感してみよう</h1>
-
-<p><a href="http://d3js.org/">D3.js</a> には jQuery ライクな DOM 操作やイベント・アニメーション関係の API が用意されてる。jQuery を使ったことがある人なら簡単にマスターできるだろう。</p>
-
-<p>jQuery にはないユニークな機能が <code>data()</code>・<code>enter()</code>・<code>exit()</code> 関数である。この関数の使い方を簡単なサンプルでみていこう。</p>
-
-<p>JavaScript 上にこんな配列が定義されているとする。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var shiritori = [&#39;りんご&#39;, &#39;ゴリラ&#39;, &#39;ラッパ&#39;];
-</code></pre></div>
-<p>HTML には入れ物の <code>&lt;ul&gt;</code> タグだけを用意しておく。</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;ul id=&quot;shiritori_list&quot;&gt;
-&lt;/ul&gt;
-</code></pre></div>
-<p><code>&lt;ul&gt;</code> タグの中に <code>shiritori</code> 配列の中身を表示してみよう、というのがお題である。</p>
-
-<h2>DOM の作成処理は data()＋enter()</h2>
-
-<p>配列の中身を <code>&lt;ul&gt;</code> に追加するには、D3.js では次のように書く。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">// ul#shiritori_list を選択
-d3.select(&#39;ul#shiritori_list&#39;)
-  // その下の &lt;li&gt; を列挙
-  .selectAll(&#39;li&#39;)
-  // それぞれに shiritori 配列の要素を割り当てる
-  .data(shiritori)
-  // data より &lt;li&gt; が少ない場合は、足りない分について
-  .enter()
-  // &lt;li&gt; を追加する
-  .append(&#39;li&#39;)
-  // &lt;li&gt; の中身の文字を設定する
-  .text(function(d, i) { return (i + 1) + &#39;番目は&#39; + d; });
-</code></pre></div>
-<p>これを実行すると、HTML はこうなる (なりそうですよね？　ね？)。</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;ul id=&quot;shiritori_list&quot;&gt;
-  &lt;li&gt;1番目はりんご&lt;/li&gt;
-  &lt;li&gt;2番目はゴリラ&lt;/li&gt;
-  &lt;li&gt;3番目はラッパ&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre></div>
-<p>再度同じ JavaScript 処理を走らせるとどうなるだろう。<code>&lt;li&gt;</code> は 6 個になるだろうか。答えは「ならない」だ。</p>
-
-<p>というのも、<code>enter()</code> 以降の処理は「<code>shiritori</code> 配列に対応する <code>&lt;li&gt;</code> がないとき」のみ実行される。「<code>&lt;li&gt;</code> の個数 ≦ <code>shiritori</code> 配列の要素数」である限りは何度実行しても <code>enter()</code> 以降は実行されない。</p>
-
-<p>では、<code>shiritori.push(&#39;パイナップル&#39;)</code> として配列側を増やしてから、再度、上の JavaScript を走らせてみるとどうなるだろう。</p>
-
-<p>そうすると、新規追加分の <code>&#39;パイナップル&#39;</code> に対してだけ、<code>enter()</code> 以降の処理が実行される。つまり、HTML は</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;ul id=&quot;shiritori_list&quot;&gt;
-  &lt;li&gt;1番目はりんご&lt;/li&gt;
-  &lt;li&gt;2番目はゴリラ&lt;/li&gt;
-  &lt;li&gt;3番目はラッパ&lt;/li&gt;
-  &lt;li&gt;4番目はパイナップル&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre></div>
-<p>となる。</p>
-
-<p><code>enter()</code> は配列の増加分に対して、DOM を生成してくれるわけだ。</p>
-
-<h2>DOM の削除処理は data()＋exit()</h2>
-
-<p>次は、<code>shiritori</code> 配列が HTML より小さくなったときに対応しよう。</p>
-
-<p><code>exit()</code> で削除方法を書く。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">// ul#shiritori_list を選択
-d3.select(&#39;ul#shiritori_list&#39;)
-  .select(&#39;ul#shiritori_list&#39;)
-  // その下の &lt;li&gt; を列挙
-  .selectAll(&#39;li&#39;)
-  // それぞれに shiritori 配列の要素を割り当てる
-  .data(shiritori)
-  // data の数よりも多い &lt;li&gt; については
-  .exit()
-  // 削除する
-  .remove();
-</code></pre></div>
-<p>はい。これで終わり。</p>
-
-<p><code>shiritori</code> が減ってないときは何も起こらないし、<code>shiritori.pop();</code> してから実行すると末尾の <code>&lt;li&gt;</code> は消える。<code>shiritori = [];</code> してから実行すると <code>&lt;li&gt;</code> は消えてなくなる。</p>
-
-<h2>DOM の更新処理は data()</h2>
-
-<p>最後に更新処理。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">// ul#shiritori_list を選択
-d3.select(&#39;ul#shiritori_list&#39;)
-  // その下の &lt;li&gt; を列挙
-  .selectAll(&#39;li&#39;)
-  // それぞれに shiritori 配列の要素を割り当てる
-  .data(shiritori)
-  // &lt;li&gt; の中身の文字を設定する
-  .text(function(d, i) { return (i + 1) + &#39;番目は&#39; + d; });
-</code></pre></div>
-<p><code>enter()</code> や <code>exit()</code> なしにすれば、更新時の処理になる。</p>
-
-<p>データが与えられたときに、それぞれの要素をどのように表示すべきかを記述している。配列を書き換えて、この処理を実行すると、中身の文字が適切に更新される。</p>
-
-<p>ここでは <code>text()</code> しか使ってないが、jQuery 的な <code>attr()</code> や <code>style()</code> を活用すれば、柔軟な指定が可能である。</p>
-
-<h2>全部まとめる</h2>
-
-<p>生成・削除・更新の処理をまとめてみる。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">function update_shiritori() {
-  var s = d3.select(&#39;ul#shiritori_list&#39;)
-    .selectAll(&#39;li&#39;)
-    .data(shiritori);
-
-  // 作成
-  s.enter().append(&#39;li&#39;);
-
-  // 削除
-  s.exit().remove();
-
-  // 更新
-  s.text(function(d, i) { return (i + 1) + &#39;番目は&#39; + d; });
-}
-</code></pre></div>
-<p>(「作成」のところで <code>text()</code> を実行しなくなっているが、そのあとの「更新」のところでまとめて設定できるのでご安心を)</p>
-
-<p>完成したソースを改めて見てみると、</p>
-
-<ul>
-<li>作成: 増えたデータに対して DOM を追加</li>
-<li>削除: 減ったデータに対して DOM を削除</li>
-<li>更新: データに対応する表示に更新</li>
-</ul>
-
-<p>という処理がシンプルに書けているのが嬉しい。</p>
-
-<p>同じような書き方を jQuery でやるのは難しい。たぶん「毎回 DOM ツリーを作り直す」という富豪的な手順をとると思う。それだと効率が悪いし、次の例にあるような増減に関係したアニメーションを実現するのは困難である。</p>
-
-<h1>Data-Driven なアニメーション</h1>
-
-<p>今度は、少し色気を加えて、アニメーションさせる。</p>
-
-<div>
-<svg id="sample2" width="300" height="300" style="background: white; border: .3em solid #ccc;"></svg>
-</div>
-
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-
-<script src="d3js-enter-exit.js" charset="utf-8"></script>
-
-<p><button style="padding: .5em .8em" onclick="change()">random</button>
-<button style="padding: .5em .8em" onclick="add()">push</button>
-<button style="padding: .5em .8em" onclick="del()">pop</button></p>
-
-<h2>使い方</h2>
-
-<ul>
-<li>初期状態では 10 個の要素を持った配列を表示している。</li>
-<li>横軸が配列のインデックス、縦軸が要素の値 (0～1) をあらわす。</li>
-<li>[random] ボタンを押すと、配列の中身がランダムな値で置き換わる。</li>
-<li>[push] ボタンを押すと、配列の末尾に要素を追加する。</li>
-<li>[pop] ボタンを押すと、配列の末尾から要素を取り除く。</li>
-</ul>
-
-<p>ボタンを押すと、アニメーションつきで見た目が変更するのを確認していただけるだろうか (SVG をサポートしてる必要があるので、モダンではないブラウザーでは表示できない)。</p>
-
-<h2>コンソールからの変更にも対応</h2>
-
-<p>このページを開いている状態であれば、JavaScript コンソールで直接</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">values = [0.5, 0, 1];
-update();
-</code></pre></div>
-<p>と入力しても、アニメーションつきで配列が反映されるはずだ。</p>
-
-<h2>更新部分のソースコード</h2>
-
-<p>では、その <code>update()</code> 関数をみてみよう。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">function update() {
-  // 配列の個数を n に代入
-  var n = values.length;
-
-  // &lt;svg&gt; の中の &lt;circle&gt; を列挙して、values を割り当てる
-  var circles = d3.select(&quot;svg#sample2&quot;)
-    .selectAll(&#39;circle&#39;).data(values);
-
-  // 作成: 足りない &lt;circle&gt; を追加する
-  circles.enter()
-    .append(&#39;circle&#39;)
-    .attr(&#39;fill&#39;, &#39;red&#39;)
-    .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })
-    .attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0);
-
-  // 削除: 余分な &lt;circle&gt; はアニメーションつきで削除
-  circles.exit()
-    .transition()
-    .duration(300)
-    .attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0)
-    .remove();
-
-  // 更新: アニメーションで正しい位置とサイズに移動
-  circles
-    .transition()
-    .duration(300)
-    .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })
-    .attr(&#39;cy&#39;, function(d, i) { return d * 280 + 10; })
-    .attr(&#39;r&#39;, 6);
-
-  // 線の位置も調整する
-  d3.select(&#39;svg#sample2 polyline&#39;)
-    .transition()
-    .duration(300)
-    .attr(&#39;points&#39;, values.map(function(d, i) {
-      return (i * 280 / n + 10) + &#39; &#39; + (d * 280 + 10);
-    }).join(&#39;,&#39;));
-}
-</code></pre></div>
-<p>画面の描画は SVG で行っている。</p>
-
-<p>削除と更新のときに <code>transition()</code> でアニメーションを指定してる点に注目。これがアニメーションの肝である。</p>
-
-<p>円の大きさのアニメーションを例に説明する。</p>
-
-<p>「追加」のときには <code>&lt;circle&gt;</code> の半径を <code>0</code> で初期化している。そのあとの「更新」で <code>6</code> にしてる。その結果、追加時には徐々に大きくなりながら画面に現れる。</p>
-
-<p>ソースが長くなって、多少複雑になったが、「追加」「削除」「更新」の基本は変わっていない。</p>
-
-<h1>まとめ</h1>
-
-<p><a href="http://d3js.org/">D3.js</a> の Data-Driven な DOM 操作を説明した。入力されたデータに対して、「追加」「削除」「更新」の処理を分けて書くことで、驚くほどシンプルに記述できることが分かった。</p>
-
-<p>基礎が分かったら、<a href="(https://github.com/mbostock/d3/wiki/Gallery)">ギャラリー</a> と <a href="(https://github.com/mbostock/d3/wiki/API-Reference)">API リファレンス</a> を見比べれば、いろんな使い方が分かってくることだろう。あと、SVG の知識も必要にはなってくる。</p>
-
-<p>D3.js は「表示機能がない」という異色のビジュアライズ用のライブラリーだけども、表示処理を自由に操れるということは、見た目のカスタマイズをやりやすくなる。この手のライブラリーで一番苦労するのが、ちょっとしたカスタマイズをやりにくいところなので、こういう設計は実はありがたいのかもしれない。</p>
-]]></description>
 		</item>
 
 	</channel>

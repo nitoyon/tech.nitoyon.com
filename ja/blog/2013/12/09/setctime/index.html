@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Windows でたくさんのファイルの作成日時を変更したくなったときに、Perl・Ruby・Python などのスクリプト言語を使おうとしたんだけど、作成日時を変更するための関数がなくて困った。そもそも UNIX にファイルの作成日時がないstat(2) で取得できる情報のうち時刻に関するものは次の 3 つがある。atime: 最終アクセス日時 (access time)utime: 最終更新日時 (modify time)ctime: 最終変更日時 (change time)名前からすると ctime が作成日時 (creation time) っぽいけど、ctime はファイルを更新..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年12月09日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/release/">作った</a><span class="delimiter">, </span><a href="/ja/blog/tags/windows/">Windows</a><span class="delimiter">, </span><a href="/ja/blog/tags/perl/">Perl</a><span class="delimiter">, </span><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/win32/">Win32</a></div>
+
+<h1>Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/12/09/setctime/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/" data-lang="ja" data-size="horizontal" data-text="Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Windows でたくさんのファイルの作成日時を変更したくなったときに、Perl・Ruby・Python などのスクリプト言語を使おうとしたんだけど、作成日時を変更するための関数がなくて困った。</p>
+
+<h1>そもそも UNIX にファイルの作成日時がない</h1>
+
+<p><a href="http://manpages.ubuntu.com/manpages/gutsy/en/man2/stat.2.html">stat(2)</a> で取得できる情報のうち時刻に関するものは次の 3 つがある。</p>
+
+<ul>
+<li><code>atime</code>: 最終アクセス日時 (access time)</li>
+<li><code>utime</code>: 最終更新日時 (modify time)</li>
+<li><code>ctime</code>: 最終変更日時 (change time)</li>
+</ul>
+
+<p>名前からすると <code>ctime</code> が作成日時 (creation time) っぽいけど、<code>ctime</code> はファイルを更新したときとか chmod や chown したときなどに自動的に現在時刻に更新されるようだ。</p>
+
+<p><code>atime</code> と <code>utime</code> は <a href="http://manpages.ubuntu.com/manpages/gutsy/en/man2/utime.2.html">utimes(2)</a> で任意の時刻に変更できるんだけど、<code>ctime</code> を変更する手段は表立っては用意されていない。</p>
+
+<p>ということで、UNIX 文化には「ファイルの作成日時」という概念がないので、UNIX 由来なスクリプト言語を使って「Windows のファイルの作成日時」を変更する公式の手法はない。</p>
+
+<p>ということで、これを何とかするための補助アプリケーション setctime.exe を作ってみた。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/setctime.exe">https://github.com/nitoyon/setctime.exe</a></li>
+</ul>
+
+<h1>setctime.exe の使い方</h1>
+
+<p>とてもシンプル。</p>
+
+<ul>
+<li>コマンドライン引数でファイル名を受け取る</li>
+<li>受け取ったファイルに設定されている更新日時を、作成日時にそろえる</li>
+<li>成功したときのみ exit code が 0 になる</li>
+</ul>
+
+<p>日時の指定方法って、言語ごとにロケールやらタイムゾーンやらフォーマットやらが色々あってややこしいので、<strong>更新日時を、作成日時にそろえる</strong>という機能だけを提供することにしてみた。</p>
+
+<p>こんだけシンプルにしたおかげで、いろんなスクリプト言語から使いやすくなってる。</p>
+
+<p>例をあげておく。</p>
+
+<h2>Perl</h2>
+
+<p>更新日時・作成日時を現在時刻にする Perl スクリプト。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl"><span class="nb">utime</span> <span class="nb">undef</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;test.txt&#39;</span><span class="p">;</span>
+<span class="nb">system</span><span class="p">(</span><span class="s">&#39;setctime test.txt&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">die</span> <span class="s">&quot;failed&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p><code>utime()</code> してから、<code>setctime.exe</code> を呼び出すだけ。</p>
+
+<p>mtime も変わっちゃっうけど、嫌なら <code>stat()</code> で取得して、<code>utime()</code> で戻してやればよい。</p>
+
+<h2>Ruby</h2>
+
+<p>同じく、更新日時・作成日時を現在時刻にする Ruby スクリプト。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="n">t</span> <span class="o">=</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span>
+<span class="ss">File</span><span class="p">:</span><span class="ss">:utime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s1">&#39;test.txt&#39;</span><span class="p">)</span>
+<span class="nb">system</span> <span class="s1">&#39;setctime.exe test.txt&#39;</span> <span class="ow">or</span> <span class="nb">abort</span> <span class="s1">&#39;failed&#39;</span>
+</code></pre></div>
+<p><code>File::utime()</code> してから、<code>setctime.exe</code> を呼び出すだけ。Ruby では atime を省略できないらしいので、一時変数 <code>t</code> を使って atime も更新している。</p>
+
+<h2>Python</h2>
+
+<p>同じく、更新日時・作成日時を現在時刻にする Python スクリプト。</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">os</span><span class="o">.</span><span class="n">utime</span><span class="p">(</span><span class="s">&#39;test.txt&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s">&#39;setctime.exe test.txt&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&#39;failed&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h1>実装詳細</h1>
+
+<p>50 行ほどの簡単な Windows プログラミングになっている。ファイルを開いて、<code>GetFileTime()</code> して <code>SetFileTime()</code> しているだけ。</p>
+
+<ul>
+<li><a href="https://github.com/nitoyon/setctime.exe/blob/v1.0.0/src/main.cpp">https://github.com/nitoyon/setctime.exe/blob/v1.0.0/src/main.cpp</a></li>
+</ul>
+
+<p>開発は Visual C++ 2008 で行っている。もっと新しいやつでやってもいいんだけど、新しいやつで開いたら自動でプロジェクトファイルが変換されるので、手元にある一番古い Visual C++ で開発している。</p>
+
+<h2>Visual C++ 再頒布可能ランタイム問題</h2>
+
+<p>Visual C++ で開発すると、再頒布可能ランタイムの扱いをどうするかが悩ましい。</p>
+
+<p>静的リンクするとサイズが大きくなる。動的リンクすると開発者と同じバージョンの Visual C++ ランタイムが入ってないと、実行時にエラーになる。</p>
+
+<p>今回は小さなアプリケーションだったので、<code>libc.lib</code> をリンクしないようにした。<code>printf()</code> が使えなくなったり、<code>argc</code> <code>argv</code> が参照できなかったり、それなりに制限はあるけど Win32 のネイティブな API を使って回避できる。</p>
+
+<p>そんなアクロバットな努力の結果、実行ファイルのサイズが 4KB と小さくなって、ランタイムライブラリーのバージョン問題に悩まなくてよくなった。</p>
+
+<h1>まとめ</h1>
+
+<p>どうぞご利用ください。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/12/09/setctime/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/" data-lang="ja" data-size="horizontal" data-text="Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/12/09/setctime/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年12月09日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-12-09-setctime.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/release/">作った</a><span class="delimiter">, </span><a href="/ja/blog/tags/windows/">Windows</a><span class="delimiter">, </span><a href="/ja/blog/tags/perl/">Perl</a><span class="delimiter">, </span><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/win32/">Win32</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/02/27/livereloadx/">ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</a></li>
+
+<li><a href="/ja/blog/2012/04/20/uncopyable/">絶対にコピペできない文章を作ったったwwww</a></li>
+
+<li><a href="/ja/blog/2009/04/15/hokkaido/">北海道を落とすとどう跳ねるのか？</a></li>
+
+<li><a href="/ja/blog/2010/08/26/catlservicemodule/">ATL の CAtlServiceModuleT を使ってサービスを作る</a></li>
+
+<li><a href="/ja/blog/2008/08/01/atlcom-dispatch/">C#＋RegAsm では JScript からコレクションとして参照できないので、ATL で作り直した話</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/11/20/cvs2git/" rel="previous"><b>&laquo;</b><span class="title">CVS レポジトリを Git に変換した手順とか注意点とか</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
