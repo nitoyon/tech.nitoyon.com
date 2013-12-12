@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 09 Dec 2013 01:00:30 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 13 Dec 2013 02:56:37 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,98 @@
 
 
 
+
+		<item>
+			<title>タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利</title>
+			<link>http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/</guid>
+			<pubDate>Fri, 13 Dec 2013 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>スマホやタブレットで写真を表示していると、ピンチでズームしたり、ドラッグで移動したりができて便利なので、あれを Web 上で実現してみたくなった。</p>
+
+<p>最近のブラウザーでは <code>touchstart</code> や <code>touchmove</code> イベントでタッチ情報を取れたり、イベントの <code>touches</code> でマルチタッチを扱えたりするので、実現するための基盤はそろっている。</p>
+
+<p>適当なライブラリーがあるかと思って探してみたが、意外と苦労してしまった。</p>
+
+<h1>Hammer.js が使えない</h1>
+
+<p>タッチを扱うためのライブラリーとしては <a href="http://eightmedia.github.io/hammer.js/">Hammer.js</a> がメジャーらしい。スワイプ・ピンチ・ドラッグなど、各種イベントにも対応していて、これを使えば一発解決してくれそうだ。</p>
+
+<p>ところが、画像ビューワーを作るには不向きだった。困ったのは次の 2 点。</p>
+
+<ul>
+<li>ピンチやドラッグは個別には動くが、組み合わせたときに「表示位置」と「倍率」の関係を自前で計算する必要がある</li>
+<li>人差し指でドラッグしながら親指を追加してピンチすると、ピンチイベントは来るもののスケールがいい加減 (ドラッグ開始位置を基準に算出している気配)</li>
+</ul>
+
+<p>いちおう公式のサンプルに <a href="http://eightmedia.github.io/hammer.js/examples/pinchzoom.html">pinchzoom.html</a> というものはあるんだけど、動かしてみると分かる通り、毎回、移動の初期位置は初期化される。</p>
+
+<p>コードも読んでみたが、複雑なものを作るには少し不向きである予感がした。</p>
+
+<h1>D3.js の d3.behavior.zoom で万事解決！</h1>
+
+<p>自前で実装するにしても難しそうだし、しばらく途方に暮れていたのだけど、<a href="http://d3js.org/">D3.js</a> の <a href="http://bl.ocks.org/mbostock/2374239">Zoomable Geography</a> のサンプルを見たら、見事に希望の動作を実現していた。</p>
+
+<p>ドラッグ中にピンチしてもきれいに動いている。マウスのドラッグやホイールにも対応してたり、ダブルクリック・ダブルタップでの拡大もしてくれる。Nexus 7 と Windows 8 + Google Chrome で動作することを確認した。すばらしい。</p>
+
+<p>しかもサンプルのコードが超絶短い。どうやら、D3.js の <a href="https://github.com/mbostock/d3/wiki/Zoom-Behavior"><code>d3.behavior.zoom()</code></a> がタッチ操作を全部面倒みてくれるようだ。</p>
+
+<h2>画像ファイルでやってみた</h2>
+
+<p>そこで、試しに自分も作ってみた。本家のサンプルは SVG だけども、こっちのサンプルは単なる画像を CSS3 の 2D Transform で動かしている。</p>
+
+<iframe src="zoom_test.html" style="border: .2em solid #999" width="100%" height="300"></iframe>
+
+<p>↑をピンチで拡大縮小、ドラッグで移動できるよ。</p>
+
+<h1>まとめ</h1>
+
+<p><a href="http://d3js.org/">D3.js</a> がタッチ操作に対応してるのは、たぶんビジュアライズ結果を拡大・移動したいからだろう。他にも同じようなことを実現するライブラリーはありそうなのだが、意外と見つからなかったので記事にしておく。</p>
+
+<p>D3.js については <a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> もご覧あれ。そうそう、このエントリーは <a href="http://www.adventar.org/calendars/117">d3.js Advent Calendar</a> の 13 日目の記事だったりもする。</p>
+
+<p>ソースは以下に (40行)。2D Transform では <code>transform-origin</code> の設定が必要なところで少しはまった。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;style&gt;
+html,body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: white;
+}
+&lt;/style&gt;
+&lt;body&gt;
+&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+var zoom = d3.behavior.zoom()
+    .scale(1)
+    .scaleExtent([.1, 10])
+    .on(&quot;zoom&quot;, zoomed);
+
+var svg = d3.select(&quot;body&quot;)
+    .call(zoom);
+
+function zoomed() {
+    var t = &quot;translate(&quot; + d3.event.translate[0] + &#39;px,&#39; + d3.event.translate[1] +&quot;px) &quot; +
+        &quot;scale(&quot; + d3.event.scale + &#39;,&#39; + d3.event.scale + &quot;)&quot;;
+    d3.select(&quot;img&quot;)
+        .style(&quot;transform-origin&quot;, &quot;0 0&quot;)
+        .style(&quot;-moz-transform-origin&quot;, &quot;0 0&quot;)
+        .style(&quot;-webkit-transform-origin&quot;, &quot;0 0&quot;)
+        .style(&quot;-o-transform-origin&quot;, &quot;0 0&quot;)
+        .style(&quot;-ms-transform-origin&quot;, &quot;0 0&quot;)
+        .style(&quot;transform&quot;, t)
+        .style(&quot;-moz-transform&quot;, t)
+        .style(&quot;-webkit-transform&quot;, t)
+        .style(&quot;-o-transform&quot;, t)
+        .style(&quot;-ms-transform&quot;, t);
+}
+&lt;/script&gt;
+&lt;img src=&quot;/images/logo-blog.png&quot;&gt;
+&lt;/body&gt;
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</title>
@@ -494,176 +586,6 @@ http://localhost:4000/ を開いて結果が出力されていれば成功。
 
 <p>JavaScript のソースは <a href="k-means.js">k-means.js</a> においてます。</p>
 ]]></description>
-		</item>
-
-		<item>
-			<title>D3.js の d3.svg.line() を試してみた</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/10/29/d3js-svg-line/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/10/29/d3js-svg-line/</guid>
-			<pubDate>Tue, 29 Oct 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>１つ前の記事 <a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> のサンプルコードではシンプルにするために、座標計算の処理を泥臭く書いていた。</p>
-
-<p>たとえば</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  circles.enter()
-    .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })
-</code></pre></div>
-<p>のような座標を計算する関数が何箇所かに散らばっていた。</p>
-
-<p>これ、<code>d3.svg.line()</code> を使ったらまとめられるし、便利な <code>interpolate</code> の機能も使えるよ、というのが今回のお話。</p>
-
-<h1>d3.svg.line() の使い方</h1>
-
-<p>たとえば</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var line = d3.svg.line()
-  .x(function(d, i) { return i; })
-  .y(function(d, i) { return d * d; });
-</code></pre></div>
-<p>としておくことにする。<code>line.x()</code> とすると <code>function(d, i) { return i; }</code> を返してくれるので、関数を再利用してコードが読みやすくなる。<code>line.y()</code> も同様。</p>
-
-<p>さらに、<code>line([5,2,4])</code> のようにして配列を渡すと <code>&quot;M0,25L1,4L2,16&quot;</code> を返す。これは <code>(1, 5*5)</code>、<code>(2, 2*2)</code>, <code>(3, 4*4)</code> を結んだ線を表す SVG である。</p>
-
-<p>ま、これだけならちょっと便利かなぁ、というぐらいだけども、<code>line.interpolate(&quot;cardinal&quot;)</code> を実行しておくと、<code>line([5,2,4])</code> は <code>&quot;M0,25Q0.7999999999999999,4.9,1,4Q1.2,3.1,2,16&quot;</code> を返す。</p>
-
-<p>これは、座標を曲線で結んだ SVG をあらわす。うまいこと計算してくれている。</p>
-
-<h1>今回のサンプル</h1>
-
-<p>というわけで、前回のサンプルを少し改善しつつ、各種の <code>interpolate</code> を試せるようにしたものを置いておく。</p>
-
-<div>
-<svg id="sample" width="300" height="300"
-  style="background: white; border: .3em solid #ccc;"></svg>
-</div>
-
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-
-<p><button onclick="random()">random</button>
-<button onclick="push()">push</button>
-<button onclick="pop()">pop</button>
-<select id="line-interpolate">
-  <option>linear</option>
-  <option>linear-closed</option>
-  <option>step</option>
-  <option>step-before</option>
-  <option>step-after</option>
-  <option>basis</option>
-  <option>basis-open</option>
-  <option>basis-closed</option>
-  <option>bundle</option>
-  <option selected>cardinal</option>
-  <option>cardinal-open</option>
-  <option>cardinal-closed</option>
-  <option>monotone</option>
-</select>
-<script src="d3js-svg-line.js" charset="utf-8"></script></p>
-
-<h2>使い方</h2>
-
-<ul>
-<li>初期状態では 10 個の要素を持った配列を表示している。</li>
-<li>横軸が配列のインデックス、縦軸が要素の値 (0～1) をあらわす。</li>
-<li>[random] ボタンを押すと、配列の中身がランダムな値で置き換わる。</li>
-<li>[push] ボタンを押すと、配列の末尾に要素を追加する。</li>
-<li>[pop] ボタンを押すと、配列の末尾から要素を取り除く。</li>
-<li>選択欄で <code>interpolate</code> の値を変更できる。</li>
-</ul>
-
-<p>ボタンを押すと、アニメーションつきで見た目が変更するのを確認していただけるだろうか (SVG をサポートしてる必要があるので、モダンではないブラウザーでは表示できない)。</p>
-
-<h2>HTML のソース</h2>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;div&gt;
-&lt;svg id=&quot;sample&quot; width=&quot;300&quot; height=&quot;300&quot;
-  style=&quot;background: white; border: .3em solid #ccc;&quot;&gt;&lt;/svg&gt;
-&lt;/div&gt;
-&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
-&lt;button onclick=&quot;random()&quot;&gt;random&lt;/button&gt;
-&lt;button onclick=&quot;push()&quot;&gt;push&lt;/button&gt;
-&lt;button onclick=&quot;pop()&quot;&gt;pop&lt;/button&gt;
-&lt;select id=&quot;line-interpolate&quot;&gt;
-  &lt;option&gt;linear&lt;/option&gt;
-  &lt;option&gt;linear-closed&lt;/option&gt;
-  &lt;option&gt;step&lt;/option&gt;
-  &lt;option&gt;step-before&lt;/option&gt;
-  &lt;option&gt;step-after&lt;/option&gt;
-  &lt;option&gt;basis&lt;/option&gt;
-  &lt;option&gt;basis-open&lt;/option&gt;
-  &lt;option&gt;basis-closed&lt;/option&gt;
-  &lt;option&gt;bundle&lt;/option&gt;
-  &lt;option&gt;cardinal&lt;/option&gt;
-  &lt;option&gt;cardinal-open&lt;/option&gt;
-  &lt;option&gt;cardinal-closed&lt;/option&gt;
-  &lt;option&gt;monotone&lt;/option&gt;
-&lt;/select&gt;
-&lt;script src=&quot;d3js-svg-line.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
-</code></pre></div>
-<h2>d3js-svg-line.js のソース</h2>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var svg = d3.select(&quot;svg#sample&quot;)
-  .attr(&#39;width&#39;, 300).attr(&#39;height&#39;, 300)
-  .style(&#39;display&#39;, &#39;block&#39;);
-var polyline = svg.append(&#39;path&#39;)
-  .attr(&#39;stroke&#39;, &#39;red&#39;)
-  .attr(&#39;stroke-width&#39;, &#39;1&#39;)
-  .attr(&#39;fill&#39;, &#39;transparent&#39;);
-
-var values = [];
-for (var i = 0; i &lt; 10; i++) {
-  values.push(Math.random());
-}
-d3.select(&#39;#line-interpolate&#39;).on(&#39;change&#39;, update);
-
-function update() {
-  var n = values.length;
-
-  var s = d3.select(&#39;#line-interpolate&#39;).node();
-  var interpolate = s.options[s.selectedIndex].value;
-
-  var line = d3.svg.line()
-    .x(function(d, i) { return (i + 1) * 300 / (n + 1); })
-    .y(function(d, i) { return d * 280 + 10; })
-    .interpolate(interpolate);
-
-  var circles = svg.selectAll(&#39;circle&#39;).data(values);
-  circles.enter()
-    .append(&#39;circle&#39;)
-    .attr(&#39;cx&#39;, line.x()).attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0);
-  circles.exit()
-    .transition()
-    .duration(300)
-    .attr(&#39;cy&#39;, 0).attr(&#39;r&#39;, 0)
-    .remove();
-  circles
-    .attr(&#39;fill&#39;, &#39;red&#39;)
-    .transition()
-    .duration(300)
-    .attr(&#39;cx&#39;, line.x())
-    .attr(&#39;cy&#39;, line.y())
-    .attr(&#39;r&#39;, 6);
-  polyline
-    .transition()
-    .duration(300)
-    .attr(&#39;d&#39;, line(values));
-}
-
-function random() {
-  var n = values.length;
-  for (var i = 0; i &lt; n; i++) {
-    values[i] = Math.random();
-  }
-  update();
-}
-
-function push() {
-  values.push(Math.random());
-  update();
-}
-
-function pop() {
-  values.pop();
-  update();
-}
-
-update();
-</code></pre></div>]]></description>
 		</item>
 
 	</channel>

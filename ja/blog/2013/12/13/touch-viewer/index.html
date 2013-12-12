@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="スマホやタブレットで写真を表示していると、ピンチでズームしたり、ドラッグで移動したりができて便利なので、あれを Web 上で実現してみたくなった。最近のブラウザーでは touchstart や touchmove イベントでタッチ情報を取れたり、イベントの touches でマルチタッチを扱えたりするので、実現するための基盤はそろっている。適当なライブラリーがあるかと思って探してみたが、意外と苦労してしまった。Hammer.js が使えないタッチを扱うためのライブラリーとしては Hammer.js がメジャーらしい。スワイプ・ピンチ・ドラッグなど、各種イベントにも対応していて、これを使え..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2013年12月13日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/iphone/">iPhone</a></div>
+
+<h1>タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" class="hatena-bookmark-button" data-hatena-bookmark-title="タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" data-lang="ja" data-size="horizontal" data-text="タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>スマホやタブレットで写真を表示していると、ピンチでズームしたり、ドラッグで移動したりができて便利なので、あれを Web 上で実現してみたくなった。</p>
+
+<p>最近のブラウザーでは <code>touchstart</code> や <code>touchmove</code> イベントでタッチ情報を取れたり、イベントの <code>touches</code> でマルチタッチを扱えたりするので、実現するための基盤はそろっている。</p>
+
+<p>適当なライブラリーがあるかと思って探してみたが、意外と苦労してしまった。</p>
+
+<h1>Hammer.js が使えない</h1>
+
+<p>タッチを扱うためのライブラリーとしては <a href="http://eightmedia.github.io/hammer.js/">Hammer.js</a> がメジャーらしい。スワイプ・ピンチ・ドラッグなど、各種イベントにも対応していて、これを使えば一発解決してくれそうだ。</p>
+
+<p>ところが、画像ビューワーを作るには不向きだった。困ったのは次の 2 点。</p>
+
+<ul>
+<li>ピンチやドラッグは個別には動くが、組み合わせたときに「表示位置」と「倍率」の関係を自前で計算する必要がある</li>
+<li>人差し指でドラッグしながら親指を追加してピンチすると、ピンチイベントは来るもののスケールがいい加減 (ドラッグ開始位置を基準に算出している気配)</li>
+</ul>
+
+<p>いちおう公式のサンプルに <a href="http://eightmedia.github.io/hammer.js/examples/pinchzoom.html">pinchzoom.html</a> というものはあるんだけど、動かしてみると分かる通り、毎回、移動の初期位置は初期化される。</p>
+
+<p>コードも読んでみたが、複雑なものを作るには少し不向きである予感がした。</p>
+
+<h1>D3.js の d3.behavior.zoom で万事解決！</h1>
+
+<p>自前で実装するにしても難しそうだし、しばらく途方に暮れていたのだけど、<a href="http://d3js.org/">D3.js</a> の <a href="http://bl.ocks.org/mbostock/2374239">Zoomable Geography</a> のサンプルを見たら、見事に希望の動作を実現していた。</p>
+
+<p>ドラッグ中にピンチしてもきれいに動いている。マウスのドラッグやホイールにも対応してたり、ダブルクリック・ダブルタップでの拡大もしてくれる。Nexus 7 と Windows 8 + Google Chrome で動作することを確認した。すばらしい。</p>
+
+<p>しかもサンプルのコードが超絶短い。どうやら、D3.js の <a href="https://github.com/mbostock/d3/wiki/Zoom-Behavior"><code>d3.behavior.zoom()</code></a> がタッチ操作を全部面倒みてくれるようだ。</p>
+
+<h2>画像ファイルでやってみた</h2>
+
+<p>そこで、試しに自分も作ってみた。本家のサンプルは SVG だけども、こっちのサンプルは単なる画像を CSS3 の 2D Transform で動かしている。</p>
+
+<iframe src="zoom_test.html" style="border: .2em solid #999" width="100%" height="300"></iframe>
+
+<p>↑をピンチで拡大縮小、ドラッグで移動できるよ。</p>
+
+<h1>まとめ</h1>
+
+<p><a href="http://d3js.org/">D3.js</a> がタッチ操作に対応してるのは、たぶんビジュアライズ結果を拡大・移動したいからだろう。他にも同じようなことを実現するライブラリーはありそうなのだが、意外と見つからなかったので記事にしておく。</p>
+
+<p>D3.js については <a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> もご覧あれ。そうそう、このエントリーは <a href="http://www.adventar.org/calendars/117">d3.js Advent Calendar</a> の 13 日目の記事だったりもする。</p>
+
+<p>ソースは以下に (40行)。2D Transform では <code>transform-origin</code> の設定が必要なところで少しはまった。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;style&gt;</span>
+<span class="nt">html</span><span class="o">,</span><span class="nt">body</span> <span class="p">{</span>
+    <span class="k">margin</span><span class="o">:</span> <span class="m">0</span><span class="p">;</span>
+    <span class="k">width</span><span class="o">:</span> <span class="m">100</span><span class="o">%</span><span class="p">;</span>
+    <span class="k">height</span><span class="o">:</span> <span class="m">100</span><span class="o">%</span><span class="p">;</span>
+    <span class="k">overflow</span><span class="o">:</span> <span class="k">hidden</span><span class="p">;</span>
+    <span class="k">background</span><span class="o">:</span> <span class="nb">white</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">&lt;/style&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://d3js.org/d3.v3.min.js&quot;</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script&gt;</span>
+<span class="kd">var</span> <span class="nx">zoom</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">behavior</span><span class="p">.</span><span class="nx">zoom</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">scale</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">scaleExtent</span><span class="p">([.</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+    <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;zoom&quot;</span><span class="p">,</span> <span class="nx">zoomed</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">svg</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">zoom</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">zoomed</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="s2">&quot;translate(&quot;</span> <span class="o">+</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">translate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;px,&#39;</span> <span class="o">+</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">translate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span><span class="s2">&quot;px) &quot;</span> <span class="o">+</span>
+        <span class="s2">&quot;scale(&quot;</span> <span class="o">+</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">scale</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">scale</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span><span class="p">;</span>
+    <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;img&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;transform-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;0 0&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-moz-transform-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;0 0&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-webkit-transform-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;0 0&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-o-transform-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;0 0&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-ms-transform-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;0 0&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;transform&quot;</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-moz-transform&quot;</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-webkit-transform&quot;</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-o-transform&quot;</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;-ms-transform&quot;</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;/images/logo-blog.png&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</code></pre></div>
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" class="hatena-bookmark-button" data-hatena-bookmark-title="タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" data-lang="ja" data-size="horizontal" data-text="タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2013年12月13日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2013-12-13-touch-viewer.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a><span class="delimiter">, </span><a href="/ja/blog/tags/iphone/">iPhone</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a></li>
+
+<li><a href="/ja/blog/2009/04/09/kmeans-visualise/">クラスタリングの定番アルゴリズム「K-means法」をビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2013/10/29/d3js-svg-line/">D3.js の d3.svg.line() を試してみた</a></li>
+
+<li><a href="/ja/blog/2013/02/15/viewport/">これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ</a></li>
+
+<li><a href="/ja/blog/2013/04/23/chrome-responsive-debug/">Google Chrome で超手軽にスマホ向けデザインを確認する方法</a></li>
+
+<li><a href="/ja/blog/2010/01/26/dijkstra-aster-visualize/">経路探索アルゴリズムの「ダイクストラ法」と「A*」をビジュアライズしてみた</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2013/12/09/setctime/" rel="previous"><b>&laquo;</b><span class="title">Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

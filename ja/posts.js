@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2013/12/13/touch-viewer/", title: "タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利"},
 	{url: "/ja/blog/2013/12/09/setctime/", title: "Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った"},
 	{url: "/ja/blog/2013/11/20/cvs2git/", title: "CVS レポジトリを Git に変換した手順とか注意点とか"},
 	{url: "/ja/blog/2013/11/14/jekyll-win/", title: "Windows で Jekyll 1.3 を動かすまでの手順"},
-	{url: "/ja/blog/2013/11/07/k-means/", title: "K-means 法を D3.js でビジュアライズしてみた"},
-	{url: "/ja/blog/2013/10/29/d3js-svg-line/", title: "D3.js の d3.svg.line() を試してみた"}
+	{url: "/ja/blog/2013/11/07/k-means/", title: "K-means 法を D3.js でビジュアライズしてみた"}
 ];
 
 Site.archives.months = [
