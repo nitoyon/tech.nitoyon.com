@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2014/01/17/chef-win-path/", title: "Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った"},
 	{url: "/ja/blog/2014/01/14/nenga/", title: "うちの年賀状2014"},
 	{url: "/ja/blog/2013/12/13/touch-viewer/", title: "タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利"},
 	{url: "/ja/blog/2013/12/09/setctime/", title: "Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った"},
-	{url: "/ja/blog/2013/11/20/cvs2git/", title: "CVS レポジトリを Git に変換した手順とか注意点とか"},
-	{url: "/ja/blog/2013/11/14/jekyll-win/", title: "Windows で Jekyll 1.3 を動かすまでの手順"}
+	{url: "/ja/blog/2013/11/20/cvs2git/", title: "CVS レポジトリを Git に変換した手順とか注意点とか"}
 ];
 
 Site.archives.months = [

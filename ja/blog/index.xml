@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Tue, 14 Jan 2014 00:58:00 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 17 Jan 2014 00:28:44 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,87 @@
 
 
 
+
+		<item>
+			<title>Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/01/17/chef-win-path/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/01/17/chef-win-path/</guid>
+			<pubDate>Fri, 17 Jan 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>話題の <a href="http://www.getchef.com/">Chef</a> をいまさら試したくなって、手元の Windows 環境に環境を作ってみた。</p>
+
+<p><a href="http://www.getchef.com/chef/install/">http://www.getchef.com/chef/install/</a> からインストーラーをダウンロードしてインストールした。Cygwin を使うと<a href="http://dqn.sakusakutto.jp/2013/12/berkshelf_chef_gem_ruby.html">無駄にはまる</a>し、ぐぐるといっぱい出てくる「gem から入れる手順」は公式サイトでは見つからなくなっている。</p>
+
+<p>すべてデフォルトでインストールすると、<code>C:\opscode\chef</code> にファイルがいっぱい展開されていた。</p>
+
+<h1>PATH に追加される 2 つのフォルダー</h1>
+
+<p>インストーラーから Chef を入れると、<code>PATH</code> に</p>
+
+<ul>
+<li><code>C:\opscode\chef\bin</code></li>
+<li><code>C:\opscode\chef\embedded\bin</code></li>
+</ul>
+
+<p>の 2 つが追加される。</p>
+
+<p><code>C:\opscode\chef\bin</code> には Chef 関係のプログラム (<code>chef-solo</code>, <code>knife</code> など...) が入っている。</p>
+
+<p>一方、<code>C:\opscode\chef\embedded\bin</code> には UNIX 関係のプログラム (<code>ruby.exe</code>, <code>perl.exe</code>, <code>ls.exe</code>, <code>cat.exe</code> など...) が入っている。</p>
+
+<h1>ピンチ！　既存の Ruby 環境と競合！！</h1>
+
+<p>全部入りでありがたいんだけど、<code>ruby.exe</code> や <code>perl.exe</code> にパスが通ってしまうのが気持ち悪い。</p>
+
+<p>自分の環境では、Chef のやつ以外にも Ruby を <code>C:\Ruby200-x64\bin</code> にインストールしていて、そっちにも <code>PATH</code> が通った状態になっている。</p>
+
+<p>この状態で、<code>gem install knife-solo</code> すると、先にインストールしたほうの Ruby の gem が動く。自分の場合は Chef が後だったので、<code>C:\Ruby200-x64\bin</code> のほうの gem が動いた。その結果、<code>C:\Ruby64</code> の下に knife-solo が入って、おかしな状態になった。</p>
+
+<p>この環境では、Chef 側の何らかのコマンドが <code>C:\opscode\chef\embedded\bin\ruby.exe</code> を実行するつもりで <code>ruby</code> を実行したとしても、<code>C:\Ruby200-x64\bin\ruby.exe</code> が実行されてしまうわけで、変なバグに困らされる確率が高そうだ。</p>
+
+<p>何かと嫌な予感がするので、対策することにした。</p>
+
+<h1>解決法: Chef 用のコンソールを作る</h1>
+
+<p>Visual Studio を入れたら「開発者コンソール」がスタート メニューに入るし、Git for Windows でも MS-DOS から隔離された Git Bash で作業をする。</p>
+
+<p>同じように、Chef にも専用のコマンド プロンプトを用意することにした。</p>
+
+<p>ということで作ってみた。手順は 2 段階。</p>
+
+<h2>1. バッチファイルを作る</h2>
+
+<p>こちらがそのバッチファイル。これを <code>C:\opscode\chefenv.bat</code> といった名前で保存しておく。</p>
+<div class="highlight"><pre><code class="bat language-bat" data-lang="bat">@ECHO OFF
+
+SET PATH=c:\opscode\chef\bin;c:\opscode\chef\embedded\bin
+SET PATH=%PATH%;c:\windows\system32;c:\windows
+
+title Chef Env
+chef-solo -v
+</code></pre></div>
+<h2>2. ショートカットを作る</h2>
+
+<p>このファイルへのショートカットを作る。</p>
+
+<p>[リンク先] は <code>C:\Windows\System32\cmd.exe /K C:\opscode\chefenv.bat</code> に設定する (<code>/K</code> は「バッチを実行して、ウインドウを閉じない」という意味)。</p>
+
+<p>[作業フォルダー] は Chef レポジトリーのパスか、マイドキュメントのパスにでもしておくとよいだろう。</p>
+
+<p>ショートカットのファイル名は何でもよいけど、「Chefコマンド プロンプト」とでもしておいてスタートメニューに登録するなり、デスクトップに置くなり、ランチャーに登録するなりしておくとよいだろう。</p>
+
+<h1>使い方</h1>
+
+<p>ショートカットを叩くと、<code>PATH</code> が限定された状態でコマンドプロンプトが立ち上がってくれる。</p>
+
+<p><center><img src="http://farm6.staticflickr.com/5527/11980775965_c14b1872a6.jpg" width="500" height="364"></center></p>
+
+<p><code>chef-solo</code> も <code>knife</code> も実行できる。めでたし。</p>
+
+<p>ついでに、システム全体の <code>PATH</code> から <code>c:\opscode</code> 以下の 2 つを削っておくと、コマンドプロンプトを使ったときの混乱も起きなくなって幸せ。</p>
+
+<p>ぜひお試しください。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>うちの年賀状2014</title>
@@ -341,185 +422,6 @@ user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 
 <p>負の遺産 CVS を捨てて、健全な Git ライフを送ろう！</p>
 ]]></description>
-		</item>
-
-		<item>
-			<title>Windows で Jekyll 1.3 を動かすまでの手順</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/11/14/jekyll-win/</guid>
-			<pubDate>Thu, 14 Nov 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p><a href="http://jekyllrb.com/">Jekyll</a> を Windows で動かそうとすると、いくつか難関がある。今回、自分の環境を新しく作り直したキッカケがあったので、導入までの手順をメモしておく。</p>
-
-<p>自分の環境は Windows 8 Pro x64。各種ツールのバージョンは次の通り。</p>
-
-<ul>
-<li>Jekyll 1.3.0</li>
-<li>Ruby 2.0.0 p247</li>
-<li>DevKit 4.7.2-20130224-1432</li>
-<li>Python 2.7.6</li>
-<li>Pygentize 1.6</li>
-</ul>
-
-<p>基本的には <a href="http://www.madhur.co.in/blog/2011/09/01/runningjekyllwindows.html">Running Jekyll on Windows &#8211; Madhur Ahuja</a> の手順に近いけど、Pygments の導入手順などは少し違っているのと、日本語独自の問題についても書いている。</p>
-
-<h1>1. Ruby 環境を整備する</h1>
-
-<p><a href="http://rubyinstaller.org/downloads/">RubyInstaller for Windows</a> から One-Click Ruby のインストーラーと Development Kit を導入する。</p>
-
-<p>Development Kit はネイティブな gem の導入に必要。</p>
-
-<p>今回導入したのは次のバージョン。</p>
-
-<ul>
-<li>Ruby 2.0.0-p247 (rubyinstaller-2.0.0-p247-x64.exe)</li>
-<li>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</li>
-</ul>
-
-<h2>Ruby インストーラーの実行</h2>
-
-<p>まず、Ruby のインストーラーを導入する。デフォルトで <code>C:\Ruby200-x64</code> にインストールされる。</p>
-
-<p>環境変数の <code>PATH</code> に <code>C:\Ruby200-x64\bin</code> を追加しておこう。</p>
-
-<h2>DevKit の導入</h2>
-
-<p><code>DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe</code> を実行すると、展開先を聞かれる。ここでは <code>C:\RubyDevKit</code> を選択した。</p>
-
-<p>次に設定する。コマンドプロンプトで <code>dk.rb</code> の <code>init</code> と <code>initialize</code> を実行する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">c:\RubyDevKit&gt;ruby dk.rb init
-[INFO] found RubyInstaller v2.0.0 at C:/Ruby200-x64
-
-Initialization complete! Please review and modify the auto-generated
-&#39;config.yml&#39; file to ensure it contains the root directories to all
-of the installed Rubies you want enhanced by the DevKit.
-
-c:\RubyDevKit&gt;ruby dk.rb install
-[INFO] Updating convenience notice gem override for &#39;C:/Ruby200-x64&#39;
-[INFO] Installing &#39;C:/Ruby200-x64/lib/ruby/site_ruby/devkit.rb&#39;
-</code></pre></div>
-<p>ここまでで Ruby のセットアップは完了。</p>
-
-<h1>2. Jekyll を導入する</h1>
-
-<p>コマンドプロンプトから <code>gem install jekyll</code> を実行する。</p>
-
-<p>次の gem が導入される。</p>
-
-<ul>
-<li>classifier-1.3.3</li>
-<li>colorator-0.1</li>
-<li>commander-4.1.5</li>
-<li>fast-stemmer-1.0.2</li>
-<li>ffi-1.9.3-x64-mingw32</li>
-<li>highline-1.6.20</li>
-<li><strong>jekyll-1.3.0</strong></li>
-<li>liquid-2.5.4</li>
-<li>listen-1.3.1</li>
-<li>maruku-0.6.1</li>
-<li>posix-spawn-0.3.6</li>
-<li>pygments.rb-0.5.4</li>
-<li>rake-0.9.6</li>
-<li>rb-fsevent-0.9.3</li>
-<li>rb-inotify-0.9.2</li>
-<li>rb-kqueue-0.2.0</li>
-<li>rdoc-4.0.0</li>
-<li>redcarpet-2.3.0</li>
-<li>safe_yaml-0.9.7</li>
-<li>syntax-1.0.0</li>
-<li>test-unit-2.0.0.0</li>
-<li>yajl-ruby-1.1.0</li>
-</ul>
-
-<h2>pygments.rb のダウングレード</h2>
-
-<p>悲しいことに、<code>pygments.rb</code> の 0.5.1 以降は Windows では動作しない。(<a href="https://github.com/tmm1/pygments.rb/pull/90">pygments.rb #90</a> で Pull Request が出ているが、執筆時点でマージされていない)</p>
-
-<p>そのため、導入された <code>pygments.rb</code> をアンインストールして、0.5.0 を入れなおしておく。「Jekyll が依存してる」と文句いわれるけど、気にせずに作業しちゃう。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; gem uninstall pygments.rb --version &quot;&gt;0.5.0&quot;
-&gt; gem install pygments.rb --version &quot;=0.5.0&quot;
-</code></pre></div>
-<h2>UTF-8 対策</h2>
-
-<p>HTML や記事に日本語が含まれると、Jekyll の実行時に次のようなエラーが出る。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Liquid Exception: invalid byte sequence in Windows-31J in post.md/#excerpt
-error: invalid byte sequence in Windows-31J. Use --trace to view backtrace
-</code></pre></div>
-<p>Windows Ruby にありがちな FAQ で、ググると色々出てくる。</p>
-
-<p><code>set LANG=ja_JP.UTF-8</code> するとよい、と書いてある記事もあったが Ruby 2.0 では効かないらしい。</p>
-
-<p>Ruby 2.0 では環境変数の <code>RUBYOPT</code> を <code>-EUTF-8</code> にしておけば解決した (参考: <a href="http://sugamasao.hatenablog.com/entry/2013/08/24/224521">WindowsでEncoding.default_externalをUTF-8にするには - すがブロ</a>)。</p>
-
-<p>環境変数をいじるのが面倒なら、<code>C:\Ruby200-x64\bin\jekyll.bat</code> の 2 行目あたりに <code>set RUBYOPT=-EUTF-8</code> と書いてもいい。</p>
-
-<p>もしくは、<code>C:\Ruby200-x64\lib\ruby\gems\2.0.0\gems\jekyll-1.3.0\bin\jekyll</code> の冒頭 2 行目に</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">Encoding.default_external = &quot;utf-8&quot;
-</code></pre></div>
-<p>を追加して回避してもよいだろう。(改行コードが LF のみなので、メモ帳では追加できない点に注意)</p>
-
-<h1>3. Pygments を導入する</h1>
-
-<p>コードのハイライトを行うためには Pygments を導入する。</p>
-
-<h2>Python 2.7</h2>
-
-<p><a href="http://www.python.org/download/">Download Python</a> から 2.7 をダウンロードする。今回導入したのは Python 2.7.6 Windows X86-64 Installer (<code>python-2.7.6.amd64.msi</code>)。</p>
-
-<p>インストーラーを実行してデフォルトの設定でインストールする。インストール先は <code>C:\Python27</code> となる。</p>
-
-<p>環境変数の <code>PATH</code> に <code>C:\Python27</code> と <code>C:\Python27\Scripts</code> を追加しておく (<code>Scripts</code> フォルダーはこのあと自動で作成される)。</p>
-
-<h2>easy_install</h2>
-
-<p>次に、<a href="https://pypi.python.org/pypi/setuptools#windows">setuptools</a> から <a href="https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py"><code>ez_setup.py</code></a> をダウンロードする。</p>
-
-<p><code>ez_setup.py</code> を実行する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; python easy_install.py
-   :
-Installing easy_install-script.py script to C:\Python27\Scripts
-Installing easy_install.exe script to C:\Python27\Scripts
-Installing easy_install-2.7-script.py script to C:\Python27\Scripts
-Installing easy_install-2.7.exe script to C:\Python27\Scripts
-
-Installed c:\python27\lib\site-packages\setuptools-1.3.2-py2.7.egg
-Processing dependencies for setuptools==1.3.2
-Finished processing dependencies for setuptools==1.3.2
-</code></pre></div>
-<h2>Pygments</h2>
-
-<p>いよいよ Pygments をインストール！</p>
-
-<p><code>easy_install pygments</code> を実行すればよい。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; easy_install pygments
-   :
-Adding Pygments 1.6 to easy-install.pth file
-Installing pygmentize-script.py script to C:\Python27\Scripts
-Installing pygmentize.exe script to C:\Python27\Scripts
-
-Installed c:\python27\lib\site-packages\pygments-1.6-py2.7.egg
-Processing dependencies for pygments
-Finished processing dependencies for pygments
-</code></pre></div>
-<h1>4. Jekyll が動くか確認する！</h1>
-
-<p>ここまでくれば導入は完了したはず。動作するかテストしてみよう。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt;jekyll new jekyll-test
-New jekyll site installed in path/to/jekyll-test.
-
-&gt;cd jekyll-test
-
-&gt;jekyll serve
-Configuration file: path/to/test-site/_config.yml
-            Source: path/to/test-site
-       Destination: path/to/test-site/_site
-      Generating... done.
-    Server address: http://0.0.0.0:4000
-  Server running... press ctrl-c to stop.```
-
-http://localhost:4000/ を開いて結果が出力されていれば成功。
-
-お疲れ様。
-</code></pre></div>]]></description>
 		</item>
 
 	</channel>
