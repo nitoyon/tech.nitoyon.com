@@ -18,13 +18,22 @@ seealso:
 設定は超簡単！！
 ================
 
-Google Chrome のデベロッパー ツールを開いて、右下の歯車のアイコンをクリックします。
+<s>Google Chrome のデベロッパー ツールを開いて、右下の歯車のアイコンをクリックします。</s>
 
-左側から [Overrides] を選んで、[User Agent] と [Device metrics] にチェックを入れます。
+<s>左側から [Overrides] を選んで、[User Agent] と [Device metrics] にチェックを入れます。</s>
 
 {% image http://farm9.staticflickr.com/8260/8672447614_28f45f8d1d.jpg, 729, 432 %}
 
-これだけです！
+<s>これだけです！</s>
+
+Google Chrome 32 からは設定方法が変わっています。ちょっとややこしい。
+
+  1. 右上の歯車のアイコンをクリックする。
+  2. [Overrides] を選んで、[Show 'Emulation' view in console drawer] をチェックする。
+  3. [Console] 以外のタブで [Esc] キーを押してコンソールを表示する。
+  4. コンソールの [Emulation] タブを開く。
+
+[Overrides page in Chrome Developer Tools gone in latest Canary - Stack Overflow](http://stackoverflow.com/questions/19496393/overrides-page-in-chrome-developer-tools-gone-in-latest-canary) を参照しました。
 
 
 ためしに Yahoo! を表示してみよう
