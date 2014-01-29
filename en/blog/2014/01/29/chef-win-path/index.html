@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Chef Console: avoid multiple ruby problem - TECH-NI Blog</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Chef Console: avoid multiple ruby problem"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="The Chef installer for Windows adds ruby.exe and to PATH. If you have installed ruby environment, which ruby is used when you enter ruby to your MS-DOS prompt? To avoid such problem, I created a Chef console with a simple..."/>
+	<meta property="og:image" content="http://farm8.staticflickr.com/7316/10710273026_68972312f0_o.jpg"/>
+	<meta property="og:site_name" content="TECH-NI Blog"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/en/blog/index.xml" />
+	<link rel="alternate" hreflang="ja_JP" href="http://tech.nitoyon.com/ja/blog/2014/01/18/chef-win-path/">
+</head>
+<body class="en">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/en/blog/" id="logo-blog-en">TECH-NI Blog</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/en/">HOME</a></li><li class="about"><a href="/en/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-ja-notice" class="alternate-notice">
+<a href="/ja/blog/2014/01/18/chef-win-path/">このページには日本語版があります。ぜひ <span>http://tech.nitoyon.com/ja/blog/2014/01/18/chef-win-path/</span> をご覧ください。</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">29 Jan 2014</div>
+
+
+
+<h1>Chef Console: avoid multiple ruby problem</h1>
+
+
+<div class="share">
+	
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/" data-lang="en" data-size="horizontal" data-text="Chef Console: avoid multiple ruby problem - TECH-NI Blog" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>The <a href="http://www.getchef.com/">Chef</a> installer for Windows adds <code>ruby.exe</code> and to <code>PATH</code>. If you have installed ruby environment, which ruby is used when you enter <code>ruby</code> to your MS-DOS prompt? </p>
+
+<p>To avoid such problem, I created a Chef console with a simple bat file.</p>
+
+<h1>Chef adds two folders to PATH</h1>
+
+<p>When you install Chef client (<a href="http://www.getchef.com/chef/install/">http://www.getchef.com/chef/install/</a>), many files are deployed to <code>C:\opscode\chef</code>  and the following 2 folders are added to <code>PATH</code>:</p>
+
+<ul>
+<li><p><code>C:\opscode\chef\bin</code></p>
+
+<p>Chef related programs such as <code>chef-solo</code>, <code>knife</code>.</p></li>
+<li><p><code>C:\opscode\chef\embedded\bin</code></p>
+
+<p>UNIX related programs such as <code>ruby.exe</code>, <code>perl.exe</code>, <code>ls.exe</code>, <code>cat.exe</code>.</p></li>
+</ul>
+
+<h1>Conflicts with existing Ruby environment</h1>
+
+<p>I have <code>ruby.exe</code> in <code>C:\Ruby200-x64\bin</code> which is added to <code>PATH</code>.</p>
+
+<p>Which ruby is used when I run <code>ruby</code> or <code>gem install xxxx</code> from my MS-DOS prompt? </p>
+
+<p>If we first install Ruby and then install Chef, <code>C:\Ruby200-x64\bin\gem</code> is executed.</p>
+
+<p>If we first install Chef and then install Ruby, <code>C:\opscode\chef\embedded\bin\gem</code> is executed.</p>
+
+<p>It&#39;s very confusing.</p>
+
+<h1>Let&#39;s use Chef console</h1>
+
+<p>To solve this problem, I created a &quot;Chef console&quot;.</p>
+
+<h2>1. Create a bat file</h2>
+
+<p>Save following file as <code>C:\opscode\chefenv.bat</code>.</p>
+<div class="highlight"><pre><code class="bat language-bat" data-lang="bat"><span class="p">@</span><span class="k">ECHO</span> <span class="k">OFF</span>
+
+<span class="k">SET</span> <span class="nv">PATH</span><span class="o">=</span>c:\opscode\chef\bin;c:\opscode\chef\embedded\bin
+<span class="k">SET</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">%PATH%</span>;c:\windows\system<span class="m">32</span>;c:\windows
+
+title Chef Env
+chef-solo -v
+</code></pre></div>
+<h2>2. Create a shortcut file</h2>
+
+<p>Create a shortcut file to this bat.</p>
+
+<ul>
+<li>Target: <code>C:\Windows\System32\cmd.exe /K C:\opscode\chefenv.bat</code></li>
+<li>Start in: Anywhere. (My document, path to chef repository and so on)</li>
+</ul>
+
+<p>(<code>/K</code> means &quot;Carries out the command specified by string and continues.&quot;)</p>
+
+<h1>How to use</h1>
+
+<p>When you double click the shortcut file, a command prompt appears with restricted <code>PATH</code>.</p>
+
+<p><center><img src="http://farm6.staticflickr.com/5527/11980775965_c14b1872a6.jpg" width="500" height="364"></center></p>
+
+<p>You can execute <code>chef-solo</code> and <code>knife</code>.</p>
+
+<p>Now, you can safely remove <code>c:\opscode\chef\bin</code> and <code>C:\opscode\chef\embedded\bin</code> from <code>PATH</code>.</p>
+
+<p>Let&#39;s enjoy!</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<div id="post-ad1">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5030829344952718";
+if (document.documentElement.clientWidth > 568) {
+	google_ad_slot = "7449402245";
+	google_ad_width = 336;
+	google_ad_height = 280;
+} else if (Math.random() < .5) {
+	google_ad_slot = "9965361520";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "4356335041";
+	google_ad_width = 320;
+	google_ad_height = 50;
+}
+__google_ad_height = google_ad_height;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<div id="post-ad2">
+<script type="text/javascript"><!--
+(function() {
+	var node = document.getElementById("entry");
+	if (node) {
+		node.className = "ad1-h" + __google_ad_height;
+	}
+})();
+
+google_ad_client = "ca-pub-5030829344952718";
+if (__google_ad_height < 280) {
+	google_ad_slot = "6039524013";
+	google_ad_width = 300;
+	google_ad_height = 250;
+} else {
+	google_ad_slot = "8926135445";
+	google_ad_width = 336;
+	google_ad_height = 280;
+}
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/" data-lang="en" data-size="horizontal" data-text="Chef Console: avoid multiple ruby problem - TECH-NI Blog" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">29 Jan 2014 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/en/2014-01-29-chef-win-path.md">View history</a></span></div>
+
+
+</div>
+
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/en/blog/2013/11/07/k-means/" rel="previous"><b>&laquo;</b><span class="title">Visualizing K-Means algorithm with D3.js</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon</p>
+		<p>I'm a programmer in Japan, Kyoto.</p>
+		<p class="seemore"><a href="/en/about/">more</a></p>
+	</div>
+
+	
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2013. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/en/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
