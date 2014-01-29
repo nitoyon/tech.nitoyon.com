@@ -4,6 +4,9 @@ title: Windows で Chef するときに PATH で混乱しないように専用�
 tags: Windows
 lang: ja
 thumbnail: http://farm6.staticflickr.com/5527/11980775965_db01e8d319_o.png
+alternate:
+  lang: en_US
+  url: /en/blog/2014/01/29/chef-win-path/
 ---
 話題の [Chef](http://www.getchef.com/) をいまさら試したくなって、手元の Windows 環境に環境を作ってみた。
 
