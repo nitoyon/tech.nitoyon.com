@@ -36,7 +36,7 @@ Generate only modified pages.
 
 Generate all pages.
 
-    $ jekyll rebuild
+    $ grunt rebuild
 
 * Post and Page are generated when source file is modified.
 * Archive and Lang are generated when page's yaml front matter or post's yaml front matter is modified.
