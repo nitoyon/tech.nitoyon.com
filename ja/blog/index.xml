@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 17 Jan 2014 00:28:44 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 06 Feb 2014 09:51:24 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,53 @@
 
 
 
+
+		<item>
+			<title>リモート デスクトップでポート番号を指定して接続する方法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/02/06/rdp-port/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/02/06/rdp-port/</guid>
+			<pubDate>Thu, 06 Feb 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Windows のリモート デスクトップは 3389 番ポートを利用している。</p>
+
+<p>通常はポート番号は変わらないんだけど、ポートフォワードで別のポート番号で待機する場合がある。</p>
+
+<p>たとえば、NAT で外に出ていく仮想マシンにリモートデスクトップで接続したい場合、ポートフォワードを使って、ゲストの 3389 番をホストの 13389 番などで公開することがある。</p>
+
+<h1>「ホスト名:ポート番号」でいける</h1>
+
+<p>13389 番で待機中のリモートデスクトップサービス接続するには、[コンピューター] の欄に <code>localhost:13389</code> と入力すればよい。</p>
+
+<p><center><img src="http://farm3.staticflickr.com/2812/12332461233_3fd4d74907.jpg" width="500" height="309"></center></p>
+
+<p>コマンドラインから接続する場合は <code>mstsc /v:localhost:13389</code> と入力する。</p>
+
+<h2>調べた手順</h2>
+
+<p>まずは、コマンドライン オプションでの指定方法を調べるために、<code>mstsc /?</code> を実行したところ、</p>
+
+<blockquote>
+<p>/v:&lt;サーバー[:ポート]&gt; -- 接続先のリモート コンピューターを指定します。</p>
+</blockquote>
+
+<p>と出てきた。</p>
+
+<p>同じ書き方を GUI でも試したらうまくいった。</p>
+
+<h2>ローカルの 3389 にポートフォワードできない問題</h2>
+
+<p>ちなみに、先ほどの例で、ゲストの 3389 番をホストの 3389 番にポートフォワードして、<code>localhost</code> に接続しようとすると</p>
+
+<blockquote>
+<p>既に進行中のコンソール セッションがあるため、リモート コンピューター上の他のコンソール セッションに接続できませんでした。</p>
+</blockquote>
+
+<p>というエラーがでて接続できない。</p>
+
+<p>要は「自分自身に RDP できませんよ」ということなんだろうけど、リモート デスクトップを有効にしてなくてもこのエラーがでてしまう…。</p>
+
+<p>ということは、接続を試みる前にクライアント側でエラーを表示しているっぽい。少し納得できないところではあるが、仕方がない。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った</title>
@@ -311,116 +358,6 @@ if os.system(&#39;setctime.exe test.txt&#39;) != 0:
 <h1>まとめ</h1>
 
 <p>どうぞご利用ください。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>CVS レポジトリを Git に変換した手順とか注意点とか</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/11/20/cvs2git/</guid>
-			<pubDate>Wed, 20 Nov 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>この前、10 年以上前に趣味で作っていたフリーソフトについてメールで質問が来た。もはや完全に記憶から消えているだけでなく、いま使っている PC にソースコードもない。何も分からない、答えられない。</p>
-
-<p>そのままでは古いソースコードも成仏しきれない。供養するために、古い HDD を引っ張り出して探したところ、自宅サーバーをやってた HDD の中に CVS レポジトリーが見つかった。せっかくなので、Git に変換して GitHub で公開してみた (<a href="https://github.com/nitoyon/mp3album">その１</a>, <a href="https://github.com/nitoyon/winamp-zipmp3plugin">その２</a>)。これで成仏できるだろう。</p>
-
-<p>そこで、この記事では CVS レポジトリーを Git に移行した手順をまとめておく。レガシーな CVS から Git に移行したい人の参考になるとうれしい。</p>
-
-<h1>git cvsimport の使い方</h1>
-
-<p>Git には <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> というコマンドがある。CVS の履歴を Git に変換してくれる。</p>
-
-<p>CVS はファイルごとに履歴を保存する構造になってるんだけど、<code>cvsps</code> というツールを組み合わせることで、同時に変更したファイルを 1 コミットとして扱ってくれるようになる。</p>
-
-<p>大きいレポジトリーだと結構時間かかる。cygwin だと超絶に時間がかかったので、UNIX 上で実行した。Git for Windows には <code>git-cvsimport</code> がない。</p>
-
-<p>自分は次のように実行した。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">git cvsimport -v -i -R -A author-conv-file.txt \
--d :local:/path/to/CVS &lt;module&gt;
-</code></pre></div>
-<p>それぞれのパラメータの意味は次の通り。詳しくは <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> を参照のこと。</p>
-
-<ul>
-<li><code>-v</code>: 出力を verbose にする。</li>
-<li><code>-i</code>: インポートだけを行ってチェックアウトしない。</li>
-<li><code>-R</code>: 「CVS のリビジョン番号」と「それに対応する Git のコミット」の対応付けを <code>.git/cvs-revisions</code> に出力する。一応生成しておく。</li>
-<li><code>-A</code>: ユーザー名の変換テーブル。詳細は後述。</li>
-<li><code>-d</code>: CVSROOT のパス。cvs コマンドで <code>-d</code> に指定するやつ。もしくは、環境変数の <code>CVSROOT</code> に指定してるやつ。</li>
-<li><code>&lt;module&gt;</code>: モジュール名。サブディレクトリを指定することもできる。</li>
-</ul>
-
-<p><code>-d</code> で指定したパスに <code>CVSROOT</code> ディレクトリがないと <code>Expected Valid-requests from server, but got: E Cannot access /path/to/CVS</code> というエラーになる。ダミーでよいので <code>mkdir /path/to/CVS/CVSROOT</code> しておけば回避できた。</p>
-
-<h2>author-conv-file の書き方</h2>
-
-<p>author-conv-file には「CVS のユーザー名」から「Git の Author 名・メールアドレス」への対応を記述していく。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">user1=User 1 &lt;user1@example.com&gt;
-user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
-</code></pre></div>
-<p>1.8.1 からはタイムゾーンも指定できるようになっている。それ以前のバージョンだと、すべて UTC でのコミットとなってしまう。</p>
-
-<p>実行が終わったら <code>git log | grep Author: | sort | uniq</code> を実行して、author-conv-file に漏れがないか確認しておくといいだろう。</p>
-
-<h2>cvsps のキャッシュ</h2>
-
-<p>個人的に悩まされたのが、<code>cvsps</code> が結果を <code>~/.cvsps</code> にキャッシュすること。CVS レポジトリーを変更したあとに <code>git cvsimport</code> を実行しても反映されない。そういうときは、<code>rm -rf ~/.cvsps</code> して再実行するとよい。</p>
-
-<h2>文字コードの変換</h2>
-
-<p>いまなら「全部 UTF-8 でやっちゃえ」となるんだけど、CVS 全盛の時代は Windows は ShiftJIS で、UNIX 上では EUC-JP がまだまだ主流だった。</p>
-
-<p>コミットログやファイル名が UTF-8 でない場合は、ちょいとソースコードを修正する必要がある。</p>
-
-<p>以下は 1.7.3.1 の <code>git-cvsimport</code> に対する修正。</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">--- /usr/local/libexec/git-core/git-cvsimport.bak
-+++ /usr/local/libexec/git-core/git-cvsimport
-@@ -722,6 +722,11 @@
- sub update_index (\@\@) {
-        my $old = shift;
-        my $new = shift;
-+
-+       # file name
-+       use Encode qw/decode encode/;
-+       $_ = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_)) for @$old;
-+       $_-&gt;[2] = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_-&gt;[2])) for @$new;
-+
-        open(my $fh, &#39;|-&#39;, qw(git update-index -z --index-info))
-                or die &quot;unable to open git update-index: $!&quot;;
-        print $fh
-@@ -810,6 +816,11 @@
-        substr($logmsg,32767) = &quot;&quot; if length($logmsg) &gt; 32767;
-        $logmsg =~ s/[\s\n]+\z//;
-
-+       # commit log
-+       use Encode qw/encode decode/;
-+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $logmsg));
-+
-        if (@skipped) {
-            $logmsg .= &quot;\n\n\nSKIPPED:\n\t&quot;;
-            $logmsg .= join(&quot;\n\t&quot;, @skipped) . &quot;\n&quot;;
-</code></pre></div>
-<p>ここではコミットログやファイル名が Shift_JIS だという前提で書いてある。</p>
-
-<p>自動判定したい場合は</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">+       use Encode::Guess qw/euc-jp shiftjis/;
-+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;guess&#39;, $logmsg));
-</code></pre></div>
-<p>のように書けばいける。</p>
-
-<h2>歴史の書き換え</h2>
-
-<p>push する前に、インポート結果を十分に確認しておきたい。次のような点に注意して作業した。</p>
-
-<p>コミットログを書き換えたいなら <code>git rebase -i</code> でやっちゃう。</p>
-
-<p>不要なファイルがあったら <code>git filter-branch --tree-filter &#39;rm -f passwords.txt&#39; HEAD</code> のようにして消しておく (参照: <a href="http://git-scm.com/book/ja/Git-%E3%81%AE%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%84%E3%83%BC%E3%83%AB-%E6%AD%B4%E5%8F%B2%E3%81%AE%E6%9B%B8%E3%81%8D%E6%8F%9B%E3%81%88">Git - 歴史の書き換え</a>)。</p>
-
-<p>一度でも歴史を書き換えたら、commit date が実行時刻になってしまうので、<code>git filter-branch --env-filter &#39;GIT_COMMITTER_DATE=$GIT_AUTHOR_DATE; export GIT_COMMITTER_DATE&#39;</code> で author date にそろえておく (参照: <a href="http://stackoverflow.com/questions/2973996/git-rebase-without-changing-commit-timestamps">git rebase without changing commit timestamps - Stack Overflow</a>)。</p>
-
-<p>このあたりは <code>git-cvsimport</code> の Tips というよりも、Git での歴史書き換えの Tips。</p>
-
-<h1>まとめ</h1>
-
-<p>負の遺産 CVS を捨てて、健全な Git ライフを送ろう！</p>
 ]]></description>
 		</item>
 
