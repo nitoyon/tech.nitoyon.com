@@ -1,27 +1,33 @@
 ---
 layout: post
-title: Vagrant＋VirtualBox で Windows をゲスト OS として利用する方法
+title: Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順
 tags: Windows
 lang: ja
-publish: false
+thumbnail: http://farm4.staticflickr.com/3785/12637800714_1f99876e85_o.png
+seealso:
+- 2014-02-06-rdp-port
+- 2014-01-17-chef-win-path
+- 2013-12-09-setctime
+- 2013-11-14-jekyll-win
+- 2011-09-18-no-flash-on-metro-ie10
 ---
-[Vagrant](http://www.vagrantup.com/)＋VirtualBox を使って、**Windows の環境を作ったり壊したり**できるようにしてみた。
+最近話題の [Vagrant](http://www.vagrantup.com/) さんは「Linux の環境を作ったり壊したりして開発とか試験が楽になるよ」と紹介されることが多いけど、Windows の環境だって作ったり壊したりしたい！
 
-完成図はこんな感じ。`vagrant up` で立ち上げた Windows にリモート デスクトップしている。
+いろいろ調べつつ環境を作ってみたので、その手順を共有しておく。
 
-`C:\vagrant` にホスト側の `Vagrantfile` がマウントされているのが分かるだろうか。
+完成イメージはこんな感じ。コマンドプロンプトから `vagrant up` をしたら VirtualBox 上に Windows Server 2012 R2 の環境が準備されて、そこにリモート デスクトップで接続している。
 
-Linux と同じように、`Vagrantfile` を書き換えれば、こんなこともできる。
+{% image http://farm4.staticflickr.com/3750/12637326905_8f2cfe0da7.jpg, 990, 722 %}
 
-  * ホスト名を変更する
-  * IP アドレスを指定してネットワーク アダプターを追加する
-  * ホスト側で書いた Chef のレシピを `vagrat provision` を使って、ゲスト上で走らせたりできる
+いろいろいじったあとに `vagrant destroy` したら環境は消え去って、`vagrant up` したら、また、まっさらな状態から使える。
+
+ちょっと注目してほしいのは、ゲスト OS の `C:\vagrant` にホスト側の `Vagrantfile` がマウントされているところ。このあたりの処理は [Vagrant-Windows] というプラグインがうまくやってくれている。このプラグインのおかげで、Linux と同じように `Vagrantfile` を設定してやると、ホスト名を変更したり、IP アドレスを指定してネットワーク アダプターを追加したり、ホスト側の Chef のレシピを `vagrat provision` を使って、ゲスト上で走らせたりできるようになる。
 
 
 目次
 ====
 
-最初に目次をお見せしよう。
+最初に目次をドーン。
 
   1. VirtualBox をインストールする
   2. Vagrant をインストールする
@@ -30,11 +36,11 @@ Linux と同じように、`Vagrantfile` を書き換えれば、こんなこと
   5. Base Box を作成する
   6. Base Box を試す
 
-正直いって長い。Linux だと、ネットに転がっている Box を拾ってくればいいんだけど、Windows の場合は自分で Box を作らなきゃいけないので、こんな長い手順になってしまう。
+正直いって長い。Linux ならネットに転がっている Box を使って「ハイ終わり」なんだけど、Windows の場合は自分で Box を作らなきゃいけないので、こんな長い手順になっている。
 
 ゲスト OS は Windows 8.1 Pro 64bit と Windows Server 2012 R2 Standard を試してみた。
 
-ホスト OS は Windows 8.1 Pro x64 を使っているが、他のバージョンでも動くだろうし、試してないけど Windows 以外の OS でも VirtualBox と Vagrant が動くならいけると思う。
+ホスト OS は Windows 8.1 Pro x64 を使っている。試してないけど Windows 以外の OS でも VirtualBox と Vagrant が動くならいけると思う。
 
 なるべく一次情報を併記しつつ手順を示すので、バージョンが違うときにも応用はきくはずだ。また、裏側で何が起こっているのかを調べてみたので、うまくいかないときには参考にしてほしい。
 
@@ -78,6 +84,8 @@ Vagrant のインストーラーを次の場所から取得して、すべてデ
   * http://www.vagrantup.com/downloads.html
 
 執筆時点で最新の 1.4.3 を利用した。
+
+{% image http://farm4.staticflickr.com/3785/12637800714_643944ef04.jpg, 499, 389 %}
 
 Vagrant は `C:\HashiCorp\Vagrant` にインストールされる。自動で、`C:\HashiCorp\Vagrant\bin` にパスが通る。`C:\HashiCorp\Vagrant\embedded` に ruby や mingw などの UNIX 環境が入る。
 
@@ -446,6 +454,9 @@ o force it
 ```
 
 `vagrant up` すると端末が上がってくる。
+
+{% image http://farm4.staticflickr.com/3750/12637326905_8f2cfe0da7.jpg, 990, 722 %}
+
 
 ### 補足
 
