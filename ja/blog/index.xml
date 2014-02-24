@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 20 Feb 2014 01:41:59 +0000</lastBuildDate>
+		<lastBuildDate>Tue, 25 Feb 2014 01:48:33 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,51 @@
 
 
 
+
+		<item>
+			<title>Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/</guid>
+			<pubDate>Tue, 25 Feb 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Jenkins を Windows 環境に MSI ファイルで導入すると、デフォルトでは <code>C:\Program Files (x86)</code> にインストールされる (64 ビットの場合)。</p>
+
+<p>Java の実行環境を同梱してくれていたり、自動でサービスに登録してくれたりして嬉しいのだけど、気になるのが <code>JENKINS_HOME</code> が <code>C:\Program Files (x86)\Jenkins</code> になってしまう点。ジョブやワークスペース、プラグインなどのデータなどが <code>Program Files</code> の下に置かれてしまう。Windows 的な作法では「アプリケーションのデータは <code>ProgramData</code> や <code>AppData</code> に置きましょう」となっているので少し気持ち悪い。</p>
+
+<p><code>JENKINS_HOME</code> を変更するには環境変数を設定したらいけそうなんだけど、MSI から導入した場合は環境変数ではなく <code>jenkins.xml</code> の値が優先されるようだ (jar から直接実行する場合は未確認)。</p>
+
+<p>ということで、「MSI から導入した Jenkins で <code>JENKINS_HOME</code> を変更する手順」をまとめておく。Jenkins のバージョンは 1.550。</p>
+
+<p>ここでは、<code>JENKINS_HOME</code> を <code>C:\ProgramData\Jenkins</code> に変更するものとする。</p>
+
+<ol>
+<li>Jenkins サービスをとめる。</li>
+<li><p>インストール フォルダーの <code>jenkins.xml</code> を開いて</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%BASE%&quot;/&gt;
+</code></pre></div>
+<p>を次のように書き換える (改行コードが LF なので、メモ帳ではできなくはないが探すのが少し大変)。</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%ProgramData%\Jenkins&quot;/&gt;
+</code></pre></div></li>
+<li><p>インストール フォルダーの次のファイル・フォルダー<strong>以外</strong>を <code>%ProgramData%\Jenkins</code> に<strong>移動</strong>する (コピーだと、<code>jobs</code> 内にシンボリックリンクがあった場合に壊れてしまうので、必ず「移動」すること)。</p>
+
+<ul>
+<li><code>jre</code> フォルダー</li>
+<li><code>jenkins.err.log</code></li>
+<li><code>jenkins.exe</code></li>
+<li><code>jenkins.exe.config</code></li>
+<li><code>jenkins.out.log</code></li>
+<li><code>jenkins.war</code></li>
+<li><code>jenkins.war.bak</code></li>
+<li><code>jenkins.war.tmp</code></li>
+<li><code>jenkins.wrapper.log</code></li>
+<li><code>jenkins.xml</code></li>
+</ul></li>
+<li><p>Jenkins サービスを開始する。</p></li>
+<li><p><code>http://localhost:8080/systemInfo</code> から <code>JEKNINS_HOME</code> が設定した値になっていることを確認する。ジョブやプラグインなどの情報が引き継がれているかどうかも合わせて確認する。</p></li>
+</ol>
+
+<p>とっても簡単ですね。インストーラーで設定できるようになっていると、より嬉しいので、気が向いたら pull request してみよう・・・。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順</title>
@@ -635,98 +680,6 @@ chef-solo -v
 
 <p>今年もよろしくおねがいします。</p>
 ]]></description>
-		</item>
-
-		<item>
-			<title>タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利</title>
-			<link>http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2013/12/13/touch-viewer/</guid>
-			<pubDate>Fri, 13 Dec 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>スマホやタブレットで写真を表示していると、ピンチでズームしたり、ドラッグで移動したりができて便利なので、あれを Web 上で実現してみたくなった。</p>
-
-<p>最近のブラウザーでは <code>touchstart</code> や <code>touchmove</code> イベントでタッチ情報を取れたり、イベントの <code>touches</code> でマルチタッチを扱えたりするので、実現するための基盤はそろっている。</p>
-
-<p>適当なライブラリーがあるかと思って探してみたが、意外と苦労してしまった。</p>
-
-<h1>Hammer.js が使えない</h1>
-
-<p>タッチを扱うためのライブラリーとしては <a href="http://eightmedia.github.io/hammer.js/">Hammer.js</a> がメジャーらしい。スワイプ・ピンチ・ドラッグなど、各種イベントにも対応していて、これを使えば一発解決してくれそうだ。</p>
-
-<p>ところが、画像ビューワーを作るには不向きだった。困ったのは次の 2 点。</p>
-
-<ul>
-<li>ピンチやドラッグは個別には動くが、組み合わせたときに「表示位置」と「倍率」の関係を自前で計算する必要がある</li>
-<li>人差し指でドラッグしながら親指を追加してピンチすると、ピンチイベントは来るもののスケールがいい加減 (ドラッグ開始位置を基準に算出している気配)</li>
-</ul>
-
-<p>いちおう公式のサンプルに <a href="http://eightmedia.github.io/hammer.js/examples/pinchzoom.html">pinchzoom.html</a> というものはあるんだけど、動かしてみると分かる通り、毎回、移動の初期位置は初期化される。</p>
-
-<p>コードも読んでみたが、複雑なものを作るには少し不向きである予感がした。</p>
-
-<h1>D3.js の d3.behavior.zoom で万事解決！</h1>
-
-<p>自前で実装するにしても難しそうだし、しばらく途方に暮れていたのだけど、<a href="http://d3js.org/">D3.js</a> の <a href="http://bl.ocks.org/mbostock/2374239">Zoomable Geography</a> のサンプルを見たら、見事に希望の動作を実現していた。</p>
-
-<p>ドラッグ中にピンチしてもきれいに動いている。マウスのドラッグやホイールにも対応してたり、ダブルクリック・ダブルタップでの拡大もしてくれる。Nexus 7 と Windows 8 + Google Chrome で動作することを確認した。すばらしい。</p>
-
-<p>しかもサンプルのコードが超絶短い。どうやら、D3.js の <a href="https://github.com/mbostock/d3/wiki/Zoom-Behavior"><code>d3.behavior.zoom()</code></a> がタッチ操作を全部面倒みてくれるようだ。</p>
-
-<h2>画像ファイルでやってみた</h2>
-
-<p>そこで、試しに自分も作ってみた。本家のサンプルは SVG だけども、こっちのサンプルは単なる画像を CSS3 の 2D Transform で動かしている。</p>
-
-<iframe src="zoom_test.html" style="border: .2em solid #999" width="100%" height="300"></iframe>
-
-<p>↑をピンチで拡大縮小、ドラッグで移動できるよ。</p>
-
-<h1>まとめ</h1>
-
-<p><a href="http://d3js.org/">D3.js</a> がタッチ操作に対応してるのは、たぶんビジュアライズ結果を拡大・移動したいからだろう。他にも同じようなことを実現するライブラリーはありそうなのだが、意外と見つからなかったので記事にしておく。</p>
-
-<p>D3.js については <a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a> もご覧あれ。そうそう、このエントリーは <a href="http://www.adventar.org/calendars/117">d3.js Advent Calendar</a> の 13 日目の記事だったりもする。</p>
-
-<p>ソースは以下に (40行)。2D Transform では <code>transform-origin</code> の設定が必要なところで少しはまった。</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;!DOCTYPE html&gt;
-&lt;meta charset=&quot;utf-8&quot;&gt;
-&lt;style&gt;
-html,body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: white;
-}
-&lt;/style&gt;
-&lt;body&gt;
-&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-var zoom = d3.behavior.zoom()
-    .scale(1)
-    .scaleExtent([.1, 10])
-    .on(&quot;zoom&quot;, zoomed);
-
-var svg = d3.select(&quot;body&quot;)
-    .call(zoom);
-
-function zoomed() {
-    var t = &quot;translate(&quot; + d3.event.translate[0] + &#39;px,&#39; + d3.event.translate[1] +&quot;px) &quot; +
-        &quot;scale(&quot; + d3.event.scale + &#39;,&#39; + d3.event.scale + &quot;)&quot;;
-    d3.select(&quot;img&quot;)
-        .style(&quot;transform-origin&quot;, &quot;0 0&quot;)
-        .style(&quot;-moz-transform-origin&quot;, &quot;0 0&quot;)
-        .style(&quot;-webkit-transform-origin&quot;, &quot;0 0&quot;)
-        .style(&quot;-o-transform-origin&quot;, &quot;0 0&quot;)
-        .style(&quot;-ms-transform-origin&quot;, &quot;0 0&quot;)
-        .style(&quot;transform&quot;, t)
-        .style(&quot;-moz-transform&quot;, t)
-        .style(&quot;-webkit-transform&quot;, t)
-        .style(&quot;-o-transform&quot;, t)
-        .style(&quot;-ms-transform&quot;, t);
-}
-&lt;/script&gt;
-&lt;img src=&quot;/images/logo-blog.png&quot;&gt;
-&lt;/body&gt;
-</code></pre></div>]]></description>
 		</item>
 
 	</channel>

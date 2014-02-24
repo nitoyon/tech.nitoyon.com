@@ -12,11 +12,11 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2014/02/25/jenkins-home-win/", title: "Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法"},
 	{url: "/ja/blog/2014/02/20/vagrant-win-guest/", title: "Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順"},
 	{url: "/ja/blog/2014/02/06/rdp-port/", title: "リモート デスクトップでポート番号を指定して接続する方法"},
 	{url: "/ja/blog/2014/01/17/chef-win-path/", title: "Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った"},
-	{url: "/ja/blog/2014/01/14/nenga/", title: "うちの年賀状2014"},
-	{url: "/ja/blog/2013/12/13/touch-viewer/", title: "タッチ操作に対応した画像ビューワーをJavaScriptで作るならD3.jsが便利"}
+	{url: "/ja/blog/2014/01/14/nenga/", title: "うちの年賀状2014"}
 ];
 
 Site.archives.months = [

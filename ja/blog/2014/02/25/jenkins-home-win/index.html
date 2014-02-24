@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Jenkins を Windows 環境に MSI ファイルで導入すると、デフォルトでは C:\Program Files (x86) にインストールされる (64 ビットの場合)。Java の実行環境を同梱してくれていたり、自動でサービスに登録してくれたりして嬉しいのだけど、気になるのが JENKINS_HOME が C:\Program Files (x86)\Jenkins になってしまう点。ジョブやワークスペース、プラグインなどのデータなどが Program Files の下に置かれてしまう。Windows 的な作法では「アプリケーションのデータは ProgramData や A..."/>
+	<meta property="og:image" content="http://farm4.staticflickr.com/3705/12749957535_2aea32f28d_o.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年02月25日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/windows/">Windows</a></div>
+
+<h1>Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" data-lang="ja" data-size="horizontal" data-text="Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+
+<p>Jenkins を Windows 環境に MSI ファイルで導入すると、デフォルトでは <code>C:\Program Files (x86)</code> にインストールされる (64 ビットの場合)。</p>
+
+<p>Java の実行環境を同梱してくれていたり、自動でサービスに登録してくれたりして嬉しいのだけど、気になるのが <code>JENKINS_HOME</code> が <code>C:\Program Files (x86)\Jenkins</code> になってしまう点。ジョブやワークスペース、プラグインなどのデータなどが <code>Program Files</code> の下に置かれてしまう。Windows 的な作法では「アプリケーションのデータは <code>ProgramData</code> や <code>AppData</code> に置きましょう」となっているので少し気持ち悪い。</p>
+
+<p><code>JENKINS_HOME</code> を変更するには環境変数を設定したらいけそうなんだけど、MSI から導入した場合は環境変数ではなく <code>jenkins.xml</code> の値が優先されるようだ (jar から直接実行する場合は未確認)。</p>
+
+<p>ということで、「MSI から導入した Jenkins で <code>JENKINS_HOME</code> を変更する手順」をまとめておく。Jenkins のバージョンは 1.550。</p>
+
+<p>ここでは、<code>JENKINS_HOME</code> を <code>C:\ProgramData\Jenkins</code> に変更するものとする。</p>
+
+<ol>
+<li>Jenkins サービスをとめる。</li>
+<li><p>インストール フォルダーの <code>jenkins.xml</code> を開いて</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  <span class="nt">&lt;env</span> <span class="na">name=</span><span class="s">&quot;JENKINS_HOME&quot;</span> <span class="na">value=</span><span class="s">&quot;%BASE%&quot;</span><span class="nt">/&gt;</span>
+</code></pre></div>
+<p>を次のように書き換える (改行コードが LF なので、メモ帳ではできなくはないが探すのが少し大変)。</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  <span class="nt">&lt;env</span> <span class="na">name=</span><span class="s">&quot;JENKINS_HOME&quot;</span> <span class="na">value=</span><span class="s">&quot;%ProgramData%\Jenkins&quot;</span><span class="nt">/&gt;</span>
+</code></pre></div></li>
+<li><p>インストール フォルダーの次のファイル・フォルダー<strong>以外</strong>を <code>%ProgramData%\Jenkins</code> に<strong>移動</strong>する (コピーだと、<code>jobs</code> 内にシンボリックリンクがあった場合に壊れてしまうので、必ず「移動」すること)。</p>
+
+<ul>
+<li><code>jre</code> フォルダー</li>
+<li><code>jenkins.err.log</code></li>
+<li><code>jenkins.exe</code></li>
+<li><code>jenkins.exe.config</code></li>
+<li><code>jenkins.out.log</code></li>
+<li><code>jenkins.war</code></li>
+<li><code>jenkins.war.bak</code></li>
+<li><code>jenkins.war.tmp</code></li>
+<li><code>jenkins.wrapper.log</code></li>
+<li><code>jenkins.xml</code></li>
+</ul></li>
+<li><p>Jenkins サービスを開始する。</p></li>
+<li><p><code>http://localhost:8080/systemInfo</code> から <code>JEKNINS_HOME</code> が設定した値になっていることを確認する。ジョブやプラグインなどの情報が引き継がれているかどうかも合わせて確認する。</p></li>
+</ol>
+
+<p>とっても簡単ですね。インストーラーで設定できるようになっていると、より嬉しいので、気が向いたら pull request してみよう・・・。</p>
+
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" class="hatena-bookmark-button" data-hatena-bookmark-title="Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" data-lang="ja" data-size="horizontal" data-text="Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年02月25日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-02-25-jenkins-home-win.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/windows/">Windows</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2014/02/20/vagrant-win-guest/">Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順</a></li>
+
+<li><a href="/ja/blog/2014/02/06/rdp-port/">リモート デスクトップでポート番号を指定して接続する方法</a></li>
+
+<li><a href="/ja/blog/2014/01/17/chef-win-path/">Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った</a></li>
+
+<li><a href="/ja/blog/2013/12/09/setctime/">Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</a></li>
+
+<li><a href="/ja/blog/2013/11/14/jekyll-win/">Windows で Jekyll 1.3 を動かすまでの手順</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/02/20/vagrant-win-guest/" rel="previous"><b>&laquo;</b><span class="title">Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
