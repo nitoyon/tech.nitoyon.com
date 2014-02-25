@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 29 Jan 2014 23:42:05 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 26 Feb 2014 02:01:55 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -19,7 +19,50 @@
 
 
 		<item>
-			<title>Chef Console: avoid multiple ruby problem</title>
+			<title>Jenkins: How to change JENKINS_HOME on Windows</title>
+			<link>http://tech.nitoyon.com/en/blog/2014/02/25/jenkins-home-win/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2014/02/25/jenkins-home-win/</guid>
+			<pubDate>Tue, 25 Feb 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>If you install Jenkins using MSI installer, it copies files to <code>C:\Program Files (x86)\jenkins</code> and uses the install directory as <code>JENKINS_HOME</code> (on 64bit machine).</p>
+
+<p>This means that Jenkins stores all data (including plugins, workspace and job data) to <code>C:\Program Files (x86)\jenkins</code>. On windows, it is recommended that application data is stored to <code>ProgramData</code> and <code>AppData</code>. So, I wanted to change <code>JENKINS_HOME</code>.</p>
+
+<p>First, I added <code>JENKINS_HOME</code> to environment value, but it doen&#39;t make any sense. Jenkins prefers the value set on <code>jenkins.xml</code> when we use MSI installer.</p>
+
+<p>Now, let&#39;s change <code>JENKINS_HOME</code> to <code>C:\ProgramData\Jenkins</code> (Jenkins version: 1.550).</p>
+
+<ol>
+<li>Stop Jenkins service.</li>
+<li><p>Open <code>jenkins.xml</code> in the install folder, and edit</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%BASE%&quot;/&gt;
+</code></pre></div>
+<p>as follows:</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%ProgramData%\Jenkins&quot;/&gt;
+</code></pre></div></li>
+<li><p><strong>Move</strong> all files in install folder <strong>except for</strong> the following files (Don&#39;t copy because it brokes symbolic links in <code>jobs</code> folder):</p>
+
+<ul>
+<li><code>jre</code> folder</li>
+<li><code>jenkins.err.log</code></li>
+<li><code>jenkins.exe</code></li>
+<li><code>jenkins.exe.config</code></li>
+<li><code>jenkins.out.log</code></li>
+<li><code>jenkins.war</code></li>
+<li><code>jenkins.war.bak</code></li>
+<li><code>jenkins.war.tmp</code></li>
+<li><code>jenkins.wrapper.log</code></li>
+<li><code>jenkins.xml</code></li>
+</ul></li>
+<li><p>Start Jenkins service.</p></li>
+<li><p>Open <code>http://localhost:8080/systemInfo</code> and check <code>JEKNINS_HOME</code> has been changed.</p></li>
+</ol>
+
+<p>Enjoy!</p>
+]]></description>
+		</item>
+
+		<item>
+			<title>Chef Console: avoid multiple ruby problem on Windows</title>
 			<link>http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/</link>
 			<guid>http://tech.nitoyon.com/en/blog/2014/01/29/chef-win-path/</guid>
 			<pubDate>Wed, 29 Jan 2014 00:00:00 +0900</pubDate>
@@ -405,77 +448,6 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <li>calls stat periodically, so uses CPU even when nothing changes.</li>
 <li>runs on any platforms.</li>
 </ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>Use symlinks in git difftool --dir-diff on Windows</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/07/09/symlink-dir-diff-on-windows/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/07/09/symlink-dir-diff-on-windows/</guid>
-			<pubDate>Tue, 09 Jul 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>I like <code>git difftool --dir-diff</code> because it checks out the modified files to a temporary directory and executes diff tool with directory pathes.</p>
-
-<p>On Unix and MacOS, <code>git difftool --dir-diff</code> create a symbolic link to the working directory if a right-hand file has the same SHA1 as the file in the working directory.  It&#39;s very useful when we modify right-hand files with a difftool.</p>
-
-<p>On Windows, instead of creating symbolic links, <code>git difftool --dir-diff</code> copy back right-hand files to working directory after difftool program exits.  I want to use symlinks on Git for Windows like Unix and MacOS.</p>
-
-<h1>Quick Hack Patch</h1>
-
-<p>Environment: Git for Windows 1.8.3 and Windows 7 (64bit).</p>
-
-<p>Patch for <code>C:\Program Files (x86)\Git\libexec\git-core\git-difftool</code>.</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">--- git-difftool    Sun Jun  2 11:28:06 2013
-+++ git-difftool    Tue Jul  9 00:42:02 2013
-@@ -283,7 +283,7 @@
-            exit_cleanup($tmpdir, 1);
-        }
-        if ($symlinks) {
--           symlink(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
-+           !system(&quot;git&quot;, &quot;mklink&quot;, &quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
-            exit_cleanup($tmpdir, 1);
-        } else {
-            copy(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
-@@ -448,7 +448,7 @@
-    my $indices_loaded = 0;
-
-    for my $file (@worktree) {
--       next if $symlinks &amp;&amp; -l &quot;$b/$file&quot;;
-+       next if $symlinks;
-        next if ! -f &quot;$b/$file&quot;;
-
-        if (!$indices_loaded) {
-</code></pre></div>
-<p>Save this patch to somewhere, and run GitBash as administrator.</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console">$ cd /c/Program\ Files\ \(x86\)/Git/libexec/git-core/
-$ patch &lt; ~/git-difftool.patch
-patching file `git-difftool&#39;
-</code></pre></div>
-<p>Create a file on <code>C:\Program Files (x86)\Git\libexec\git-core\git-mklink</code>:</p>
-<div class="highlight"><pre><code class="sh language-sh" data-lang="sh">#!/bin/sh
-
-cmd.exe /c &quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot; &gt; /dev/null
-</code></pre></div>
-<p>(This script is necessary for converting <code>/tmp/</code> directory to Windows path)</p>
-
-<h1>How to Use</h1>
-
-<p>First, configure difftool on <code>.gitconfig</code>. For example, set <a href="http://winmerge.org/">WinMerge</a> as difftool.</p>
-<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[diff]
-    tool = winmerge
-[difftool winmerge]
-    path = C:/Program Files (x86)/WinMerge/winmergeu.exe
-    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;
-</code></pre></div>
-<p>Run GitBash as an administrator, and enter following command.</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git difftool -d --symlinks [&lt;commit&gt; [&lt;commit&gt;]]
-</code></pre></div>
-<p>(On Windows, administrator privileges is required to create symbolic links)</p>
-
-<p>If you want, create an alias on <code>.gitconfig</code>.</p>
-<div class="highlight"><pre><code class="ini language-ini" data-lang="ini">[alias]
-    d = difftool -d --symlinks
-</code></pre></div>
-<p>Enjoy.</p>
 ]]></description>
 		</item>
 
