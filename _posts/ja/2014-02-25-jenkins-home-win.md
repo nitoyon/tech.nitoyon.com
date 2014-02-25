@@ -3,7 +3,10 @@ layout: post
 title: Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法
 tags: Windows
 lang: ja
-thumbnail: http://farm4.staticflickr.com/3705/12749957535_2aea32f28d_o.png
+thumbnail: http://farm4.staticflickr.com/3705/12749957535_7568f3c3c2_o.png
+alternate:
+  lang: en_US
+  url: /en/blog/2014/02/25/jenkins-home-win/
 seealso:
 - 2014-02-20-vagrant-win-guest
 - 2014-02-06-rdp-port
