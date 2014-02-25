@@ -1,6 +1,7 @@
 ---
 layout: post
-title: "Chef Console: avoid multiple ruby problem"
+title: "Chef Console: avoid multiple ruby problem on Windows"
+tags: Windows
 lang: en
 thumbnail: http://farm8.staticflickr.com/7316/10710273026_68972312f0_o.jpg
 alternate:

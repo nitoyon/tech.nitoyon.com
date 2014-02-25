@@ -3,6 +3,7 @@ layout: post
 title: Use symlinks in git difftool --dir-diff on Windows
 lang: en
 thumbnail: http://farm4.staticflickr.com/3792/9191502091_5f4e156b87_o.jpg
+tags: Windows
 alternate:
   lang: ja_JP
   url: /ja/blog/2013/07/09/symlink-dir-diff-on-windows/
