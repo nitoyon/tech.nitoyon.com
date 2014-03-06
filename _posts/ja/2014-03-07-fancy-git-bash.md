@@ -3,7 +3,7 @@ layout: post
 title: ConEmu 突っ込んだら Git for Windows の Git Bash がカッコよくなった
 tags: Windows Git
 lang: ja
-thumbnail: http://farm4.staticflickr.com/3705/12749957535_7568f3c3c2_o.png
+thumbnail: http://farm8.staticflickr.com/7428/12971385585_16c5ed8db4_o.png
 seealso:
 - ja/2013-07-23-git-patch
 - ja/2013-07-02-git-dir-diff
