@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>全角半角混在の文章で 1 行に半角何文字分あるか調べる方法 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="全角半角混在の文章で 1 行に半角何文字分あるか調べる方法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="「ソースコードは 1 行あたり 80 文字以内」とか「コミットログは横幅 72 文字以内」とか、文字数に関するルールはいろいろある。ルールを徹底するには機械的に判定したい。と思って、簡単なスクリプトを書こうとした瞬間、意外と「1 行あたりの文字数」をカウントするのが難しいことに気付いた。たとえば、「あA」は「全角 1 文字＋半角 1 文字」なので半角 3 文字分としてカウントしたい。しかし、UTF-8 の世界では「あA」の文字長は 2 だし、バイト数は 4 (あ=0xE38182、a=0x41) である。EUC-JP や Shift-JIS の時代なら、単純に「あA」は 3 バイトなので..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年03月14日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/python/">Python</a><span class="delimiter">, </span><a href="/ja/blog/tags/perl/">Perl</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
+<h1>全角半角混在の文章で 1 行に半角何文字分あるか調べる方法</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" class="hatena-bookmark-button" data-hatena-bookmark-title="全角半角混在の文章で 1 行に半角何文字分あるか調べる方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" data-lang="ja" data-size="horizontal" data-text="全角半角混在の文章で 1 行に半角何文字分あるか調べる方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>「ソースコードは 1 行あたり 80 文字以内」とか「コミットログは横幅 72 文字以内」とか、文字数に関するルールはいろいろある。</p>
+
+<p>ルールを徹底するには機械的に判定したい。と思って、簡単なスクリプトを書こうとした瞬間、意外と「1 行あたりの文字数」をカウントするのが難しいことに気付いた。</p>
+
+<p>たとえば、「あA」は「全角 1 文字＋半角 1 文字」なので半角 3 文字分としてカウントしたい。</p>
+
+<p>しかし、UTF-8 の世界では「あA」の文字長は 2 だし、バイト数は 4 (あ=0xE38182、a=0x41) である。</p>
+
+<p>EUC-JP や Shift-JIS の時代なら、単純に「あA」は 3 バイトなので「半角 3 つ分」とすぐ分かったのだけども… (逆に文字長を調べるのが面倒だった)。</p>
+
+<p>はて、どうするか？　というのがこの記事でいいたいこと。</p>
+
+<h1>East Asian Width を見よ</h1>
+
+<p>いろいろとググった結果、Unicode の <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> を参照するとよいらしい。</p>
+
+<p><a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> で <a href="http://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt">EastAsianWidth.txt</a> という資料が紹介されている。この資料では、全ての文字の横幅が 6 つのカテゴリーに分類されている。</p>
+
+<p>そのカテゴリーが次の 6 つ。</p>
+
+<table><thead>
+<tr>
+<th>分類</th>
+<th>意味</th>
+<th>例</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>F</td>
+<td>East Asian Fullwidth</td>
+<td>Ａ (全角の A)</td>
+</tr>
+<tr>
+<td>H</td>
+<td>East Asian Halfwidth</td>
+<td>ｱ (半角のア)</td>
+</tr>
+<tr>
+<td>Na</td>
+<td>East Asian Narrow</td>
+<td>A (半角の A)</td>
+</tr>
+<tr>
+<td>W</td>
+<td>East Asian Wide</td>
+<td>ア (全角のア)</td>
+</tr>
+<tr>
+<td>A</td>
+<td>East Asian Ambiguous</td>
+<td>○☆※ (一部の記号)、Д (ロシア語)</td>
+</tr>
+<tr>
+<td>N</td>
+<td>Neutral (Not East Asian)</td>
+<td>À</td>
+</tr>
+</tbody></table>
+
+<p>たとえば、「あ」なら <code>3042;W # HIRAGANA LETTER A</code> と書いてある。カテゴリーは <code>W</code> なので、全角 （＝半角 2 文字分) だと分かる。</p>
+
+<p>ということで、<code>F</code>・<code>W</code> は全角 (＝ 2 文字分)、<code>H</code>・<code>Na</code>・<code>N</code> は半角 (＝ 1 文字) として扱えばよいわけだ。</p>
+
+<h2>Ambiguous をどうするか問題</h2>
+
+<p>で、<code>A</code> (East Asian Ambiguous) の扱いが難しい。</p>
+
+<p>例にあるような ○☆※ などの記号を見ると全角として扱いたくなる。しかし、<code>A</code> にはロシア語も含まれている。</p>
+
+<p><code>A</code> を一律に全角として扱うと、「1 行に 80 文字以上書いたら警告出すシステム」を作ると、「80 文字超えてないのに警告出るんだけどなにこれ？」とロシアの人に怒られてしまうかもしれない。</p>
+
+<p>具体例をみてみよう。ロシア語でヘンタイをあらわす「Хентай」をいくつかの環境で表示してみた。</p>
+
+<p><center><img src="http://farm8.staticflickr.com/7394/13131518004_f517a03418_o.png" width="680" height="212"></center></p>
+
+<p>Cent OS のコンソールでは半角になっているが、MS ゴシックなら全角になる。プロポーショナルなメイリオでは、だいたい半角で表示している。</p>
+
+<p>悩ましい・・・！</p>
+
+<p>とりあえず、Ambiguous は 1 文字として扱うのが安全そうだ。ある環境で 80 文字以上に見えていても、別の環境では 80 文字以内に見えている…ということは十分に起こりうるのだ…！</p>
+
+<h1>いろんな言語で判別したいよ</h1>
+
+<p>さて、一次情報と判定方法が分かったところで、いろんなスクリプト言語で実装するにはどうしたらいいだろう。<code>&quot;East Asian Width&quot; 言語名</code> で検索したら、それなりに情報が出てくる。</p>
+
+<h2>Python</h2>
+
+<p>一番簡単だったのが Python さん。標準モジュールの <code>unicodedata</code> に <a href="http://docs.python.org/2/library/unicodedata.html#unicodedata.east_asian_width"><code>unicodedata.east_asian_width(unichr)</code></a> なるメソッドがあった。</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">unicodedata</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">east_asian_width</span><span class="p">(</span><span class="s">u&#39;あ&#39;</span><span class="p">)</span>
+<span class="s">&#39;W&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">east_asian_width</span><span class="p">(</span><span class="s">u&#39;※&#39;</span><span class="p">)</span>
+<span class="s">&#39;A&#39;</span>
+</code></pre></div>
+<h2>PHP</h2>
+
+<p>伝家の宝刀 mb うんたらの関数群の中に、期待通り <a href="http://www.php.net/manual/en/function.mb-strwidth.php"><code>mb_strwidth()</code></a> がいた。</p>
+<div class="highlight"><pre><code class="php language-php" data-lang="php"><span class="x">echo mb_strwidth(&quot;あ&quot;); // 2</span>
+<span class="x">echo mb_strwidth(&quot;※&quot;); // 1</span>
+</code></pre></div>
+<p>Ambiguous は <code>1</code> を返すようだ。</p>
+
+<h2>Ruby</h2>
+
+<p>標準ではムリだけど、<a href="https://github.com/janlelis/unicode-display_width"><code>unicode-display_width</code></a> なるモジュールが gem にあった。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;unicode/display_width&#39;</span>
+<span class="s2">&quot;○&quot;</span><span class="o">.</span><span class="n">display_width</span> <span class="c1">#=&gt; 1</span>
+<span class="s1">&#39;一&#39;</span><span class="o">.</span><span class="n">display_width</span> <span class="c1">#=&gt; 2</span>
+</code></pre></div>
+<p>現時点では Ambiguous は全部 <code>1</code> を返しているよ、ということが TODO のところに書いてある。</p>
+
+<h2>JavaScript</h2>
+
+<p>こちらも標準ではムリだけど、<a href="https://github.com/komagata/eastasianwidth"><code>eastasianwidth</code></a> なるモジュールが npm にあがっている。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">eaw</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;eastasianwidth&#39;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eaw</span><span class="p">.</span><span class="nx">eastAsianWidth</span><span class="p">(</span><span class="s1">&#39;￦&#39;</span><span class="p">))</span> <span class="c1">// &#39;F&#39;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eaw</span><span class="p">.</span><span class="nx">eastAsianWidth</span><span class="p">(</span><span class="s1">&#39;｡&#39;</span><span class="p">))</span> <span class="c1">// &#39;H&#39;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eaw</span><span class="p">.</span><span class="nx">eastAsianWidth</span><span class="p">(</span><span class="s1">&#39;뀀&#39;</span><span class="p">))</span> <span class="c1">// &#39;W&#39;</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eaw</span><span class="p">.</span><span class="nx">length</span><span class="p">(</span><span class="s1">&#39;あいうえお&#39;</span><span class="p">))</span> <span class="c1">// 10</span>
+</code></pre></div>
+<p>ソースコードを読んだところ、Ambiguous は <code>2</code> を返している。</p>
+
+<h2>Perl</h2>
+
+<p>CPAN にある <a href="http://search.cpan.org/%7Eaudreyt/Unicode-EastAsianWidth-1.33/lib/Unicode/EastAsianWidth.pm"><code>Unicode::EastAsianWidth</code></a> を使えば、次のようにできるらしい。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl"><span class="k">use</span> <span class="nn">Unicode::</span><span class="n">EastAsianWidth</span><span class="p">;</span>
+
+<span class="nv">$_</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="mh">0x2588</span><span class="p">);</span> <span class="c1"># FULL BLOCK, an ambiguous-width character</span>
+
+<span class="sr">/\p{InEastAsianAmbiguous}/</span><span class="p">;</span> <span class="c1"># true</span>
+<span class="sr">/\p{InFullwidth}/</span><span class="p">;</span>          <span class="c1"># false</span>
+</code></pre></div>
+<p>長さやカテゴリーが返ってこない分、少し面倒そう。</p>
+
+<h1>まとめ</h1>
+
+<p>3 行でまとめちゃう。</p>
+
+<ul>
+<li>UTF-8 では半角何文字分で表示されるのかを調べるのは少し面倒になった。</li>
+<li>しかも、環境によって何文字分で表示するかは違うので、完全に調べきるのはあきらめたほうがよい。</li>
+<li>一次情報は <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> にあるが、各種スクリプト言語には便利なライブラリーを使えばよい。</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" class="hatena-bookmark-button" data-hatena-bookmark-title="全角半角混在の文章で 1 行に半角何文字分あるか調べる方法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" data-lang="ja" data-size="horizontal" data-text="全角半角混在の文章で 1 行に半角何文字分あるか調べる方法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年03月14日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-03-14-utf8-str-count.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a><span class="delimiter">, </span><a href="/ja/blog/tags/python/">Python</a><span class="delimiter">, </span><a href="/ja/blog/tags/perl/">Perl</a><span class="delimiter">, </span><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
+
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/03/07/fancy-git-bash/" rel="previous"><b>&laquo;</b><span class="title">ConEmu 突っ込んだら Git for Windows の Git Bash がカッコよくなった</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

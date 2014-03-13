@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 07 Mar 2014 01:39:19 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 14 Mar 2014 03:49:18 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,158 @@
 
 
 
+
+		<item>
+			<title>全角半角混在の文章で 1 行に半角何文字分あるか調べる方法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/</guid>
+			<pubDate>Fri, 14 Mar 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>「ソースコードは 1 行あたり 80 文字以内」とか「コミットログは横幅 72 文字以内」とか、文字数に関するルールはいろいろある。</p>
+
+<p>ルールを徹底するには機械的に判定したい。と思って、簡単なスクリプトを書こうとした瞬間、意外と「1 行あたりの文字数」をカウントするのが難しいことに気付いた。</p>
+
+<p>たとえば、「あA」は「全角 1 文字＋半角 1 文字」なので半角 3 文字分としてカウントしたい。</p>
+
+<p>しかし、UTF-8 の世界では「あA」の文字長は 2 だし、バイト数は 4 (あ=0xE38182、a=0x41) である。</p>
+
+<p>EUC-JP や Shift-JIS の時代なら、単純に「あA」は 3 バイトなので「半角 3 つ分」とすぐ分かったのだけども… (逆に文字長を調べるのが面倒だった)。</p>
+
+<p>はて、どうするか？　というのがこの記事でいいたいこと。</p>
+
+<h1>East Asian Width を見よ</h1>
+
+<p>いろいろとググった結果、Unicode の <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> を参照するとよいらしい。</p>
+
+<p><a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> で <a href="http://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt">EastAsianWidth.txt</a> という資料が紹介されている。この資料では、全ての文字の横幅が 6 つのカテゴリーに分類されている。</p>
+
+<p>そのカテゴリーが次の 6 つ。</p>
+
+<table><thead>
+<tr>
+<th>分類</th>
+<th>意味</th>
+<th>例</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>F</td>
+<td>East Asian Fullwidth</td>
+<td>Ａ (全角の A)</td>
+</tr>
+<tr>
+<td>H</td>
+<td>East Asian Halfwidth</td>
+<td>ｱ (半角のア)</td>
+</tr>
+<tr>
+<td>Na</td>
+<td>East Asian Narrow</td>
+<td>A (半角の A)</td>
+</tr>
+<tr>
+<td>W</td>
+<td>East Asian Wide</td>
+<td>ア (全角のア)</td>
+</tr>
+<tr>
+<td>A</td>
+<td>East Asian Ambiguous</td>
+<td>○☆※ (一部の記号)、Д (ロシア語)</td>
+</tr>
+<tr>
+<td>N</td>
+<td>Neutral (Not East Asian)</td>
+<td>À</td>
+</tr>
+</tbody></table>
+
+<p>たとえば、「あ」なら <code>3042;W # HIRAGANA LETTER A</code> と書いてある。カテゴリーは <code>W</code> なので、全角 （＝半角 2 文字分) だと分かる。</p>
+
+<p>ということで、<code>F</code>・<code>W</code> は全角 (＝ 2 文字分)、<code>H</code>・<code>Na</code>・<code>N</code> は半角 (＝ 1 文字) として扱えばよいわけだ。</p>
+
+<h2>Ambiguous をどうするか問題</h2>
+
+<p>で、<code>A</code> (East Asian Ambiguous) の扱いが難しい。</p>
+
+<p>例にあるような ○☆※ などの記号を見ると全角として扱いたくなる。しかし、<code>A</code> にはロシア語も含まれている。</p>
+
+<p><code>A</code> を一律に全角として扱うと、「1 行に 80 文字以上書いたら警告出すシステム」を作ると、「80 文字超えてないのに警告出るんだけどなにこれ？」とロシアの人に怒られてしまうかもしれない。</p>
+
+<p>具体例をみてみよう。ロシア語でヘンタイをあらわす「Хентай」をいくつかの環境で表示してみた。</p>
+
+<p><center><img src="http://farm8.staticflickr.com/7394/13131518004_f517a03418_o.png" width="680" height="212"></center></p>
+
+<p>Cent OS のコンソールでは半角になっているが、MS ゴシックなら全角になる。プロポーショナルなメイリオでは、だいたい半角で表示している。</p>
+
+<p>悩ましい・・・！</p>
+
+<p>とりあえず、Ambiguous は 1 文字として扱うのが安全そうだ。ある環境で 80 文字以上に見えていても、別の環境では 80 文字以内に見えている…ということは十分に起こりうるのだ…！</p>
+
+<h1>いろんな言語で判別したいよ</h1>
+
+<p>さて、一次情報と判定方法が分かったところで、いろんなスクリプト言語で実装するにはどうしたらいいだろう。<code>&quot;East Asian Width&quot; 言語名</code> で検索したら、それなりに情報が出てくる。</p>
+
+<h2>Python</h2>
+
+<p>一番簡単だったのが Python さん。標準モジュールの <code>unicodedata</code> に <a href="http://docs.python.org/2/library/unicodedata.html#unicodedata.east_asian_width"><code>unicodedata.east_asian_width(unichr)</code></a> なるメソッドがあった。</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python">&gt;&gt;&gt; import unicodedata
+&gt;&gt;&gt; unicodedata.east_asian_width(u&#39;あ&#39;)
+&#39;W&#39;
+&gt;&gt;&gt; unicodedata.east_asian_width(u&#39;※&#39;)
+&#39;A&#39;
+</code></pre></div>
+<h2>PHP</h2>
+
+<p>伝家の宝刀 mb うんたらの関数群の中に、期待通り <a href="http://www.php.net/manual/en/function.mb-strwidth.php"><code>mb_strwidth()</code></a> がいた。</p>
+<div class="highlight"><pre><code class="php language-php" data-lang="php">echo mb_strwidth(&quot;あ&quot;); // 2
+echo mb_strwidth(&quot;※&quot;); // 1
+</code></pre></div>
+<p>Ambiguous は <code>1</code> を返すようだ。</p>
+
+<h2>Ruby</h2>
+
+<p>標準ではムリだけど、<a href="https://github.com/janlelis/unicode-display_width"><code>unicode-display_width</code></a> なるモジュールが gem にあった。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">require &#39;unicode/display_width&#39;
+&quot;○&quot;.display_width #=&gt; 1
+&#39;一&#39;.display_width #=&gt; 2
+</code></pre></div>
+<p>現時点では Ambiguous は全部 <code>1</code> を返しているよ、ということが TODO のところに書いてある。</p>
+
+<h2>JavaScript</h2>
+
+<p>こちらも標準ではムリだけど、<a href="https://github.com/komagata/eastasianwidth"><code>eastasianwidth</code></a> なるモジュールが npm にあがっている。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var eaw = require(&#39;eastasianwidth&#39;);
+console.log(eaw.eastAsianWidth(&#39;￦&#39;)) // &#39;F&#39;
+console.log(eaw.eastAsianWidth(&#39;｡&#39;)) // &#39;H&#39;
+console.log(eaw.eastAsianWidth(&#39;뀀&#39;)) // &#39;W&#39;
+
+console.log(eaw.length(&#39;あいうえお&#39;)) // 10
+</code></pre></div>
+<p>ソースコードを読んだところ、Ambiguous は <code>2</code> を返している。</p>
+
+<h2>Perl</h2>
+
+<p>CPAN にある <a href="http://search.cpan.org/%7Eaudreyt/Unicode-EastAsianWidth-1.33/lib/Unicode/EastAsianWidth.pm"><code>Unicode::EastAsianWidth</code></a> を使えば、次のようにできるらしい。</p>
+<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">use Unicode::EastAsianWidth;
+
+$_ = chr(0x2588); # FULL BLOCK, an ambiguous-width character
+
+/\p{InEastAsianAmbiguous}/; # true
+/\p{InFullwidth}/;          # false
+</code></pre></div>
+<p>長さやカテゴリーが返ってこない分、少し面倒そう。</p>
+
+<h1>まとめ</h1>
+
+<p>3 行でまとめちゃう。</p>
+
+<ul>
+<li>UTF-8 では半角何文字分で表示されるのかを調べるのは少し面倒になった。</li>
+<li>しかも、環境によって何文字分で表示するかは違うので、完全に調べきるのはあきらめたほうがよい。</li>
+<li>一次情報は <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> にあるが、各種スクリプト言語には便利なライブラリーを使えばよい。</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>ConEmu 突っ込んだら Git for Windows の Git Bash がカッコよくなった</title>
@@ -640,87 +792,6 @@ o force it
 <p>要は「自分自身に RDP できませんよ」ということなんだろうけど、リモート デスクトップを有効にしてなくてもこのエラーがでてしまう…。</p>
 
 <p>ということは、接続を試みる前にクライアント側でエラーを表示しているっぽい。少し納得できないところではあるが、仕方がない。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Windows で Chef するときに PATH で混乱しないように専用のコンソールを作った</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/01/17/chef-win-path/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/01/17/chef-win-path/</guid>
-			<pubDate>Fri, 17 Jan 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>話題の <a href="http://www.getchef.com/">Chef</a> をいまさら試したくなって、手元の Windows 環境に環境を作ってみた。</p>
-
-<p><a href="http://www.getchef.com/chef/install/">http://www.getchef.com/chef/install/</a> からインストーラーをダウンロードしてインストールした。Cygwin を使うと<a href="http://dqn.sakusakutto.jp/2013/12/berkshelf_chef_gem_ruby.html">無駄にはまる</a>し、ぐぐるといっぱい出てくる「gem から入れる手順」は公式サイトでは見つからなくなっている。</p>
-
-<p>すべてデフォルトでインストールすると、<code>C:\opscode\chef</code> にファイルがいっぱい展開されていた。</p>
-
-<h1>PATH に追加される 2 つのフォルダー</h1>
-
-<p>インストーラーから Chef を入れると、<code>PATH</code> に</p>
-
-<ul>
-<li><code>C:\opscode\chef\bin</code></li>
-<li><code>C:\opscode\chef\embedded\bin</code></li>
-</ul>
-
-<p>の 2 つが追加される。</p>
-
-<p><code>C:\opscode\chef\bin</code> には Chef 関係のプログラム (<code>chef-solo</code>, <code>knife</code> など...) が入っている。</p>
-
-<p>一方、<code>C:\opscode\chef\embedded\bin</code> には UNIX 関係のプログラム (<code>ruby.exe</code>, <code>perl.exe</code>, <code>ls.exe</code>, <code>cat.exe</code> など...) が入っている。</p>
-
-<h1>ピンチ！　既存の Ruby 環境と競合！！</h1>
-
-<p>全部入りでありがたいんだけど、<code>ruby.exe</code> や <code>perl.exe</code> にパスが通ってしまうのが気持ち悪い。</p>
-
-<p>自分の環境では、Chef のやつ以外にも Ruby を <code>C:\Ruby200-x64\bin</code> にインストールしていて、そっちにも <code>PATH</code> が通った状態になっている。</p>
-
-<p>この状態で、<code>gem install knife-solo</code> すると、先にインストールしたほうの Ruby の gem が動く。自分の場合は Chef が後だったので、<code>C:\Ruby200-x64\bin</code> のほうの gem が動いた。その結果、<code>C:\Ruby64</code> の下に knife-solo が入って、おかしな状態になった。</p>
-
-<p>この環境では、Chef 側の何らかのコマンドが <code>C:\opscode\chef\embedded\bin\ruby.exe</code> を実行するつもりで <code>ruby</code> を実行したとしても、<code>C:\Ruby200-x64\bin\ruby.exe</code> が実行されてしまうわけで、変なバグに困らされる確率が高そうだ。</p>
-
-<p>何かと嫌な予感がするので、対策することにした。</p>
-
-<h1>解決法: Chef 用のコンソールを作る</h1>
-
-<p>Visual Studio を入れたら「開発者コンソール」がスタート メニューに入るし、Git for Windows でも MS-DOS から隔離された Git Bash で作業をする。</p>
-
-<p>同じように、Chef にも専用のコマンド プロンプトを用意することにした。</p>
-
-<p>ということで作ってみた。手順は 2 段階。</p>
-
-<h2>1. バッチファイルを作る</h2>
-
-<p>こちらがそのバッチファイル。これを <code>C:\opscode\chefenv.bat</code> といった名前で保存しておく。</p>
-<div class="highlight"><pre><code class="bat language-bat" data-lang="bat">@ECHO OFF
-
-SET PATH=c:\opscode\chef\bin;c:\opscode\chef\embedded\bin
-SET PATH=%PATH%;c:\windows\system32;c:\windows
-
-title Chef Env
-chef-solo -v
-</code></pre></div>
-<h2>2. ショートカットを作る</h2>
-
-<p>このファイルへのショートカットを作る。</p>
-
-<p>[リンク先] は <code>C:\Windows\System32\cmd.exe /K C:\opscode\chefenv.bat</code> に設定する (<code>/K</code> は「バッチを実行して、ウインドウを閉じない」という意味)。</p>
-
-<p>[作業フォルダー] は Chef レポジトリーのパスか、マイドキュメントのパスにでもしておくとよいだろう。</p>
-
-<p>ショートカットのファイル名は何でもよいけど、「Chefコマンド プロンプト」とでもしておいてスタートメニューに登録するなり、デスクトップに置くなり、ランチャーに登録するなりしておくとよいだろう。</p>
-
-<h1>使い方</h1>
-
-<p>ショートカットを叩くと、<code>PATH</code> が限定された状態でコマンドプロンプトが立ち上がってくれる。</p>
-
-<p><center><img src="http://farm6.staticflickr.com/5527/11980775965_c14b1872a6.jpg" width="500" height="364"></center></p>
-
-<p><code>chef-solo</code> も <code>knife</code> も実行できる。めでたし。</p>
-
-<p>ついでに、システム全体の <code>PATH</code> から <code>c:\opscode</code> 以下の 2 つを削っておくと、コマンドプロンプトを使ったときの混乱も起きなくなって幸せ。</p>
-
-<p>ぜひお試しください。</p>
 ]]></description>
 		</item>
 
