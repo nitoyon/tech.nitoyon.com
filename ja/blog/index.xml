@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 14 Mar 2014 03:49:18 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 28 Mar 2014 01:12:21 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,116 @@
 
 
 
+
+		<item>
+			<title>Git for Windows でレポジトリー上の CR LF を LF に変換する手順</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/03/28/git-crlf-to-lf/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/03/28/git-crlf-to-lf/</guid>
+			<pubDate>Fri, 28 Mar 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Git for Windows では改行コードが「レポジトリー上は LF」「ワーキング ディレクトリーは CR LF」となるように、git config の <code>core.autocrlf</code> が <code>true</code> となる状態でインストールされる (インストーラーでデフォルトの [Checkout Windows-style, commit Unix-style line endings] を選択した場合)。</p>
+
+<p>Windows 以外の文化圏の人は CR LF を見ると CR がゴミに見えるので、妥当な設定だろう。</p>
+
+<p>標準設定の <code>autocrlf</code> が <code>true</code> のときに、レポジトリー上に CR LF なファイルが紛れ込んでいないか調べたり、紛れ込んだ CR LF を LF に変換したかったのだけど、この手順が少しややこしかったので記事にまとめておく。</p>
+
+<p>(<code>autocrlf</code> を <code>false</code> にして clone したらすぐに分かる…という話なんだけど、大きなレポジトリーを clone しなおすのはストレスフルなので、その場で確認する手順を調べてみた)</p>
+
+<p>※ Git for Windows は 1.9 と 1.8.4 で検証した</p>
+
+<h1>レポジトリー上に CR LF のファイルがあるか調べたい</h1>
+
+<p>レポジトリー上のファイルの改行コードは LF で統一しているつもりなのに、CR LF のファイルが混ざりこんでたら悲しい。</p>
+
+<p><code>autocrlf</code> が <code>true</code> な状態で、レポジトリー上に CR LF のファイルが入ってないか調べるには次のようにする。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
+</code></pre></div>
+<p>オプションの補足:</p>
+
+<ul>
+<li><code>--cached</code> を指定しないと、ワーキング ディレクトリー上のファイルから CR を探してしまう。つまり、<code>core.autocrlf</code> が <code>true</code> な状態では、すべての改行がヒットしてしまう。</li>
+<li><code>-I</code> でバイナリー ファイルを無視している。</li>
+</ul>
+
+<h2>実行例</h2>
+
+<p><a href="https://gist.github.com/nitoyon/9808563">https://gist.github.com/nitoyon/9808563</a> に CRLF と LF のファイルの 2 つがあるレポジトリーを用意してみた。</p>
+
+<p><code>core.autocrlf</code> が <code>true</code> な状態で clone すると、両方のファイルが CRLF でチェックアウトされる。</p>
+
+<p>この状態で上記のコマンドを実行してみると、CR LF のほうだけが引っかかる。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
+crlf-test.txt:End of Line Character Test^M
+crlf-test.txt:^M
+crlf-test.txt:Which do you like CR LF or LF?^M
+crlf-test.txt:^M
+crlf-test.txt:This file uses &quot;CR LF&quot;!!!!^M
+crlf-test.txt:^M
+crlf-test.txt:Clone me!^M
+</code></pre></div>
+<p>めでたし。</p>
+
+<h1>レポジトリー上の CR LF を LF に変換したい</h1>
+
+<p>万が一、レポジトリー上に CR LF を発見したら、LF に統一しよう。</p>
+
+<p>こちらも <code>core.autocrlf</code> が <code>true</code> になっている状態からの手順を示しておく。</p>
+
+<ol>
+<li><p>一時的に <code>core.autocrlf</code> を <code>false</code> に設定する。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git config core.autocrlf false
+</code></pre></div></li>
+<li><p>LF でチェックアウトするために、ワーク ディレクトリーのファイルを全部削除してから、チェックアウトする (一度削除しないと反映されないことがあった!!)。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ rm -rf .
+$ git checkout .
+</code></pre></div></li>
+<li><p>CR LF になっているファイルを何らかのエディターで LF に変換する。</p></li>
+<li><p>コミットする。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git add . &amp;&amp; git commit
+</code></pre></div></li>
+<li><p><code>autocrlf</code> の設定を戻す。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git config core.autocrlf true
+</code></pre></div></li>
+</ol>
+
+<h2>実行例</h2>
+
+<p>再び、<a href="https://gist.github.com/nitoyon/9808563">https://gist.github.com/nitoyon/9808563</a> で試してみる。</p>
+
+<p>作業完了後の diff はこんな感じになる。</p>
+<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">$ git diff HEAD~
+diff --git a/crlf-test.txt b/crlf-test.txt
+index ad9608a..85a3c62 100644
+--- a/crlf-test.txt
++++ b/crlf-test.txt
+@@ -1,7 +1,7 @@
+-End of Line Character Test
+-
+-Which do you like CR LF or LF?
+-
+-This file uses &quot;CR LF&quot;!!!!
+-
+-Clone me!
++End of Line Character Test
++
++Which do you like CR LF or LF?
++
++This file uses &quot;CR LF&quot;!!!!
++
++Clone me!
+</code></pre></div>
+<p>違いが分かりにくい diff が表示されていて悲しい。git の diff では CR があると <code>^M</code> として警告してくれるはずなんだけど、<code>^M</code> が表示されるのは <code>+</code> から始まる行だけのようだ。今回のような「CR LF が LF になった」ケースでは CR があるのは <code>-</code> の行なので <code>^M</code> は表示してくれない…。</p>
+
+<p><code>--ignore-space-at-eol</code> を指定して行末スペースの変更を無視したら、diff が消え去るので、うまくいっていると信じる。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git diff --ignore-space-at-eol HEAD~
+</code></pre></div>
+<p><code>git grep</code> でも CR を見つけられなくなるので、うまくいっていると信じる。</p>
+<div class="highlight"><pre><code class="console language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
+</code></pre></div>
+<h1>まとめ</h1>
+
+<p>Windows はつらいよ。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>全角半角混在の文章で 1 行に半角何文字分あるか調べる方法</title>
@@ -745,53 +855,6 @@ o force it
 <p><a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> が頑張ってくれているおかげで、Linux と同じように Vagrant の機能を使えることがわかった。手順が面倒だったのは、ライセンス上の問題で Windows の Box がネットに落ちていないから。</p>
 
 <p>実際に使ってみると、VirtualBox がたまに落ちたり、ゲスト OS 内で <code>VirtualBoxService.exe</code> や <code>rundll32.exe aepdu.dll,AePduRunUpdate</code> が CPU を消費しまくっている現象が起きたりして悲しい。VirtualBox や Windows の問題なので、Vagrant は悪くない。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>リモート デスクトップでポート番号を指定して接続する方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/02/06/rdp-port/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/02/06/rdp-port/</guid>
-			<pubDate>Thu, 06 Feb 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Windows のリモート デスクトップは 3389 番ポートを利用している。</p>
-
-<p>通常はポート番号は変わらないんだけど、ポートフォワードで別のポート番号で待機する場合がある。</p>
-
-<p>たとえば、NAT で外に出ていく仮想マシンにリモートデスクトップで接続したい場合、ポートフォワードを使って、ゲストの 3389 番をホストの 13389 番などで公開することがある。</p>
-
-<h1>「ホスト名:ポート番号」でいける</h1>
-
-<p>13389 番で待機中のリモートデスクトップサービス接続するには、[コンピューター] の欄に <code>localhost:13389</code> と入力すればよい。</p>
-
-<p><center><img src="http://farm3.staticflickr.com/2812/12332461233_3fd4d74907.jpg" width="500" height="309"></center></p>
-
-<p>コマンドラインから接続する場合は <code>mstsc /v:localhost:13389</code> と入力する。</p>
-
-<h2>調べた手順</h2>
-
-<p>まずは、コマンドライン オプションでの指定方法を調べるために、<code>mstsc /?</code> を実行したところ、</p>
-
-<blockquote>
-<p>/v:&lt;サーバー[:ポート]&gt; -- 接続先のリモート コンピューターを指定します。</p>
-</blockquote>
-
-<p>と出てきた。</p>
-
-<p>同じ書き方を GUI でも試したらうまくいった。</p>
-
-<h2>ローカルの 3389 にポートフォワードできない問題</h2>
-
-<p>ちなみに、先ほどの例で、ゲストの 3389 番をホストの 3389 番にポートフォワードして、<code>localhost</code> に接続しようとすると</p>
-
-<blockquote>
-<p>既に進行中のコンソール セッションがあるため、リモート コンピューター上の他のコンソール セッションに接続できませんでした。</p>
-</blockquote>
-
-<p>というエラーがでて接続できない。</p>
-
-<p>要は「自分自身に RDP できませんよ」ということなんだろうけど、リモート デスクトップを有効にしてなくてもこのエラーがでてしまう…。</p>
-
-<p>ということは、接続を試みる前にクライアント側でエラーを表示しているっぽい。少し納得できないところではあるが、仕方がない。</p>
 ]]></description>
 		</item>
 
