@@ -12,15 +12,16 @@ var Site = {
 
 
 Site.archives.posts = [
+	{url: "/ja/blog/2014/04/02/d3-event-dispatch/", title: "D3.js で自作クラスにイベント発行機能を追加する"},
 	{url: "/ja/blog/2014/03/28/git-crlf-to-lf/", title: "Git for Windows でレポジトリー上の CR LF を LF に変換する手順"},
 	{url: "/ja/blog/2014/03/14/utf8-str-count/", title: "全角半角混在の文章で 1 行に半角何文字分あるか調べる方法"},
 	{url: "/ja/blog/2014/03/07/fancy-git-bash/", title: "ConEmu 突っ込んだら Git for Windows の Git Bash がカッコよくなった"},
-	{url: "/ja/blog/2014/02/25/jenkins-home-win/", title: "Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法"},
-	{url: "/ja/blog/2014/02/20/vagrant-win-guest/", title: "Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順"}
+	{url: "/ja/blog/2014/02/25/jenkins-home-win/", title: "Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法"}
 ];
 
 Site.archives.months = [
-  "201403"
+  "201404"
+, "201403"
 , "201402"
 , "201401"
 , "201312"

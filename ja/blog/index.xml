@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 28 Mar 2014 01:12:21 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 02 Apr 2014 01:27:57 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,128 @@
 
 
 
+
+		<item>
+			<title>D3.js で自作クラスにイベント発行機能を追加する</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/</guid>
+			<pubDate>Wed, 02 Apr 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>D3.js を使っていると、自作クラスのイベント発行も D3.js を使いたくなる。そんなときには <a href="https://github.com/mbostock/d3/wiki/Internals#d3_dispatch"><code>d3.dispatch</code></a> を使うとよい。</p>
+
+<h1>使う側の実装</h1>
+
+<p>イメージしやすいように、最初に使う側のコードを示しておく。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var myButton = new MyButton(d3.select(&quot;button&quot;));
+myButton.on(&quot;myclick&quot;, function(e) {
+  alert(e.name); // MyEvent
+  console.log(this, e); // MyButton, { name: &quot;MyEvent&quot;, MouseEvent }
+});
+</code></pre></div>
+<p>こんな感じで、自作の <code>MyButton</code> クラスで <code>myclick</code> イベントを発行したい。</p>
+
+<h1>MyButton の実装</h1>
+
+<p>では、さっそく <code>MyButton</code> の実装。最初はコンストラクターから。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">function MyButton(selector) {
+  // ボタンがクリックされたときに onClick を呼ぶ
+  selector.on(&#39;click&#39;, this.onClick.bind(this));
+
+  // myclick イベントを発行する dispatcher を作成
+  this.dispatcher = d3.dispatch(&quot;myclick&quot;);
+}
+</code></pre></div>
+<p><code>d3.dispatch</code> の引数に「発行したいイベント名」を渡して、dispatcher オブジェクトを取得している。複数のイベントを出す場合は <code>d3.dispatch(&quot;event1&quot;, &quot;event2&quot;);</code> のようにする。</p>
+
+<p>dispatcher オブジェクトには次の 2 種類のメソッドが定義される。</p>
+
+<ul>
+<li>イベントを発行するためのメソッド (イベント名と同じ名前)</li>
+<li>イベントを監視するための <code>on(type, listener)</code></li>
+</ul>
+
+<h2>イベント発行処理</h2>
+
+<p>イベントの発行処理からみていこう。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">MyButton.prototype.onClick = function() {
+  this.dispatcher.myclick.call(this, {
+    name: &quot;MyEvent&quot;,
+    event: d3.event
+  });
+};
+</code></pre></div>
+<p>ボタンがクリックされたときに <code>myclick</code> イベントを発行している。今回は <code>myclick</code> イベントと名付けたので、<code>dispatcher.myclick()</code> を実行すれば、<code>myclick</code> イベントが発火する。引数はそのままリスナーに渡される。</p>
+
+<p><code>Function.call()</code> を使っているのは、リスナー側で <code>this</code> が <code>dispatcher</code> ではなく <code>MyButton</code> にしたいから。</p>
+
+<h2>on の実装</h2>
+
+<p>次に <code>MyButton.prototype.on()</code> の実装。こちらは、単純に <code>dispatcher.on()</code> に中継している。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">MyButton.prototype.on = function() {
+  return this.dispatcher.on.apply(this.dispatcher, arguments);
+};
+</code></pre></div>
+<p>単純に中継しているだけなので、もっと簡略化して書けそうである。そう、<a href="https://github.com/mbostock/d3/wiki/Internals#d3_rebind"><code>d3.rebind</code></a> を使えばね。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">function MyButton(selector) {
+  selector.on(&#39;click&#39;, this.onClick.bind(this));
+  this.dispatcher = d3.dispatch(&quot;myclick&quot;);
+
+  // !!! ここが追加 !!!
+  d3.rebind(this, this.dispatcher, &quot;on&quot;);
+}
+</code></pre></div>
+<p>コンストラクターに 1 行追加したおかげで、<code>MyButton.prototype.on()</code> が不要になった。コードは短くなったが、<code>d3.rebind()</code> の学習コストが増えたので微妙なところではある。</p>
+
+<p>ちなみに、<code>d3.rebind()</code> は 11 行の短い関数。上で手で書いたのとだいたい同じ動作になるのが分かるはず。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">d3.rebind = function(target, source) {
+  var i = 1, n = arguments.length, method;
+  while (++i &lt; n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
+  return target;
+};
+function d3_rebind(target, source, method) {
+  return function() {
+    var value = method.apply(source, arguments);
+    return value === source ? target : value;
+  };
+}
+</code></pre></div>
+<p>これで目的は完遂。めでたし。</p>
+
+<p>完成後の全体のソースコードを貼っておく。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;script src=&quot;http://d3js.org/d3.v3.min.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+&lt;body&gt;
+&lt;button&gt;click me&lt;/button&gt;
+
+&lt;script&gt;
+function MyButton(selector) {
+  selector.on(&#39;click&#39;, this.onClick.bind(this));
+  this.dispatcher = d3.dispatch(&quot;myclick&quot;);
+  d3.rebind(this, this.dispatcher, &quot;on&quot;);
+}
+
+MyButton.prototype.onClick = function() {
+  this.dispatcher.myclick.call(this, {
+    name: &quot;MyEvent&quot;,
+    event: d3.event
+  });
+};
+
+var myButton = new MyButton(d3.select(&quot;button&quot;));
+myButton.on(&quot;myclick&quot;, function(e) {
+  alert(e.name); // MyEvent
+  console.log(this, e); // MyButton, { name: &quot;MyEvent&quot;, MouseEvent }
+});
+&lt;/script&gt;
+&lt;/body&gt;
+</code></pre></div>
+<h1>複数イベント登録の罠</h1>
+
+<p>D3.js のイベントで厄介な点は、1 つのイベント名に複数のイベントを登録できないところ。新しいイベントを登録したら、古いほうは消される…。DOM イベントと同じ感覚でいると混乱してしまう。</p>
+
+<p>これを回避するには <code>myclick.foo</code> や <code>myclick.bar</code> のように optional namespace をつけてイベント登録する必要がある。くわしくは <a href="https://github.com/mbostock/d3/wiki/Selections#on"><code>selection.on</code></a> を参照あれ。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Git for Windows でレポジトリー上の CR LF を LF に変換する手順</title>
@@ -385,476 +507,6 @@ $_ = chr(0x2588); # FULL BLOCK, an ambiguous-width character
 </ol>
 
 <p>とっても簡単ですね。インストーラーで設定できるようになっていると、より嬉しいので、気が向いたら pull request してみよう・・・。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Vagrant で作ったり壊したりできる Windows 環境を手に入れるまでの手順</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/02/20/vagrant-win-guest/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/02/20/vagrant-win-guest/</guid>
-			<pubDate>Thu, 20 Feb 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>最近話題の <a href="http://www.vagrantup.com/">Vagrant</a> さんは「Linux の環境を作ったり壊したりして開発とか試験が楽になるよ」と紹介されることが多いけど、Windows の環境だって作ったり壊したりしたい！</p>
-
-<p>いろいろ調べつつ環境を作ってみたので、その手順を共有しておく。</p>
-
-<p>完成イメージはこんな感じ。コマンドプロンプトから <code>vagrant up</code> をしたら VirtualBox 上に Windows Server 2012 R2 の環境が準備されて、そこにリモート デスクトップで接続している。</p>
-
-<p><center><img src="http://farm4.staticflickr.com/3750/12637326905_8f2cfe0da7.jpg" width="500" height="365"></center></p>
-
-<p>いろいろいじったあとに <code>vagrant destroy</code> したら環境は消え去って、<code>vagrant up</code> したら、また、まっさらな状態から使える。</p>
-
-<p>ちょっと注目してほしいのは、ゲスト OS の <code>C:\vagrant</code> にホスト側の <code>Vagrantfile</code> がマウントされているところ。このあたりの処理は <a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> というプラグインがうまくやってくれている。このプラグインのおかげで、Linux と同じように <code>Vagrantfile</code> を設定してやると、ホスト名を変更したり、IP アドレスを指定してネットワーク アダプターを追加したり、ホスト側の Chef のレシピを <code>vagrat provision</code> を使って、ゲスト上で走らせたりできるようになる。</p>
-
-<h1>目次</h1>
-
-<p>最初に目次をドーン。</p>
-
-<ol>
-<li>VirtualBox をインストールする</li>
-<li>Vagrant をインストールする</li>
-<li>ゲスト OS をインストールする</li>
-<li>Vagrant-Windows 用の設定を行う</li>
-<li>Base Box を作成する</li>
-<li>Base Box を試す</li>
-</ol>
-
-<p>正直いって長い。Linux ならネットに転がっている Box を使って「ハイ終わり」なんだけど、Windows の場合は自分で Box を作らなきゃいけないので、こんな長い手順になっている。</p>
-
-<p>ゲスト OS は Windows 8.1 Pro 64bit と Windows Server 2012 R2 Standard を試してみた。</p>
-
-<p>ホスト OS は Windows 8.1 Pro x64 を使っている。試してないけど Windows 以外の OS でも VirtualBox と Vagrant が動くならいけると思う。</p>
-
-<p>なるべく一次情報を併記しつつ手順を示すので、バージョンが違うときにも応用はきくはずだ。また、裏側で何が起こっているのかを調べてみたので、うまくいかないときには参考にしてほしい。</p>
-
-<p>では、さっそく行ってみよう。</p>
-
-<h1>1. VirtualBox をインストールする</h1>
-
-<p>VirtualBox を次の場所からダウンロードする。</p>
-
-<ul>
-<li><a href="https://www.virtualbox.org/wiki/Downloads">https://www.virtualbox.org/wiki/Downloads</a></li>
-</ul>
-
-<p>執筆時点で最新の 4.3.6 をインストールした。</p>
-
-<p>すべてデフォルトでインストールしたら、<code>C:\Program Files\Oracle\VirtualBox</code> にインストールされた。</p>
-
-<h3>補足</h3>
-
-<p>Vagrant が対応している VirtualBox をインストールしなきゃいけない。</p>
-
-<p><a href="http://docs.vagrantup.com/v2/virtualbox/index.html">VirtualBox Provider - Vagrant Documentation</a> に Vagrant が要求する VirtualBox のバージョンが書いてある。執筆時点 (2014年2月) は次のようになっている。</p>
-
-<blockquote>
-<p>The VirtualBox provider is compatible with VirtualBox versions 4.0.x, 4.1.x, 4.2.x, and 4.3.x.</p>
-</blockquote>
-
-<h2>パスを通す</h2>
-
-<p>Vagrant さんは <code>C:\Program Files\Oracle\VirtualBox\VBoxManage.exe</code> を使って VirtualBox に色んな指令をだす。</p>
-
-<p>パスが通ってないとエラーになるので、<code>C:\Program Files\Oracle\VirtualBox</code> にパスを通しておく。</p>
-
-<h1>2. Vagrant をインストールする</h1>
-
-<p>Vagrant のインストーラーを次の場所から取得して、すべてデフォルトでインストールする。</p>
-
-<ul>
-<li><a href="http://www.vagrantup.com/downloads.html">http://www.vagrantup.com/downloads.html</a></li>
-</ul>
-
-<p>執筆時点で最新の 1.4.3 を利用した。</p>
-
-<p><center><img src="http://farm4.staticflickr.com/3785/12637800714_643944ef04.jpg" width="500" height="390"></center></p>
-
-<p>Vagrant は <code>C:\HashiCorp\Vagrant</code> にインストールされる。自動で、<code>C:\HashiCorp\Vagrant\bin</code> にパスが通る。<code>C:\HashiCorp\Vagrant\embedded</code> に ruby や mingw などの UNIX 環境が入る。</p>
-
-<h2>Vagrant-Windows プラグイン</h2>
-
-<p>Vagrant で Windows をゲスト OS として扱うために、<a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> プラグインを導入しておく。</p>
-
-<p>コマンドプロンプトから次のコマンドを実行する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt;vagrant plugin install vagrant-windows
-Installing the &#39;vagrant-windows&#39; plugin. This can take a few minutes...
-Installed the plugin &#39;vagrant-windows (1.5.1)&#39;!
-</code></pre></div>
-<p>Vagrant-Windows の 1.5.1 がインストールされた。</p>
-
-<h3>補足</h3>
-
-<p>プラグインの gem は <code>C:\Users\username\.vagrant.d\gems\gems</code> に展開される。</p>
-
-<h1>3. ゲスト OS をインストールする</h1>
-
-<p>UNIX 系の OS だと、<a href="http://www.vagrantbox.es/">Vagrantbox.es</a> から Base Box (Vagrant 用のイメージ) を拾ってくればいいんだけど、Windows だとそうもいかない。自分で Base Box を作るところから始まる。</p>
-
-<p>Base Box を作るときの注意点は <a href="http://docs.vagrantup.com/v2/boxes/base.html">Creating a Base Box - Vagrant Documentation</a> にある。ざっと要約すると</p>
-
-<ul>
-<li>ディスク サイズは大きめにしてね。VirtualBox なら [可変サイズ] のディスクを大きめのサイズで作ってね。</li>
-<li>メモリーは大きすぎない値にしてね。ユーザーは <code>Vagrantfile</code> で変更できるんだから、512MB ぐらいにしておいてね。</li>
-<li>オーディオとか USB は無効にしてね。</li>
-<li><code>vagrant</code> というユーザー (パスワードも <code>vagrant</code>) を作ってね。<code>authorized_keys</code> に追加してね。<code>sudoers</code> に追加してね。<code>root</code> のパスワードも <code>vagrant</code> にしてね。</li>
-</ul>
-
-<p>といったことが書いてある。これに従って作業してみる。</p>
-
-<h2>仮想マシンの作成</h2>
-
-<p>次の手順で実施した。インストールメディアの ISO ファイルがあるものとする。</p>
-
-<ol>
-<li>VirtualBox を起動する。</li>
-<li>メニューから [仮想マシン] &gt; [新規] で新しい仮想マシンを作る。</li>
-<li>名前とバージョンを選択して、[次へ] を押す。
-
-<ul>
-<li>Windows Server 2012 R2 のとき: 名前は [Windows 2012 R2]、バージョンは [Windows 2012 (64bit)]。</li>
-<li>Windows 8.1 のとき: 名前は [Windows 8.1]、バージョンは [Windows 8.1 (64bit)]。</li>
-</ul></li>
-<li>メモリーは 2048MB を提案されるので、1024MB に減らして [次へ] を押す。
-
-<ul>
-<li>512MB まで減らすと、Windows 8.1 で 0xc0000017、Windows Server 2012 R2 で 0xE0000100 エラーが出て先に進めなかった。</li>
-</ul></li>
-<li>ハードドライブはデフォルトで 25GB の可変サイズで [作成]、[次へ] を押していく。</li>
-<li>新しくできた仮想マシン [Windows 2012 R2] を選択して、メニューから [仮想マシン] &gt; [設定] を選ぶ。</li>
-<li>オーディオと USB を無効にする。
-
-<ul>
-<li>[オーディオ] を選択して、[オーディオを有効化] のチェックを外す。</li>
-<li>[USB] を選択して、[USB コントローラーを有効化] のチェックを外す。</li>
-</ul></li>
-<li>ISO イメージを割り当てる。
-
-<ul>
-<li>[ストレージ] を選択する。</li>
-<li>[コントロｰラー: IDE] の下の [空] を選択する。</li>
-<li>[CD/DVD ドライブ] の右側のディスクのアイコンをクリックして、[仮想CD/DVDディスクファイルの選択...] を選ぶ。</li>
-<li>インストールメディアの ISO ファイルを選ぶ。</li>
-</ul></li>
-<li>[OK] を押して閉じる。</li>
-</ol>
-
-<h2>OS のインストール</h2>
-
-<p>引き続き、OS のインストールを行う。</p>
-
-<ol>
-<li>メニューから [仮想マシン] &gt; [起動] で仮想マシンを起動する。</li>
-<li>ISO イメージから起動するので、デフォルトの設定でインストールを始める。</li>
-<li>(2012 R2 のみ) OS の種類は [Windows Server 2012 R2 Standard (GUI 使用サーバー)] を選択して、[次へ]。</li>
-<li>インストールの種類は [カスタム: Windows のみをインストールする (詳細設定)] を選ぶ。
-
-<ul>
-<li>インストールが始まるので、しばらく待つ。</li>
-</ul></li>
-<li>アカウントのパスワードを設定する。
-
-<ul>
-<li>Windows Server 2012 R2: Administrator アカウントのパスワードを決める画面になるので、適当に入力する (この時点では &quot;vagrant&quot; は「簡単すぎる」と怒られるので設定できない)。</li>
-<li>Windows 8.1: Microsoft アカウントは登録しない。ローカルアカウントをユーザー名 vagrant、パスワード vagrant で登録する。</li>
-</ul></li>
-<li>ログオン画面になるので、作成したアカウントでログオンする。
-
-<ul>
-<li>Ctrl + Alt + Del は「右 Ctrl + Del」で入力する。メニューから [仮想マシン] &gt; [Ctrl-Alt-Delを送信] でもよい。</li>
-</ul></li>
-<li><p>Guest Additions をインストールする。</p>
-
-<ul>
-<li>メニューから [デバイス] &gt; [Guest Additions のCDイメージを挿入...] を選ぶ。</li>
-<li>D: ドライブを開いて、Guest Additions のセットアップを行う。</li>
-<li>作業が終わったら、[デバイス] &gt; [CD/DVD デバイス] &gt; [仮想ドライブからディスクを除去] でディスクを抜いておく。</li>
-</ul></li>
-</ol>
-
-<h1>4. Vagrant-Windows 用の設定を行う</h1>
-
-<p>ゲスト OS 側にいろんな設定を行う。</p>
-
-<p>Linux 側の手順でいうところの</p>
-
-<ul>
-<li><code>vagrant</code> というユーザー (パスワードも <code>vagrant</code>) を作ってね。<code>authorized_keys</code> に追加してね。<code>sudoers</code> に追加してね。<code>root</code> のパスワードも <code>vagrant</code> にしてね。</li>
-</ul>
-
-<p>の作業をやるのだが、Windows の場合は SSH ではなく WinRM を使う。</p>
-
-<p>詳しい手順は <a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> のページに書いてあるので、この手順に従って、ちまちまと作業を行う。</p>
-
-<blockquote>
-<ul>
-<li>Create a vagrant user, for things to work out of the box username and password should both be &quot;vagrant&quot;.</li>
-<li>Turn off UAC (Msconfig)</li>
-<li>Disable complex passwords</li>
-<li><a href="http://www.jppinto.com/2010/01/how-to-disable-the-shutdown-event-tracker-in-server-20032008/">Disable Shutdown Tracker</a> on Windows 2008/2012 Servers (except Core).</li>
-<li><a href="http://www.elmajdal.net/win2k8/How_to_Turn_Off_The_Automatic_Display_of_Server_Manager_At_logon.aspx">Disable &quot;Server Manager&quot; Starting at login</a> on Windows 2008/2012 Servers (except Core).</li>
-<li>Enable and configure WinRM (see below)</li>
-</ul>
-</blockquote>
-
-<h2>パスワードの複雑性を無効にする</h2>
-
-<p>Windows Server 2012 R2 のみ。</p>
-
-<ol>
-<li>サーバー マネージャーのメニューから [ツール] &gt; [ローカル セキュリティー ポリシー] を選択する。</li>
-<li>[アカウント ポリシー] &gt; [パスワードのポリシー] &gt; [複雑さの要件を満たす必要があるパスワード] をダブルクリックして [無効] に設定する。</li>
-<li>Ctrl-Alt-Del から Administrator のパスワードを <code>vagrant</code> に変更しておくとよい。</li>
-</ol>
-
-<h2>ユーザー vagrant を作成する</h2>
-
-<p>Windows Server 2012 R2 のみ。</p>
-
-<ol>
-<li>サーバー マネージャーのメニューから [ツール] &gt; [コンピューターの管理] を選択する。</li>
-<li>[システム ツール] &gt; [ローカル ユーザーとグループ] &gt; [ユーザー] を選択する。</li>
-<li>右クリックから [新しいユーザー] を選択する。</li>
-<li>ユーザーを作成する。
-
-<ul>
-<li>ユーザー名、パスワードを <code>vagrant</code> にする。</li>
-<li>[ユーザーは次回ログオン時にパスワードの変更が必要] のチェックを外す。</li>
-<li>[パスワードを無期限にする] をチェックする。</li>
-<li>[作成] ボタンを押す。</li>
-</ul></li>
-<li>管理者に変更する。
-
-<ul>
-<li>新しく作成した <code>vagrant</code> 右クリックして [プロパティ] を選択する。</li>
-<li>[所属するグループ] タブを開く。</li>
-<li><code>Administrators</code> を追加して、[Users] を削除する。</li>
-<li>[OK] ボタンを押す。</li>
-</ul></li>
-</ol>
-
-<h2>UAC を無効にする</h2>
-
-<p>Windows Server 2012 R2、Windows 8.1 共通。</p>
-
-<ol>
-<li>msconfig を起動する。たとえば、Windows + R で [ファイル名を指定して実行] を開いて、<code>msconfig</code> と入力して [OK] を押す。</li>
-<li>[ツール] タブを開いて、[UAC 設定の変更] を選択して、[起動] ボタンを押す。</li>
-<li>スライダーを一番下の [通知しない] にして、[OK] ボタンを押す。</li>
-</ol>
-
-<h2>Shutdown Tracker を無効にする</h2>
-
-<p>Windows Server 2012 R2 のみ。</p>
-
-<ol>
-<li>[ローカル グループ ポリシー エディター] を起動する。たとえば、Windows + R で [ファイル名を指定して実行] を開いて、<code>gpedit.msc</code> と入力して [OK] を押す。</li>
-<li>ツリーから [コンピューターの構成] &gt; [管理者用テンプレート] &gt; [システム] を選択する。</li>
-<li>右側のペインから [シャットダウン イベントの追跡ツールを表示する] をダブルクリックする。</li>
-<li>[未構成] を [無効] に変更して、[OK] ボタンを押す。</li>
-</ol>
-
-<h2>ログオン後にサーバー マネージャーが表示されないようにする</h2>
-
-<p>Windows Server 2012 R2 のみ。</p>
-
-<ol>
-<li>[ローカル グループ ポリシー エディター] を起動する。たとえば、Windows + R で [ファイル名を指定して実行] を開いて、<code>gpedit.msc</code> と入力して [OK] を押す。</li>
-<li>ツリーから [コンピューターの構成] &gt; [管理者用テンプレート] &gt; [システム] &gt; [サーバー マネージャー] を選択する。</li>
-<li>右側のペインから [ログオン時にサーバー マネージャーを自動的に表示しない] をダブルクリックする。</li>
-<li>[未構成] を [有効] に変更して、[OK] ボタンを押す。
-5．コマンドプロンプトから <code>gpupdate</code> を実行して、その場でポリシーを反映する。</li>
-</ol>
-
-<h2>WinRM を有効にする</h2>
-
-<p>Windows Server 2012 R2、Windows 8.1 共通。</p>
-
-<p>コマンドプロンプト上で次のコマンドを実行する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">winrm quickconfig -q
-winrm set winrm/config/winrs @{MaxMemoryPerShellMB=&quot;512&quot;}
-winrm set winrm/config @{MaxTimeoutms=&quot;1800000&quot;}
-winrm set winrm/config/service @{AllowUnencrypted=&quot;true&quot;}
-winrm set winrm/config/service/auth @{Basic=&quot;true&quot;}
-sc config WinRM start= auto
-</code></pre></div>
-<p>Windows Server 2008 では追加の設定が必要になるようなので、<a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> を参照のこと。</p>
-
-<h2>設定しておいたほうが便利そうなこと</h2>
-
-<p><a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> の手順には書いてなかったが、やっておいたほうがよいかもしれないのは次の手順。</p>
-
-<ul>
-<li>リモートデスクトップを有効にする: ヘッドレスで利用する場合は、リモートデスクトップでつなぐことになる。いずれにしても有効にしておいたほうが便利だろう。</li>
-<li>Windows Update をとめる: 自動でダウンロードしたりインストールしたりする設定は OFF にしておくと、いきなり端末が重くなって悩まされない。</li>
-</ul>
-
-<h1>4. Base Box を作成する</h1>
-
-<p>ここまでで準備は完了。ゲスト OS は電源を切っておく。</p>
-
-<p>ホスト OS 側でイメージを Base Box としてパッケージ化していく。</p>
-
-<h2>デフォルトの Vagrantfile を用意</h2>
-
-<p>Box に <code>Vagrantfile</code> を同梱したいので、次の中身を <code>Vagrantfile.txt</code> として保存しておく。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">Vagrant.configure(&quot;2&quot;) do |config|
-  config.vm.guest = :windows
-end
-</code></pre></div>
-<p>「ゲスト OS は Windows だよ」「Vagrant-Windows を使ってゲスト OS に指令をだしてね」という意味だ。</p>
-
-<p>この手順は省略してもよいんだけど、省略した場合は、プロジェクトを作るたびに上の設定を <code>Vagrantfile</code> に書く必要がある (忘れてしまうと、電源起動以外がうまく動かない)。</p>
-
-<h3>参考情報</h3>
-
-<ul>
-<li><a href="http://docs.vagrantup.com/v2/vagrantfile/">Vagrantfile - Vagrant Documentation</a>: <code>Vagrantfile</code> の優先順位について書いてある。プロジェクトごとの <code>Vagrantfile</code> に設定がない場合は、Box の <code>Vagrantfile</code> を見に行くそうだ。</li>
-</ul>
-
-<h2>vagrant package で Box を作成</h2>
-
-<p>コマンドプロンプトで次のように入力するだけ。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">C:\Users\username&gt;vagrant package --base &quot;Windows 2012 R2&quot; --vagrantfile Vagrantfile.txt
-[Windows 2012 R2] Clearing any previously set forwarded ports...
-[Windows 2012 R2] Exporting VM...
-[Windows 2012 R2] Compressing package to: C:/Users/username/package.box```
-</code></pre></div>
-<p>カレントディレクトリに <code>package.box</code> というファイル名で出力される。<code>Win2012R2.box</code> や <code>Win81.box</code> などにリネームしておくと分かりやすいだろう。</p>
-
-<h3>補足</h3>
-
-<ul>
-<li><code>Windows 2012 R2</code> の部分は VirtualBox の仮想マシン名なので、別名で作った場合は適宜変更すべし。</li>
-<li>Vagrantfile.txt が別のディレクトリーにあるときは、そこへのパスを入力すべし。</li>
-<li>Vagrantfile を同梱しない場合は、<code>--vagrantfile</code> の指定は不要。</li>
-</ul>
-
-<h3>裏側の挙動</h3>
-
-<p>それなりの時間がかかる。内部的には次のような処理をしている様子。</p>
-
-<ol>
-<li>ディスクイメージ (この時点で約 8GB) を <code>C:\Users\username\.vagrant.d\tmp</code> の下に圧縮した vmdk として出力する (4GB に圧縮)。</li>
-<li><code>box.ovf</code> と <code>Vagrantfile</code> も同じ場所に設置。</li>
-<li>tar でカレントディレクトリに <code>package.box</code> として固めて出力。</li>
-</ol>
-
-<h3>参考情報</h3>
-
-<ul>
-<li><a href="http://docs.vagrantup.com/v2/virtualbox/boxes.html">Creating a Base Box - VirtualBox Provider - Vagrant Documentation</a>: パッケージ化の方法</li>
-<li><a href="http://docs.vagrantup.com/v2/cli/package.html">vagrant package - Command-Line Interface - Vagrant Documentation</a>: <code>vagrant package</code> のコマンドライン オプション。</li>
-</ul>
-
-<h1>5. Base Box を試す</h1>
-
-<p>ここからは他の OS の Base Box を試す手順とかなり似てくる。</p>
-
-<h2>vagrant box add</h2>
-
-<p>次のコマンドで Box を作成する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; vagrant box add Win2012R2 path\to\package.box
-Downloading box from URL: file:C:/Users/username/package.box
-Extracting box...ate: 124M/s, Estimated time remaining: --:--:--)
-Successfully added box &#39;Win2012R2&#39; with provider &#39;virtualbox&#39;!
-</code></pre></div>
-<p><code>path\to\package.box</code> の部分は 4. で作成した box ファイルへのパスに置き換えて実行してね。</p>
-
-<h3>補足</h3>
-
-<p><code>package.box</code> を Web サーバー上に置いた場合は <code>vagrant box add BoxName http://example.com/package.box</code> のように指定できる。Web 上に公開された Box ファイルの情報を寄せ集めたのが <a href="http://www.vagrantbox.es/">Vagrantbox.es</a> である。</p>
-
-<h3>裏側の挙動</h3>
-
-<p><code>C:\Users\username\.vagrant.d\boxes\Win2012R2\virtualbox</code> に box ファイルの中身が展開される。</p>
-
-<h2>vagrant init</h2>
-
-<p>プロジェクトのディレクトリーを適当に作って、<code>vagrant init</code> する。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt;cd C:\Users\username\Documents
-&gt;mkdir Win2012R2
-&gt;cd Win2012R2
-&gt;vagrant init Win2012R2
-A `Vagrantfile` has been placed in this directory. You are now
-ready to `vagrant up` your first virtual environment! Please read
-the comments in the Vagrantfile as well as documentation on
-`vagrantup.com` for more information on using Vagrant.
-</code></pre></div>
-<p><code>Vagrantfile</code> がカレントディレクトリーに出力される。</p>
-
-<p>ゲスト OS の画面を表示する方法を</p>
-
-<ul>
-<li>VirtualBox のウインドウを表示する</li>
-<li>リモートデスクトップする</li>
-</ul>
-
-<p>のいずれを選ぶかに応じて、<code>Vagrantfile</code> の設定手順が変わる。</p>
-
-<p>VirtualBox のウインドウを表示する場合は、次のように <code># Don&#39;t boot with headless mode</code> の部分のコメントを取り除いておく。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">  config.vm.provider :virtualbox do |vb|
-    # Don&#39;t boot with headless mode
-    vb.gui = true
-
-    # Use VBoxManage to customize the VM. For example to change memory:
-    #vb.customize [&quot;modifyvm&quot;, :id, &quot;--memory&quot;, &quot;1024&quot;]
-  end
-</code></pre></div>
-<p>リモートデスクトップを利用する場合は、次のような設定を書いておく。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-
-  # Port forward RDP
-  config.vm.network :forwarded_port, guest: 3389, host: 13389
-
-  # ここより下は省略...
-end
-</code></pre></div>
-<p>ゲストの電源を入れたあと、ホスト上のリモートデスクトップ クライアントを立ち上げて <code>localhost:13389</code> に繋ぎに行けばよい。詳しくは <a href="/ja/blog/2014/02/06/rdp-port/">リモート デスクトップでポート番号を指定して接続する方法</a> を参照してほしい。なお、<a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> にはホスト側を <code>3389</code> とする設定例が載っていたが、それではうまく動かなかった。</p>
-
-<h2>vagrant up</h2>
-
-<p>いよいよ起動。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">&gt; vagrant up
-Bringing machine &#39;default&#39; up with &#39;virtualbox&#39; provider...
-[default] Clearing any previously set forwarded ports...
-[default] Clearing any previously set network interfaces...
-[default] Preparing network interfaces based on configuration...
-[default] Forwarding ports...
-[default] -- 3389 =&gt; 13389 (adapter 1)
-[default] Booting VM...
-[default] Waiting for machine to boot. This may take a few minutes...
-[default] Machine booted and ready!
-[default] Mounting shared folders...
-[default] -- /vagrant
-[default] VM already provisioned. Run `vagrant provision` or use `--provision` t
-o force it
-</code></pre></div>
-<p><code>vagrant up</code> すると端末が上がってくる。</p>
-
-<p><center><img src="http://farm4.staticflickr.com/3750/12637326905_8f2cfe0da7.jpg" width="500" height="365"></center></p>
-
-<h3>補足</h3>
-
-<ul>
-<li>コピーが発生するので初回は少し待つ。</li>
-<li>VirtualBox を起動しておくと、イメージが登録されて起動してくる様子を確認できる。</li>
-<li>ログオンしてみると、<code>C:\vagrant</code> にホスト側のプロジェクト ディレクトリーが見えているのが確認できる。</li>
-</ul>
-
-<h3>裏側の挙動</h3>
-
-<ul>
-<li><code>C:\Users\username\.vagrant.d\boxes\Win2012R2\virtualbox</code> の中身を <code>C:\Users\username\VirtualBox VMs</code> にコピーする。</li>
-<li>上記イメージを VirtualBox に登録して、電源が入る。</li>
-<li>プロジェクト ディレクトリーが <code>C:\vagrant</code> で見えているのは「VirtualBox の共有フォルダーの機能」と「<a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> が共有へのシンボリックリンクを作る機能」の合わせ技で実現している。シンボリックリンクは WinRM で <a href="https://github.com/WinRb/vagrant-windows/blob/v1.5.1/lib/vagrant-windows/scripts/mount_volume.ps1.erb"><code>mount_volume.ps1</code></a> を実行して作成している。</li>
-</ul>
-
-<h1>まとめ</h1>
-
-<p>以上で手順の解説は終わる。このあとは <code>Vagrantfile</code> を編集していろいろ試すとよい。</p>
-
-<p><a href="https://github.com/WinRb/vagrant-windows">Vagrant-Windows</a> が頑張ってくれているおかげで、Linux と同じように Vagrant の機能を使えることがわかった。手順が面倒だったのは、ライセンス上の問題で Windows の Box がネットに落ちていないから。</p>
-
-<p>実際に使ってみると、VirtualBox がたまに落ちたり、ゲスト OS 内で <code>VirtualBoxService.exe</code> や <code>rundll32.exe aepdu.dll,AePduRunUpdate</code> が CPU を消費しまくっている現象が起きたりして悲しい。VirtualBox や Windows の問題なので、Vagrant は悪くない。</p>
 ]]></description>
 		</item>
 

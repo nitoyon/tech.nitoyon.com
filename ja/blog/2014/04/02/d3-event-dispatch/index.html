@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>D3.js で自作クラスにイベント発行機能を追加する - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="D3.js で自作クラスにイベント発行機能を追加する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="D3.js を使っていると、自作クラスのイベント発行も D3.js を使いたくなる。そんなときには d3.dispatch を使うとよい。使う側の実装イメージしやすいように、最初に使う側のコードを示しておく。var myButton = new MyButton(d3.select(&amp;quot;button&amp;quot;));myButton.on(&amp;quot;myclick&amp;quot;, function(e) { alert(e.name); // MyEvent console.log(this, e); // MyButton, { name: &amp;quot;MyEvent&amp;quot..."/>
+	<meta property="og:image" content="http://farm4.staticflickr.com/3767/10434503954_f41fb09ca6_o.jpg"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年04月02日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
+<h1>D3.js で自作クラスにイベント発行機能を追加する</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" class="hatena-bookmark-button" data-hatena-bookmark-title="D3.js で自作クラスにイベント発行機能を追加する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" data-lang="ja" data-size="horizontal" data-text="D3.js で自作クラスにイベント発行機能を追加する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>D3.js を使っていると、自作クラスのイベント発行も D3.js を使いたくなる。そんなときには <a href="https://github.com/mbostock/d3/wiki/Internals#d3_dispatch"><code>d3.dispatch</code></a> を使うとよい。</p>
+
+<h1>使う側の実装</h1>
+
+<p>イメージしやすいように、最初に使う側のコードを示しておく。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">));</span>
+<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">alert</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span> <span class="c1">// MyEvent</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: &quot;MyEvent&quot;, MouseEvent }</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>こんな感じで、自作の <code>MyButton</code> クラスで <code>myclick</code> イベントを発行したい。</p>
+
+<h1>MyButton の実装</h1>
+
+<p>では、さっそく <code>MyButton</code> の実装。最初はコンストラクターから。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ボタンがクリックされたときに onClick を呼ぶ</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+
+  <span class="c1">// myclick イベントを発行する dispatcher を作成</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>d3.dispatch</code> の引数に「発行したいイベント名」を渡して、dispatcher オブジェクトを取得している。複数のイベントを出す場合は <code>d3.dispatch(&quot;event1&quot;, &quot;event2&quot;);</code> のようにする。</p>
+
+<p>dispatcher オブジェクトには次の 2 種類のメソッドが定義される。</p>
+
+<ul>
+<li>イベントを発行するためのメソッド (イベント名と同じ名前)</li>
+<li>イベントを監視するための <code>on(type, listener)</code></li>
+</ul>
+
+<h2>イベント発行処理</h2>
+
+<p>イベントの発行処理からみていこう。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">MyButton</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">onClick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">.</span><span class="nx">myclick</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;MyEvent&quot;</span><span class="p">,</span>
+    <span class="nx">event</span><span class="o">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>ボタンがクリックされたときに <code>myclick</code> イベントを発行している。今回は <code>myclick</code> イベントと名付けたので、<code>dispatcher.myclick()</code> を実行すれば、<code>myclick</code> イベントが発火する。引数はそのままリスナーに渡される。</p>
+
+<p><code>Function.call()</code> を使っているのは、リスナー側で <code>this</code> が <code>dispatcher</code> ではなく <code>MyButton</code> にしたいから。</p>
+
+<h2>on の実装</h2>
+
+<p>次に <code>MyButton.prototype.on()</code> の実装。こちらは、単純に <code>dispatcher.on()</code> に中継している。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">MyButton</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">on</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">.</span><span class="nx">on</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>単純に中継しているだけなので、もっと簡略化して書けそうである。そう、<a href="https://github.com/mbostock/d3/wiki/Internals#d3_rebind"><code>d3.rebind</code></a> を使えばね。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
+
+  <span class="c1">// !!! ここが追加 !!!</span>
+  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="s2">&quot;on&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>コンストラクターに 1 行追加したおかげで、<code>MyButton.prototype.on()</code> が不要になった。コードは短くなったが、<code>d3.rebind()</code> の学習コストが増えたので微妙なところではある。</p>
+
+<p>ちなみに、<code>d3.rebind()</code> は 11 行の短い関数。上で手で書いたのとだいたい同じ動作になるのが分かるはず。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">source</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">method</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">++</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">n</span><span class="p">)</span> <span class="nx">target</span><span class="p">[</span><span class="nx">method</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">=</span> <span class="nx">d3_rebind</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">source</span><span class="p">,</span> <span class="nx">source</span><span class="p">[</span><span class="nx">method</span><span class="p">]);</span>
+  <span class="k">return</span> <span class="nx">target</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="kd">function</span> <span class="nx">d3_rebind</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">source</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">method</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">source</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">value</span> <span class="o">===</span> <span class="nx">source</span> <span class="o">?</span> <span class="nx">target</span> <span class="o">:</span> <span class="nx">value</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>これで目的は完遂。めでたし。</p>
+
+<p>完成後の全体のソースコードを貼っておく。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://d3js.org/d3.v3.min.js&quot;</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;button&gt;</span>click me<span class="nt">&lt;/button&gt;</span>
+
+<span class="nt">&lt;script&gt;</span>
+<span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
+  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="s2">&quot;on&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">MyButton</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">onClick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">.</span><span class="nx">myclick</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;MyEvent&quot;</span><span class="p">,</span>
+    <span class="nx">event</span><span class="o">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">));</span>
+<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">alert</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span> <span class="c1">// MyEvent</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: &quot;MyEvent&quot;, MouseEvent }</span>
+<span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</code></pre></div>
+<h1>複数イベント登録の罠</h1>
+
+<p>D3.js のイベントで厄介な点は、1 つのイベント名に複数のイベントを登録できないところ。新しいイベントを登録したら、古いほうは消される…。DOM イベントと同じ感覚でいると混乱してしまう。</p>
+
+<p>これを回避するには <code>myclick.foo</code> や <code>myclick.bar</code> のように optional namespace をつけてイベント登録する必要がある。くわしくは <a href="https://github.com/mbostock/d3/wiki/Selections#on"><code>selection.on</code></a> を参照あれ。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" class="hatena-bookmark-button" data-hatena-bookmark-title="D3.js で自作クラスにイベント発行機能を追加する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" data-lang="ja" data-size="horizontal" data-text="D3.js で自作クラスにイベント発行機能を追加する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年04月02日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-04-02-d3-event-dispatch.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/11/07/k-means/">K-means 法を D3.js でビジュアライズしてみた</a></li>
+
+<li><a href="/ja/blog/2013/10/29/d3js-svg-line/">D3.js の d3.svg.line() を試してみた</a></li>
+
+<li><a href="/ja/blog/2013/10/24/d3js/">D3.js の Data-Driven な DOM 操作がおもしろい</a></li>
+
+<li><a href="/ja/blog/2013/06/27/node-yield/">Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</a></li>
+
+<li><a href="/ja/blog/2013/02/15/viewport/">これがスマートフォン向けサイトを作るときの viewport 設定３パターンだ</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/03/28/git-crlf-to-lf/" rel="previous"><b>&laquo;</b><span class="title">Git for Windows でレポジトリー上の CR LF を LF に変換する手順</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
