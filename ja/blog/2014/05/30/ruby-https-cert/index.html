@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Ruby で HTTPS 接続するときの証明書で悩んだ話 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Ruby で HTTPS 接続するときの証明書で悩んだ話"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="flickr の API が HTTPS のみになるというので、以前作ったスクリプトに手を入れようとしたら無駄に手こずったので、ググって得た知見をメモしておく。Ruby 1.8 系で証明書を検証しない問題上記のスクリプトは、さくらのレンタルサーバーにて Ruby で動かしている。2014 年にどうかという話だけど、Ruby のバージョンは 1.8.7 である・・・。Net::HTTP で https に接続したらwarning: peer certificate won&amp;#39;t be verified in this SSL sessionという警告が出てきて困ったので調べてみた。つ..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年05月30日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a></div>
+
+<h1>Ruby で HTTPS 接続するときの証明書で悩んだ話</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby で HTTPS 接続するときの証明書で悩んだ話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" data-lang="ja" data-size="horizontal" data-text="Ruby で HTTPS 接続するときの証明書で悩んだ話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>flickr の API が HTTPS のみになるというので、<a href="/ja/blog/2012/11/06/flickr-auto-update/">以前作ったスクリプト</a>に手を入れようとしたら無駄に手こずったので、ググって得た知見をメモしておく。</p>
+
+<h1>Ruby 1.8 系で証明書を検証しない問題</h1>
+
+<p>上記のスクリプトは、さくらのレンタルサーバーにて Ruby で動かしている。</p>
+
+<p>2014 年にどうかという話だけど、Ruby のバージョンは 1.8.7 である・・・。</p>
+
+<p>Net::HTTP で https に接続したら</p>
+
+<blockquote>
+<p>warning: peer certificate won&#39;t be verified in this SSL session</p>
+</blockquote>
+
+<p>という警告が出てきて困ったので調べてみた。</p>
+
+<p>つかったコードはこんなやつ。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
+<span class="n">https</span> <span class="o">=</span> <span class="ss">Net</span><span class="p">:</span><span class="ss">:HTTP</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+<span class="n">https</span><span class="o">.</span><span class="n">use_ssl</span> <span class="o">=</span> <span class="kp">true</span>
+<span class="n">https</span><span class="o">.</span><span class="n">start</span> <span class="p">{</span> <span class="o">|</span><span class="n">h</span><span class="o">|</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2>警告が出る理由</h2>
+
+<p>Ruby 1.8 の時点では上記のようなコードで HTTPS 接続したときには、デフォルトでは証明書を検証しないポリシーになっていた。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">    <span class="k">unless</span> <span class="vi">@ssl_context</span><span class="o">.</span><span class="n">verify_mode</span>
+      <span class="nb">warn</span> <span class="s2">&quot;warning: peer certificate won&#39;t be verified in this SSL session&quot;</span>
+      <span class="vi">@ssl_context</span><span class="o">.</span><span class="n">verify_mode</span> <span class="o">=</span> <span class="ss">OpenSSL</span><span class="p">:</span><span class="ss">:SSL</span><span class="o">::</span><span class="no">VERIFY_NONE</span>
+    <span class="k">end</span>
+</code></pre></div>
+<p>(<a href="https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566">https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566</a> より)</p>
+
+<p>デフォルトで証明書検証しないというのは罠なので、そのことを教えようとしている warning のようだ。</p>
+
+<h2>警告を消す方法</h2>
+
+<p>上のコードをみたら分かる通り、明示的にポリシーを指定すれば警告は消える。</p>
+
+<ul>
+<li>証明書を検証したい場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_PEER</code> を追加する</li>
+<li>証明書を検証したくない場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_NONE</code> を追加する</li>
+</ul>
+
+<h2>1.9 系で変わってる</h2>
+
+<p>ちなみに、「デフォルトでは証明書を検証しない」という挙動は、1.9 系では<a href="https://github.com/ruby/ruby/commit/c6920177f3e561f779f54534e511f0c9f0de6edd">修正されている</a>。</p>
+
+<h1>ルート証明書どうするの問題</h1>
+
+<p>証明書を検証する設定にしたら、「証明書の検証に失敗したぜ」というような例外がでるようになった。</p>
+
+<blockquote>
+<p>OpenSSL::SSL::SSLError: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</p>
+</blockquote>
+
+<p>これはどうも、自分の環境にルート証明書が正しく入ってないっぽい。</p>
+
+<p>いかんせんレンタルサーバーなので、何ともできない。仕方がないので、どこかからルート証明書を取ってくることにした。</p>
+
+<p>ググると <a href="http://curl.haxx.se/docs/caextract.html">http://curl.haxx.se/docs/caextract.html</a> が有名っぽい。cURL の人が mozilla.org のデータを PEM 形式に変換してくれているヤツ。</p>
+
+<p>ここにある cacert.pem を拾ってきて、<code>ca_file</code> に cacert.pem のパスを指定すればおしまい。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
+<span class="n">https</span> <span class="o">=</span> <span class="ss">Net</span><span class="p">:</span><span class="ss">:HTTP</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+<span class="n">https</span><span class="o">.</span><span class="n">use_ssl</span> <span class="o">=</span> <span class="kp">true</span>
+<span class="n">https</span><span class="o">.</span><span class="n">verify_mode</span> <span class="o">=</span> <span class="ss">OpenSSL</span><span class="p">:</span><span class="ss">:SSL</span><span class="o">::</span><span class="no">VERIFY_PEER</span>
+<span class="n">https</span><span class="o">.</span><span class="n">ca_file</span> <span class="o">=</span> <span class="s1">&#39;/path/to/cacert.pem&#39;</span>
+<span class="n">https</span><span class="o">.</span><span class="n">start</span> <span class="p">{</span> <span class="o">|</span><span class="n">h</span><span class="o">|</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>まとめ</h1>
+
+<p>新しい OS を新規セットアップした場合はたぶんまったく問題にならないであろうことに苦しめられつつ、以上の無駄な知見を得た。</p>
+
+<p>flickr の更新用に使っていた flickraw というライブラリーは <code>verify_mode</code> や <code>ca_file</code> を指定するオプションがなかったので、<a href="https://github.com/hanklords/flickraw/pull/75">「追加してね」という pull request</a> を投げたらマージしてもらえた。めでたし。</p>
+
+<p>あと、<a href="http://www.happytrap.jp/blogs/2010/02/23/2919/">Ruby 「warning: peer certificate won&#8217;t be verified in this SSL session」 | HAPPY*TRAP</a> が非常に役に立った。ありがたや。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" class="hatena-bookmark-button" data-hatena-bookmark-title="Ruby で HTTPS 接続するときの証明書で悩んだ話 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" data-lang="ja" data-size="horizontal" data-text="Ruby で HTTPS 接続するときの証明書で悩んだ話 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年05月30日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-05-30-ruby-https-cert.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/ruby/">Ruby</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2014/03/14/utf8-str-count/">全角半角混在の文章で 1 行に半角何文字分あるか調べる方法</a></li>
+
+<li><a href="/ja/blog/2013/12/09/setctime/">Windows でファイル作成日時をスクリプト言語から操作するために setctime.exe を作った</a></li>
+
+<li><a href="/ja/blog/2012/11/06/flickr-auto-update/">Flickr の Set 内の写真一覧を更新する Ruby スクリプトを作った</a></li>
+
+<li><a href="/ja/blog/2012/10/29/liquid-drop/">Ruby の Liquid でテンプレートに値を渡すパターン４つ</a></li>
+
+<li><a href="/ja/blog/2008/12/02/ubygems/">ubygems</a></li>
+
+<li><a href="/ja/blog/2008/11/09/utf8-normalize/">Ruby で UTF-8 の文字化け部分を取り除く</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/04/02/d3-event-dispatch/" rel="previous"><b>&laquo;</b><span class="title">D3.js で自作クラスにイベント発行機能を追加する</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

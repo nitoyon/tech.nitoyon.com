@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 02 Apr 2014 01:27:57 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 30 May 2014 02:26:29 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,92 @@
 
 
 
+
+		<item>
+			<title>Ruby で HTTPS 接続するときの証明書で悩んだ話</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/</guid>
+			<pubDate>Fri, 30 May 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>flickr の API が HTTPS のみになるというので、<a href="/ja/blog/2012/11/06/flickr-auto-update/">以前作ったスクリプト</a>に手を入れようとしたら無駄に手こずったので、ググって得た知見をメモしておく。</p>
+
+<h1>Ruby 1.8 系で証明書を検証しない問題</h1>
+
+<p>上記のスクリプトは、さくらのレンタルサーバーにて Ruby で動かしている。</p>
+
+<p>2014 年にどうかという話だけど、Ruby のバージョンは 1.8.7 である・・・。</p>
+
+<p>Net::HTTP で https に接続したら</p>
+
+<blockquote>
+<p>warning: peer certificate won&#39;t be verified in this SSL session</p>
+</blockquote>
+
+<p>という警告が出てきて困ったので調べてみた。</p>
+
+<p>つかったコードはこんなやつ。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">require &#39;net/https&#39;
+https = Net::HTTP.new(&#39;www.google.com&#39;, 443)
+https.use_ssl = true
+https.start { |h|
+}
+</code></pre></div>
+<h2>警告が出る理由</h2>
+
+<p>Ruby 1.8 の時点では上記のようなコードで HTTPS 接続したときには、デフォルトでは証明書を検証しないポリシーになっていた。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">    unless @ssl_context.verify_mode
+      warn &quot;warning: peer certificate won&#39;t be verified in this SSL session&quot;
+      @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+</code></pre></div>
+<p>(<a href="https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566">https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566</a> より)</p>
+
+<p>デフォルトで証明書検証しないというのは罠なので、そのことを教えようとしている warning のようだ。</p>
+
+<h2>警告を消す方法</h2>
+
+<p>上のコードをみたら分かる通り、明示的にポリシーを指定すれば警告は消える。</p>
+
+<ul>
+<li>証明書を検証したい場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_PEER</code> を追加する</li>
+<li>証明書を検証したくない場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_NONE</code> を追加する</li>
+</ul>
+
+<h2>1.9 系で変わってる</h2>
+
+<p>ちなみに、「デフォルトでは証明書を検証しない」という挙動は、1.9 系では<a href="https://github.com/ruby/ruby/commit/c6920177f3e561f779f54534e511f0c9f0de6edd">修正されている</a>。</p>
+
+<h1>ルート証明書どうするの問題</h1>
+
+<p>証明書を検証する設定にしたら、「証明書の検証に失敗したぜ」というような例外がでるようになった。</p>
+
+<blockquote>
+<p>OpenSSL::SSL::SSLError: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</p>
+</blockquote>
+
+<p>これはどうも、自分の環境にルート証明書が正しく入ってないっぽい。</p>
+
+<p>いかんせんレンタルサーバーなので、何ともできない。仕方がないので、どこかからルート証明書を取ってくることにした。</p>
+
+<p>ググると <a href="http://curl.haxx.se/docs/caextract.html">http://curl.haxx.se/docs/caextract.html</a> が有名っぽい。cURL の人が mozilla.org のデータを PEM 形式に変換してくれているヤツ。</p>
+
+<p>ここにある cacert.pem を拾ってきて、<code>ca_file</code> に cacert.pem のパスを指定すればおしまい。</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">require &#39;net/https&#39;
+https = Net::HTTP.new(&#39;www.google.com&#39;, 443)
+https.use_ssl = true
+https.verify_mode = OpenSSL::SSL::VERIFY_PEER
+https.ca_file = &#39;/path/to/cacert.pem&#39;
+https.start { |h|
+}
+</code></pre></div>
+<h1>まとめ</h1>
+
+<p>新しい OS を新規セットアップした場合はたぶんまったく問題にならないであろうことに苦しめられつつ、以上の無駄な知見を得た。</p>
+
+<p>flickr の更新用に使っていた flickraw というライブラリーは <code>verify_mode</code> や <code>ca_file</code> を指定するオプションがなかったので、<a href="https://github.com/hanklords/flickraw/pull/75">「追加してね」という pull request</a> を投げたらマージしてもらえた。めでたし。</p>
+
+<p>あと、<a href="http://www.happytrap.jp/blogs/2010/02/23/2919/">Ruby 「warning: peer certificate won&#8217;t be verified in this SSL session」 | HAPPY*TRAP</a> が非常に役に立った。ありがたや。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>D3.js で自作クラスにイベント発行機能を追加する</title>
@@ -462,51 +548,6 @@ $_ = chr(0x2588); # FULL BLOCK, an ambiguous-width character
 <li>タブ化して、色とかフォントがキレイになるだけでもメリットある。</li>
 <li>他にも便利な機能はいっぱいありそう。</li>
 </ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>Windows の Jenkins で JENKINS_HOME を別のフォルダーに変更する方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/02/25/jenkins-home-win/</guid>
-			<pubDate>Tue, 25 Feb 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Jenkins を Windows 環境に MSI ファイルで導入すると、デフォルトでは <code>C:\Program Files (x86)</code> にインストールされる (64 ビットの場合)。</p>
-
-<p>Java の実行環境を同梱してくれていたり、自動でサービスに登録してくれたりして嬉しいのだけど、気になるのが <code>JENKINS_HOME</code> が <code>C:\Program Files (x86)\Jenkins</code> になってしまう点。ジョブやワークスペース、プラグインなどのデータなどが <code>Program Files</code> の下に置かれてしまう。Windows 的な作法では「アプリケーションのデータは <code>ProgramData</code> や <code>AppData</code> に置きましょう」となっているので少し気持ち悪い。</p>
-
-<p><code>JENKINS_HOME</code> を変更するには環境変数を設定したらいけそうなんだけど、MSI から導入した場合は環境変数ではなく <code>jenkins.xml</code> の値が優先されるようだ (jar から直接実行する場合は未確認)。</p>
-
-<p>ということで、「MSI から導入した Jenkins で <code>JENKINS_HOME</code> を変更する手順」をまとめておく。Jenkins のバージョンは 1.550。</p>
-
-<p>ここでは、<code>JENKINS_HOME</code> を <code>C:\ProgramData\Jenkins</code> に変更するものとする。</p>
-
-<ol>
-<li>Jenkins サービスをとめる。</li>
-<li><p>インストール フォルダーの <code>jenkins.xml</code> を開いて</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%BASE%&quot;/&gt;
-</code></pre></div>
-<p>を次のように書き換える (改行コードが LF なので、メモ帳ではできなくはないが探すのが少し大変)。</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%ProgramData%\Jenkins&quot;/&gt;
-</code></pre></div></li>
-<li><p>インストール フォルダーの次のファイル・フォルダー<strong>以外</strong>を <code>%ProgramData%\Jenkins</code> に<strong>移動</strong>する (コピーだと、<code>jobs</code> 内にシンボリックリンクがあった場合に壊れてしまうので、必ず「移動」すること)。</p>
-
-<ul>
-<li><code>jre</code> フォルダー</li>
-<li><code>jenkins.err.log</code></li>
-<li><code>jenkins.exe</code></li>
-<li><code>jenkins.exe.config</code></li>
-<li><code>jenkins.out.log</code></li>
-<li><code>jenkins.war</code></li>
-<li><code>jenkins.war.bak</code></li>
-<li><code>jenkins.war.tmp</code></li>
-<li><code>jenkins.wrapper.log</code></li>
-<li><code>jenkins.xml</code></li>
-</ul></li>
-<li><p>Jenkins サービスを開始する。</p></li>
-<li><p><code>http://localhost:8080/systemInfo</code> から <code>JEKNINS_HOME</code> が設定した値になっていることを確認する。ジョブやプラグインなどの情報が引き継がれているかどうかも合わせて確認する。</p></li>
-</ol>
-
-<p>とっても簡単ですね。インストーラーで設定できるようになっていると、より嬉しいので、気が向いたら pull request してみよう・・・。</p>
 ]]></description>
 		</item>
 
