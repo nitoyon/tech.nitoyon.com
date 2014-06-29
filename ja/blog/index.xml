@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 30 May 2014 02:26:29 +0000</lastBuildDate>
+		<lastBuildDate>Mon, 30 Jun 2014 02:05:50 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,171 @@
 
 
 
+
+		<item>
+			<title>Vue.js が data に渡した値を激しく書き換える件について</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/</guid>
+			<pubDate>Mon, 30 Jun 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>最近、JavaScript の MV* フレームワークの中で <a href="http://vuejs.org/">Vue.js</a> が少しずつ注目を浴びてきているようであります。</p>
+
+<ul>
+<li><a href="http://www.infiniteloop.co.jp/blog/2014/06/5min_vuejs/">5分でわかるVue.jsと、jQueryで頑張ってはいけない理由 | 株式会社インフィニットループ技術ブログ</a></li>
+<li><a href="http://qiita.com/icoxfog417/items/49f7301be502bc2ad897">Vue.jsから手軽に始めるJavaScriptフレームワーク - Qiita</a></li>
+<li><a href="http://mizchi.hatenablog.com/entry/2014/02/13/153742">軽量でパワフルなデータバインディングMVVM, vue.jsで遊んでみた - mizchi&#39;s blog</a></li>
+</ul>
+
+<p>そんなわけで、自分も Vue.js (v0.10.5) を触ってみたのですが、<code>data</code> で渡した値を激しく書き換えるところに面食らったので記事にしておきます。</p>
+
+<h1>自作クラスのオブジェクトを Vue.js に渡すと壊される</h1>
+
+<p>何らかのビジネスロジックを持ったモデルを作って、それを Vue.js のデータバインディングで HTML に反映しようすると破綻します。</p>
+
+<p>簡単な例として、よくある <code>Animal</code> クラスを作ったとしましょう。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">function Animal(name) {
+  this.name = name;
+};
+Animal.prototype.say = function() {
+  console.log(this.name);
+};
+
+var dog = new Animal(&#39;dog&#39;);
+dog.bark(); // I&#39;m a dog
+</code></pre></div>
+<p>まぁ、当然動きます。</p>
+
+<p>では、<code>dog</code> をデータバインディングで HTML に表示してみます。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html">&lt;body&gt;
+&lt;p&gt;{{animal.name}}&lt;/p&gt;
+&lt;script src=&quot;vue.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+function Animal(name) {
+  this.name = name;
+};
+Animal.prototype.bark = function() {
+  console.log(&quot;I&#39;m a &quot; + this.name);
+};
+
+var dog = new Animal(&#39;dog&#39;);
+dog.bark(); // I&#39;m a dog
+
+new Vue({
+  el: &quot;body&quot;,
+  data: { animal: dog }
+});
+&lt;/script&gt;
+&lt;/body&gt;
+</code></pre></div>
+<p>期待通り、<code>{{animal.name}}</code> の部分が <code>dog</code> になります。</p>
+
+<p>JavaScript コンソールにて、<code>dog.name = &quot;dog!!!&quot;</code> とすると、HTML は <code>dog!!!</code> に書き換わります。ちゃんと動いてるようにみえますね。</p>
+
+<p>しかし・・・JavaScript コンソールで <code>dog.bark()</code> と入力すると・・・。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3912/14348658487_b188ef6abc_o.png" width="477" height="195"></center></p>
+
+<p>さっきまで動いていたコードが動かなくなりました・・・。恐怖！</p>
+
+<h2>激しく書き換えられた犬と書き換えられる前の猫</h2>
+
+<p>Vue.js では、data に渡した値を書き換えます。激しく書き換えます。</p>
+
+<p>ためしに、dog を表示してみます。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>ははは。プロトタイプ (<code>__proto__</code>) が別のオブジェクトになってしまっていますよ。<code>bark()</code> がなくてエラーになるのも無理はありません。</p>
+
+<p>ちなみに、普通にインスタンス化した猫はこうなってますよ。当たり前だけども、<code>bark()</code> あります。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3842/14533637664_2e67ac0ca8_o.png" width="410" height="104"></center></p>
+
+<p><a href="http://vuejs.org/">Vue.js</a> さんは、<code>new Vue()</code> の <code>data</code> に渡した値を書き換えてしまうのです。恐ろしい子！</p>
+
+<h2>なぜにあなたは書き換える？</h2>
+
+<p>Vue.js は <code>data</code> に変更が加わったことを検知するために、data の値を書き換えているようです。</p>
+
+<p>たとえば、<code>dog.name</code> というキーは ECMAScript 5 のプロパティーに置き換えられます。<code>get name</code> と <code>set name</code> が定義されてますね。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>このようにすることで、<code>dog.name</code> が書き換えられた瞬間に <code>set name</code> が呼ばれるので、Vue.js はデータの書き換えを検知するわけでございます。</p>
+
+<p>じゃ、なんで prototype まで置き換えるのか。</p>
+
+<p><a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> によると、ECMAScript 5 ではキーの追加・削除は検知できないので、<code>$add</code> と <code>$delete</code> を使ってくれ、ということのようです (ざっくりと日本語訳してみた)。</p>
+
+<blockquote>
+<p>In ECMAScript 5 there is no way to detect when a new property is added to an Object, or when a property is deleted from an Object. To counter for that, observed objects will be augmented with two methods: $add(key, value) and $delete(key). These methods can be used to add / delete properties from observed objects while triggering the desired View updates.</p>
+
+<blockquote>
+<p>ECMAScript 5 では、Object に対するプロパティーの追加や削除を検出する方法がないんだぜ。だから、監視対象の Object には $add(key, value) と $delete(key) の 2 つのメソッドを追加するんだよ。このメソッドを使ってプロパティーを追加・削除すると、View への反映をトリガーできるんだぜ。</p>
+</blockquote>
+</blockquote>
+
+<p><code>$add</code> と <code>$delete</code> を追加するのには、そういう理由があったわけですね。</p>
+
+<p>さて、自作のクラスを渡せないのは明らかにバグっぽいので修正したいところではあります。次の図でいうところの</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>一番下の <code>__proto__</code> が <code>Animal.prototype</code> を指してくれれば動きそうです。Vue.js のソースを読んだ感じでは <a href="https://github.com/yyx990803/vue/blob/v0.10.5/dist/vue.js#L2386"><code>ObjProxy</code> の生成部分</a> で少し頑張れば対処できそうな感じはします。</p>
+
+<h1>Array も激しく書き換える</h1>
+
+<p>Vue.js が激しく書き換えるのは Object だけではありません。配列も猛烈に書き換えます。</p>
+
+<p>そのことは、ドキュメントの <a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> からも伝わってきます (先ほどと同じくざっくりと日本語訳してる)。</p>
+
+<blockquote>
+<p>Under the hood, Vue.js intercepts an observed Array&#39;s mutating methods (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) so they will also trigger View updates.</p>
+
+<p>You should avoid directly setting elements of a data-bound Array with indices, because those changes will not be picked up by Vue.js. Instead, use the agumented <code>$set()</code> method.</p>
+
+<blockquote>
+<p>内部的に、Vue.js は Array の状態を変更するメソッド (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) の呼び出しを監視して、View が更新されるように処理をしてるんだぜ。</p>
+
+<p>インデックスを指定しての値を変更すると Vue.js が検知できないのでやめてほしいよ。その代り、`$set() メソッドってのを用意したから、こっちを使ってほしいんだぜ。</p>
+</blockquote>
+</blockquote>
+
+<p>まぁ、こんな感じで、扱うには少し工夫が必要であります。</p>
+
+<h1>data に渡した Object が console.log() で見にくい問題の対処方法</h1>
+
+<p><code>data</code> に渡した値を <code>console.log()</code> すると getter, setter の山になるわけで、値がどうなっているかを確認しにくいですね。</p>
+
+<p>これをなんとかするには <code>JSON.stringify</code> を使う回避方法が <a href="http://vuejs.org/api/instantiation-options.html#data">Instantiation Options - vue.js</a> にて示されております。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var vm = new Vue({
+  el: &quot;body&quot;,
+  data: {
+    animal: { name: &quot;foo&quot; }
+  }
+});
+
+console.log(JSON.stringify(vm.$data));
+// {&quot;animal&quot;:{&quot;name&quot;:&quot;foo&quot;}} 
+</code></pre></div>
+<p>やや面倒だし、巨大なデータを渡したときは見つけるのが大変そうであります。</p>
+
+<h1>Object.observe() に期待</h1>
+
+<p>こんな面倒なことになっているのも、Vue.js が ECMAScript 5 の世界で頑張っているからです。</p>
+
+<p>ECMAScript 6 の <code>Object.observe()</code> が使える世界になれば、Object や Array の置き換えも不要になるし、Vue.js の設計もシンプルになることでしょう。</p>
+
+<p><a href="http://vuejs.org/">Vue.js</a> の <a href="https://github.com/yyx990803/vue/issues/78">ロードマップ</a> には 0.11 で <code>Object.observe()</code> が使えるなら使うようにする、と書いてあります。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li><a href="http://vuejs.org/">Vue.js</a> はオブジェクトの監視を行うために、Object のキーをプロパティーに置き換えたり、<code>Array.push()</code> を置き換えたりする</li>
+<li>この努力は ECMAScript 5 の限界ゆえ</li>
+<li>ECMAScript 6 で <code>Object.observe()</code> がやってきたら、<a href="http://vuejs.org/">Vue.js</a> の実装もシンプルになるし、もっと楽な API になる</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>Ruby で HTTPS 接続するときの証明書で悩んだ話</title>
@@ -484,69 +649,6 @@ $_ = chr(0x2588); # FULL BLOCK, an ambiguous-width character
 <li>UTF-8 では半角何文字分で表示されるのかを調べるのは少し面倒になった。</li>
 <li>しかも、環境によって何文字分で表示するかは違うので、完全に調べきるのはあきらめたほうがよい。</li>
 <li>一次情報は <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> にあるが、各種スクリプト言語には便利なライブラリーを使えばよい。</li>
-</ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>ConEmu 突っ込んだら Git for Windows の Git Bash がカッコよくなった</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/03/07/fancy-git-bash/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/03/07/fancy-git-bash/</guid>
-			<pubDate>Fri, 07 Mar 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Git for Windows の Git Bash の配色がイマイチだなーと思ってググってたら、<a href="http://sourceforge.net/projects/console/">Console2</a> だとか <a href="https://code.google.com/p/conemu-maximus5/">ConEmu</a> を使うと楽にできるっぽいことが、Stack Overflow とか英語のブログで見つかった。</p>
-
-<p>そこで、<a href="https://code.google.com/p/conemu-maximus5/">ConEmu</a> を試してみたら色々と幸せになった (<a href="http://sourceforge.net/projects/console/">Console2</a> はそのままでは日本語が使えなかった。解決方法はあるらしいけど…)。</p>
-
-<p>左が Git Bash、右が ConEmu さん。</p>
-
-<p><center><img src="http://farm8.staticflickr.com/7428/12971385585_16c5ed8db4_o.png" width="600" height="503"></center></p>
-
-<p>アンチエイリアス効いてるし、色もオサレ。</p>
-
-<h1>起動から色を設定するまで</h1>
-
-<p><a href="https://code.google.com/p/conemu-maximus5/">ConEmu</a> を起動すると、初回は設定の保存場所などを確認される。お好みで答えて [OK] を押すと、タブ化した MS-DOS プロンプトみたいなのが立ち上がってくる。</p>
-
-<p>[Win] + [N] を押すと新しいタブを開始できる。</p>
-
-<p><center><img src="http://farm3.staticflickr.com/2146/12971527963_69fbb4b171.jpg" width="500" height="364"></center></p>
-
-<p>上のキャプチャーのように、どんな環境のタブを開始するかをメニューで聞いてきている (<code>{cmd}</code> やら <code>{cmd (Admin)}</code> やら <code>{PowerShell}</code> やら <code>{Git bash}</code> やら <code>{Putty}</code> やら…。システムにインストールされてるものを自動で検知して、立ち上げられるようになっているようだ)。</p>
-
-<p><code>{Git Bash}</code> を選ぶと、Git Bash が新しいタブに出てくる。</p>
-
-<p>この時点ではデフォルトの配色なんだけど、タブの部分を右クリックしたら、いろんなカラースキーマを試せるようになっているのが手軽だ。</p>
-
-<p><center><img src="http://farm3.staticflickr.com/2416/12971385475_b32ca52128.jpg" width="500" height="495"></center></p>
-
-<p><code>&lt;Terminal.app&gt;</code> (MacOS 風) とか、<code>&lt;xterm&gt;</code> (X Window) とかあるけど、世間的には <code>Solarized</code> が人気っぽいので、<code>&lt;Solarized (Luke Maciak)&gt;</code> を選んだ。</p>
-
-<p>色が気に入ったら、全体設定の [Features] &gt; [Colors] からデフォルトのカラースキーマを選んでおくと、次回からはその色で表示してくれるようになる。</p>
-
-<h1>多すぎる設定項目</h1>
-
-<p>設定パネルをみたら、気力を失うぐらいの設定項目がある。</p>
-
-<p><center><img src="http://farm8.staticflickr.com/7364/12971527793_387e9b4495.jpg" width="500" height="370"></center></p>
-
-<p>ショートカットキーにからしか使えない機能も多数あるようで、上下左右分割とかもできるっぽい。プラグインとかマクロとかもあるご様子…。</p>
-
-<p>とりあえずは、タブの使い勝手が気になったので、[Features] &gt; [Tabs] から [Lazy tab switch] と [Recent mode] をオフにしておいた。</p>
-
-<p>あと、ちょっとキーコンフィグをいじって、標準的な Windows っぽいやつに置き換えてみたりした。</p>
-
-<h1>エディター起動中の Duplicate root が便利</h1>
-
-<p>ちょっと使っていて便利だなー、と思ったのは、タブの右クリック メニューにある [Duplicate root...]。カレントディレクトリをそのまま引き継いで、新しいタブで Git Bash を起動してくれる。</p>
-
-<p>何がうれしいかというと、コミットとか <code>rebase -i</code> でエディターが立ち上がっているときに、log とか diff とか見たくなることはそれなりにあると思う。こんなときにも、[Duplicate root...] して、新しい GitBash 上で確認できる。いままでは、別の Git Bash を立ち上げるとか、一時的なコミットログを書くとかしてたので、便利になった。</p>
-
-<h1>まとめ</h1>
-
-<ul>
-<li>ConEmu 便利だよ。</li>
-<li>タブ化して、色とかフォントがキレイになるだけでもメリットある。</li>
-<li>他にも便利な機能はいっぱいありそう。</li>
 </ul>
 ]]></description>
 		</item>

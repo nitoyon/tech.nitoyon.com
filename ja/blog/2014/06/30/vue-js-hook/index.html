@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Vue.js が data に渡した値を激しく書き換える件について - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Vue.js が data に渡した値を激しく書き換える件について"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="最近、JavaScript の MV* フレームワークの中で Vue.js が少しずつ注目を浴びてきているようであります。5分でわかるVue.jsと、jQueryで頑張ってはいけない理由 | 株式会社インフィニットループ技術ブログVue.jsから手軽に始めるJavaScriptフレームワーク - Qiita軽量でパワフルなデータバインディングMVVM, vue.jsで遊んでみた - mizchi&amp;#39;s blogそんなわけで、自分も Vue.js (v0.10.5) を触ってみたのですが、data で渡した値を激しく書き換えるところに面食らったので記事にしておきます。自作クラスのオブ..."/>
+	<meta property="og:image" content="https://farm3.staticflickr.com/2939/14348935187_2df7c5bf1c_o.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年06月30日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
+<h1>Vue.js が data に渡した値を激しく書き換える件について</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" class="hatena-bookmark-button" data-hatena-bookmark-title="Vue.js が data に渡した値を激しく書き換える件について - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" data-lang="ja" data-size="horizontal" data-text="Vue.js が data に渡した値を激しく書き換える件について - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>最近、JavaScript の MV* フレームワークの中で <a href="http://vuejs.org/">Vue.js</a> が少しずつ注目を浴びてきているようであります。</p>
+
+<ul>
+<li><a href="http://www.infiniteloop.co.jp/blog/2014/06/5min_vuejs/">5分でわかるVue.jsと、jQueryで頑張ってはいけない理由 | 株式会社インフィニットループ技術ブログ</a></li>
+<li><a href="http://qiita.com/icoxfog417/items/49f7301be502bc2ad897">Vue.jsから手軽に始めるJavaScriptフレームワーク - Qiita</a></li>
+<li><a href="http://mizchi.hatenablog.com/entry/2014/02/13/153742">軽量でパワフルなデータバインディングMVVM, vue.jsで遊んでみた - mizchi&#39;s blog</a></li>
+</ul>
+
+<p>そんなわけで、自分も Vue.js (v0.10.5) を触ってみたのですが、<code>data</code> で渡した値を激しく書き換えるところに面食らったので記事にしておきます。</p>
+
+<h1>自作クラスのオブジェクトを Vue.js に渡すと壊される</h1>
+
+<p>何らかのビジネスロジックを持ったモデルを作って、それを Vue.js のデータバインディングで HTML に反映しようすると破綻します。</p>
+
+<p>簡単な例として、よくある <code>Animal</code> クラスを作ったとしましょう。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Animal</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="nx">Animal</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">say</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">dog</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Animal</span><span class="p">(</span><span class="s1">&#39;dog&#39;</span><span class="p">);</span>
+<span class="nx">dog</span><span class="p">.</span><span class="nx">bark</span><span class="p">();</span> <span class="c1">// I&#39;m a dog</span>
+</code></pre></div>
+<p>まぁ、当然動きます。</p>
+
+<p>では、<code>dog</code> をデータバインディングで HTML に表示してみます。</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;p&gt;</span>{{animal.name}}<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;vue.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script&gt;</span>
+<span class="kd">function</span> <span class="nx">Animal</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="nx">Animal</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">bark</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;I&#39;m a &quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">dog</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Animal</span><span class="p">(</span><span class="s1">&#39;dog&#39;</span><span class="p">);</span>
+<span class="nx">dog</span><span class="p">.</span><span class="nx">bark</span><span class="p">();</span> <span class="c1">// I&#39;m a dog</span>
+
+<span class="k">new</span> <span class="nx">Vue</span><span class="p">({</span>
+  <span class="nx">el</span><span class="o">:</span> <span class="s2">&quot;body&quot;</span><span class="p">,</span>
+  <span class="nx">data</span><span class="o">:</span> <span class="p">{</span> <span class="nx">animal</span><span class="o">:</span> <span class="nx">dog</span> <span class="p">}</span>
+<span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</code></pre></div>
+<p>期待通り、<code>{{animal.name}}</code> の部分が <code>dog</code> になります。</p>
+
+<p>JavaScript コンソールにて、<code>dog.name = &quot;dog!!!&quot;</code> とすると、HTML は <code>dog!!!</code> に書き換わります。ちゃんと動いてるようにみえますね。</p>
+
+<p>しかし・・・JavaScript コンソールで <code>dog.bark()</code> と入力すると・・・。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3912/14348658487_b188ef6abc_o.png" width="477" height="195"></center></p>
+
+<p>さっきまで動いていたコードが動かなくなりました・・・。恐怖！</p>
+
+<h2>激しく書き換えられた犬と書き換えられる前の猫</h2>
+
+<p>Vue.js では、data に渡した値を書き換えます。激しく書き換えます。</p>
+
+<p>ためしに、dog を表示してみます。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>ははは。プロトタイプ (<code>__proto__</code>) が別のオブジェクトになってしまっていますよ。<code>bark()</code> がなくてエラーになるのも無理はありません。</p>
+
+<p>ちなみに、普通にインスタンス化した猫はこうなってますよ。当たり前だけども、<code>bark()</code> あります。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3842/14533637664_2e67ac0ca8_o.png" width="410" height="104"></center></p>
+
+<p><a href="http://vuejs.org/">Vue.js</a> さんは、<code>new Vue()</code> の <code>data</code> に渡した値を書き換えてしまうのです。恐ろしい子！</p>
+
+<h2>なぜにあなたは書き換える？</h2>
+
+<p>Vue.js は <code>data</code> に変更が加わったことを検知するために、data の値を書き換えているようです。</p>
+
+<p>たとえば、<code>dog.name</code> というキーは ECMAScript 5 のプロパティーに置き換えられます。<code>get name</code> と <code>set name</code> が定義されてますね。</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>このようにすることで、<code>dog.name</code> が書き換えられた瞬間に <code>set name</code> が呼ばれるので、Vue.js はデータの書き換えを検知するわけでございます。</p>
+
+<p>じゃ、なんで prototype まで置き換えるのか。</p>
+
+<p><a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> によると、ECMAScript 5 ではキーの追加・削除は検知できないので、<code>$add</code> と <code>$delete</code> を使ってくれ、ということのようです (ざっくりと日本語訳してみた)。</p>
+
+<blockquote>
+<p>In ECMAScript 5 there is no way to detect when a new property is added to an Object, or when a property is deleted from an Object. To counter for that, observed objects will be augmented with two methods: $add(key, value) and $delete(key). These methods can be used to add / delete properties from observed objects while triggering the desired View updates.</p>
+
+<blockquote>
+<p>ECMAScript 5 では、Object に対するプロパティーの追加や削除を検出する方法がないんだぜ。だから、監視対象の Object には $add(key, value) と $delete(key) の 2 つのメソッドを追加するんだよ。このメソッドを使ってプロパティーを追加・削除すると、View への反映をトリガーできるんだぜ。</p>
+</blockquote>
+</blockquote>
+
+<p><code>$add</code> と <code>$delete</code> を追加するのには、そういう理由があったわけですね。</p>
+
+<p>さて、自作のクラスを渡せないのは明らかにバグっぽいので修正したいところではあります。次の図でいうところの</p>
+
+<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
+
+<p>一番下の <code>__proto__</code> が <code>Animal.prototype</code> を指してくれれば動きそうです。Vue.js のソースを読んだ感じでは <a href="https://github.com/yyx990803/vue/blob/v0.10.5/dist/vue.js#L2386"><code>ObjProxy</code> の生成部分</a> で少し頑張れば対処できそうな感じはします。</p>
+
+<h1>Array も激しく書き換える</h1>
+
+<p>Vue.js が激しく書き換えるのは Object だけではありません。配列も猛烈に書き換えます。</p>
+
+<p>そのことは、ドキュメントの <a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> からも伝わってきます (先ほどと同じくざっくりと日本語訳してる)。</p>
+
+<blockquote>
+<p>Under the hood, Vue.js intercepts an observed Array&#39;s mutating methods (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) so they will also trigger View updates.</p>
+
+<p>You should avoid directly setting elements of a data-bound Array with indices, because those changes will not be picked up by Vue.js. Instead, use the agumented <code>$set()</code> method.</p>
+
+<blockquote>
+<p>内部的に、Vue.js は Array の状態を変更するメソッド (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) の呼び出しを監視して、View が更新されるように処理をしてるんだぜ。</p>
+
+<p>インデックスを指定しての値を変更すると Vue.js が検知できないのでやめてほしいよ。その代り、`$set() メソッドってのを用意したから、こっちを使ってほしいんだぜ。</p>
+</blockquote>
+</blockquote>
+
+<p>まぁ、こんな感じで、扱うには少し工夫が必要であります。</p>
+
+<h1>data に渡した Object が console.log() で見にくい問題の対処方法</h1>
+
+<p><code>data</code> に渡した値を <code>console.log()</code> すると getter, setter の山になるわけで、値がどうなっているかを確認しにくいですね。</p>
+
+<p>これをなんとかするには <code>JSON.stringify</code> を使う回避方法が <a href="http://vuejs.org/api/instantiation-options.html#data">Instantiation Options - vue.js</a> にて示されております。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">vm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Vue</span><span class="p">({</span>
+  <span class="nx">el</span><span class="o">:</span> <span class="s2">&quot;body&quot;</span><span class="p">,</span>
+  <span class="nx">data</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">animal</span><span class="o">:</span> <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;foo&quot;</span> <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">vm</span><span class="p">.</span><span class="nx">$data</span><span class="p">));</span>
+<span class="c1">// {&quot;animal&quot;:{&quot;name&quot;:&quot;foo&quot;}} </span>
+</code></pre></div>
+<p>やや面倒だし、巨大なデータを渡したときは見つけるのが大変そうであります。</p>
+
+<h1>Object.observe() に期待</h1>
+
+<p>こんな面倒なことになっているのも、Vue.js が ECMAScript 5 の世界で頑張っているからです。</p>
+
+<p>ECMAScript 6 の <code>Object.observe()</code> が使える世界になれば、Object や Array の置き換えも不要になるし、Vue.js の設計もシンプルになることでしょう。</p>
+
+<p><a href="http://vuejs.org/">Vue.js</a> の <a href="https://github.com/yyx990803/vue/issues/78">ロードマップ</a> には 0.11 で <code>Object.observe()</code> が使えるなら使うようにする、と書いてあります。</p>
+
+<h1>まとめ</h1>
+
+<ul>
+<li><a href="http://vuejs.org/">Vue.js</a> はオブジェクトの監視を行うために、Object のキーをプロパティーに置き換えたり、<code>Array.push()</code> を置き換えたりする</li>
+<li>この努力は ECMAScript 5 の限界ゆえ</li>
+<li>ECMAScript 6 で <code>Object.observe()</code> がやってきたら、<a href="http://vuejs.org/">Vue.js</a> の実装もシンプルになるし、もっと楽な API になる</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" class="hatena-bookmark-button" data-hatena-bookmark-title="Vue.js が data に渡した値を激しく書き換える件について - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" data-lang="ja" data-size="horizontal" data-text="Vue.js が data に渡した値を激しく書き換える件について - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年06月30日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-06-30-vue-js-hook.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2013/06/27/node-yield/">Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</a></li>
+
+<li><a href="/ja/blog/2013/02/27/livereloadx/">ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</a></li>
+
+<li><a href="/ja/blog/2013/02/19/node-source-map/">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a></li>
+
+<li><a href="/ja/blog/2011/03/24/jQuery-extend-mania/">jQuery.extend マニアックス</a></li>
+
+<li><a href="/ja/blog/2008/12/11/jquery-fast-css/">jQuery を高速に使う CSS セレクタの書き方</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/05/30/ruby-https-cert/" rel="previous"><b>&laquo;</b><span class="title">Ruby で HTTPS 接続するときの証明書で悩んだ話</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
