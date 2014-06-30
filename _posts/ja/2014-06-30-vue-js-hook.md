@@ -162,7 +162,17 @@ console.log(JSON.stringify(vm.$data));
 ```
 
 
-やや面倒だし、巨大なデータを渡したときは見つけるのが大変そうであります。
+やや面倒だし、巨大なデータを渡したときは見つけるのが大変そうであります。そんなときは、さらに `JSON.parse()` で Object に変換すればよい。
+
+面倒だから、Object に復元する関数でも作っておくとよいでしょう。
+
+```javascript
+function deepCopy(o) {
+  return JSON.parse(JSON.stringify(o));
+}
+
+console.log(deepCopy(vm.$data));
+```
 
 
 Object.observe() に期待
