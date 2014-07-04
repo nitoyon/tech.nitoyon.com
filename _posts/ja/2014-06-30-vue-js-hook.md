@@ -117,11 +117,14 @@ Vue.js は `data` に変更が加わったことを検知するために、data 
 
 `$add` と `$delete` を追加するのには、そういう理由があったわけですね。
 
-さて、自作のクラスを渡せないのは明らかにバグっぽいので修正したいところではあります。次の図でいうところの
+さて、自作のクラスを渡せないのは明らかにバグっぽいので修正したいところではあります。
 
-{% image https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png, 411, 149 %}
+(追記) よくよく公式ドキュメントの [Instantiation Options - vue.js](http://vuejs.org/api/instantiation-options.html#data) を読んでみると
 
-一番下の `__proto__` が `Animal.prototype` を指してくれれば動きそうです。Vue.js のソースを読んだ感じでは [`ObjProxy` の生成部分](https://github.com/yyx990803/vue/blob/v0.10.5/dist/vue.js#L2386) で少し頑張れば対処できそうな感じはします。
+> The object must be JSON-compliant (no circular references)
+>> `data` に渡すオブジェクトは JSON の仕様に従っていて、循環参照してないものにしてね
+
+とあるので、自作クラスのオブジェクトを渡せないのは仕方ないようです。
 
 
 Array も激しく書き換える
