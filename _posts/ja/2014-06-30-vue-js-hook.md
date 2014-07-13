@@ -178,8 +178,10 @@ console.log(deepCopy(vm.$data));
 ```
 
 
-Object.observe() に期待
-=======================
+Object.observe に期待
+=====================
+
+
 
 こんな面倒なことになっているのも、Vue.js が ECMAScript 5 の世界で頑張っているからです。
 
