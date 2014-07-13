@@ -140,7 +140,7 @@ Vue.js が激しく書き換えるのは Object だけではありません。�
 >
 >> 内部的に、Vue.js は Array の状態を変更するメソッド (`push()`, `pop()`, `shift()`, `unshift()`, `splice()`, `sort()` and `reverse()`) の呼び出しを監視して、View が更新されるように処理をしてるんだぜ。
 >>
->> インデックスを指定しての値を変更すると Vue.js が検知できないのでやめてほしいよ。その代り、`$set() メソッドってのを用意したから、こっちを使ってほしいんだぜ。
+>> インデックスを指定しての値を変更すると Vue.js が検知できないのでやめてほしいよ。その代り、`$set()` メソッドってのを用意したから、こっちを使ってほしいんだぜ。
 
 まぁ、こんな感じで、扱うには少し工夫が必要であります。
 
@@ -183,7 +183,7 @@ Object.observe() に期待
 
 こんな面倒なことになっているのも、Vue.js が ECMAScript 5 の世界で頑張っているからです。
 
-ECMAScript 6 の `Object.observe()` が使える世界になれば、Object や Array の置き換えも不要になるし、Vue.js の設計もシンプルになることでしょう。
+ECMAScript に提案されている `Object.observe()` が使える世界になれば、Object や Array の置き換えも不要になるし、Vue.js の設計もシンプルになることでしょう。
 
 [Vue.js] の [ロードマップ](https://github.com/yyx990803/vue/issues/78) には 0.11 で `Object.observe()` が使えるなら使うようにする、と書いてあります。
 
@@ -193,6 +193,6 @@ ECMAScript 6 の `Object.observe()` が使える世界になれば、Object や 
 
 * [Vue.js] はオブジェクトの監視を行うために、Object のキーをプロパティーに置き換えたり、`Array.push()` を置き換えたりする
 * この努力は ECMAScript 5 の限界ゆえ
-* ECMAScript 6 で `Object.observe()` がやってきたら、[Vue.js] の実装もシンプルになるし、もっと楽な API になる
+* ECMAScript に `Object.observe()` がやってきたら、[Vue.js] の実装もシンプルになるし、もっと楽な API になる
 
 [Vue.js]: http://vuejs.org/
