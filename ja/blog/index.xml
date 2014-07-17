@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sun, 13 Jul 2014 23:56:45 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 18 Jul 2014 02:20:13 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -17,6 +17,134 @@
 
 
 
+
+		<item>
+			<title>JavaScript フレームワークがデータバインディングを実現する４通りの手法</title>
+			<link>http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/</guid>
+			<pubDate>Fri, 18 Jul 2014 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>最近流行りの JavaScript MV* フレームワークは、どれもデータバインディングをサポートしているが、実現方法はフレームワークによって異なる。</p>
+
+<p>この記事では、各種フレームワークが<strong>どのようにモデルの変更を検知しているか</strong>を次の 4 つのパターンに分類して紹介する。</p>
+
+<ol>
+<li>モデル クラス方式 (Ember.js、Backbone.js、Ractive.js、Knockout.js など)</li>
+<li>力ずく方式 (AngualrJS)</li>
+<li>モデル書き換え方式 (Vue.js)</li>
+<li>Object.observe 方式 (Polymer)</li>
+</ol>
+
+<p>パターン名は私が勝手に名づけたものだけど、このへんの雰囲気が理解できれば、フレームワークごとの個性が分かるだろうし、利用イメージもわきやすいんじゃないかと思っている。</p>
+
+<h1>1. モデル クラス方式</h1>
+
+<p>「モデルとして扱えるのはフレームワークが用意したモデル クラスのインスタンスだけ」という制約を課すのがこの方式。</p>
+
+<p>たとえば、Ember.js では <code>{title: &quot;てっく煮&quot;}</code> という情報をデータバインディングで利用しようと思ったら、次のようにしてモデル クラスのインスタンスを作る必要がある。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var a = Ember.Object.create({title: &quot;てっく煮&quot;})
+console.log(a.get(&#39;title&#39;)); // てっく煮
+</code></pre></div>
+<p>モデルを変更するには <code>set()</code> メソッドを使う。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">a.set(&#39;title&#39;, &#39;!!!!&#39;);
+console.log(a.get(&#39;title&#39;)); // !!!!
+</code></pre></div>
+<p>当然、フレームワーク側はモデルの値が変更されたことを検知できる。検知したら、あとはフレームワークは新しい値に応じて DOM を書き換えればよい。とてもシンプルな構造だ。</p>
+
+<p>使う側の視点でみると、<code>get()</code> や <code>set()</code> を呼ぶのが面倒だし、ラッパーの API は JavaScript の <code>Object</code> や <code>Array</code> と扱い方が違うし、さらに、既存のモデルがある場合は流用できない (作成・取得・変更処理を全部置き換える必要がある) し・・・、と不便な印象がある。</p>
+
+<p>これ以降の方式は、ネイティブな <code>Object</code> や <code>Array</code> などをモデルとして扱えるように工夫している。</p>
+
+<h2>この方式を採用するフレームワークが多い</h2>
+
+<p>現時点においては、この方式を採用するフレームワークが多数派である。</p>
+
+<p><a href="http://qiita.com/tekkoc/items/eb5ab65524c3e5b4a11c">Backbone.jsなどのライブラリのgetter, setterがダサい理由と、その解消方法 - Qiita</a> によると、Backbone.js、Knockout.js、Ractive.js も同じ方式を採用しているらしい。</p>
+
+<blockquote>
+<p>Backbone.js と Ractive.js は <code>get(&quot;hoge&quot;)</code> や <code>set(&quot;hoge&quot;, value)</code> という形式。
+Knockout.js は少しマシで <code>hoge()</code> で取得し <code>hoge(value)</code> で設定する形式。</p>
+</blockquote>
+
+<h1>2. 力ずく方式</h1>
+
+<p>次の方式は <a href="(https://angularjs.org/)">AngularJS</a> が採用しているヤツを説明しよう。</p>
+
+<p>AngularJS はネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せるし、独自クラスのオブジェクトだって渡せる。</p>
+
+<p>たとえば、モデルが <code>{title: &#39;てっく煮&#39;}</code> だったとしよう。モデルはネイティブなオブジェクトなので、変更をプッシュ通知で受け取るのは諦めている。</p>
+
+<p>そんな前提なので、AngularJS は <strong>何かあるごとに</strong> <code>title</code> の値が変化したかどうかを自力でチェックする。変化してれば DOM を書き換える。オブジェクトの参照が変わってしまうこともあるので、「前回の値」はディープコピーして覚えている。</p>
+
+<p>とても力技なので処理にはオーバーヘッドがある。ソースコードも複雑になっている。</p>
+
+<h2>「何かあるごとに」はいつか？</h2>
+
+<p>さて、さきほど「何かあるごとに」と書いたが、前回の値と今の値を比較するタイミングはいつだろうか。</p>
+
+<p>正解は「AngularJS 経由で JavaScript のコードを実行したとき」である。</p>
+
+<p>たとえば、ボタンのクリックイベントに関しては <code>&lt;button ng-click=&quot;foo()&quot;&gt;</code> のように書くと、AngularJS 経由で <code>foo()</code> が呼ばれる。<code>setTimeout()</code> の処理であれば、<code>$timeout</code> を使えば AngularJS 経由でコールバックが呼ばれる。</p>
+
+<p>コールバックを読んだとき、モデルの値は変更されるかもしれないし、実際には変更されないかもしれない。変更されたか調べるために、呼び終わったあとに、力ずくで調べるのだ。</p>
+
+<p>直接 DOM イベントを監視するようなときには AngularJS を経由させるのは難しい。そういうときには <code>$scope.$apply()</code> に関数を渡すと、関数を呼んだあとに力ずくの比較処理をやってくれる。</p>
+
+<p>AngularJS を使う側の視点からすると、モデルへの変更を HTML に確実に反映させるには、<code>ng-click</code> や <code>$timeout</code>、<code>$scope.$apply()</code> など使って AngularJS 経由でモデルを変更する必要がある。</p>
+
+<h2>力ずく方式のまとめ</h2>
+
+<ul>
+<li><code>Object</code> や <code>Array</code> や独自クラスのインスタンスをモデルにできる</li>
+<li>比較処理がトリガーされるかどうかを意識する必要がある</li>
+<li>比較処理のオーバーヘッドがある</li>
+</ul>
+
+<h1>3. モデル書き換え方式</h1>
+
+<p>こちらは <a href="http://vuejs.org/">Vue.js</a> が採用している方式である。</p>
+
+<p>Vue.js もネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せる。</p>
+
+<p>たとえば、オブジェクトのキーの変更を検知するために、キーを (ECMAScript 5 的な) プロパティーに書き換える。配列の変更を検知するために、<code>Array.prototype</code> を書き換えて <code>push()</code> メソッドなどを置き換える。</p>
+
+<p>AngularJS のように力ずくの比較は行わないので動作は速いのが利点。Vue.js のサイトでも <a href="http://vuejs.org/perf/">他のフレームワークより速いこと</a> を自慢している。</p>
+
+<p>一方の弱点は、次の通り。</p>
+
+<ul>
+<li>モデルとして受け取ったオブジェクトを書き換えてしまう</li>
+<li>完全に変更を検知できない (完全に検知できないので、一部の変更処理については、<code>$set()</code> や <code>$add()</code> といったメソッドを使う必要がある。ラッパー オブジェクト的な要素が残っているといえる)。</li>
+</ul>
+
+<p>詳しくは <a href="/ja/blog/2014/06/30/vue-js-hook/">Vue.js が data に渡した値を激しく書き換える件について</a> に書いたので見てほしい。</p>
+
+<h1>4. Object.observe() 方式</h1>
+
+<p>現在、ECMAScript には「オブジェクトの変更を検知する」という機能を持った <code>Object.observe()</code> というメソッドが提案されていて、<a href="http://www.chromestatus.com/features/6147094632988672">Google Chrome 36 ではデフォルトで有効</a> になるらしい。</p>
+
+<p>まさにデータバインディングで使ってくれといっているようなメソッドである。</p>
+
+<p><a href="(http://www.polymer-project.org/)">Polymer</a> は <code>Object.observe()</code> を前提としている。さらに、先ほどから紹介していた各種ライブラリーについても、AngularJS は 2.0 での対応を<a href="http://blog.angularjs.org/2014/03/angular-20.html">検討している</a> し、Vue.js は v0.11.x で<a href="https://github.com/yyx990803/vue/issues/78">対応予定</a> となっている。</p>
+
+<p>ECMAScript に <code>Object.observe()</code> が取り込まれれば、ここまで紹介したようなややこしいデータバインディングの仕組みは不要となる。まさに、データバインディングのための API であるが、ECMAScript 6 にも入っておらず、すべてのブラウザーで使えるようになるには時間がかかりそうだ。
+<code>Object.observe()</code> については以下のページが詳しかった。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/jovi0608/20121206/1354762082">次世代JavaScriptでデータバインディング： Object.observe() を試す - ぼちぼち日記</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/es7/observe/">Data-binding Revolutions with Object.observe() - HTML5 Rocks</a></li>
+</ul>
+
+<h1>まとめ</h1>
+
+<p>MV* フレームワークが「どのようにモデルの変更を検知しているか」を 4 通り紹介した。</p>
+
+<ul>
+<li>OOP 的なモデル クラスを使う方式が主流。</li>
+<li><a href="(https://angularjs.org/)">AngularJS</a> や <a href="http://vuejs.org/">Vue.js</a> はネイティブな値をモデルとして扱うために頑張っている。</li>
+<li><code>Object.observe()</code> が使えるようになれば、フレームワークの苦しみが減る。<a href="(http://www.polymer-project.org/)">Polymer</a> はそこを見据えている。</li>
+</ul>
+]]></description>
+		</item>
 
 		<item>
 			<title>Vue.js が data に渡した値を激しく書き換える件について</title>
@@ -513,158 +641,6 @@ index ad9608a..85a3c62 100644
 <h1>まとめ</h1>
 
 <p>Windows はつらいよ。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>全角半角混在の文章で 1 行に半角何文字分あるか調べる方法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/03/14/utf8-str-count/</guid>
-			<pubDate>Fri, 14 Mar 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>「ソースコードは 1 行あたり 80 文字以内」とか「コミットログは横幅 72 文字以内」とか、文字数に関するルールはいろいろある。</p>
-
-<p>ルールを徹底するには機械的に判定したい。と思って、簡単なスクリプトを書こうとした瞬間、意外と「1 行あたりの文字数」をカウントするのが難しいことに気付いた。</p>
-
-<p>たとえば、「あA」は「全角 1 文字＋半角 1 文字」なので半角 3 文字分としてカウントしたい。</p>
-
-<p>しかし、UTF-8 の世界では「あA」の文字長は 2 だし、バイト数は 4 (あ=0xE38182、a=0x41) である。</p>
-
-<p>EUC-JP や Shift-JIS の時代なら、単純に「あA」は 3 バイトなので「半角 3 つ分」とすぐ分かったのだけども… (逆に文字長を調べるのが面倒だった)。</p>
-
-<p>はて、どうするか？　というのがこの記事でいいたいこと。</p>
-
-<h1>East Asian Width を見よ</h1>
-
-<p>いろいろとググった結果、Unicode の <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> を参照するとよいらしい。</p>
-
-<p><a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> で <a href="http://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt">EastAsianWidth.txt</a> という資料が紹介されている。この資料では、全ての文字の横幅が 6 つのカテゴリーに分類されている。</p>
-
-<p>そのカテゴリーが次の 6 つ。</p>
-
-<table><thead>
-<tr>
-<th>分類</th>
-<th>意味</th>
-<th>例</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>F</td>
-<td>East Asian Fullwidth</td>
-<td>Ａ (全角の A)</td>
-</tr>
-<tr>
-<td>H</td>
-<td>East Asian Halfwidth</td>
-<td>ｱ (半角のア)</td>
-</tr>
-<tr>
-<td>Na</td>
-<td>East Asian Narrow</td>
-<td>A (半角の A)</td>
-</tr>
-<tr>
-<td>W</td>
-<td>East Asian Wide</td>
-<td>ア (全角のア)</td>
-</tr>
-<tr>
-<td>A</td>
-<td>East Asian Ambiguous</td>
-<td>○☆※ (一部の記号)、Д (ロシア語)</td>
-</tr>
-<tr>
-<td>N</td>
-<td>Neutral (Not East Asian)</td>
-<td>À</td>
-</tr>
-</tbody></table>
-
-<p>たとえば、「あ」なら <code>3042;W # HIRAGANA LETTER A</code> と書いてある。カテゴリーは <code>W</code> なので、全角 （＝半角 2 文字分) だと分かる。</p>
-
-<p>ということで、<code>F</code>・<code>W</code> は全角 (＝ 2 文字分)、<code>H</code>・<code>Na</code>・<code>N</code> は半角 (＝ 1 文字) として扱えばよいわけだ。</p>
-
-<h2>Ambiguous をどうするか問題</h2>
-
-<p>で、<code>A</code> (East Asian Ambiguous) の扱いが難しい。</p>
-
-<p>例にあるような ○☆※ などの記号を見ると全角として扱いたくなる。しかし、<code>A</code> にはロシア語も含まれている。</p>
-
-<p><code>A</code> を一律に全角として扱うと、「1 行に 80 文字以上書いたら警告出すシステム」を作ると、「80 文字超えてないのに警告出るんだけどなにこれ？」とロシアの人に怒られてしまうかもしれない。</p>
-
-<p>具体例をみてみよう。ロシア語でヘンタイをあらわす「Хентай」をいくつかの環境で表示してみた。</p>
-
-<p><center><img src="http://farm8.staticflickr.com/7394/13131518004_f517a03418_o.png" width="680" height="212"></center></p>
-
-<p>Cent OS のコンソールでは半角になっているが、MS ゴシックなら全角になる。プロポーショナルなメイリオでは、だいたい半角で表示している。</p>
-
-<p>悩ましい・・・！</p>
-
-<p>とりあえず、Ambiguous は 1 文字として扱うのが安全そうだ。ある環境で 80 文字以上に見えていても、別の環境では 80 文字以内に見えている…ということは十分に起こりうるのだ…！</p>
-
-<h1>いろんな言語で判別したいよ</h1>
-
-<p>さて、一次情報と判定方法が分かったところで、いろんなスクリプト言語で実装するにはどうしたらいいだろう。<code>&quot;East Asian Width&quot; 言語名</code> で検索したら、それなりに情報が出てくる。</p>
-
-<h2>Python</h2>
-
-<p>一番簡単だったのが Python さん。標準モジュールの <code>unicodedata</code> に <a href="http://docs.python.org/2/library/unicodedata.html#unicodedata.east_asian_width"><code>unicodedata.east_asian_width(unichr)</code></a> なるメソッドがあった。</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python">&gt;&gt;&gt; import unicodedata
-&gt;&gt;&gt; unicodedata.east_asian_width(u&#39;あ&#39;)
-&#39;W&#39;
-&gt;&gt;&gt; unicodedata.east_asian_width(u&#39;※&#39;)
-&#39;A&#39;
-</code></pre></div>
-<h2>PHP</h2>
-
-<p>伝家の宝刀 mb うんたらの関数群の中に、期待通り <a href="http://www.php.net/manual/en/function.mb-strwidth.php"><code>mb_strwidth()</code></a> がいた。</p>
-<div class="highlight"><pre><code class="php language-php" data-lang="php">echo mb_strwidth(&quot;あ&quot;); // 2
-echo mb_strwidth(&quot;※&quot;); // 1
-</code></pre></div>
-<p>Ambiguous は <code>1</code> を返すようだ。</p>
-
-<h2>Ruby</h2>
-
-<p>標準ではムリだけど、<a href="https://github.com/janlelis/unicode-display_width"><code>unicode-display_width</code></a> なるモジュールが gem にあった。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">require &#39;unicode/display_width&#39;
-&quot;○&quot;.display_width #=&gt; 1
-&#39;一&#39;.display_width #=&gt; 2
-</code></pre></div>
-<p>現時点では Ambiguous は全部 <code>1</code> を返しているよ、ということが TODO のところに書いてある。</p>
-
-<h2>JavaScript</h2>
-
-<p>こちらも標準ではムリだけど、<a href="https://github.com/komagata/eastasianwidth"><code>eastasianwidth</code></a> なるモジュールが npm にあがっている。</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">var eaw = require(&#39;eastasianwidth&#39;);
-console.log(eaw.eastAsianWidth(&#39;￦&#39;)) // &#39;F&#39;
-console.log(eaw.eastAsianWidth(&#39;｡&#39;)) // &#39;H&#39;
-console.log(eaw.eastAsianWidth(&#39;뀀&#39;)) // &#39;W&#39;
-
-console.log(eaw.length(&#39;あいうえお&#39;)) // 10
-</code></pre></div>
-<p>ソースコードを読んだところ、Ambiguous は <code>2</code> を返している。</p>
-
-<h2>Perl</h2>
-
-<p>CPAN にある <a href="http://search.cpan.org/%7Eaudreyt/Unicode-EastAsianWidth-1.33/lib/Unicode/EastAsianWidth.pm"><code>Unicode::EastAsianWidth</code></a> を使えば、次のようにできるらしい。</p>
-<div class="highlight"><pre><code class="perl language-perl" data-lang="perl">use Unicode::EastAsianWidth;
-
-$_ = chr(0x2588); # FULL BLOCK, an ambiguous-width character
-
-/\p{InEastAsianAmbiguous}/; # true
-/\p{InFullwidth}/;          # false
-</code></pre></div>
-<p>長さやカテゴリーが返ってこない分、少し面倒そう。</p>
-
-<h1>まとめ</h1>
-
-<p>3 行でまとめちゃう。</p>
-
-<ul>
-<li>UTF-8 では半角何文字分で表示されるのかを調べるのは少し面倒になった。</li>
-<li>しかも、環境によって何文字分で表示するかは違うので、完全に調べきるのはあきらめたほうがよい。</li>
-<li>一次情報は <a href="http://www.unicode.org/reports/tr11/">East Asian Width</a> にあるが、各種スクリプト言語には便利なライブラリーを使えばよい。</li>
-</ul>
 ]]></description>
 		</item>
 

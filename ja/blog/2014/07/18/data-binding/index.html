@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>JavaScript フレームワークがデータバインディングを実現する４通りの手法 - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="JavaScript フレームワークがデータバインディングを実現する４通りの手法"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="最近流行りの JavaScript MV* フレームワークは、どれもデータバインディングをサポートしているが、実現方法はフレームワークによって異なる。この記事では、各種フレームワークがどのようにモデルの変更を検知しているかを次の 4 つのパターンに分類して紹介する。モデル クラス方式 (Ember.js、Backbone.js、Ractive.js、Knockout.js など)力ずく方式 (AngualrJS)モデル書き換え方式 (Vue.js)Object.observe 方式 (Polymer)パターン名は私が勝手に名づけたものだけど、このへんの雰囲気が理解できれば、フレームワーク..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2014年07月18日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+
+<h1>JavaScript フレームワークがデータバインディングを実現する４通りの手法</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" class="hatena-bookmark-button" data-hatena-bookmark-title="JavaScript フレームワークがデータバインディングを実現する４通りの手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" data-lang="ja" data-size="horizontal" data-text="JavaScript フレームワークがデータバインディングを実現する４通りの手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>最近流行りの JavaScript MV* フレームワークは、どれもデータバインディングをサポートしているが、実現方法はフレームワークによって異なる。</p>
+
+<p>この記事では、各種フレームワークが<strong>どのようにモデルの変更を検知しているか</strong>を次の 4 つのパターンに分類して紹介する。</p>
+
+<ol>
+<li>モデル クラス方式 (Ember.js、Backbone.js、Ractive.js、Knockout.js など)</li>
+<li>力ずく方式 (AngualrJS)</li>
+<li>モデル書き換え方式 (Vue.js)</li>
+<li>Object.observe 方式 (Polymer)</li>
+</ol>
+
+<p>パターン名は私が勝手に名づけたものだけど、このへんの雰囲気が理解できれば、フレームワークごとの個性が分かるだろうし、利用イメージもわきやすいんじゃないかと思っている。</p>
+
+<h1>1. モデル クラス方式</h1>
+
+<p>「モデルとして扱えるのはフレームワークが用意したモデル クラスのインスタンスだけ」という制約を課すのがこの方式。</p>
+
+<p>たとえば、Ember.js では <code>{title: &quot;てっく煮&quot;}</code> という情報をデータバインディングで利用しようと思ったら、次のようにしてモデル クラスのインスタンスを作る必要がある。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Ember</span><span class="p">.</span><span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;てっく煮&quot;</span><span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">));</span> <span class="c1">// てっく煮</span>
+</code></pre></div>
+<p>モデルを変更するには <code>set()</code> メソッドを使う。</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">a</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;!!!!&#39;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">));</span> <span class="c1">// !!!!</span>
+</code></pre></div>
+<p>当然、フレームワーク側はモデルの値が変更されたことを検知できる。検知したら、あとはフレームワークは新しい値に応じて DOM を書き換えればよい。とてもシンプルな構造だ。</p>
+
+<p>使う側の視点でみると、<code>get()</code> や <code>set()</code> を呼ぶのが面倒だし、ラッパーの API は JavaScript の <code>Object</code> や <code>Array</code> と扱い方が違うし、さらに、既存のモデルがある場合は流用できない (作成・取得・変更処理を全部置き換える必要がある) し・・・、と不便な印象がある。</p>
+
+<p>これ以降の方式は、ネイティブな <code>Object</code> や <code>Array</code> などをモデルとして扱えるように工夫している。</p>
+
+<h2>この方式を採用するフレームワークが多い</h2>
+
+<p>現時点においては、この方式を採用するフレームワークが多数派である。</p>
+
+<p><a href="http://qiita.com/tekkoc/items/eb5ab65524c3e5b4a11c">Backbone.jsなどのライブラリのgetter, setterがダサい理由と、その解消方法 - Qiita</a> によると、Backbone.js、Knockout.js、Ractive.js も同じ方式を採用しているらしい。</p>
+
+<blockquote>
+<p>Backbone.js と Ractive.js は <code>get(&quot;hoge&quot;)</code> や <code>set(&quot;hoge&quot;, value)</code> という形式。
+Knockout.js は少しマシで <code>hoge()</code> で取得し <code>hoge(value)</code> で設定する形式。</p>
+</blockquote>
+
+<h1>2. 力ずく方式</h1>
+
+<p>次の方式は <a href="(https://angularjs.org/)">AngularJS</a> が採用しているヤツを説明しよう。</p>
+
+<p>AngularJS はネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せるし、独自クラスのオブジェクトだって渡せる。</p>
+
+<p>たとえば、モデルが <code>{title: &#39;てっく煮&#39;}</code> だったとしよう。モデルはネイティブなオブジェクトなので、変更をプッシュ通知で受け取るのは諦めている。</p>
+
+<p>そんな前提なので、AngularJS は <strong>何かあるごとに</strong> <code>title</code> の値が変化したかどうかを自力でチェックする。変化してれば DOM を書き換える。オブジェクトの参照が変わってしまうこともあるので、「前回の値」はディープコピーして覚えている。</p>
+
+<p>とても力技なので処理にはオーバーヘッドがある。ソースコードも複雑になっている。</p>
+
+<h2>「何かあるごとに」はいつか？</h2>
+
+<p>さて、さきほど「何かあるごとに」と書いたが、前回の値と今の値を比較するタイミングはいつだろうか。</p>
+
+<p>正解は「AngularJS 経由で JavaScript のコードを実行したとき」である。</p>
+
+<p>たとえば、ボタンのクリックイベントに関しては <code>&lt;button ng-click=&quot;foo()&quot;&gt;</code> のように書くと、AngularJS 経由で <code>foo()</code> が呼ばれる。<code>setTimeout()</code> の処理であれば、<code>$timeout</code> を使えば AngularJS 経由でコールバックが呼ばれる。</p>
+
+<p>コールバックを読んだとき、モデルの値は変更されるかもしれないし、実際には変更されないかもしれない。変更されたか調べるために、呼び終わったあとに、力ずくで調べるのだ。</p>
+
+<p>直接 DOM イベントを監視するようなときには AngularJS を経由させるのは難しい。そういうときには <code>$scope.$apply()</code> に関数を渡すと、関数を呼んだあとに力ずくの比較処理をやってくれる。</p>
+
+<p>AngularJS を使う側の視点からすると、モデルへの変更を HTML に確実に反映させるには、<code>ng-click</code> や <code>$timeout</code>、<code>$scope.$apply()</code> など使って AngularJS 経由でモデルを変更する必要がある。</p>
+
+<h2>力ずく方式のまとめ</h2>
+
+<ul>
+<li><code>Object</code> や <code>Array</code> や独自クラスのインスタンスをモデルにできる</li>
+<li>比較処理がトリガーされるかどうかを意識する必要がある</li>
+<li>比較処理のオーバーヘッドがある</li>
+</ul>
+
+<h1>3. モデル書き換え方式</h1>
+
+<p>こちらは <a href="http://vuejs.org/">Vue.js</a> が採用している方式である。</p>
+
+<p>Vue.js もネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せる。</p>
+
+<p>たとえば、オブジェクトのキーの変更を検知するために、キーを (ECMAScript 5 的な) プロパティーに書き換える。配列の変更を検知するために、<code>Array.prototype</code> を書き換えて <code>push()</code> メソッドなどを置き換える。</p>
+
+<p>AngularJS のように力ずくの比較は行わないので動作は速いのが利点。Vue.js のサイトでも <a href="http://vuejs.org/perf/">他のフレームワークより速いこと</a> を自慢している。</p>
+
+<p>一方の弱点は、次の通り。</p>
+
+<ul>
+<li>モデルとして受け取ったオブジェクトを書き換えてしまう</li>
+<li>完全に変更を検知できない (完全に検知できないので、一部の変更処理については、<code>$set()</code> や <code>$add()</code> といったメソッドを使う必要がある。ラッパー オブジェクト的な要素が残っているといえる)。</li>
+</ul>
+
+<p>詳しくは <a href="/ja/blog/2014/06/30/vue-js-hook/">Vue.js が data に渡した値を激しく書き換える件について</a> に書いたので見てほしい。</p>
+
+<h1>4. Object.observe() 方式</h1>
+
+<p>現在、ECMAScript には「オブジェクトの変更を検知する」という機能を持った <code>Object.observe()</code> というメソッドが提案されていて、<a href="http://www.chromestatus.com/features/6147094632988672">Google Chrome 36 ではデフォルトで有効</a> になるらしい。</p>
+
+<p>まさにデータバインディングで使ってくれといっているようなメソッドである。</p>
+
+<p><a href="(http://www.polymer-project.org/)">Polymer</a> は <code>Object.observe()</code> を前提としている。さらに、先ほどから紹介していた各種ライブラリーについても、AngularJS は 2.0 での対応を<a href="http://blog.angularjs.org/2014/03/angular-20.html">検討している</a> し、Vue.js は v0.11.x で<a href="https://github.com/yyx990803/vue/issues/78">対応予定</a> となっている。</p>
+
+<p>ECMAScript に <code>Object.observe()</code> が取り込まれれば、ここまで紹介したようなややこしいデータバインディングの仕組みは不要となる。まさに、データバインディングのための API であるが、ECMAScript 6 にも入っておらず、すべてのブラウザーで使えるようになるには時間がかかりそうだ。
+<code>Object.observe()</code> については以下のページが詳しかった。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/jovi0608/20121206/1354762082">次世代JavaScriptでデータバインディング： Object.observe() を試す - ぼちぼち日記</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/es7/observe/">Data-binding Revolutions with Object.observe() - HTML5 Rocks</a></li>
+</ul>
+
+<h1>まとめ</h1>
+
+<p>MV* フレームワークが「どのようにモデルの変更を検知しているか」を 4 通り紹介した。</p>
+
+<ul>
+<li>OOP 的なモデル クラスを使う方式が主流。</li>
+<li><a href="(https://angularjs.org/)">AngularJS</a> や <a href="http://vuejs.org/">Vue.js</a> はネイティブな値をモデルとして扱うために頑張っている。</li>
+<li><code>Object.observe()</code> が使えるようになれば、フレームワークの苦しみが減る。<a href="(http://www.polymer-project.org/)">Polymer</a> はそこを見据えている。</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" class="hatena-bookmark-button" data-hatena-bookmark-title="JavaScript フレームワークがデータバインディングを実現する４通りの手法 - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" data-lang="ja" data-size="horizontal" data-text="JavaScript フレームワークがデータバインディングを実現する４通りの手法 - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2014年07月18日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2014-07-18-data-binding.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/javascript/">JavaScript</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2014/06/30/vue-js-hook/">Vue.js が data に渡した値を激しく書き換える件について</a></li>
+
+<li><a href="/ja/blog/2013/06/27/node-yield/">Node.js 0.12 では yield が使えるのでコールバック地獄にサヨナラできる話</a></li>
+
+<li><a href="/ja/blog/2013/02/27/livereloadx/">ファイル編集したら即ブラウザー再読込させる LiveReloadX を作った</a></li>
+
+<li><a href="/ja/blog/2013/02/19/node-source-map/">Node.js＋CoffeeScript でソースマップを使ってデバッグを楽にする方法</a></li>
+
+<li><a href="/ja/blog/2011/03/24/jQuery-extend-mania/">jQuery.extend マニアックス</a></li>
+
+<li><a href="/ja/blog/2008/12/11/jquery-fast-css/">jQuery を高速に使う CSS セレクタの書き方</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2014/06/30/vue-js-hook/" rel="previous"><b>&laquo;</b><span class="title">Vue.js が data に渡した値を激しく書き換える件について</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
