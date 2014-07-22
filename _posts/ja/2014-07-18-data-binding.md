@@ -120,7 +120,32 @@ AngularJS のように力ずくの比較は行わないので動作は速いの�
 4. Object.observe() 方式
 ========================
 
-現在、ECMAScript には「オブジェクトの変更を検知する」という機能を持った `Object.observe()` というメソッドが提案されていて、[Google Chrome 36 ではデフォルトで有効](http://www.chromestatus.com/features/6147094632988672) になるらしい。
+現在、ECMAScript には「オブジェクトの変更を検知する」という機能を持つ `Object.observe()` というメソッドが提案されていて、仕様決定に先立って [Google Chrome 36 ではデフォルトで有効](http://www.chromestatus.com/features/6147094632988672) になっている。
+
+ためしに Google Chrome 36 のコンソールで使ってみる。
+
+```javascript
+> a = {foo: 1}
+> Object.observe(a, function() { console.log(arguments); })
+> a.foo = 3
+  [Array[1]]
+      0: Array[1]
+          0: Object
+              name: "foo"
+              object: Object
+                  foo: 3
+              oldValue: 1
+              type: "update"
+> a.bar = 10
+  [Array[1]]
+      0: Array[1]
+          0: Object
+              name: "bar"
+              object: Object
+                  bar: 10
+                  foo: 3
+              type: "add"
+```
 
 まさにデータバインディングで使ってくれといっているようなメソッドである。
 
