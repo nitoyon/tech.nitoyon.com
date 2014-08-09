@@ -54,7 +54,7 @@ module Jekyll
 
     # add 'raw' attribute
     def to_liquid(attrs = nil)
-      self.to_liquid_orig(attrs).deep_merge({
+      Utils.deep_merge_hashes(self.to_liquid_orig(attrs), {
         "raw" => ToDrop.new(self)
       })
     end
@@ -72,7 +72,7 @@ module Jekyll
 
     # add 'raw' attribute
     def to_liquid(attrs = nil)
-      self.to_liquid_orig(attrs).deep_merge({
+      Utils.deep_merge_hashes(self.to_liquid_orig(attrs), {
         "raw" => ToDrop.new(self)
       })
     end
