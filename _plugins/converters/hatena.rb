@@ -26,7 +26,7 @@ module Jekyll
 
       # _config.yml で pygments を true にしているときは、スーパー pre 記法も
       # Pygments を使ってハイライトする
-      if @config['pygments']
+      if @config['highlighter'] == 'pygments'
         HParser::Block::SuperPre::use_pygments = true
       end
 
