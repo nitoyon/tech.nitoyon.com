@@ -16,9 +16,9 @@ module Jekyll
     end
 
     # override default `categories' accessor
-    def categories
-      [self.lang]
-    end
+    #def categories
+    #  [self.lang]
+    #end
 
     def next
       if @has_next_cache
