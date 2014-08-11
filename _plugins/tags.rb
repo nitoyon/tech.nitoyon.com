@@ -1,16 +1,12 @@
 # -*- encoding: utf-8 -*-
 #
-# Generate yearly and monthly archive page
-#
-# from https://github.com/BlackBulletIV/blackbulletiv.github.com/blob/master/_plugins/tags_categories.rb
+# Generate tag page
 #
 # Change log
 # * Multilang support
-# * Generate only when YAML changed
 #
 # Dependent plugins
-# * site_ext plugin
-# * post_yaml_cache plugin
+# * post_multilang_by_category plugin
 
 module Jekyll
   class Tag < Page
@@ -36,19 +32,6 @@ module Jekyll
 
       self.data['title'] = Jekyll::Locales.translate(site.config, lang,
         'tag.title', 'Tag: $0', tag_display_name)
-    end
-
-    # quick hack for #1568
-    def destination(dest)
-      # The url needs to be unescaped in order to preserve the correct
-      # filename.
-      path = File.join(dest, URI.unescape(self.url))
-      path = File.join(path, "index.html") if self.url =~ /\/$/
-      path
-    end
-
-    def needs_render?
-      @site.yaml_cache.yaml_modified
     end
 
     def self.tag2filename(name)
@@ -105,12 +88,12 @@ module Jekyll
     end
   end
 
-  class Site
-    def generate_tags
-      payload = site_payload
+  class TagPageGenerator < Generator
+    def generate(site)
+      payload = site.site_payload
 
       lang_tags = {}
-      self.tags.each do |tag, posts|
+      site.tags.each do |tag, posts|
         posts.each do |post|
           lang_tags[post.lang] = {} unless lang_tags.key? post.lang
           lang_tags[post.lang][tag] = [] unless lang_tags[post.lang].key? tag
@@ -119,14 +102,12 @@ module Jekyll
       end
 
       lang_tags.each do |lang, tags|
-        page = TagList.new(self, self.source, tags, lang)
-        self.render_if_modified(page, payload)
-        self.pages << page
+        page = TagList.new(site, site.source, tags, lang)
+        site.pages << page
 
         tags.each do |tag, posts|
-          page = Tag.new(self, self.source, tag, lang, posts)
-          self.render_if_modified(page, payload)
-          self.pages << page
+          page = Tag.new(site, site.source, tag, lang, posts)
+          site.pages << page
         end
       end
     end
