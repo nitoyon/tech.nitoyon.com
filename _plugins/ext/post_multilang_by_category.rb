@@ -25,7 +25,7 @@ module Jekyll
         return @next_cache
       end
 
-      category = self.site.categories[self.lang]
+      category = self.site.categories[self.lang].reverse()
       pos = category.index(self)
 
       if pos && pos < category.length-1
@@ -42,7 +42,7 @@ module Jekyll
         return @previous_cache
       end
 
-      category = self.site.categories[self.lang]
+      category = self.site.categories[self.lang].reverse()
       pos = category.index(self)
 
       if pos && pos > 0
