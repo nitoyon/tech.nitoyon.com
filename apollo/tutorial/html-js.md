@@ -2,7 +2,7 @@
 layout: post
 title: HTML+JS版 Apollo アプリを作ってみる
 lang: ja
-date: 2007-03-22 23:26:52
+date: 2007-03-22 23:26:52 +0900
 toc:
 - /apollo/tutorial/html-js.html
 - /apollo/tutorial/as_apollo.html

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: IEerBug - Debug Console for IE6
-date: 2006-08-28 00:00:01
+date: 2006-08-28 00:00:01 +0900
 lang: en
 alternate:
   lang: ja_JP

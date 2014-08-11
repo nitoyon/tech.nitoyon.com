@@ -2,7 +2,7 @@
 layout: post
 title: text-hatena.js 公開
 lang: ja
-date: 2005-12-01 00:00:00
+date: 2005-12-01 00:00:00 +0900
 ---
 CPAN で公開されている [Text::Hatena] を JavaScript に移植してみました。
 

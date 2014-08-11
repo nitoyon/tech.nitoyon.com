@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Driving on Google Earth!
-date: 2006-09-21 00:00:00
+date: 2006-09-21 00:00:00 +0900
 lang: en
 alternate:
   lang: ja_JP

@@ -2,7 +2,7 @@
 layout: post
 title: JavaScript から Flash を楽々操作できる FABridge
 lang: ja
-date: 2007-03-22 23:26:52
+date: 2007-03-22 23:26:52 +0900
 ---
 JavaScript から Flash を操作できるツール、Flex-Ajax Bridge (FABridge) を試してみました。
 

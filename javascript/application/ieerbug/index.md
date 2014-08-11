@@ -1,7 +1,7 @@
 ---
 layout: post
 title: IEerBug － IE6 用デバッグ コンソール
-date: 2006-08-28 00:00:01
+date: 2006-08-28 00:00:01 +0900
 lang: ja
 alternate:
   lang: en_US
