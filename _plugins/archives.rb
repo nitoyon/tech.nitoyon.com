@@ -2,17 +2,15 @@
 #
 # Generate yearly and monthly archive page
 #
-# from https://github.com/BlackBulletIV/blackbulletiv.github.com/blob/master/_plugins/archives.rb
+# based on https://github.com/BlackBulletIV/blackbulletiv.github.com/blob/master/_plugins/archives.rb
 #
 # Change log
+# * Works as a Generator
 # * Multilang support
 # * Stopped generating daily archive
-# * Generate only when YAML changed
 #
 # Dependent plugins
-# * site_ext plugin
 # * post_multilang_by_category plugin
-# * post_yaml_cache plugin
 
 module Jekyll
   class Archive < Page
@@ -79,33 +77,33 @@ module Jekyll
     end
   end
   
-  class Site
-    def generate_archives
+  class ArhivePageGenerator < Generator
+    def generate(site)
+      @site = site
+
       # check config
-      unless self.config.has_key? 'lang' and self.config['lang'].instance_of? Array
+      unless @site.config.has_key? 'lang' and @site.config['lang'].instance_of? Array
         puts "language list is not defined in _config.yml."
         return
       end
 
-      self.config['lang'].each do |lang|
+      @site.config['lang'].each do |lang|
         self.generate_archives_for_lang(lang)
       end
     end
 
     # Generate yearly and monthly archive page of lang
     def generate_archives_for_lang(lang)
-      years, months = Archive.archives(self.categories[lang])
-      payload = site_payload
+      years, months = Archive.archives(@site.categories[lang])
+      payload = @site.site_payload
 
       months.each do |year, m|
-        page = Archive.new(self, self.source, years[year], lang, year)
-        self.render_if_modified(page, payload)
-        self.pages << page
+        page = Archive.new(@site, @site.source, years[year], lang, year)
+        @site.pages << page
 
         m.each do |month, d|
-          page = Archive.new(self, self.source, months[year][month], lang, year, month)
-          self.render_if_modified(page, payload)
-          self.pages << page
+          page = Archive.new(@site, @site.source, months[year][month], lang, year, month)
+          @site.pages << page
         end
       end
     end
