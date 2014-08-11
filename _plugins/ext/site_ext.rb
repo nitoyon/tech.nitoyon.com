@@ -49,10 +49,6 @@ module Jekyll
   #    puts "#{self.destination('/')} updated: #{update.strip}" unless update.strip.empty?
   #    !update.strip.empty?
   #  end
-
-  #  def source
-  #    File.join(@base, @dir, @name)[@site.source.length .. -1]
-  #  end
   #end
 
   #class Layout
