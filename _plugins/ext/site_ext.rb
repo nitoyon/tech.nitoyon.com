@@ -196,6 +196,9 @@ module Jekyll
       [posts, pages].flatten.each do |page_or_post|
         puts "rendering " + page_or_post.destination('/')
         page_or_post.render(layouts, payload)
+
+        # quick hack for HTML backward compatibility
+        page_or_post.output.gsub!(/<pre><code class="language-([^"]+)"/, '<pre><code class="\1 language-\1"')
       end
     rescue Errno::ENOENT => e
       # ignore missing layout dir
