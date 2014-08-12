@@ -9,29 +9,29 @@
 #   * compares mtime of src file and dst file
 
 module Jekyll
-  #class StaticFile
-  #  # Is source path modified?
-  #  #
-  #  # Returns true if modified since last write.
-  #  def modified?(dest_path)
-  #    File.stat(dest_path).mtime.to_i < mtime
-  #  end
+  class StaticFile
+    # Is source path modified?
+    #
+    # Returns true if modified since last write.
+    def modified?(dest_path)
+      File.stat(dest_path).mtime.to_i < mtime
+    end
 
-  #  # Write the static file to the destination directory (if modified).
-  #  #
-  #  # dest - The String path to the destination dir.
-  #  #
-  #  # Returns false if the file was not modified since last time (no-op).
-  #  def write(dest)
-  #    dest_path = destination(dest)
+    # Write the static file to the destination directory (if modified).
+    #
+    # dest - The String path to the destination dir.
+    #
+    # Returns false if the file was not modified since last time (no-op).
+    def write(dest)
+      dest_path = destination(dest)
 
-  #    return false if File.exist?(dest_path) and !modified?(dest_path)
-  #    @@mtimes[path] = mtime
+      return false if File.exist?(dest_path) and !modified?(dest_path)
+      @@mtimes[path] = mtime
 
-  #    FileUtils.mkdir_p(File.dirname(dest_path))
-  #    FileUtils.cp(path, dest_path)
+      FileUtils.mkdir_p(File.dirname(dest_path))
+      FileUtils.cp(path, dest_path)
 
-  #    true
-  #  end
-  #end
+      true
+    end
+  end
 end
