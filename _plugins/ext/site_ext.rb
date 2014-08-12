@@ -56,9 +56,9 @@ module Jekyll
   #end
 
   class Site
-  #  def is_modified_only
-  #    self.future
-  #  end
+    def is_modified_only
+      self.future
+    end
 
     # Public: Read, process, and write this Site to output.
     #
@@ -175,27 +175,6 @@ module Jekyll
 
   #    FileUtils.rm_rf(obsolete_files.to_a)
   #  end
-
-    # Render the site to the destination.
-    #
-    # Returns nothing.
-    def render
-      relative_permalinks_deprecation_method
-
-      collections.each do |label, collection|
-        collection.docs.each do |document|
-          document.output = Jekyll::Renderer.new(self, document).run
-        end
-      end
-
-      payload = site_payload
-      [posts, pages].flatten.each do |page_or_post|
-        puts "rendering " + page_or_post.destination('/')
-        page_or_post.render(layouts, payload)
-      end
-    rescue Errno::ENOENT => e
-      # ignore missing layout dir
-    end
 
   #  # Render the site to the destination.
   #  #

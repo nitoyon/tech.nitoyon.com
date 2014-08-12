@@ -19,7 +19,36 @@ module Jekyll
     end
   end
 
+  class Page
+    alias :post_yaml_cache_original_render :render
+
+    def render(layouts, site_payload)
+      return if site.is_modified_only && !self.modified
+
+      puts "rendering " + self.destination('/')
+      post_yaml_cache_original_render(layouts, site_payload)
+      self.rendered = true
+    end
+  end
+
+  class Post
+    alias :post_yaml_cache_original_render :render
+
+    def render(layouts, site_payload)
+      return if site.is_modified_only && !self.modified
+
+      puts "rendering " + self.destination('/')
+      post_yaml_cache_original_render(layouts, site_payload)
+      self.rendered = true
+    end
+  end
+
   module Convertible
+    attr_accessor :modified
+    attr_accessor :rendered
+
+    alias :post_yaml_cache_original_write :write
+
     # Read the YAML frontmatter.
     #
     # base - The String path to the dir containing the file.
@@ -31,8 +60,14 @@ module Jekyll
       ret = site.yaml_cache.get(base, name, self.merged_file_read_opts(opts))
       self.content = ret[:content]
       self.data = ret[:yaml]
-      #self.modified = ret[:modified]
-      #self.yaml_modified = ret[:yaml_modified]
+      self.modified = ret[:modified]
+    end
+
+    def write(dest)
+      return unless self.rendered
+
+      puts "writing " + self.destination('/')
+      post_yaml_cache_original_write(dest)
     end
   end
 
