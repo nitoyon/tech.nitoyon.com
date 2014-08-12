@@ -11,7 +11,7 @@ seealso:
 - 2014-01-29-chef-win-path
 - 2013-10-02-node-watch-impl
 - 2013-07-09-symlink-dir-diff-on-windows
-- 2013-02-27-livereloadx
+- en/2013-02-27-livereloadx
 ---
 If you install Jenkins using MSI installer, it copies files to `C:\Program Files (x86)\jenkins` and uses the install directory as `JENKINS_HOME` (on 64bit machine).
 
