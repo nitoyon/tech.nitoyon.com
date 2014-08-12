@@ -12,7 +12,7 @@ seealso:
 - 2014-02-06-rdp-port
 - 2014-01-17-chef-win-path
 - 2013-12-09-setctime
-- 2013-11-14-jekyll-win
+- ja/2013-11-14-jekyll-win
 ---
 Jenkins を Windows 環境に MSI ファイルで導入すると、デフォルトでは `C:\Program Files (x86)` にインストールされる (64 ビットの場合)。
 
