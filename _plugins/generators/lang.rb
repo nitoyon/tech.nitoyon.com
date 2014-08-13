@@ -4,8 +4,7 @@
 # * Output pages in _lang folder for each languages
 #
 # Dependent plugins
-# * site_ext plugin
-# * post_yaml_cache plugin
+# * post_multilang_by_category plugin
 
 module Jekyll
   class LanguagePage < Page
@@ -16,31 +15,30 @@ module Jekyll
     end
   end
   
-  class Site
-    def generate_languages
+  class LanguagePageGenerator < Generator
+    def generate(site)
       # check config
-      unless self.config.has_key? 'lang' and self.config['lang'].instance_of? Array
+      unless site.config.has_key? 'lang' and site.config['lang'].instance_of? Array
         puts "language list is not defined in _config.yml."
         return
       end
 
-      base = File.join(self.source, '_lang')
+      base = File.join(site.source, '_lang')
       return unless File.exists?(base)
-      entries = Dir.chdir(base) { filter_entries(Dir['**/*']) }
-      payload = site_payload
+      entries = Dir.chdir(base) { site.filter_entries(Dir['**/*']) }
+      payload = site.site_payload
 
       # process each entries and languages
       entries.each do |f|
         # skip directories
         next if File.directory?(File.join(base, f))
 
-        self.config['lang'].each do |lang|
+        site.config['lang'].each do |lang|
           # Create new page
-          page = LanguagePage.new(self, base, f, lang)
+          page = LanguagePage.new(site, base, f, lang)
 
           # Render if post yaml is modified (set by post_yaml_cache plugin)
-          self.render_if_modified(page, payload)
-          self.pages << page
+          site.pages << page
         end
       end
     end

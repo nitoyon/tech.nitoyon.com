@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 走っているように見える仕組み
-date: 2005-11-07 00:00:00
+date: 2005-11-07 00:00:00 +0900
 lang: ja
 toc:
 - /javascript/application/racing/1.html

@@ -2,7 +2,7 @@
 layout: post
 title: ActionScript版 Apollo アプリを作ってみる
 lang: ja
-date: 2007-04-02 03:05:22
+date: 2007-04-02 03:05:22 +0900
 toc:
 - /apollo/tutorial/html-js.html
 - /apollo/tutorial/as_apollo.html

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: IEerBug － IE6 用デバッグ コンソール
-date: 2006-08-28 00:00:01
+date: 2006-08-28 00:00:01 +0900
 lang: ja
 alternate:
   lang: en_US
@@ -15,34 +15,35 @@ alternate:
 使い方
 ======
 
-1. <a href="ieerbug-0-2.zip">ieerbug.zip</a> をダウンロードし、中身をアプリケーションのディレクトリに配置します。IEerBug 用のディレクトリを作成して、その中に配置しても問題ありません。
+<a href="ieerbug-0-2.zip">ieerbug.zip</a> をダウンロードし、中身をアプリケーションのディレクトリに配置します。IEerBug 用のディレクトリを作成して、その中に配置しても問題ありません。
 
-2. HTML の中で次のようにして `ieerbug.js` を読み込みます。
+HTML の中で次のようにして `ieerbug.js` を読み込みます。
 
-   ```html
-   <script src="ieerbug.js"></script>
-   ```
+```html
+<script src="ieerbug.js"></script>
+```
 
-3. JavaScript のソースの中で、コンソール出力用のコードを記述します。たとえば、次のように書くと
+JavaScript のソースの中で、コンソール出力用のコードを記述します。たとえば、次のように書くと
 
-   ```javascript
-   console.debug("test");
-   console.debug("value is : %d %s", i, s);
-   console.debug("debug object : %o", {x : 3, y : 2});
-   console.info(document);
-   console.assert(a);
-   ```
-   次のように出力されます。
+```javascript
+console.debug("test");
+console.debug("value is : %d %s", i, s);
+console.debug("debug object : %o", {x : 3, y : 2});
+console.info(document);
+console.assert(a);
+```
 
-   <img src="screen1.gif" width="403" height="188">
+次のように出力されます。
 
-   `[object Object]` をクリックすると、オブジェクトの中身が表示されます。
+<img src="screen1.gif" width="403" height="188">
 
-   <img src="screen2.gif" width="409" height="193">
+`[object Object]` をクリックすると、オブジェクトの中身が表示されます。
 
-   `document` をクリックしても同じように document オブジェクトの中身を覗くことができます。
+<img src="screen2.gif" width="409" height="193">
 
-   <img src="screen3.gif" width="409" height="193">
+`document` をクリックしても同じように document オブジェクトの中身を覗くことができます。
+
+<img src="screen3.gif" width="409" height="193">
 
 
 主な特徴

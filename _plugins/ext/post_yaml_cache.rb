@@ -5,41 +5,69 @@
 module Jekyll
   class Site
     attr_accessor :yaml_cache
+    alias :post_yaml_cache_original_read :read
 
     def read
-      @yaml_cache = YamlCache.new(self) if @yaml_cache.nil?
-      @yaml_cache.clear_modified
+      @yaml_cache = YamlCache.new(self)
+      post_yaml_cache_original_read()
+    end
+  end
 
-      self.read_layouts
-      self.read_directories
+  class YamlCacheGenerator < Generator
+    def generate(site)
+      site.yaml_cache.save
+    end
+  end
 
-      @yaml_cache.save
+  class Page
+    alias :post_yaml_cache_original_render :render
+
+    def render(layouts, site_payload)
+      return if site.is_modified_only && !self.modified
+
+      puts "rendering " + self.destination('/')
+      post_yaml_cache_original_render(layouts, site_payload)
+      self.rendered = true
+    end
+  end
+
+  class Post
+    alias :post_yaml_cache_original_render :render
+
+    def render(layouts, site_payload)
+      return if site.is_modified_only && !self.modified
+
+      puts "rendering " + self.destination('/')
+      post_yaml_cache_original_render(layouts, site_payload)
+      self.rendered = true
     end
   end
 
   module Convertible
+    attr_accessor :modified
+    attr_accessor :rendered
+
+    alias :post_yaml_cache_original_write :write
+
     # Read the YAML frontmatter.
     #
     # base - The String path to the dir containing the file.
     # name - The String filename of the file.
+    # opts - optional parameter to File.read, default at site configs
     #
     # Returns nothing.
-    def read_yaml(base, name)
-      source = File.join(base, name)
+    def read_yaml(base, name, opts = {})
+      ret = site.yaml_cache.get(base, name, self.merged_file_read_opts(opts))
+      self.content = ret[:content]
+      self.data = ret[:yaml]
+      self.modified = ret[:modified]
+    end
 
-      begin
-        ret = site.yaml_cache.get(source)
+    def write(dest)
+      return unless self.rendered
 
-        self.content = ret[:content]
-        self.data = ret[:yaml]
-        self.modified = ret[:modified]
-        self.yaml_modified = ret[:yaml_modified]
-      rescue => e
-        puts "YAML Exception reading #{name}: #{e.message}"
-        raise e
-      end
-
-      self.data ||= {}
+      puts "writing " + self.destination('/')
+      post_yaml_cache_original_write(dest)
     end
   end
 
@@ -66,7 +94,7 @@ module Jekyll
       { :modified         => updated || yaml_modified || content_modified,
         :yaml_modified    => yaml_modified,
         :content_modified => content_modified,
-        :yaml             => Marshal.load(Marshal.dump(yaml)),
+        :yaml             => Marshal.load(Marshal.dump(yaml)) || {},
         :content          => content,
       }
     end
@@ -74,8 +102,9 @@ module Jekyll
     # Get cache or create cache
     #
     # Returns the Hash representation of the cache data.
-    def get(path)
+    def get(base, name, opts)
       self.load if @cache.nil?
+      path = Jekyll.sanitized_path(base, name)
       key = path[@site.source.length..-1]
       mtime = File.mtime(path)
 
@@ -84,17 +113,24 @@ module Jekyll
         ret_hash(@cache[key]['yaml'], @cache[key]['content'], false, false, false)
       else
         puts "parsed yaml #{key}..."
-        self.set_content(key, path, mtime)
+        self.set_content(key, path, mtime, opts)
       end
     end
 
-    def set_content(key, path, mtime)
+    def set_content(key, path, mtime, opts)
       # get current data
-      content = File.read(path)
-      if content =~ /^(---\s*\n.*?\n?)^(---\s*$\n?)/m
-        content = $POSTMATCH
-        yaml = YAML.load($1)
+      begin
+        content = File.read(path, opts)
+        if content =~ /\A(---\s*\n.*?\n?)^((---|\.\.\.)\s*$\n?)/m
+          content = $POSTMATCH
+          yaml = SafeYAML.load($1)
+        end
+      rescue SyntaxError => e
+        Jekyll.logger.warn "YAML Exception reading #{path}: #{e.message}"
+      rescue Exception => e
+        Jekyll.logger.warn "Error reading file #{path}: #{e.message}"
       end
+      yaml ||= {}
 
       # get cache
       if @cache.has_key?(key)

@@ -16,16 +16,16 @@ module Jekyll
     end
 
     # override default `categories' accessor
-    def categories
-      [self.lang]
-    end
+    #def categories
+    #  [self.lang]
+    #end
 
     def next
       if @has_next_cache
         return @next_cache
       end
 
-      category = self.site.categories[self.lang]
+      category = self.site.categories[self.lang].reverse()
       pos = category.index(self)
 
       if pos && pos < category.length-1
@@ -42,7 +42,7 @@ module Jekyll
         return @previous_cache
       end
 
-      category = self.site.categories[self.lang]
+      category = self.site.categories[self.lang].reverse()
       pos = category.index(self)
 
       if pos && pos > 0
