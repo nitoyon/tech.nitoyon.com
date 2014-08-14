@@ -29,8 +29,8 @@ module Jekyll
     def tag2displayname(input)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
-      config = @context.registers[:site].config
-      Jekyll::Tag.tag2displayname(config, lang, input)
+      site = @context.registers[:site]
+      Jekyll::Tag.tag2displayname(site, lang, input)
     end
   end
 end

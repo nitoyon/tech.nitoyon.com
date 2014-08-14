@@ -12,7 +12,7 @@ module Jekyll
   class Tag < Page
     def initialize(site, base, tag, lang, posts)
       tag_file_name = Tag.tag2filename(tag)
-      tag_display_name = Tag.tag2displayname(site.config, lang, tag)
+      tag_display_name = Tag.tag2displayname(site, lang, tag)
 
       @site = site
       @base = base
@@ -30,7 +30,7 @@ module Jekyll
       self.data["lang"] = lang
       self.data["permalink"] = permalink
 
-      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+      self.data['title'] = Jekyll::Locales.translate(site, lang,
         'tag.title', 'Tag: $0', tag_display_name)
     end
 
@@ -38,9 +38,9 @@ module Jekyll
       name.downcase.gsub(' ', '-')
     end
 
-    def self.tag2displayname(config, lang, name)
+    def self.tag2displayname(site, lang, name)
       filename = self.tag2filename(name)
-      Jekyll::Locales.translate(config, lang, filename, name)
+      Jekyll::Locales.translate(site, lang, filename, name)
     end
   end
 
@@ -79,7 +79,7 @@ module Jekyll
       }
       self.data["lang"] = lang
 
-      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+      self.data['title'] = Jekyll::Locales.translate(site, lang,
         'tags.title', 'Tag Cloud')
     end
 

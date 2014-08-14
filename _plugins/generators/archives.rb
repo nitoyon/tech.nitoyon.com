@@ -54,13 +54,13 @@ module Jekyll
       self.read_yaml(File.join(base, '_layouts'), 'archive.html')
 
       if day
-        title = Jekyll::Locales.translate(site.config, lang,
+        title = Jekyll::Locales.translate(site, lang,
           'archive.title.day', 'Archives for %B %d, %Y', time)
       elsif month
-        title = Jekyll::Locales.translate(site.config, lang,
+        title = Jekyll::Locales.translate(site, lang,
           'archive.title.month', 'Archives for %B %Y', time)
       else
-        title = Jekyll::Locales.translate(site.config, lang,
+        title = Jekyll::Locales.translate(site, lang,
           'archive.title.year', 'Archives for %Y', time)
       end
       
