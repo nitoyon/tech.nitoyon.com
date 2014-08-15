@@ -18,8 +18,8 @@ module Jekyll
   class LanguagePageGenerator < Generator
     def generate(site)
       # check config
-      unless site.config.has_key? 'lang' and site.config['lang'].instance_of? Array
-        puts "language list is not defined in _config.yml."
+      unless site.config.has_key? 'lang' and site.config['lang'].instance_of? String
+        puts "language is not defined in _config.yml."
         return
       end
 
@@ -33,13 +33,11 @@ module Jekyll
         # skip directories
         next if File.directory?(File.join(base, f))
 
-        site.config['lang'].each do |lang|
-          # Create new page
-          page = LanguagePage.new(site, base, f, lang)
+        # Create new page
+        page = LanguagePage.new(site, base, f, site.config['lang'])
 
-          # Render if post yaml is modified (set by post_yaml_cache plugin)
-          site.pages << page
-        end
+        # Render if post yaml is modified (set by post_yaml_cache plugin)
+        site.pages << page
       end
     end
   end

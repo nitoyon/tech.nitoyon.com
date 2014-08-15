@@ -4,9 +4,6 @@
 #
 # Change log
 # * Multilang support
-#
-# Dependent plugins
-# * post_multilang_by_category plugin
 
 module Jekyll
   class Tag < Page
@@ -92,23 +89,16 @@ module Jekyll
     def generate(site)
       payload = site.site_payload
 
-      lang_tags = {}
+      raise Errors::FatalException.new("lang is not defined. override " +
+        "_config.yml with _config.[lang].yml!") unless site.config.key?('lang')
+      lang = site.config['lang']
+
+      page = TagList.new(site, site.source, site.tags, lang)
+      site.pages << page
+
       site.tags.each do |tag, posts|
-        posts.each do |post|
-          lang_tags[post.lang] = {} unless lang_tags.key? post.lang
-          lang_tags[post.lang][tag] = [] unless lang_tags[post.lang].key? tag
-          lang_tags[post.lang][tag] << post
-        end
-      end
-
-      lang_tags.each do |lang, tags|
-        page = TagList.new(site, site.source, tags, lang)
+        page = Tag.new(site, site.source, tag, lang, posts)
         site.pages << page
-
-        tags.each do |tag, posts|
-          page = Tag.new(site, site.source, tag, lang, posts)
-          site.pages << page
-        end
       end
     end
   end

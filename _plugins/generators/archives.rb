@@ -6,11 +6,7 @@
 #
 # Change log
 # * Works as a Generator
-# * Multilang support
 # * Stopped generating daily archive
-#
-# Dependent plugins
-# * post_multilang_by_category plugin
 
 module Jekyll
   class Archive < Page
@@ -36,11 +32,13 @@ module Jekyll
       [years, months]
     end
     
-    def initialize(site, base, posts, lang, year, month = nil, day = nil)
+    def initialize(site, posts, year, month = nil, day = nil)
       @site = site
-      @base = base
       @name = "index.html"
 
+      raise Errors::FatalException.new("lang is not defined. override " +
+        "_config.yml with _config.[lang].yml!") unless site.config.key?('lang')
+      lang = site.config['lang']
       time = Time.new(year, month, day)
       if day
         @dir = time.strftime("/#{lang}/blog/%Y/%m/%d")
@@ -51,7 +49,7 @@ module Jekyll
       end
 
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), 'archive.html')
+      self.read_yaml(File.join(site.source, '_layouts'), 'archive.html')
 
       if day
         title = Jekyll::Locales.translate(site, lang,
@@ -65,15 +63,8 @@ module Jekyll
       end
       
       self.data["title"] = title
-      self.data["posts"] = posts.reverse
-      self.data["lang"] = lang;
-    end
-
-    def needs_render?
-      self.data["posts"].each { |post|
-        return true if post.yaml_modified
-      }
-      false
+      self.data["posts"] = posts
+      self.data["lang"] = lang
     end
   end
   
@@ -81,28 +72,15 @@ module Jekyll
     def generate(site)
       @site = site
 
-      # check config
-      unless @site.config.has_key? 'lang' and @site.config['lang'].instance_of? Array
-        puts "language list is not defined in _config.yml."
-        return
-      end
-
-      @site.config['lang'].each do |lang|
-        self.generate_archives_for_lang(lang)
-      end
-    end
-
-    # Generate yearly and monthly archive page of lang
-    def generate_archives_for_lang(lang)
-      years, months = Archive.archives(@site.categories[lang])
+      years, months = Archive.archives(@site.posts)
       payload = @site.site_payload
 
       months.each do |year, m|
-        page = Archive.new(@site, @site.source, years[year], lang, year)
+        page = Archive.new(@site, years[year], year)
         @site.pages << page
 
         m.each do |month, d|
-          page = Archive.new(@site, @site.source, months[year][month], lang, year, month)
+          page = Archive.new(@site, months[year][month], year, month)
           @site.pages << page
         end
       end
