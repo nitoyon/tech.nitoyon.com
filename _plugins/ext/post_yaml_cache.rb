@@ -143,7 +143,7 @@ module Jekyll
       content_modified = old_content != content
       modified = yaml_modified || content_modified
       @yaml_modified |= yaml_modified
-      @modified |= modified
+      @modified = true
 
       # set cache
       @cache[key] = {
@@ -151,7 +151,7 @@ module Jekyll
         'yaml' => yaml,
         'modified' => mtime,
       }
-      puts "modify cache: yaml=#{yaml_modified}, content=#{content_modified}" if modified
+      puts "modify cache: yaml=#{yaml_modified}, content=#{content_modified}, mtime=#{mtime}"
 
       ret_hash(yaml, content, yaml_modified, content_modified, true)
     end
