@@ -19,10 +19,10 @@ module Jekyll
     def t(input, string=nil)
       lang = 'en'
       lang = @context['page']['lang'] if @context['page'].has_key?('lang')
-      config = @context.registers[:site].config
+      site = @context.registers[:site]
       param = string.nil? ? nil : input
       key = string.nil? ? input : string
-      Jekyll::Locales::translate(config, lang, key, nil, param)
+      Jekyll::Locales::translate(site, lang, key, nil, param)
     end
   end
 
@@ -51,12 +51,12 @@ module Jekyll
     #     translate(c, 'en', 'hello2', 'foo')    # => Hello world 'foo'
     #     translate(c, 'fr', 'hello', nil, '!')  # => !
     #     translate(c, 'en', 'date', Time.now)   # => 01-JAN-2013
-    def self.translate(config, lang, key, default_value=nil, param=nil)
-      unless config.has_key?('locale') && config['locale'].has_key?(lang)
-        return "(UNKNOWN TEXT: locale config for #{lang} not found)"
+    def self.translate(site, lang, key, default_value=nil, param=nil)
+      unless site.data.has_key?('locale') && site.data['locale'].has_key?(lang)
+        return "(UNKNOWN TEXT: locale config for #{lang} not found #{data})"
       end
-      config = config['locale']
 
+      locale = site.data['locale'][lang]
       begin
         if key.nil?
           return "(nil)"
@@ -65,8 +65,8 @@ module Jekyll
         end
 
         # get value
-        if config[lang].has_key? key
-          value = config[lang][key]
+        if locale.has_key? key
+          value = locale[key]
         else
           value = default_value
           return "(UNKNOWN KEY: #{key} for #{lang})" if value.nil?

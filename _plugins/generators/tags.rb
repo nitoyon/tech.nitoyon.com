@@ -4,15 +4,12 @@
 #
 # Change log
 # * Multilang support
-#
-# Dependent plugins
-# * post_multilang_by_category plugin
 
 module Jekyll
   class Tag < Page
     def initialize(site, base, tag, lang, posts)
       tag_file_name = Tag.tag2filename(tag)
-      tag_display_name = Tag.tag2displayname(site.config, lang, tag)
+      tag_display_name = Tag.tag2displayname(site, lang, tag)
 
       @site = site
       @base = base
@@ -30,7 +27,7 @@ module Jekyll
       self.data["lang"] = lang
       self.data["permalink"] = permalink
 
-      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+      self.data['title'] = Jekyll::Locales.translate(site, lang,
         'tag.title', 'Tag: $0', tag_display_name)
     end
 
@@ -38,9 +35,9 @@ module Jekyll
       name.downcase.gsub(' ', '-')
     end
 
-    def self.tag2displayname(config, lang, name)
+    def self.tag2displayname(site, lang, name)
       filename = self.tag2filename(name)
-      Jekyll::Locales.translate(config, lang, filename, name)
+      Jekyll::Locales.translate(site, lang, filename, name)
     end
   end
 
@@ -79,7 +76,7 @@ module Jekyll
       }
       self.data["lang"] = lang
 
-      self.data['title'] = Jekyll::Locales.translate(site.config, lang,
+      self.data['title'] = Jekyll::Locales.translate(site, lang,
         'tags.title', 'Tag Cloud')
     end
 
@@ -92,23 +89,16 @@ module Jekyll
     def generate(site)
       payload = site.site_payload
 
-      lang_tags = {}
+      raise Errors::FatalException.new("lang is not defined. override " +
+        "_config.yml with _config.[lang].yml!") unless site.config.key?('lang')
+      lang = site.config['lang']
+
+      page = TagList.new(site, site.source, site.tags, lang)
+      site.pages << page
+
       site.tags.each do |tag, posts|
-        posts.each do |post|
-          lang_tags[post.lang] = {} unless lang_tags.key? post.lang
-          lang_tags[post.lang][tag] = [] unless lang_tags[post.lang].key? tag
-          lang_tags[post.lang][tag] << post
-        end
-      end
-
-      lang_tags.each do |lang, tags|
-        page = TagList.new(site, site.source, tags, lang)
+        page = Tag.new(site, site.source, tag, lang, posts)
         site.pages << page
-
-        tags.each do |tag, posts|
-          page = Tag.new(site, site.source, tag, lang, posts)
-          site.pages << page
-        end
       end
     end
   end

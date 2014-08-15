@@ -2,11 +2,17 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     shell: {
-      jekyll_build: {
-        command: 'jekyll build --future'
+      jekyll_build_ja: {
+        command: 'jekyll build --future --config _config.yml,_config.ja.yml'
       },
-      jekyll_rebuild: {
-        command: 'jekyll build'
+      jekyll_build_en: {
+        command: 'jekyll build --future --config _config.yml,_config.en.yml'
+      },
+      jekyll_rebuild_ja: {
+        command: 'jekyll build --config _config.yml,_config.ja.yml'
+      },
+      jekyll_rebuild_en: {
+        command: 'jekyll build --config _config.yml,_config.en.yml'
       }
     },
     livereloadx: {
@@ -22,7 +28,7 @@ module.exports = function(grunt) {
           enabled: false
         }
       },
-      '*': function(filepath) { return 'shell:jekyll_build' }
+      '*': function(filepath) { return 'build' }
     }
   });
 
@@ -32,6 +38,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('watch', ['esteWatch']);
   grunt.registerTask('default', ['livereloadx', 'build', 'esteWatch']);
-  grunt.registerTask('build', ['shell:jekyll_build']);
-  grunt.registerTask('rebuild', ['shell:jekyll_rebuild']);
+  grunt.registerTask('build', ['shell:jekyll_build_ja', 'shell:jekyll_build_en']);
+  grunt.registerTask('rebuild', ['shell:jekyll_rebuild_ja', 'shell:jekyll_rebuild_en']);
 };
