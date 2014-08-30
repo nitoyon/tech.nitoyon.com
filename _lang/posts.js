@@ -1,5 +1,4 @@
 ---
-update_policy: "{% include enum-lang-posts.html %}{% includex post-list-yaml-modified.html,5 %}"
 ---
 var Site = {
 	lang: "{{ page.lang }}", 
