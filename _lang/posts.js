@@ -8,7 +8,7 @@ var Site = {
 
 Site.archives.posts = [
 {% for post in site.posts limit:5%}{% unless forloop.first %},
-{% endunless %}	{url: {{post.url | json}}, title: {{post.title | json}}}{% endfor %}
+{% endunless %}	{url: {{post.url | jsonify}}, title: {{post.title | jsonify}}}{% endfor %}
 ];
 
 Site.archives.months = [
