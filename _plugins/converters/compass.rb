@@ -5,30 +5,27 @@
 require 'sass'
 
 module Jekyll
-  class SassConverter < Converter
-    safe true
-    priority :low
-    
-    def matches(ext)
-      ext =~ /scss/i
-    end
-    
-    def output_ext(ext)
-      ".css"
-    end
-    
-    def convert(content)
-      begin
+  module Converters
+    class Scss
+      def compass_sass_load_paths
+        return [] unless jekyll_sass_configuration["compass"]
         require 'compass'
+        Compass.configuration.sass_load_paths
+      end
 
-        options = {
-          :syntax => :scss, 
-          :style => :compact, 
-          :load_paths => Compass.configuration.sass_load_paths
+      def sass_dir_relative_to_site_source
+        Jekyll.sanitized_path(@config["source"], sass_dir)
+      end
+
+      def sass_load_paths
+        if safe?
+          [sass_dir_relative_to_site_source]
+        else
+          (user_sass_load_paths + compass_sass_load_paths +
+           [sass_dir_relative_to_site_source]).uniq
+        end.select { |load_path|
+          !load_path.is_a?(String) || File.directory?(load_path)
         }
-        Sass::Engine.new(content, options).render
-      rescue StandardError => e
-        puts "[Sass Error] #{e.message}"
       end
     end
   end
