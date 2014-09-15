@@ -170,7 +170,7 @@
 <p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a>, I found <code>fs.watchFile()</code> is implemented by <code>uv_fs_poll_start()</code> function.</p>
 
 <p>OK. Let&#39;s read <code>uv_fs_poll_start()</code> defined in <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a>.</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c"><span class="kt">int</span> <span class="nf">uv_fs_poll_start</span><span class="p">(</span><span class="kt">uv_fs_poll_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">uv_fs_poll_start</span><span class="p">(</span><span class="kt">uv_fs_poll_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
                      <span class="n">uv_fs_poll_cb</span> <span class="n">cb</span><span class="p">,</span>
                      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                      <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">interval</span><span class="p">)</span> <span class="p">{</span>
@@ -182,7 +182,7 @@
 <p>The point is <code>uv_fs_stat()</code>. This function executes  asynchronous <code>stat()</code>. The callback <code>poll_cb</code> is called when it completes.</p>
 
 <p>Next, <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a>.</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c"><span class="k">static</span> <span class="kt">void</span> <span class="nf">poll_cb</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="k">static</span> <span class="kt">void</span> <span class="nf">poll_cb</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// snip: trigger event, error handling, and so on</span>
 
   <span class="cm">/* Reschedule timer, subtract the delay from doing the stat(). */</span>

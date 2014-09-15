@@ -75,7 +75,7 @@
 <p>大きいレポジトリーだと結構時間かかる。cygwin だと超絶に時間がかかったので、UNIX 上で実行した。Git for Windows には <code>git-cvsimport</code> がない。</p>
 
 <p>自分は次のように実行した。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">git cvsimport -v -i -R -A author-conv-file.txt \
+<div class="highlight"><pre><code class="language-text" data-lang="text">git cvsimport -v -i -R -A author-conv-file.txt \
 -d :local:/path/to/CVS &lt;module&gt;
 </code></pre></div>
 <p>それぞれのパラメータの意味は次の通り。詳しくは <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> を参照のこと。</p>
@@ -94,7 +94,7 @@
 <h2>author-conv-file の書き方</h2>
 
 <p>author-conv-file には「CVS のユーザー名」から「Git の Author 名・メールアドレス」への対応を記述していく。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">user1=User 1 &lt;user1@example.com&gt;
+<div class="highlight"><pre><code class="language-text" data-lang="text">user1=User 1 &lt;user1@example.com&gt;
 user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 </code></pre></div>
 <p>1.8.1 からはタイムゾーンも指定できるようになっている。それ以前のバージョンだと、すべて UTC でのコミットとなってしまう。</p>
@@ -112,7 +112,7 @@ user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 <p>コミットログやファイル名が UTF-8 でない場合は、ちょいとソースコードを修正する必要がある。</p>
 
 <p>以下は 1.7.3.1 の <code>git-cvsimport</code> に対する修正。</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff"><span class="gd">--- /usr/local/libexec/git-core/git-cvsimport.bak</span>
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gd">--- /usr/local/libexec/git-core/git-cvsimport.bak</span>
 <span class="gi">+++ /usr/local/libexec/git-core/git-cvsimport</span>
 <span class="gu">@@ -722,6 +722,11 @@</span>
  sub update_index (\@\@) {
@@ -142,7 +142,7 @@ user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 <p>ここではコミットログやファイル名が Shift_JIS だという前提で書いてある。</p>
 
 <p>自動判定したい場合は</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff"><span class="gi">+       use Encode::Guess qw/euc-jp shiftjis/;</span>
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gi">+       use Encode::Guess qw/euc-jp shiftjis/;</span>
 <span class="gi">+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;guess&#39;, $logmsg));</span>
 </code></pre></div>
 <p>のように書けばいける。</p>

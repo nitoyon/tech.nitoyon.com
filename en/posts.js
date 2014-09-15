@@ -4,13 +4,6 @@ var Site = {
 	archives: {}
 };
 
-
-
-
-
-
-
-
 Site.archives.posts = [
 	{url: "/en/blog/2014/02/25/jenkins-home-win/", title: "Jenkins: How to change JENKINS_HOME on Windows"},
 	{url: "/en/blog/2014/01/29/chef-win-path/", title: "Chef Console: avoid multiple ruby problem on Windows"},

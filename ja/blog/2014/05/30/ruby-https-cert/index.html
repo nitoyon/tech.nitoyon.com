@@ -77,7 +77,7 @@
 <p>という警告が出てきて困ったので調べてみた。</p>
 
 <p>つかったコードはこんなやつ。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
 <span class="n">https</span> <span class="o">=</span> <span class="ss">Net</span><span class="p">:</span><span class="ss">:HTTP</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
 <span class="n">https</span><span class="o">.</span><span class="n">use_ssl</span> <span class="o">=</span> <span class="kp">true</span>
 <span class="n">https</span><span class="o">.</span><span class="n">start</span> <span class="p">{</span> <span class="o">|</span><span class="n">h</span><span class="o">|</span>
@@ -86,7 +86,7 @@
 <h2>警告が出る理由</h2>
 
 <p>Ruby 1.8 の時点では上記のようなコードで HTTPS 接続したときには、デフォルトでは証明書を検証しないポリシーになっていた。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby">    <span class="k">unless</span> <span class="vi">@ssl_context</span><span class="o">.</span><span class="n">verify_mode</span>
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="k">unless</span> <span class="vi">@ssl_context</span><span class="o">.</span><span class="n">verify_mode</span>
       <span class="nb">warn</span> <span class="s2">&quot;warning: peer certificate won&#39;t be verified in this SSL session&quot;</span>
       <span class="vi">@ssl_context</span><span class="o">.</span><span class="n">verify_mode</span> <span class="o">=</span> <span class="ss">OpenSSL</span><span class="p">:</span><span class="ss">:SSL</span><span class="o">::</span><span class="no">VERIFY_NONE</span>
     <span class="k">end</span>
@@ -123,7 +123,7 @@
 <p>ググると <a href="http://curl.haxx.se/docs/caextract.html">http://curl.haxx.se/docs/caextract.html</a> が有名っぽい。cURL の人が mozilla.org のデータを PEM 形式に変換してくれているヤツ。</p>
 
 <p>ここにある cacert.pem を拾ってきて、<code>ca_file</code> に cacert.pem のパスを指定すればおしまい。</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;net/https&#39;</span>
 <span class="n">https</span> <span class="o">=</span> <span class="ss">Net</span><span class="p">:</span><span class="ss">:HTTP</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
 <span class="n">https</span><span class="o">.</span><span class="n">use_ssl</span> <span class="o">=</span> <span class="kp">true</span>
 <span class="n">https</span><span class="o">.</span><span class="n">verify_mode</span> <span class="o">=</span> <span class="ss">OpenSSL</span><span class="p">:</span><span class="ss">:SSL</span><span class="o">::</span><span class="no">VERIFY_PEER</span>

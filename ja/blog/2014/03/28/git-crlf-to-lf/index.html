@@ -75,7 +75,7 @@
 <p>レポジトリー上のファイルの改行コードは LF で統一しているつもりなのに、CR LF のファイルが混ざりこんでたら悲しい。</p>
 
 <p><code>autocrlf</code> が <code>true</code> な状態で、レポジトリー上に CR LF のファイルが入ってないか調べるには次のようにする。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
 </code></pre></div>
 <p>オプションの補足:</p>
 
@@ -91,7 +91,7 @@
 <p><code>core.autocrlf</code> が <code>true</code> な状態で clone すると、両方のファイルが CRLF でチェックアウトされる。</p>
 
 <p>この状態で上記のコマンドを実行してみると、CR LF のほうだけが引っかかる。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
 <span class="go">crlf-test.txt:End of Line Character Test^M</span>
 <span class="go">crlf-test.txt:^M</span>
 <span class="go">crlf-test.txt:Which do you like CR LF or LF?^M</span>
@@ -110,18 +110,18 @@
 
 <ol>
 <li><p>一時的に <code>core.autocrlf</code> を <code>false</code> に設定する。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git config core.autocrlf <span class="nb">false</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git config core.autocrlf <span class="nb">false</span>
 </code></pre></div></li>
 <li><p>LF でチェックアウトするために、ワーク ディレクトリーのファイルを全部削除してから、チェックアウトする (一度削除しないと反映されないことがあった!!)。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> rm -rf .
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> rm -rf .
 <span class="gp">$</span> git checkout .
 </code></pre></div></li>
 <li><p>CR LF になっているファイルを何らかのエディターで LF に変換する。</p></li>
 <li><p>コミットする。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git add . <span class="o">&amp;&amp;</span> git commit
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git add . <span class="o">&amp;&amp;</span> git commit
 </code></pre></div></li>
 <li><p><code>autocrlf</code> の設定を戻す。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git config core.autocrlf <span class="nb">true</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git config core.autocrlf <span class="nb">true</span>
 </code></pre></div></li>
 </ol>
 
@@ -130,7 +130,7 @@
 <p>再び、<a href="https://gist.github.com/nitoyon/9808563">https://gist.github.com/nitoyon/9808563</a> で試してみる。</p>
 
 <p>作業完了後の diff はこんな感じになる。</p>
-<div class="highlight"><pre><code class="diff language-diff" data-lang="diff">$ git diff HEAD~
+<div class="highlight"><pre><code class="language-diff" data-lang="diff">$ git diff HEAD~
 <span class="gh">diff --git a/crlf-test.txt b/crlf-test.txt</span>
 <span class="gh">index ad9608a..85a3c62 100644</span>
 <span class="gd">--- a/crlf-test.txt</span>
@@ -154,10 +154,10 @@
 <p>違いが分かりにくい diff が表示されていて悲しい。git の diff では CR があると <code>^M</code> として警告してくれるはずなんだけど、<code>^M</code> が表示されるのは <code>+</code> から始まる行だけのようだ。今回のような「CR LF が LF になった」ケースでは CR があるのは <code>-</code> の行なので <code>^M</code> は表示してくれない…。</p>
 
 <p><code>--ignore-space-at-eol</code> を指定して行末スペースの変更を無視したら、diff が消え去るので、うまくいっていると信じる。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git diff --ignore-space-at-eol HEAD~
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git diff --ignore-space-at-eol HEAD~
 </code></pre></div>
 <p><code>git grep</code> でも CR を見つけられなくなるので、うまくいっていると信じる。</p>
-<div class="highlight"><pre><code class="console language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git grep --cached -I <span class="s1">$&#39;\r&#39;</span>
 </code></pre></div>
 <h1>まとめ</h1>
 

@@ -4,13 +4,6 @@ var Site = {
 	archives: {}
 };
 
-
-
-
-
-
-
-
 Site.archives.posts = [
 	{url: "/ja/blog/2014/07/18/data-binding/", title: "JavaScript フレームワークがデータバインディングを実現する４通りの手法"},
 	{url: "/ja/blog/2014/06/30/vue-js-hook/", title: "Vue.js が data に渡した値を激しく書き換える件について"},

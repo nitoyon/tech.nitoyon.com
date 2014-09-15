@@ -6,16 +6,9 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Wed, 26 Feb 2014 02:01:55 +0000</lastBuildDate>
+		<lastBuildDate>Sat, 30 Aug 2014 23:14:31 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
-
-
-
-
-
-
-
 
 
 		<item>
@@ -32,12 +25,12 @@
 <p>Now, let&#39;s change <code>JENKINS_HOME</code> to <code>C:\ProgramData\Jenkins</code> (Jenkins version: 1.550).</p>
 
 <ol>
-<li>Stop Jenkins service.</li>
+<li><p>Stop Jenkins service.</p></li>
 <li><p>Open <code>jenkins.xml</code> in the install folder, and edit</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%BASE%&quot;/&gt;
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%BASE%&quot;/&gt;
 </code></pre></div>
 <p>as follows:</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%ProgramData%\Jenkins&quot;/&gt;
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">  &lt;env name=&quot;JENKINS_HOME&quot; value=&quot;%ProgramData%\Jenkins&quot;/&gt;
 </code></pre></div></li>
 <li><p><strong>Move</strong> all files in install folder <strong>except for</strong> the following files (Don&#39;t copy because it brokes symbolic links in <code>jobs</code> folder):</p>
 
@@ -102,7 +95,7 @@
 <h2>1. Create a bat file</h2>
 
 <p>Save following file as <code>C:\opscode\chefenv.bat</code>.</p>
-<div class="highlight"><pre><code class="bat language-bat" data-lang="bat">@ECHO OFF
+<div class="highlight"><pre><code class="language-bat" data-lang="bat">@ECHO OFF
 
 SET PATH=c:\opscode\chef\bin;c:\opscode\chef\embedded\bin
 SET PATH=%PATH%;c:\windows\system32;c:\windows
@@ -241,7 +234,7 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <h2>Example</h2>
 
 <p>Here is my <a href="https://github.com/nitoyon/tech.nitoyon.com/blob/b1fd0f12a6318b200390d8a2934d5cb66e46d454/Gruntfile.js"><code>Gruntfile.js</code></a>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">module.exports = function(grunt) {
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON(&#39;package.json&#39;),
     shell: {
@@ -271,7 +264,7 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <p>My callback function returns <code>&#39;shell:jekyll_build&#39;</code>, so <code>grunt</code> executes <code>shell:jekyll_build</code> when watched files are modified. We can check <code>filepath</code> argument to determine the tasks returned.</p>
 
 <p><code>&#39;*&#39;</code> means all extensions. We can register callback to specified extension. There is a good example on <a href="https://github.com/steida/grunt-este-watch/blob/master/README.md">grunt-este-watch/README.md</a>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">    coffee: function(filepath) {
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">    coffee: function(filepath) {
       var files = [{
         expand: true,
         src: filepath,
@@ -402,7 +395,7 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a>, I found <code>fs.watchFile()</code> is implemented by <code>uv_fs_poll_start()</code> function.</p>
 
 <p>OK. Let&#39;s read <code>uv_fs_poll_start()</code> defined in <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a>.</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
+<div class="highlight"><pre><code class="language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
                      uv_fs_poll_cb cb,
                      const char* path,
                      unsigned int interval) {
@@ -414,7 +407,7 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
 <p>The point is <code>uv_fs_stat()</code>. This function executes  asynchronous <code>stat()</code>. The callback <code>poll_cb</code> is called when it completes.</p>
 
 <p>Next, <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a>.</p>
-<div class="highlight"><pre><code class="c language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
+<div class="highlight"><pre><code class="language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
   // snip: trigger event, error handling, and so on
 
   /* Reschedule timer, subtract the delay from doing the stat(). */
