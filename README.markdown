@@ -48,11 +48,11 @@ Build Requirements
 * Node.js 0.10.18
   * grunt-cli
 * Ruby 2.0.0
-  * Jekyll 2.2.0
+  * Jekyll 2.4.0
   * hparser 0.4.1
-  * Compass 0.12.0
-  * Sass 3.2.12
+  * Compass 1.0.1
+  * Sass 3.4.3
 * Python 2.7
   * Pygmentize 1.6
 
-On Windows, pygments.rb should be v0.5.0 or applied the patch on tmm1/pygments.rb#90.
+On Windows, pygments.rb should be applied the patch on tmm1/pygments.rb#90.
