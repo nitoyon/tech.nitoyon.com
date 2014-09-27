@@ -23,11 +23,12 @@ module Jekyll
     alias :post_yaml_cache_original_render :render
 
     def render(layouts, site_payload)
-      return if site.is_modified_only && !self.modified
+      if site.is_modified_only && !self.modified
+        self.skipped = true
+      end
 
       puts "rendering " + self.destination('/')
       post_yaml_cache_original_render(layouts, site_payload)
-      self.rendered = true
     end
   end
 
@@ -35,17 +36,18 @@ module Jekyll
     alias :post_yaml_cache_original_render :render
 
     def render(layouts, site_payload)
-      return if site.is_modified_only && !self.modified
+      if site.is_modified_only && !self.modified
+        self.skipped = true
+      end
 
       puts "rendering " + self.destination('/')
       post_yaml_cache_original_render(layouts, site_payload)
-      self.rendered = true
     end
   end
 
   module Convertible
     attr_accessor :modified
-    attr_accessor :rendered
+    attr_accessor :skipped
 
     alias :post_yaml_cache_original_write :write
 
@@ -64,7 +66,7 @@ module Jekyll
     end
 
     def write(dest)
-      return unless self.rendered
+      return if self.skipped
 
       puts "writing " + self.destination('/')
       post_yaml_cache_original_write(dest)
