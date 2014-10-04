@@ -1,8 +1,8 @@
 ---
 ---
-var Site = {
+{% include set-locale.html %}var Site = {
 	lang: "{{ page.lang }}", 
-	locale: "{{ 'locale'|t }}",
+	locale: "{{ locale.locale }}",
 	archives: {}
 };
 

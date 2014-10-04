@@ -1,31 +1,4 @@
 module Jekyll
-  module Filters
-    # Convert a text using locale file.
-    #
-    # input - key name when string is nil, parameter otherwise.
-    # string - key name or nil.
-    #
-    # _config.yml file:
-    #     locale:
-    #       en:
-    #         hello: "Hello world"
-    #         hello2: "Hello world '$0'"
-    #
-    # Liquid:
-    #     {{'hello' | t}}            # => Hello world
-    #     {{'foo' | t:'hello2'}}     # => Hello world 'foo'
-    #
-    # Returns the translated String.
-    def t(input, string=nil)
-      lang = 'en'
-      lang = @context['page']['lang'] if @context['page'].has_key?('lang')
-      site = @context.registers[:site]
-      param = string.nil? ? nil : input
-      key = string.nil? ? input : string
-      Jekyll::Locales::translate(site, lang, key, nil, param)
-    end
-  end
-
   class Locales
     # Convert a text using locale file.
     #
