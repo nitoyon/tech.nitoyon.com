@@ -1,7 +1,7 @@
 ---
 ---
 {% include set-locale.html %}var Site = {
-	lang: "{{ page.lang }}", 
+	lang: "{{ site.lang }}", 
 	locale: "{{ locale.locale }}",
 	archives: {}
 };
