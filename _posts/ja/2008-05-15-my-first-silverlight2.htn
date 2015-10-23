@@ -12,7 +12,7 @@ Silverlight 勉強会に備えて環境をそろえてみた。参考にした�
 <a href="http://go.microsoft.com/fwlink/?LinkId=111131">ヘルプの CHM 版</a> の「Dynamic Languages in Silverlight 2」を参考にして触っていたんだけどエラーになる。
 
 こんなエラー。
->|
+>||
 Silverlight error message     
 ErrorCode: 4002
 ErrorType: ManagedRuntimeError       
@@ -23,7 +23,7 @@ Message: Microsoft.Scripting.ArgumentTypeException: LoadRootVisual() takes exact
    場所 Microsoft.Scripting.Ast.Interpreter.EvaluateExpression(CodeContext context, Expression node)
 
    場所 Microsoft.Scripting.Ast.Interpreter.Execute(CodeContext context, Expression expression)
-|<
+||<
 エラーメッセージ、分かりにくすぎるよ…。
 
 どうやらこのあたりが問題のようだ。
@@ -38,25 +38,25 @@ function App() {
 
 **検索してみた
 2ch に同じ問題ではまってる人がいた。
->|
+>||
 366 ：デフォルトの名無しさん：2008/03/07(金) 23:59:55 
 ヘルプの Dynamic Languages in Silverlight 2 
 に書いてある通りやったのに 
 LoadRootVisual の引数の使い方がおかしいって怒られるぞ・・・ 
 IronRuby, IronPython でもダメだ。ほんとに動くのか 
-|<
+||<
 動きません。
 
 で、<a href="http://d.hatena.ne.jp/coma2n/20080311/1205192784">Silverlight2 Beta1を入れてみた - Programmable Life</a> に解決方法を見つけた。JScript だと次のように修正する。
->|
+>||
 Import("System.Windows.Application")
-<strong>Import("System.Windows.Controls.Canvas") </strong>
+Import("System.Windows.Controls.Canvas") 
 
 function App() {
    this.scene = 
-      Application.Current.LoadRootVisual(<strong>new Canvas()</strong>, "app.xaml")
+      Application.Current.LoadRootVisual(new Canvas(), "app.xaml")
 }
-|<
+||<
 やっと動いた…。
 
 自分は元々 Windows 開発者なので、MS のドキュメントは見慣れてるほうだと思うんだけど、それでも CHM ファイルのせいで２時間ぐらい苦しめられた。

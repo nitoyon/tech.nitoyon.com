@@ -17,18 +17,18 @@ System.alert("hoge");
 ||<
 
 avmplus.System パッケージには exit などの関数がありますが、alert 関数は実装ありません。そのため、この hoge.as を実行すると
->|
+>||
 $ avmplus.exe hoge.abc
 ReferenceError: Error #1065
-|<
+||<
 参照エラーになってしまいます。
 
 これを動かすのが今回の目標です。
 ====
 **toplevel.as の実装
 toplevel.as を覗いてみましょう。
->|
-<span class="synComment">// toplevel.as</span>
+>|java|
+// toplevel.as
 package avmplus 
 {
     public class System
@@ -45,8 +45,8 @@ package avmplus
         public static const argv:Array = getArgv();
         public native static function readLine():String
     }
-<span class="synComment">// ...</span>
-|<
+// ...
+||<
 avmplus.System パッケージの関数が宣言されていますね。
 
 native キーワードがついていますが、これらの関数が C++ で関数が実装されていることをあらわします。
@@ -55,20 +55,20 @@ alert 関数も native で実装してみたいところですが、まずは Ac
 
 
 ということで、toplevel.as を書き換えます。System.write 関数をそのまんま使っちゃいます。
->|
-<span class="synComment">// toplevel.as</span>
+>|java|
+// toplevel.as
 package avmplus 
 {
     public class System
     {
-        <strong>public static function alert(text:String):void</strong>
-        <strong>{</strong>
-            <strong>System.write(text);</strong>
-        <strong>}</strong>
+        public static function alert(text:String):void
+        {
+            System.write(text);
+        }
         public native static function exec(command:String):int
         public native static function getAvmplusVersion():String
-<span class="synComment">// ...</span>
-|<
+// ...
+||<
 
 **toplevel.as のコンパイル
 さて、avmplus 側は、どう修正すればよいのでしょうか。
@@ -90,7 +90,7 @@ static unsigned char toplevel_abc_data[4403] = {
 この16進数の羅列が toplevel.as のバイトコードなんです。toplevel.as をバイトコードに変換して、toplevel.cpp を作れば動きそうです。
 
 ということで、toplevel.as をコンパイルしてみます。-in を指定して、他の AS もまとめてコンパイルするのを忘れずに。
->|
+>||
 java -jar asc_authoring.jar ^
     -import global.abc ^
     -in shell\ByteArray.as ^
@@ -108,22 +108,22 @@ java -jar asc_authoring.jar ^
     shell\toplevel.as
 
 toplevel.abc, 3850 bytes written
-|<
+||<
 
 toplevel.abc が生成されました。
 
 さらに、なんと toplevel.cpp と toplevel.h も自動的に更新されました。
->|
-<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_length = <span class="synConstant"><strong>3908</strong></span>;
-<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_method_count = <span class="synConstant"><strong>122</strong></span>;
-<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_class_count = <span class="synConstant"><strong>15</strong></span>;
-<span class="synType">const</span> <span class="synType">int</span> toplevel_abc_script_count = <span class="synConstant"><strong>1</strong></span>;
-<span class="synType">static</span> <span class="synType">unsigned</span> <span class="synType">char</span> toplevel_abc_data[<span class="synConstant"><strong>3908</strong></span>] = {
-<span class="synConstant">0x10</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x2e</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x02</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x02</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0xe0</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xff</span>, <span class="synConstant">0xef</span>, <span class="synConstant">0x41</span>,
-<span class="synConstant">0x79</span>, <span class="synConstant">0x08</span>, <span class="synConstant">0x72</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x64</span>, <span class="synConstant">0x4c</span>, <span class="synConstant">0x69</span>, <span class="synConstant">0x6e</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x0d</span>, <span class="synConstant">0x74</span>, <span class="synConstant">0x6f</span>, <span class="synConstant">0x70</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x65</span>,
-<span class="synConstant">0x76</span>, <span class="synConstant">0x65</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x2e</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x73</span>, <span class="synConstant">0x24</span>, <span class="synConstant">0x31</span>, <span class="synConstant">0x00</span>, <span class="synConstant">0x07</span>, <span class="synConstant">0x61</span>, <span class="synConstant">0x76</span>, <span class="synConstant">0x6d</span>, <span class="synConstant">0x70</span>, <span class="synConstant">0x6c</span>, <span class="synConstant">0x75</span>,
-<span class="synComment">// ...</span>
-|<
+>|cpp|
+const int toplevel_abc_length = 3908;
+const int toplevel_abc_method_count = 122;
+const int toplevel_abc_class_count = 15;
+const int toplevel_abc_script_count = 1;
+static unsigned char toplevel_abc_data[3908] = {
+0x10, 0x00, 0x2e, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0xe0, 0xff, 0xff, 0xff, 0xef, 0x41,
+0x79, 0x08, 0x72, 0x65, 0x61, 0x64, 0x4c, 0x69, 0x6e, 0x65, 0x0d, 0x74, 0x6f, 0x70, 0x6c, 0x65,
+0x76, 0x65, 0x6c, 0x2e, 0x61, 0x73, 0x24, 0x31, 0x00, 0x07, 0x61, 0x76, 0x6d, 0x70, 0x6c, 0x75,
+// ...
+||<
 どうも、ActionScript 内に native 宣言された関数があると、cpp と h が書き出されるようです。
 
 toplevel_abc_class_count と toplevel_abc_script_count の値が減ってしまっていますが、ひとまずは気にせずに先に進むことにします。
@@ -132,10 +132,10 @@ toplevel_abc_class_count と toplevel_abc_script_count の値が減ってしま�
 toplevel.cpp と toplevel.h が更新されたところで、avmplus.exe をビルドします。
 
 いざ、実行！
->|
+>||
 $ avmplus.exe hoge.abc
 hoge
-|<
+||<
 
 やったー！
 
@@ -145,80 +145,80 @@ hoge
 さて、ActionScript で実装していた alert 関数を C++ での実装に切り替えてみましょう。
 
 まずは、toplevel.as の編集です。alert 関数を native 宣言にします。
->|
-<span class="synComment">// toplevel.as</span>
+>|java|
+// toplevel.as
 package avmplus 
 {
     public class System
     {
-        <strong>public native static function alert(text:String):void</strong>
+        public native static function alert(text:String):void
         public native static function exec(command:String):int
         public native static function getAvmplusVersion():String
-<span class="synComment">// ...</span>
-|<
+// ...
+||<
 
 toplevel.as をバイトコードに変換すると、toplevel.cpp と toplevel.h が更新されます。
 
 native 部分の実装は System.exit 関数を参考に、shell/SystemClass.cpp と shell/SystemClass.h を修正してみます。
->|
-<span class="synComment">/* shell/SystemClass.h */</span>
-<span class="synComment">// ...</span>
-<span class="synType">namespace</span> avmshell
+>|cpp|
+/* shell/SystemClass.h */
+// ...
+namespace avmshell
 {
-    <span class="synType">class</span> SystemClass : <span class="synStatement">public</span> ClassClosure
+    class SystemClass : public ClassClosure
     {
         
-        <span class="synComment">//#define PERFORMANCE_GETTIMER</span>
-<span class="synPreProc">        #ifdef PERFORMANCE_GETTIMER</span>
+        //#define PERFORMANCE_GETTIMER
+        #ifdef PERFORMANCE_GETTIMER
         uint64 initialTime;
-<span class="synPreProc">        #else</span>
-        <span class="synType">double</span> initialTime;
-<span class="synPreProc">        #endif</span>
+        #else
+        double initialTime;
+        #endif
 
-    <span class="synStatement">public</span>:
+    public:
         SystemClass(VTable* cvtable);
         ~SystemClass();
 
-        <span class="synComment">// set by shell</span>
-        <span class="synType">static</span> <span class="synType">int</span> user_argc;
-        <span class="synType">static</span> <span class="synType">char</span> **user_argv;
+        // set by shell
+        static int user_argc;
+        static char **user_argv;
 
-        <strong><span class="synType">void</span> alert(Stringp text);</strong>
+        void alert(Stringp text);
 
-        <span class="synComment">/**</span>
-<span class="synComment">         * Implementation of System.exit</span>
-<span class="synComment">         * AS usage: System.exit(status);</span>
-<span class="synComment">         * Exits the VM with OS exit code specified by  status.</span>
-<span class="synComment">         */</span>
-        <span class="synType">void</span> exit(<span class="synType">int</span> status);
-<span class="synComment">// ...</span>
-|<
+        /**
+         * Implementation of System.exit
+         * AS usage: System.exit(status);
+         * Exits the VM with OS exit code specified by  status.
+         */
+        void exit(int status);
+// ...
+||<
 
->|
-<span class="synComment">/* shell/SystemClass.cpp */</span>
-<span class="synPreProc">#include </span><span class="synConstant">"avmshell.h"</span>
+>|cpp|
+/* shell/SystemClass.cpp */
+#include "avmshell.h"
 
-<span class="synPreProc">#include </span><span class="synConstant"><stdlib.h></span>
+#include <stdlib.h>
 
-<span class="synType">namespace</span> avmshell
+namespace avmshell
 {
     BEGIN_NATIVE_MAP(SystemClass)
-        <strong>NATIVE_METHOD(avmplus_System_alert, SystemClass::alert)</strong>
+        sNATIVE_METHOD(avmplus_System_alert, SystemClass::alert)
         NATIVE_METHOD(avmplus_System_exit, SystemClass::exit)
-        <span class="synComment">// ...</span>
+        // ...
     END_NATIVE_MAP()
 
-    <strong><span class="synType">void</span> SystemClass::alert(Stringp text)</strong>
-    <strong>{</strong>
-        <strong>MessageBoxW(<span class="synConstant">NULL</span>, text->c_str(), <span class="synConstant">L"avmplus"</span>, MB_ICONEXCLAMATION);</strong>
-    <strong>}</strong>
+    void SystemClass::alert(Stringp text)
+    {
+        MessageBoxW(NULL, text->c_str(), L"avmplus", MB_ICONEXCLAMATION);
+    }
 
-    <span class="synType">void</span> SystemClass::exit(<span class="synType">int</span> status)
+    void SystemClass::exit(int status)
     {
         ::exit(status);
     }
-<span class="synComment">// ...</span>
-|<
+// ...
+||<
 
 avmplus_System_alert は、先ほどの toplevel.as のコンパイル時に toplevel.h に生成されています。バイトコード中の native 宣言と C++ の中継ぎをするのが、この BEGIN_NATIVE_MAP であり、avmplus_System_alert であるわけです。
 
@@ -227,9 +227,9 @@ SystemClass::alert では、C++ らしく MessageBoxW 関数を呼び出して�
 **いざ、実行 (2)
 avmplus.exe をビルドして、hoge.abc を実行してみます。
 
->|
+>||
 $ avmplus.exe hoge.abc
-|<
+||<
 
 メッセージが表示されました。
 

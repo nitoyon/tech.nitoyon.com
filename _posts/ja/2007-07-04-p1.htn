@@ -34,63 +34,63 @@ function dump_int(i)
 &gt;&gt;&gt; が符号を考えずに右シフトする演算子だそうだ。今回、このビット演算子で遊ぶまで、こんな演算子があることすら知らなかった。
 
 **Firebug で確認してみた
->|
-<span class="synStatement">&gt;&gt;&gt; function dump_int(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(0)</span>
-<span class="synConstant">""</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(1)</span>
-<span class="synConstant">"1"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(2)</span>
-<span class="synConstant">"10"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(3)</span>
-<span class="synConstant">"11"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(0x1000)</span>
-<span class="synConstant">"1000000000000"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-1)</span>
-<span class="synConstant">"11111111111111111111111111111111"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-2)</span>
-<span class="synConstant">"11111111111111111111111111111110"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-3)</span>
-<span class="synConstant">"11111111111111111111111111111101"</span>
-|<
+>|javascript|
+>>> function dump_int(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}
+>>> dump_int(0)
+""
+>>> dump_int(1)
+"1"
+>>> dump_int(2)
+"10"
+>>> dump_int(3)
+"11"
+>>> dump_int(0x1000)
+"1000000000000"
+>>> dump_int(-1)
+"11111111111111111111111111111111"
+>>> dump_int(-2)
+"11111111111111111111111111111110"
+>>> dump_int(-3)
+"11111111111111111111111111111101"
+||<
 
 出力の最大桁数が 32bit なのは、ビット演算の前に ToInt32 という内部関数が呼ばれて 32bit に切り詰められるから。
 
 **桁数をそろえるバージョン
 桁数がそろってなくて見にくい場合は、こう改造すればよい。
->|
-<span class="synStatement">&gt;&gt;&gt; function dump_int2(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int2(3)</span>
-<span class="synConstant">"00000000000000000000000000000011"</span>
-|<
+>|javascript|
+>>> function dump_int2(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}
+>>> dump_int2(3)
+"00000000000000000000000000000011"
+||<
 
 c = -1 として while(c){c >>>= 1;} のループを回すことにより、ビット数の回数だけ while のループが回るようにしている。
 
 
 **toString(2)
 ところで、これとは別に Number.prototype.toString() に 2 を渡すことで２進数表示することもできる。今回作った dump_int とはちょっと異なっていて面白い。
->|
-<span class="synStatement">&gt;&gt;&gt; (0).toString(2)</span>
-<span class="synConstant">"0"</span>
-<span class="synStatement">&gt;&gt;&gt; (1).toString(2)</span>
-<span class="synConstant">"1"</span>
-<span class="synStatement">&gt;&gt;&gt; (2).toString(2)</span>
-<span class="synConstant">"10"</span>
-<span class="synStatement">&gt;&gt;&gt; (-1).toString(2)</span>
-<span class="synConstant">"-1"</span>
-<span class="synStatement">&gt;&gt;&gt; (-2).toString(2)</span>
-<span class="synConstant">"-10"</span>
-|<
+>|javascript|
+>>> (0).toString(2)
+"0"
+>>> (1).toString(2)
+"1"
+>>> (2).toString(2)
+"10"
+>>> (-1).toString(2)
+"-1"
+>>> (-2).toString(2)
+"-10"
+||<
 
 マイナスの値を渡したときの挙動が明らかに違う。というのも、Number 型は 64bit の浮動小数点であり、符号部に 1bit が割かれている。
 
 というわけで、負数を toString(2) すると - がつくのは Number の内部に符号部があるから、と考えると納得がいく。
 
 Number 形が浮動小数点ということは、小数を toString(2) することもできたりする。
->|
-<span class="synStatement">&gt;&gt;&gt; (2.25).toString(2)</span>
-<span class="synConstant">"10.01"</span>
-|<
+>|javascript|
+>>> (2.25).toString(2)
+"10.01"
+||<
 
 **まとめ
 

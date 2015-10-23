@@ -39,9 +39,9 @@ REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含�
 書き込みに成功したあと、<code>RegQueryValueEx</code> を利用すると、実際に何バイト書き込まれたかどうかを調べることができる。上記の呼び出しでは、ANSI で5バイト、Unicode で10バイトが格納されており、NULL 文字も含めてレジストリ上に書き込まれたことが分かる。
 
 以下、自作テストツールの出力(ANSI の場合)。NULL 文字は _ で表現した。
->|
+>||
  set 5 bytes = test_ (74 65 73 74 00) -> wrote 5 bytes
-|<
+||<
 5バイト(<code>"test"</code>書き込んだら、ちゃんと5バイト分書き込めていた、という出力になっている。
 
 **NULL 文字のサイズを含めるのを忘れた場合
@@ -54,9 +54,9 @@ REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含�
 |<code>lpData</code>|<code>TEXT("test")</code>|
 |<code>cbData</code>|<code>4 * sizeof(TCHAR)</code>|
 4バイトだけ書き込んだはずなのに、<code>RegQueryValueEx()</code> を呼び出すと NULL 文字を含んだバイト数が書き込まれていたことが分かった。
->|
+>||
  set 4 bytes = test_ (74 65 73 74 00) -> wrote 5 bytes
-|<
+||<
 4バイト(<code>"test"</code>書き込んだら、なぜか5バイト分書き込めていた、という状態。
 
 余計なおせっかいと言ってしまえばそれまで。
@@ -67,21 +67,21 @@ REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含�
 |<code>lpData</code>|<code>TEXT("test")</code>|
 |<code>cbData</code>|<code>3 * sizeof(TCHAR)</code>|
 この場合は NULL 文字を含まない形でレジストリに格納される。
->|
+>||
   set 3 bytes = test_ (74 65 73 74 00) -> wrote 3 bytes
-|<
+||<
 
 このとき、レジストリ上には test のうちの何文字が格納されているのだろうか。末尾に NULL は付加されているのだろうか。
 
 3文字分のバッファを渡して <code>RegQueryValueEx()</code> で取得すると NULL を含まない形で <code>tes</code> の3文字が返ってきた。
->|
+>||
 query 3 bytes = tesﾌﾌ (74 65 73 cc cc) (lpcbData=3)
-|<
+||<
 
 一方、NULL 文字を格納する余地を含んだバッファを <code>RegQueryValueEx()</code> に渡してあげると、NULL 文字が追加された <code>tes\0</code> が返ってきた。
->|
+>||
 query 5 bytes = tes_ﾌ (74 65 73 00 cc) (lpcbData=3)
-|<
+||<
 ただ、このときの <code>lpcbData</code> には「NULL 文字を含んだバイト数」(=4バイト)ではなく「レジストリに保存されたバイト数」(=3バイト)が入っているので注意が必要だ。
 
 Microsoft さんの余計なおせっかいにも似た優しさに惑わされてバグを生まないように注意したい。
@@ -92,13 +92,13 @@ Microsoft さんの余計なおせっかいにも似た優しさに惑わされ�
 |<code>lpData</code>|<code>TEXT("t\0st")</code>|
 |<code>cbData</code>|<code>5 * sizeof(TCHAR)</code>|
 5バイト分書き込むことができる。
->|
+>||
   set 5 bytes = t_st_ (74 00 73 74 00) -> wrote 5 bytes
-|<
+||<
 取得すると、NULL 文字を含んだ形で取得できた。
->|
+>||
 query 5 bytes = t_st_ (74 00 73 74 00) (size=5)
-|<
+||<
 ただし、レジストリエディタで値を確認する限りは、最初の NULL 文字までしか表示されない。C# の <code>Microsoft.Win32.RegistryKey.GetValue()</code> を使って取得しても、NULL 文字以降は取得できなかった。こっそりと秘密の情報を格納するのに使えるかもしれない。
 
 また、何も考えずにバッファサイズ分の文字をレジストリに格納していると、NULL 文字以降の情報もレジストリに保存されてしまうので、秘密のデータがこっそり漏れてしまうかもしれないので注意が必要だ。
