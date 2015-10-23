@@ -74,19 +74,20 @@
 <h2>何が問題か</h2>
 <p>jQuery は CSS セレクタを書くたびに、DOM をたどってセレクタにマッチする要素を検索します。</p>
 <p><code>$("div.foo")</code> を実行すると、その背後で jQuery は次のような処理を実行しています。</p>
-<pre>// セレクタで選択した結果を格納する配列
-var ret = [];
+<div class="highlight"><pre><span class="c1">// セレクタで選択した結果を格納する配列</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[];</span>
 
-// div タグ一覧を列挙する
-var elems = document.getElementsByTagName("div");
+<span class="c1">// div タグ一覧を列挙する</span>
+<span class="kd">var</span> <span class="nx">elems</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
 
-// それぞれについて、クラス名が foo のものを ret に入れる
-for(var i = 0; i < elems.length; i++){
-    var classes = elems[i].className.split(" ");
-    if(classes.indexOf("foo") != -1){
-        ret.push(elems[i]);
-    }
-}</pre>
+<span class="c1">// それぞれについて、クラス名が foo のものを ret に入れる</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">elems</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">classes</span> <span class="o">=</span> <span class="nx">elems</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">className</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">classes</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">elems</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>HTML 中に含まれる div タグを列挙して、そのそれぞれについてクラス名を調べていくわけです。(<code>Array.indexOf</code> は非標準ですが、簡単に書くために使っています)</p>
 <p>つまり、冒頭のコードのように <code>$("div.foo")</code> を３回書いてしまうと、上記の処理が３回実行されてしまいます。非効率的ですね。</p>
 <h2>改善方法1: キャッシュ</h2>

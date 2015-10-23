@@ -65,7 +65,7 @@
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">hoge</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">3</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/hoge&gt;;</span>
 </pre></div>
 <p>asc でコンパイルして、abcdump でダンプしたらこうなった。</p>
-<pre class="">  0         getlocal0
+<pre>  0         getlocal0
   1         pushscope
   2         findpropstrict      XML
   4         getproperty         XML
@@ -86,7 +86,7 @@
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">String</span><span class="p">(</span><span class="s2">&quot;hoge&quot;</span><span class="p">);</span>
 </pre></div>
 <p>ダンプしたらこうなった。</p>
-<pre class="">  0         getlocal0
+<pre>  0         getlocal0
   1         pushscope
   2         findpropstrict      String
   4         pushstring          &quot;hoge&quot;
@@ -98,11 +98,11 @@
 <p>ふむ、似たような形になってるね。</p>
 <h1>スタックをつむところだけ抜き出してみる</h1>
 <p>まずは String のほう。</p>
-<pre class="">  4         pushstring          &quot;hoge&quot;
+<pre>  4         pushstring          &quot;hoge&quot;
   6         constructprop       String (1)</pre>
 <p>String は "hoge" をスタックにつんで、コンストラクタを呼び出してる。そのままだ。</p>
 <p>対して、XML。</p>
-<pre class="">  6         pushstring          &quot;&lt;hoge&gt;&quot;
+<pre>  6         pushstring          &quot;&lt;hoge&gt;&quot;
   8         pushbyte            3
   10        esc_xelem                    
   11        add
@@ -111,11 +111,11 @@
   15        construct           (1)</pre>
 <p>ちょっと複雑なので順番に。</p>
 <p>まず、"<hoge>" という文字列をスタックにつむ。</p>
-<pre class="">   +----------------+
+<pre>   +----------------+
    |    &quot;&lt;hoge&gt;&quot;    |
 ---+----------------+---</pre>
 <p>続けて、3 もスタックにつむ。</p>
-<pre class="">   +----------------+
+<pre>   +----------------+
    |       3        |
    +----------------+
    |    &quot;&lt;hoge&gt;&quot;    |
@@ -123,17 +123,17 @@
 <p>次の、esc_xelem はなんだろう。</p>
 <p><a href="http://www.adobe.com/devnet/actionscript/articles/avm2overview.pdf">avm2overview.pdf </a> によると、XML ノードの値を決定するためのオペレーションで、スタックから値を取り出して文字列に変換するらしい。変換には E4X で定義されている <a href="http://www.ne.jp/asahi/nanto/moon/specs/ecma-357.html#sec-10.2">ToXmlString()</a> を使うようだ。</p>
 <p>ってことで、esc_xelem 実行後はこうなる。</p>
-<pre class="">   +----------------+
+<pre>   +----------------+
    |      &quot;3&quot;       |
    +----------------+
    |    &quot;&lt;hoge&gt;&quot;    |
 ---+----------------+---</pre>
 <p>続けて、add。スタックから２つを取り出して足し算する。</p>
-<pre class="">   +----------------+
+<pre>   +----------------+
    |   &quot;&lt;hoge&gt;3&quot;    |
 ---+----------------+---</pre>
 <p>次に、"</hoge>" を push して、add するので最終的には次のようになる。</p>
-<pre class="">   +----------------+
+<pre>   +----------------+
    |&quot;&lt;hoge&gt;3&lt;/hoge&gt;&quot;|
 ---+----------------+---</pre>
 <p>で、ここで construct を呼ぶので、new XML("<hoge>3</hoge>") した結果がスタックに入るわけだ。</p>

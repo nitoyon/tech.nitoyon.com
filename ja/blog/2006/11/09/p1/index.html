@@ -13,7 +13,7 @@
 	<meta property="og:title" content="prototype.js 1.4.0 の Enumerable.min のバグ"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2006/11/09/p1/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="script.aculo.us をいじっていて気づいた Enumerable.min のバグ。実証コードはこんな感じ。配列の最小値 0 を返すべきなのに...なぜか 1 が返ってきます。&gt;&gt;&gt; [0,1,2,3].min()1該当部分のソースコードはこうなってます。 min: function(iterator) { var result; this.each(function(value, index) { value = (iterator || Prototype.K)(value, index); if (value result = value; }); return resu..."/>
+	<meta property="og:description" content="script.aculo.us をいじっていて気づいた Enumerable.min のバグ。実証コードはこんな感じ。配列の最小値 0 を返すべきなのに...なぜか 1 が返ってきます。&amp;gt;&amp;gt;&amp;gt; [0,1,2,3].min()1該当部分のソースコードはこうなってます。 min: function(iterator) { var result; this.each(function(value, index) { value = (iterator || Prototype.K)(value, index); if (value &amp;lt;= (result || value..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -62,30 +62,32 @@
 
 <p>script.aculo.us をいじっていて気づいた Enumerable.min のバグ。</p>
 <p>実証コードはこんな感じ。配列の最小値 0 を返すべきなのに...なぜか 1 が返ってきます。</p>
-<pre>>>> [0,1,2,3].min()
+<pre>&gt;&gt;&gt; [0,1,2,3].min()
 1</pre>
 <p>該当部分のソースコードはこうなってます。</p>
-<pre>  min: function(iterator) {
-    var result;
-    this.each(function(value, index) {
-      value = (iterator || Prototype.K)(value, index);
-<font color="blue">      if (value <= (result || value))</font>
-        result = value;
-    });
-    return result;
-  },</pre>
+<div class="highlight"><pre>  <span class="nx">min</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">iterator</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">result</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">value</span> <span class="o">=</span> <span class="p">(</span><span class="nx">iterator</span> <span class="o">||</span> <span class="nx">Prototype</span><span class="p">.</span><span class="nx">K</span><span class="p">)(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">index</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">value</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="nx">result</span> <span class="o">||</span> <span class="nx">value</span><span class="p">))</span>
+        <span class="nx">result</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+  <span class="p">},</span>
+</pre></div>
 <p>バグの原因は each の２回目で if (value <= (result || value)) が if (1 <= (0 || 1)) すなわち if (true) となってしまうところにあるようです。</p>
 <p>prototype.js では undefined かどうかを調べるのに || 演算子を使ってることが多いのですが、0 や "" が false になってしまうことに注意しなければならないですね。</p>
 <p>なお、この部分のコードは 1.5.0 rc1 で次のように修正されてます。</p>
-<pre>  min: function(iterator) {
-    var result;
-    this.each(function(value, index) {
-      value = (iterator || Prototype.K)(value, index);
-      <font color="red">if (result == undefined || value < result)</font>
-        result = value;
-    });
-    return result;
-  },</pre>
+<div class="highlight"><pre>  <span class="nx">min</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">iterator</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">result</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">value</span> <span class="o">=</span> <span class="p">(</span><span class="nx">iterator</span> <span class="o">||</span> <span class="nx">Prototype</span><span class="p">.</span><span class="nx">K</span><span class="p">)(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">index</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">result</span> <span class="o">==</span> <span class="kc">undefined</span> <span class="o">||</span> <span class="nx">value</span> <span class="o">&lt;</span> <span class="nx">result</span><span class="p">)</span>
+        <span class="nx">result</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+  <span class="p">},</span>
+</pre></div>
 <p>多くの人が使ってる prototype.js 1.4 にこんなバグが潜んでいたとは。恐ろしい。1.5 を正式リリースしたら、1.4.1 を出してほしいものです。</p>
 
 </div>

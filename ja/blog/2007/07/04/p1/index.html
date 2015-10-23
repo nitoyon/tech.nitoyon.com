@@ -82,48 +82,52 @@
 </pre></div>
 <p>&gt;&gt;&gt; が符号を考えずに右シフトする演算子だそうだ。今回、このビット演算子で遊ぶまで、こんな演算子があることすら知らなかった。</p>
 <h1>Firebug で確認してみた</h1>
-<pre><span class="synStatement">&gt;&gt;&gt; function dump_int(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(0)</span>
-<span class="synConstant">""</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(1)</span>
-<span class="synConstant">"1"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(2)</span>
-<span class="synConstant">"10"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(3)</span>
-<span class="synConstant">"11"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(0x1000)</span>
-<span class="synConstant">"1000000000000"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-1)</span>
-<span class="synConstant">"11111111111111111111111111111111"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-2)</span>
-<span class="synConstant">"11111111111111111111111111111110"</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int(-3)</span>
-<span class="synConstant">"11111111111111111111111111111101"</span></pre>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kd">function</span> <span class="nx">dump_int</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="kd">var</span> <span class="nx">s</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="nx">c</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span><span class="k">while</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span><span class="nx">s</span><span class="o">=</span><span class="p">(</span><span class="nx">i</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nx">s</span><span class="p">;</span><span class="nx">i</span><span class="o">&gt;&gt;&gt;=</span><span class="mi">1</span><span class="p">;</span><span class="nx">c</span><span class="o">&gt;&gt;&gt;=</span><span class="mi">1</span><span class="p">}</span><span class="k">return</span> <span class="nx">s</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="s2">&quot;&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="s2">&quot;1&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;10&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="s2">&quot;11&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="mh">0x1000</span><span class="p">)</span>
+<span class="s2">&quot;1000000000000&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="s2">&quot;11111111111111111111111111111111&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;11111111111111111111111111111110&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="s2">&quot;11111111111111111111111111111101&quot;</span>
+</pre></div>
 <p>出力の最大桁数が 32bit なのは、ビット演算の前に ToInt32 という内部関数が呼ばれて 32bit に切り詰められるから。</p>
 <h1>桁数をそろえるバージョン</h1>
 <p>桁数がそろってなくて見にくい場合は、こう改造すればよい。</p>
-<pre><span class="synStatement">&gt;&gt;&gt; function dump_int2(i){var s="",c=-1;while(c){s=(i&1)+s;i>>>=1;c>>>=1}return s}</span>
-<span class="synStatement">&gt;&gt;&gt; dump_int2(3)</span>
-<span class="synConstant">"00000000000000000000000000000011"</span></pre>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kd">function</span> <span class="nx">dump_int2</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span><span class="kd">var</span> <span class="nx">s</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="nx">c</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span><span class="k">while</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span><span class="nx">s</span><span class="o">=</span><span class="p">(</span><span class="nx">i</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nx">s</span><span class="p">;</span><span class="nx">i</span><span class="o">&gt;&gt;&gt;=</span><span class="mi">1</span><span class="p">;</span><span class="nx">c</span><span class="o">&gt;&gt;&gt;=</span><span class="mi">1</span><span class="p">}</span><span class="k">return</span> <span class="nx">s</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nx">dump_int2</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="s2">&quot;00000000000000000000000000000011&quot;</span>
+</pre></div>
 <p>c = -1 として while(c){c >>>= 1;} のループを回すことにより、ビット数の回数だけ while のループが回るようにしている。</p>
 <br />
 <h1>toString(2)</h1>
 <p>ところで、これとは別に Number.prototype.toString() に 2 を渡すことで２進数表示することもできる。今回作った dump_int とはちょっと異なっていて面白い。</p>
-<pre><span class="synStatement">&gt;&gt;&gt; (0).toString(2)</span>
-<span class="synConstant">"0"</span>
-<span class="synStatement">&gt;&gt;&gt; (1).toString(2)</span>
-<span class="synConstant">"1"</span>
-<span class="synStatement">&gt;&gt;&gt; (2).toString(2)</span>
-<span class="synConstant">"10"</span>
-<span class="synStatement">&gt;&gt;&gt; (-1).toString(2)</span>
-<span class="synConstant">"-1"</span>
-<span class="synStatement">&gt;&gt;&gt; (-2).toString(2)</span>
-<span class="synConstant">"-10"</span></pre>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;0&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;1&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;10&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;-1&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;-10&quot;</span>
+</pre></div>
 <p>マイナスの値を渡したときの挙動が明らかに違う。というのも、Number 型は 64bit の浮動小数点であり、符号部に 1bit が割かれている。</p>
 <p>というわけで、負数を toString(2) すると - がつくのは Number の内部に符号部があるから、と考えると納得がいく。</p>
 <p>Number 形が浮動小数点ということは、小数を toString(2) することもできたりする。</p>
-<pre><span class="synStatement">&gt;&gt;&gt; (2.25).toString(2)</span>
-<span class="synConstant">"10.01"</span></pre>
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mf">2.25</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="s2">&quot;10.01&quot;</span>
+</pre></div>
 <h1>まとめ</h1>
 <ul><li>自作 dump_int は 32bit までの数にしか対応できない</li><li>toString(2) は 64bit の浮動小数点の範囲を全てカバーできる</li></ul>
 <p>比べてみると dump_int がいい所なしに見えるが、先日の <a href="/ja/blog/2007/06/29/four-operations-implementation-in-javascript/">四則演算を JavaScript で実装する</a> を作るときには役立ったんですよ、っと。</p>
