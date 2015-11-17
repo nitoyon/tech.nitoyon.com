@@ -25,6 +25,7 @@ module Jekyll
     def render(layouts, site_payload)
       if site.is_modified_only && !self.modified
         self.skipped = true
+        return
       end
 
       puts "rendering " + self.destination('/')
@@ -38,6 +39,7 @@ module Jekyll
     def render(layouts, site_payload)
       if site.is_modified_only && !self.modified
         self.skipped = true
+        return
       end
 
       puts "rendering " + self.destination('/')
