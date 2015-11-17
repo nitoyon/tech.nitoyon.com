@@ -5,15 +5,16 @@ var Site = {
 };
 
 Site.archives.posts = [
+	{url: "/ja/blog/2015/11/18/death-of-oo/", title: "Object.observe の死 (ECMAScript の提案取り下げ、V8 からも削除予定)"},
 	{url: "/ja/blog/2014/07/18/data-binding/", title: "JavaScript フレームワークがデータバインディングを実現する４通りの手法"},
 	{url: "/ja/blog/2014/06/30/vue-js-hook/", title: "Vue.js が data に渡した値を激しく書き換える件について"},
 	{url: "/ja/blog/2014/05/30/ruby-https-cert/", title: "Ruby で HTTPS 接続するときの証明書で悩んだ話"},
-	{url: "/ja/blog/2014/04/02/d3-event-dispatch/", title: "D3.js で自作クラスにイベント発行機能を追加する"},
-	{url: "/ja/blog/2014/03/28/git-crlf-to-lf/", title: "Git for Windows でレポジトリー上の CR LF を LF に変換する手順"}
+	{url: "/ja/blog/2014/04/02/d3-event-dispatch/", title: "D3.js で自作クラスにイベント発行機能を追加する"}
 ];
 
 Site.archives.months = [
-  "201407"
+  "201511"
+, "201407"
 , "201406"
 , "201405"
 , "201404"

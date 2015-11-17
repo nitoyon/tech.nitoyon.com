@@ -6,10 +6,76 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sat, 30 Aug 2014 23:13:21 +0000</lastBuildDate>
+		<lastBuildDate>Wed, 18 Nov 2015 02:46:08 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
+
+		<item>
+			<title>Object.observe の死 (ECMAScript の提案取り下げ、V8 からも削除予定)</title>
+			<link>http://tech.nitoyon.com/ja/blog/2015/11/18/death-of-oo/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2015/11/18/death-of-oo/</guid>
+			<pubDate>Wed, 18 Nov 2015 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>1年前の記事 <a href="/ja/blog/2014/07/18/data-binding/">JavaScript フレームワークがデータバインディングを実現する４通りの手法</a> では、<code>Object.observe()</code> について次のように説明した。</p>
+
+<ul>
+<li>Google Chrome には実装済み</li>
+<li>ECMAScript 7 に提案中</li>
+<li>提案が通れば MV* フレームワークの実装がシンプルになってハッピー</li>
+</ul>
+
+<p>将来を期待されていた <code>Object.observe()</code> であったが、2015 年 11 月頭、ES Discuss メーリングリストへの <a href="https://esdiscuss.org/topic/an-update-on-object-observe">An update on Object.observe</a> という投稿で、ECMAScript からの提案が取り下げられて、V8 エンジンからも年内に削除される予定であることが表明された。</p>
+
+<h1>Object.observe() に何があったのか</h1>
+
+<p>メーリングリストへの投稿をざっくりと訳してみた。</p>
+
+<blockquote>
+<p>3年前、Rafael Weinstein、Erik Arvidsson、私 (Adam Klein) で、データバインディングを実現するための API を設計し始めた。V8 上のブランチでプロトタイプを作成したあと、V8 チームに正式版を開発することを認めてもらった。さらに、Object.observe (以下、&quot;O.o&quot; と表記) を ES7 標準に提案しつつ、Polymer チームと協力して O.o を使ってデータバインディングを実装した。</p>
+
+<p>3年後、世界は大きく変わった。Ember や Angular といったフレームワークは O.o に興味を示したものの、既存のモデルを O.o のモデルに発展させるのは難しかった。Polymer は 1.0 をリリースするにあたりゼロから書き直されたが、そこでは O.o は使われなかった。さらに、React のような、データバインディングでミュータブルなものを避けようとする処理モデルが人気を博している。</p>
+
+<p>関係者との議論の末、Object.observe の提案を TC39 (現在、ES 仕様策定のステージ 2) から取り下げることにした。また、今年の終わりまでには V8 でのサポートを終了したいと考えている (<a href="https://www.chromestatus.com/metrics/feature/popularity">chromestatus.com</a> によると、Chrome がアクセスしたページのうち 0.0169% でしか O.o は利用されていない)。</p>
+
+<p>O.o を使っていた開発者は、<a href="https://github.com/MaxArt2501/object-observe">object-observe</a> のような polyfill や <a href="https://github.com/polymer/observe-js">observe-js</a> のようなラッパーライブラリーを使うことを検討してほしい。</p>
+</blockquote>
+
+<p><code>Object.observe()</code> は他のフレームワークで使われることもなかったし、Polymer でも使われなくなってしまったので、ECMAScript への提案を取り下げる、ということのようだ。</p>
+
+<h1>Polymer 1.0 のデータバインディング実現方法</h1>
+
+<p>Polymer が <code>Object.observe()</code> を使わなくなった理由については、Polymer の開発にも関わっている Brian Chin さんから <a href="https://esdiscuss.org/topic/an-update-on-object-observe">スレッド</a> 内に次のような<a href="https://esdiscuss.org/topic/an-update-on-object-observe#content-4">コメントがでている</a>。</p>
+
+<blockquote>
+<p>O.o はプロパティーを変更したあと、非同期でコールバックが呼ばれるのがイケてなかった。Polymer 1.0 ではプロパティーを変更したら、すぐに変更が UI に反映されるので、利用者にも分かりやすくなっている。</p>
+</blockquote>
+
+<p>モデルを書きかえた瞬間に、UI に反映されるようにしたかった、というのがメインの理由のようだ。</p>
+
+<p>「じゃ、Polymer は <code>Object.observe()</code> の代わりに何を使ってるの？」という質問に対しては、次のような<a href="https://esdiscuss.org/topic/an-update-on-object-observe#content-2">回答</a>が出ている。</p>
+
+<blockquote>
+<p>getter/setter を定義して、DOM イベントで伝搬させてるよ。詳しくは polymer-project.org を見てね。たとえば <a href="https://www.polymer-project.org/1.0/docs/devguide/properties.html#change-callbacks">ここ</a> とか <a href="https://www.polymer-project.org/1.0/docs/devguide/data-binding.html#change-notification-protocol">ここ</a> だよ</p>
+</blockquote>
+
+<p>ざっと上記のページを見た感じでは、次のような感じでデータバインディングに使うプロパティーを宣言しておくらしい。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  Polymer({
+    is: &#39;custom-element&#39;,
+    properties: {
+      someProp: {
+        type: String,
+        notify: true
+      }
+    }
+  });
+</code></pre></div>
+<p>スレッドには、他にも「ブラウザーでは使われないかもしれないけど、Node.js のエコシステムには大きな影響があるかもしれないから、そんなに急に削除しないでくれ」と Node.js の中の人が書き込んでいたり、「Firefox の <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/watch">Object.watch()</a> はデバッガーで使われてるからすぐに削除されることはないはず」といった書き込みがあったりして興味深い。</p>
+
+<h1>まとめ</h1>
+
+<p><code>Object.observe()</code> は ECMAScript 7 に入ることはなくなったので、他のブラウザーに 実装される可能性はなくなったし、Google Chrome でも近い将来、使えなくなるだろう。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>JavaScript フレームワークがデータバインディングを実現する４通りの手法</title>
@@ -544,116 +610,6 @@ myButton.on(&quot;myclick&quot;, function(e) {
 <p>D3.js のイベントで厄介な点は、1 つのイベント名に複数のイベントを登録できないところ。新しいイベントを登録したら、古いほうは消される…。DOM イベントと同じ感覚でいると混乱してしまう。</p>
 
 <p>これを回避するには <code>myclick.foo</code> や <code>myclick.bar</code> のように optional namespace をつけてイベント登録する必要がある。くわしくは <a href="https://github.com/mbostock/d3/wiki/Selections#on"><code>selection.on</code></a> を参照あれ。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Git for Windows でレポジトリー上の CR LF を LF に変換する手順</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/03/28/git-crlf-to-lf/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/03/28/git-crlf-to-lf/</guid>
-			<pubDate>Fri, 28 Mar 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Git for Windows では改行コードが「レポジトリー上は LF」「ワーキング ディレクトリーは CR LF」となるように、git config の <code>core.autocrlf</code> が <code>true</code> となる状態でインストールされる (インストーラーでデフォルトの [Checkout Windows-style, commit Unix-style line endings] を選択した場合)。</p>
-
-<p>Windows 以外の文化圏の人は CR LF を見ると CR がゴミに見えるので、妥当な設定だろう。</p>
-
-<p>標準設定の <code>autocrlf</code> が <code>true</code> のときに、レポジトリー上に CR LF なファイルが紛れ込んでいないか調べたり、紛れ込んだ CR LF を LF に変換したかったのだけど、この手順が少しややこしかったので記事にまとめておく。</p>
-
-<p>(<code>autocrlf</code> を <code>false</code> にして clone したらすぐに分かる…という話なんだけど、大きなレポジトリーを clone しなおすのはストレスフルなので、その場で確認する手順を調べてみた)</p>
-
-<p>※ Git for Windows は 1.9 と 1.8.4 で検証した</p>
-
-<h1>レポジトリー上に CR LF のファイルがあるか調べたい</h1>
-
-<p>レポジトリー上のファイルの改行コードは LF で統一しているつもりなのに、CR LF のファイルが混ざりこんでたら悲しい。</p>
-
-<p><code>autocrlf</code> が <code>true</code> な状態で、レポジトリー上に CR LF のファイルが入ってないか調べるには次のようにする。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
-</code></pre></div>
-<p>オプションの補足:</p>
-
-<ul>
-<li><code>--cached</code> を指定しないと、ワーキング ディレクトリー上のファイルから CR を探してしまう。つまり、<code>core.autocrlf</code> が <code>true</code> な状態では、すべての改行がヒットしてしまう。</li>
-<li><code>-I</code> でバイナリー ファイルを無視している。</li>
-</ul>
-
-<h2>実行例</h2>
-
-<p><a href="https://gist.github.com/nitoyon/9808563">https://gist.github.com/nitoyon/9808563</a> に CRLF と LF のファイルの 2 つがあるレポジトリーを用意してみた。</p>
-
-<p><code>core.autocrlf</code> が <code>true</code> な状態で clone すると、両方のファイルが CRLF でチェックアウトされる。</p>
-
-<p>この状態で上記のコマンドを実行してみると、CR LF のほうだけが引っかかる。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
-crlf-test.txt:End of Line Character Test^M
-crlf-test.txt:^M
-crlf-test.txt:Which do you like CR LF or LF?^M
-crlf-test.txt:^M
-crlf-test.txt:This file uses &quot;CR LF&quot;!!!!^M
-crlf-test.txt:^M
-crlf-test.txt:Clone me!^M
-</code></pre></div>
-<p>めでたし。</p>
-
-<h1>レポジトリー上の CR LF を LF に変換したい</h1>
-
-<p>万が一、レポジトリー上に CR LF を発見したら、LF に統一しよう。</p>
-
-<p>こちらも <code>core.autocrlf</code> が <code>true</code> になっている状態からの手順を示しておく。</p>
-
-<ol>
-<li><p>一時的に <code>core.autocrlf</code> を <code>false</code> に設定する。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git config core.autocrlf false
-</code></pre></div></li>
-<li><p>LF でチェックアウトするために、ワーク ディレクトリーのファイルを全部削除してから、チェックアウトする (一度削除しないと反映されないことがあった!!)。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ rm -rf .
-$ git checkout .
-</code></pre></div></li>
-<li><p>CR LF になっているファイルを何らかのエディターで LF に変換する。</p></li>
-<li><p>コミットする。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git add . &amp;&amp; git commit
-</code></pre></div></li>
-<li><p><code>autocrlf</code> の設定を戻す。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git config core.autocrlf true
-</code></pre></div></li>
-</ol>
-
-<h2>実行例</h2>
-
-<p>再び、<a href="https://gist.github.com/nitoyon/9808563">https://gist.github.com/nitoyon/9808563</a> で試してみる。</p>
-
-<p>作業完了後の diff はこんな感じになる。</p>
-<div class="highlight"><pre><code class="language-diff" data-lang="diff">$ git diff HEAD~
-diff --git a/crlf-test.txt b/crlf-test.txt
-index ad9608a..85a3c62 100644
---- a/crlf-test.txt
-+++ b/crlf-test.txt
-@@ -1,7 +1,7 @@
--End of Line Character Test
--
--Which do you like CR LF or LF?
--
--This file uses &quot;CR LF&quot;!!!!
--
--Clone me!
-+End of Line Character Test
-+
-+Which do you like CR LF or LF?
-+
-+This file uses &quot;CR LF&quot;!!!!
-+
-+Clone me!
-</code></pre></div>
-<p>違いが分かりにくい diff が表示されていて悲しい。git の diff では CR があると <code>^M</code> として警告してくれるはずなんだけど、<code>^M</code> が表示されるのは <code>+</code> から始まる行だけのようだ。今回のような「CR LF が LF になった」ケースでは CR があるのは <code>-</code> の行なので <code>^M</code> は表示してくれない…。</p>
-
-<p><code>--ignore-space-at-eol</code> を指定して行末スペースの変更を無視したら、diff が消え去るので、うまくいっていると信じる。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git diff --ignore-space-at-eol HEAD~
-</code></pre></div>
-<p><code>git grep</code> でも CR を見つけられなくなるので、うまくいっていると信じる。</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console">$ git grep --cached -I $&#39;\r&#39;
-</code></pre></div>
-<h1>まとめ</h1>
-
-<p>Windows はつらいよ。</p>
 ]]></description>
 		</item>
 
