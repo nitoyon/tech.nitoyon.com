@@ -12,6 +12,8 @@ seealso:
 ---
 1年前の記事 {% post_link 2014-07-18-data-binding %} では、`Object.observe()` について次のように説明した。
 
+* JavaScript オブジェクトが変更されたときにコールバックを呼んでくれる API
+* データバインディングの実装が簡単になる
 * Google Chrome には実装済み
 * ECMAScript 7 に提案中
 * 提案が通れば MV* フレームワークの実装がシンプルになってハッピー
