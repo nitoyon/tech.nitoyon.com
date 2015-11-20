@@ -12,7 +12,7 @@ seealso:
 - ja/2013-02-27-livereloadx
 - ja/2013-02-19-node-source-map
 ---
-期待のオープンソース IDE、[Visual Studio Code](https://code.visualstudio.com/) を試してみたら衝撃を受けた。
+クロスプラットフォームでオープンソースな IDE 環境、[Visual Studio Code](https://code.visualstudio.com/) が公開されたので試してみた。
 
 拡張を入れなくても、デフォルトで JavaScript の「自動 Lint」「Grunt、Gulp 連携」「デバッグ」が動いた。なんだかすごく便利そうな予感。
 
@@ -55,6 +55,7 @@ Visual Studio Code にはプロジェクトの概念はない。
 
 {% image https://farm1.staticflickr.com/703/22827902400_6bcc58719d.jpg, 500, 231 %}
 
+ESLint と JSHint に[対応している](https://code.visualstudio.com/docs/languages/javascript#_javascript-linters-eslint-jshint)らしい。
 
 Git 連携！
 ==========
