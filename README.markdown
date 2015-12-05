@@ -15,6 +15,8 @@ Initialize
     $ git checkout .; git clean -d -f
     $ npm install
     $ npm install -g grunt-cli
+    $ gem install bundler
+    $ bundle install --path=vendor/bundle
 
 (ref) [git-new-workdir](https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir), [git-new-workdir-win](https://github.com/dansmith65/git/blob/master/contrib/workdir/git-new-workdir-win)
 
@@ -24,19 +26,19 @@ How to Build
 
 When file is modified, generate only modified pages and notify to browser (http://localhost:35729/).
 
-    $ grunt
+    $ bundle exec grunt
 
 Generate only modified pages when file is modified.
 
-    $ grunt watch
+    $ bundle exec grunt watch
 
 Generate only modified pages.
 
-    $ grunt build
+    $ bundle exec grunt build
 
 Generate all pages.
 
-    $ grunt rebuild
+    $ bundle exec grunt rebuild
 
 * Post and Page are generated when source file is modified.
 * Archive and Lang are generated when page's yaml front matter or post's yaml front matter is modified.
@@ -48,11 +50,6 @@ Build Requirements
 * Node.js 0.10.18
   * grunt-cli
 * Ruby 2.0.0
-  * Jekyll 2.4.0
-  * hparser 0.4.1
-  * Compass 1.0.1
-  * Sass 3.4.3
 * Python 2.7
   * Pygmentize 1.6
 
-On Windows, pygments.rb should be applied the patch on tmm1/pygments.rb#90.
