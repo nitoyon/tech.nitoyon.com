@@ -209,7 +209,8 @@ Configuration file: path/to/test-site/_config.yml
        Destination: path/to/test-site/_site
       Generating... done.
     Server address: http://0.0.0.0:4000
-  Server running... press ctrl-c to stop.```
+  Server running... press ctrl-c to stop.
+```
 
 http://localhost:4000/ を開いて結果が出力されていれば成功。
 
