@@ -14,6 +14,11 @@ function prettify(str) {
   str = html.prettyPrint(str, {max_char: 0})
   return str.split(/\r|\n/)
     .map(function(s) { return s.trim(); })
+    .map(function(s) {
+      return s
+        .replace(/<code class="[^"]+" data-lang="[^"]+">/, "")
+        .replace("</code></pre>", "</pre>");
+    })
     .filter(function(s) { return s != ''; })
     .join("\r\n");
 }
