@@ -95,7 +95,7 @@
   <span class="ss">&#39;nil!</span><span class="p">)))</span>
 <span class="c1">; #:G3123 が gensym で定義されたシンボルだとしておく</span>
 </pre></div>
-<p><code>progn</code> では２つの式を順番に評価している。１つ目が <code>setf</code> で２つ目が <code>'nil!</code> だ。</p>
+<p><code>progn</code> では２つの式を順番に評価している。１つ目が <code>setf</code> で２つ目が <code>&#39;nil!</code> だ。</p>
 <p>２つ目の結果が <code>progn</code> の評価結果となるので、この式の戻り値はシンボル <code>nil!</code> となる。</p>
 <p>１つ目の <code>setf</code> のところを見ていこう。<code>our-expander</code> マクロが登場してるのでこれも展開してみる。</p>
 <div class="highlight"><pre>  <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nb">get</span> <span class="ss">&#39;nil!</span> <span class="ss">&#39;expander</span><span class="p">)</span> <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="ss">#:G3123</span><span class="p">)</span> <span class="p">(</span><span class="o">...</span><span class="p">))</span> <span class="p">)</span>
@@ -109,15 +109,15 @@
       <span class="p">(</span><span class="nb">funcall</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">))</span> <span class="nv">expr</span><span class="p">)</span>
       <span class="nv">expr</span><span class="p">))</span>
 </pre></div>
-<p>この関数は <code>(our-macro-expand '(nil! x))</code> のように呼び出す。</p>
+<p>この関数は <code>(our-macro-expand &#39;(nil! x))</code> のように呼び出す。</p>
 <p>１行目の <code>if</code> では、引数のチェックをしている。</p>
-<ol><li><code>expr</code> が <code>cons</code> であるか？</li><li><code>car expr</code>（つまり <code>'nil!</code>）に <code>expand</code> プロパティが定義されているか？</li></ol>
-<p><code>'(nil! x)</code> はこの条件を満たすので、晴れて２行目が評価される。</p>
+<ol><li><code>expr</code> が <code>cons</code> であるか？</li><li><code>car expr</code>（つまり <code>&#39;nil!</code>）に <code>expand</code> プロパティが定義されているか？</li></ol>
+<p><code>&#39;(nil! x)</code> はこの条件を満たすので、晴れて２行目が評価される。</p>
 <p>２行目は、<code>(funcall [expansion function] expr)</code> を実施している。ここで expansion function が呼ばれている。引数は <code>expr</code> だ。</p>
-<p>つまり、expansion function は <code>'(nil! x)</code> を引数に呼び出されることが分かった。</p>
+<p>つまり、expansion function は <code>&#39;(nil! x)</code> を引数に呼び出されることが分かった。</p>
 <h1>expansion function の定義を見つつ、our-macroexpand-1 の結果を追う</h1>
 <p>引数が分かったところで、expansion function の動きを追っていく。</p>
-<p>expansion function を再掲しておく。この関数の引数が <code>'(nil! x)</code> である。</p>
+<p>expansion function を再掲しておく。この関数の引数が <code>&#39;(nil! x)</code> である。</p>
 <div class="highlight"><pre>  <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
       <span class="p">(</span><span class="k">block</span> <span class="nv">nil!</span>
              <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">expr</span><span class="p">)</span>

@@ -78,23 +78,23 @@
 <h1>正常なケース</h1>
 <p>REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含めたバイト数を渡してあげる必要がある。</p>
 <p><code>test</code> を書き込むにはそれぞれ次のようなパラメータを与えると、ANSI の場合には5バイト分、Unicode の場合には10バイト分がレジストリに書き込まれる。</p>
-<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT("test")</code></td></tr><tr><td><code>cbData</code></td><td><code>5 * sizeof(TCHAR)</code></td></tr></table>
+<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT(&quot;test&quot;)</code></td></tr><tr><td><code>cbData</code></td><td><code>5 * sizeof(TCHAR)</code></td></tr></table>
 <p>書き込みに成功したあと、<code>RegQueryValueEx</code> を利用すると、実際に何バイト書き込まれたかどうかを調べることができる。上記の呼び出しでは、ANSI で5バイト、Unicode で10バイトが格納されており、NULL 文字も含めてレジストリ上に書き込まれたことが分かる。</p>
 <p>以下、自作テストツールの出力(ANSI の場合)。NULL 文字は _ で表現した。</p>
 <pre> set 5 bytes = test_ (74 65 73 74 00) -&gt; wrote 5 bytes</pre>
-<p>5バイト(<code>"test"</code>書き込んだら、ちゃんと5バイト分書き込めていた、という出力になっている。</p>
+<p>5バイト(<code>&quot;test&quot;</code>書き込んだら、ちゃんと5バイト分書き込めていた、という出力になっている。</p>
 <h1>NULL 文字のサイズを含めるのを忘れた場合</h1>
 <p><code>test</code> を書き込むには <code>cbData</code> に5文字分のバイト数を渡さなきゃいけないのだけど、忘れちゃうケースはよくあるだろう。</p>
 <p>この点に配慮してか、<code>RegSetValueEx()</code> 関数は <code>cbData</code> バイト目に NULL 文字がなく、その次が NULL 文字の場合に限り、レジストリに書き込む文字数をこっそり１増やすようだ。</p>
 <p>次のような値で書き込むと、</p>
-<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT("test")</code></td></tr><tr><td><code>cbData</code></td><td><code>4 * sizeof(TCHAR)</code></td></tr></table>
+<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT(&quot;test&quot;)</code></td></tr><tr><td><code>cbData</code></td><td><code>4 * sizeof(TCHAR)</code></td></tr></table>
 <p>4バイトだけ書き込んだはずなのに、<code>RegQueryValueEx()</code> を呼び出すと NULL 文字を含んだバイト数が書き込まれていたことが分かった。</p>
 <pre> set 4 bytes = test_ (74 65 73 74 00) -&gt; wrote 5 bytes</pre>
-<p>4バイト(<code>"test"</code>書き込んだら、なぜか5バイト分書き込めていた、という状態。</p>
+<p>4バイト(<code>&quot;test&quot;</code>書き込んだら、なぜか5バイト分書き込めていた、という状態。</p>
 <p>余計なおせっかいと言ってしまえばそれまで。</p>
 <h1>さらに小さいサイズを指定した場合</h1>
 <p>さらに１バイト減らしてみた。<code>test</code> を書き込むのに <code>cbData</code> に3文字分のバイト数を渡すとどうなるか。</p>
-<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT("test")</code></td></tr><tr><td><code>cbData</code></td><td><code>3 * sizeof(TCHAR)</code></td></tr></table>
+<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT(&quot;test&quot;)</code></td></tr><tr><td><code>cbData</code></td><td><code>3 * sizeof(TCHAR)</code></td></tr></table>
 <p>この場合は NULL 文字を含まない形でレジストリに格納される。</p>
 <pre>  set 3 bytes = test_ (74 65 73 74 00) -&gt; wrote 3 bytes</pre>
 <p>このとき、レジストリ上には test のうちの何文字が格納されているのだろうか。末尾に NULL は付加されているのだろうか。</p>
@@ -106,7 +106,7 @@
 <p>Microsoft さんの余計なおせっかいにも似た優しさに惑わされてバグを生まないように注意したい。</p>
 <h1>NULL 文字を途中に含んだ文字列を書き込んだ場合</h1>
 <p>試しに途中に NULL 文字を含んだ文字列を書き込んでみるとどうなるだろう。</p>
-<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT("t\0st")</code></td></tr><tr><td><code>cbData</code></td><td><code>5 * sizeof(TCHAR)</code></td></tr></table>
+<table><tr><th>変数名</th><th>パラメータ</th></tr><tr><td><code>lpData</code></td><td><code>TEXT(&quot;t\0st&quot;)</code></td></tr><tr><td><code>cbData</code></td><td><code>5 * sizeof(TCHAR)</code></td></tr></table>
 <p>5バイト分書き込むことができる。</p>
 <pre>  set 5 bytes = t_st_ (74 00 73 74 00) -&gt; wrote 5 bytes</pre>
 <p>取得すると、NULL 文字を含んだ形で取得できた。</p>

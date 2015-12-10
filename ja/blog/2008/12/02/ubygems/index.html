@@ -13,7 +13,7 @@
 	<meta property="og:title" content="ubygems"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/12/02/ubygems/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="rubygems を使ってライブラリをインストールすると、そのまま require &#39;sqlite3&#39; のようにすれば使えるようになる。ところが、ライブラリパスである $LOAD_PATH を見てみると、その中に lib/ruby/gems/1.8/gems 以下のフォルダは含まれていなかった。irb(main):001:0&gt; $LOAD_PATH=&gt; [&quot;c:/ruby/lib/ruby/site_ruby/1.8&quot;, &quot;c:/ruby/lib/ruby/site_ruby/1.8/i386-msvcrt&quot;, &quot;c:/rub..."/>
+	<meta property="og:description" content="rubygems を使ってライブラリをインストールすると、そのまま require &#39;sqlite3&#39; のようにすれば使えるようになる。ところが、ライブラリパスである $LOAD_PATH を見てみると、その中に lib/ruby/gems/1.8/gems 以下のフォルダは含まれていなかった。irb(main):001:0&gt; $LOAD_PATH=&gt; [&quot;c:/ruby/lib/ruby/site_ruby/1.8&quot;, &quot;c:/ruby/lib/ruby/site_ruby/1.8/i386-msvcrt&quot;, &amp;quo..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -60,7 +60,7 @@
 <div id="entry">
 <div class="entry-body">
 <section>
-<p>rubygems を使ってライブラリをインストールすると、そのまま require 'sqlite3' のようにすれば使えるようになる。</p>
+<p>rubygems を使ってライブラリをインストールすると、そのまま require &#39;sqlite3&#39; のようにすれば使えるようになる。</p>
 <p>ところが、ライブラリパスである $LOAD_PATH を見てみると、その中に lib/ruby/gems/1.8/gems 以下のフォルダは含まれていなかった。</p>
 <div class="highlight"><pre><span class="n">irb</span><span class="p">(</span><span class="n">main</span><span class="p">):</span><span class="mo">001</span><span class="p">:</span><span class="mi">0</span><span class="o">&gt;</span> <span class="vg">$LOAD_PATH</span>
 <span class="o">=&gt;</span> <span class="o">[</span><span class="s2">&quot;c:/ruby/lib/ruby/site_ruby/1.8&quot;</span><span class="p">,</span> 
@@ -73,7 +73,7 @@
 <p>不思議だったのでいろいろと情報をあたってみた。</p>
 <h1>犯人は RUBYOPT</h1>
 <p>環境変数を見てみると RUBYOPT に -rubygems が設定されていた。ruby を起動するごとに RUBYOPT が自動的にコマンドライン引数に付加されるらしい。どうやら、One-Click Ruby のセットアップ時に、環境変数 RUBYOPT に -rubygems が設定されていたようだ。</p>
-<p>試しに RUBYOPT を空にして require 'sqlite3' するとエラーになった。</p>
+<p>試しに RUBYOPT を空にして require &#39;sqlite3&#39; するとエラーになった。</p>
 <p>次に、-rubygems オプションの仕組みが気になった。ruby 本体に rubygems 用の特殊な処理が組み込まれているとは考えづらい。</p>
 <h1>-r オプション</h1>
 <p>ruby --help を実行すると、-r はライブラリを読み込むためのオプションだと分かった。</p>
@@ -90,7 +90,7 @@
 <p>としてもよい。</p>
 <h1>-rubygems の答え</h1>
 <p>そこで、-rubygems。</p>
-<p>なんと、lib/ruby/site_ruby/1.8 に <strong>ubygems.rb</strong> というファイルが用意されていた。ubygems.rb は require 'rubygems' してるだけ。</p>
+<p>なんと、lib/ruby/site_ruby/1.8 に <strong>ubygems.rb</strong> というファイルが用意されていた。ubygems.rb は require &#39;rubygems&#39; してるだけ。</p>
 <p>この ubygems.rb があるおかげで</p>
 <div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">r</span> <span class="n">rubygems</span> <span class="n">foo</span><span class="o">.</span><span class="n">rb</span>
 </pre></div>
@@ -114,7 +114,7 @@
   <span class="k">end</span>
 <span class="k">end</span>  <span class="c1"># module Kernel</span>
 </pre></div>
-<p>ということで、require 'rubygems' するか -rubygems オプションを指定すると、require がラップされるようだ。</p>
+<p>ということで、require &#39;rubygems&#39; するか -rubygems オプションを指定すると、require がラップされるようだ。</p>
 <p>lib/ruby/gems/1.8/gems の下の適切なバージョンのライブラリを読み込んでくれるわけですな。</p>
 </section>
 

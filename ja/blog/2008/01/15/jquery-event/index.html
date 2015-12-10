@@ -81,7 +81,7 @@
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">).</span><span class="nx">bind</span><span class="p">(</span> <span class="nx">type</span><span class="p">,</span> <span class="nx">fn</span> <span class="p">);</span>
 </pre></div>
 <p>このとき、裏側では次のように動いている。</p>
-<ol><li>fn に guid を設定する。guid はイベントハンドラに一意につけられた id。</li><li>type と guid をキーにして、イベントハンドラを保持する（hash.events[type][guid] = fn）。<ul><li>element から登録された type 一覧を知ることができる</li><li>element と type から登録された fn の一覧を知ることができる</li></ul></li><li>element に type のイベントが登録されていない場合は、element.addEventListener(type, <特製ハンドラ>, false) する。<ul><li>複数回 bind しても、登録されるイベントハンドラはこの特製ハンドラ１つだけ</li><li>このハンドラが呼ばれると、hash.events[type] に保存されている fn（実際に bind で登録されたイベントハンドラ）を順番に呼び出す。</li></ul></li></ol>
+<ol><li>fn に guid を設定する。guid はイベントハンドラに一意につけられた id。</li><li>type と guid をキーにして、イベントハンドラを保持する（hash.events[type][guid] = fn）。<ul><li>element から登録された type 一覧を知ることができる</li><li>element と type から登録された fn の一覧を知ることができる</li></ul></li><li>element に type のイベントが登録されていない場合は、element.addEventListener(type, &lt;特製ハンドラ&gt;, false) する。<ul><li>複数回 bind しても、登録されるイベントハンドラはこの特製ハンドラ１つだけ</li><li>このハンドラが呼ばれると、hash.events[type] に保存されている fn（実際に bind で登録されたイベントハンドラ）を順番に呼び出す。</li></ul></li></ol>
 <p>element と type が同じなら、１回しか addEventListener が呼び出されず、同じイベントハンドラを使いまわしている。</p>
 <h2>unbind の裏側</h2>
 <ul><li>element, type, fn を指定した場合<ol><li>hash.events[type] から fn の guid を削除する</li><li>hash.events[type] が空になったときは、removeEventHandler する</li></ol></li><li>element, type を指定した場合<ol><li>hash.events[type] を空にする</li><li>removeEventListener する</li></ol></li><li>element のみ指定されたとき<ol><li>hash.events から全ての type を列挙して、removeEventListener する</li><li>hash.events も初期化する</li></ol></li></ul>

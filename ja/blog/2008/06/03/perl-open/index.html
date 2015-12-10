@@ -70,7 +70,7 @@
 <h1>調べてみた</h1>
 <p>2008年流の Perl な書き方を調べるなら <a href="http://perl-users.jp/">perl-users.jp</a>。</p>
 <p>早速見つけた。oldtype と modern の書き方が比較されている。</p>
-<blockquote><p>open</p><ul><li>oldtype: open FH, "filename" or die $!;</li><li>modern: open my $fh, '<', 'filename' or die $!; または file('filename')->open('r') とか</li></ul><cite><a href="http://perl-users.jp/nowpast.html">Perl 5 今昔 - Perl-users.jp</a></cite></blockquote>
+<blockquote><p>open</p><ul><li>oldtype: open FH, &quot;filename&quot; or die $!;</li><li>modern: open my $fh, &#39;&lt;&#39;, &#39;filename&#39; or die $!; または file(&#39;filename&#39;)-&gt;open(&#39;r&#39;) とか</li></ul><cite><a href="http://perl-users.jp/nowpast.html">Perl 5 今昔 - Perl-users.jp</a></cite></blockquote>
 <h1>まず $! が分からない</h1>
 <p>oldtype の $! すら理解できない自分…。Perl は特殊変数が多くて大変なんだよなぁ。しかも、検索エンジンで検索できないのが困り者。</p>
 <p>こういうときは、<a href="http://perldoc.perl.org/perlvar.html">perlvar</a> を眺める。どうやら $! はエラーメッセージになるらしい。</p>
@@ -102,10 +102,10 @@ open FILEHANDLE </pre>
 <p>問題は my $fh。なんだこの書き方は。</p>
 <p>open の説明をみても良く分からなかったので、<a href="http://perldoc.perl.org/perlopentut.html">perlopentut</a> を見てみた。</p>
 <p>そしたら、<a href="http://perldoc.perl.org/perlopentut.html#Indirect-Filehandles">Indirect Filehandles</a> にズバリそのものの記述が（日本語は私が訳したもの）。</p>
-<blockquote><p>open の第一引数はファイルハンドルのリファレンスを指定することもできます。Perl 5.6 では、第一引数が初期化されていない場合、Perl はファイルハンドルを自動的に作成し、第一引数にリファレンスを代入します。</p><blockquote><p>open's first argument can be a reference to a filehandle. As of perl 5.6.0, if the argument is uninitialized, Perl will automatically create a filehandle and put a reference to it in the first argument</p></blockquote></blockquote>
+<blockquote><p>open の第一引数はファイルハンドルのリファレンスを指定することもできます。Perl 5.6 では、第一引数が初期化されていない場合、Perl はファイルハンドルを自動的に作成し、第一引数にリファレンスを代入します。</p><blockquote><p>open&#39;s first argument can be a reference to a filehandle. As of perl 5.6.0, if the argument is uninitialized, Perl will automatically create a filehandle and put a reference to it in the first argument</p></blockquote></blockquote>
 <p>なるほど。初期化されてない変数を渡せるわけね。</p>
 <p>しかし、メリットがいまいち分からん。続きを読む（同じく、日本語は私が勝手に訳したもの）。</p>
-<blockquote><p>Indrect filehandle を使うと、名前空間の扱いが簡単になります。ファイルハンドルはパッケージ空間に対して global なので、例えば２つのサブルーチンで INFILE を開くとクラッシュしてしまいます。indirect filehandle を利用して my $infile を開いた場合にはクラッシュする心配はありませんし、それ以後に名前の衝突が発生する恐れもありません。</p><blockquote><p>Indirect filehandles make namespace management easier. Since filehandles are global to the current package, two subroutines trying to open INFILE will clash. With two functions opening indirect filehandles like my $infile , there's no clash and no need to worry about future conflicts.</p></blockquote></blockquote>
+<blockquote><p>Indrect filehandle を使うと、名前空間の扱いが簡単になります。ファイルハンドルはパッケージ空間に対して global なので、例えば２つのサブルーチンで INFILE を開くとクラッシュしてしまいます。indirect filehandle を利用して my $infile を開いた場合にはクラッシュする心配はありませんし、それ以後に名前の衝突が発生する恐れもありません。</p><blockquote><p>Indirect filehandles make namespace management easier. Since filehandles are global to the current package, two subroutines trying to open INFILE will clash. With two functions opening indirect filehandles like my $infile , there&#39;s no clash and no need to worry about future conflicts.</p></blockquote></blockquote>
 <p>なるほど。これは安心。</p>
 <p>open IN, ... 形式がグローバル変数で、open my $in, ... がローカル変数、というイメージ。</p>
 <p>読んだり閉じたりするには次のようにする。</p>
