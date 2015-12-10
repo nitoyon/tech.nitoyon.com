@@ -16,7 +16,7 @@ opt = {
   :tables => true,
   :definition_lists => false,
   :footnotes => true,
-  :autolink => false,
+  :autolink => true,
 }
 
 # 出力の拡張子
