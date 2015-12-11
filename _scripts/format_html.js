@@ -17,7 +17,8 @@ function prettify(str) {
     .map(function(s) {
       return s
         .replace(/<code class="[^"]+" data-lang="[^"]+">/, "")
-        .replace("</code></pre>", "</pre>");
+        .replace("</code></pre>", "</pre>")
+        .replace(/(.)<\/pre>/, "$1\n</pre>");
     })
     .filter(function(s) { return s != ''; })
     .join("\r\n");
