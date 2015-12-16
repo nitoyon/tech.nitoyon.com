@@ -80,7 +80,6 @@
 <p>どうしてもへっこんだ多角形を作りたい場合には、複数の凸包を組み合わせて作るしかない。</p>
 <h1>はまりポイント３：頂点数は８個まで</h1>
 <p>多角形の頂点数は最大 8 個に制限されている。(※2.0.2 の場合。バージョンによって異なるかもしれない)</p>
-<a name="seemore"></a>
 <p>8個以上の頂点を作りたいときの対策は２つ。好きなほうを選ぶとよいだろう。</p>
 <ol><li><code>Box2D.Common.b2Setting</code> の <code>b2_maxPolygonVertices</code> で定義されている最大頂点数を変更する</li><li>複数の shape に分解する</li></ol>
 <p>2つ目の分解を選ぶときには色々と注意が必要だ。</p>
@@ -89,7 +88,6 @@
 <p>図の左側がその例。一番下の頂点に全ての四角形の頂点が集中しているが、この頂点が衝突したときの計算量が増えて処理落ちしてしまう。</p>
 <p>右の例のように頂点を分散させる工夫が必要だ。</p>
 <p><a href="/ja/blog/2009/04/15/hokkaido/">北海道を落とすとどう跳ねるのか？</a> では特定の頂点から開始して、左回り・右回りに多角形に使う頂点を選んでいってる。少し複雑になってるが、上の図の右にある分解を実現している。</p>
-<div class="fix-height-syntax">
 <div class="highlight"><pre><span class="c1">// points には x 座標、 y 座標が順番に入ってる</span>
 <span class="kd">var</span> <span class="nx">x0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">(),</span> <span class="nx">y0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">y1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">(),</span> <span class="nx">x1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
@@ -122,7 +120,6 @@
     <span class="nx">body</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 <p>ただ、このように分解した結果、分解した多角形の隙間を小さな島がすり抜けてしまう現象が発生してしまった。図形のサイズが一定ではない場合には、<code>b2_maxPolygonVertices</code> を変更する方法を選択すべきだったのかもしれない。</p>
 <h1>はまりポイント４：多角形の中心を取得してる？</h1>
 <p><code>b2DebugDraw</code> を使っていると気づきにくいのだけど、物体の位置は物体の重心で表現される。そのため、多角形を表示する <code>Sprite</code> は <code>Sprite</code> の <code>(0, 0)</code> を物体の重心に合わせておくべきだ。そうしないと、物体がずれて表示されてしまう。</p>

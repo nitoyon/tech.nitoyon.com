@@ -68,7 +68,6 @@
 <p>の 3 つが紹介されている。</p>
 <p>このうちの 1. と 2. の自前判定は日本語にしか使えない。他言語にも対応したかったので mlang.dll を使う方法を試すことにした。mlang.dll は IE5 以上が利用する文字コード関連のライブラリだ。<code>IMultiLanguage2::DetectInputCodepage()</code> が文字コード判定の機能を提供している。</p>
 <p>このページの手順を試してみたが、どうも判定結果が正しくない。C++ から <code>IMultiLanguage2::DetectInputCodepage()</code> を呼ぶと意図したとおりの結果を返すのに、C# から呼び出すと「トルコ語」などと適当なことを言い出す。</p>
-<a name="seemore"></a>
 <p>何かおかしいので、WinDbg でブレークポイントしかけつつ見てみたところ、C# から呼び出したときにはバイト列の 1 バイト目しか渡っていなかった。（WinDbg で調べる方法は後述する）</p>
 <p>そりゃー、正しい結果にならないわけだ…。</p>
 <h1>バイト列を渡すには？</h1>
@@ -78,7 +77,6 @@
 <p>その結果、見事に C# でも文字コードを判定できるようになった。</p>
 <p>以下が完成したコードである。タイプライブラリを登録する必要もなく、素の C# コンソール プロジェクトに食わせて動くはずである。</p>
 <p>コマンドライン引数で受け取ったファイルの文字コードを判定してコンソールに出力している。</p>
-<div class="fix-height-syntax">
 <div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.IO</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
@@ -187,7 +185,6 @@
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 <h1>WinDbg で COM 呼び出しをブレークする</h1>
 <p>最後に、WinDbg で COM 呼び出しをブレークして調べる方法をまとめておく。同じ方法を使えば COM 呼び出しに限らず、Win32 の API でも同じようにブレークできるだろう。Visual Studio でもできるかもしれないが、自分の環境ではシンボル読み込みがうまくいかないことが多かったので、WinDbg を使うようになった。</p>
 <p>Debugging Tools for Windows がインストールされている前提とする。</p>

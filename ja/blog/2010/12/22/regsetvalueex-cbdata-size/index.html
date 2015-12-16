@@ -74,7 +74,6 @@
 <blockquote><p>If the data is of type REG_SZ, REG_EXPAND_SZ, or REG_MULTI_SZ, cbData must include the size of the terminating null character or characters.</p><blockquote><p>データの種類が REG_SZ、REG_EXPAND_SZ、REG_MULTI_SZ のいずれかである場合、cbData パラメータで終端の NULL のサイズも含めなければなりません。 </p><cite><a href="http://msdn.microsoft.com/ja-jp/library/cc429936.aspx">RegSetValueEx 関数</a></cite></blockquote><cite><a href="http://msdn.microsoft.com/en-us/library/aa916717.aspx">RegSetValueEx</a></cite></blockquote>
 <p>とあるだけで、<code>NULL</code> のサイズを含めない場合にどうなるのかが分からなかった。</p>
 <p>そこで、<code>dwType</code>(種類)が REG_SZ のときに <code>lpData</code>(値のデータ) と <code>cbData</code>(値のデータのサイズ) を変化させたときの挙動を調べてみた。</p>
-<a name="seemore"></a>
 <h1>正常なケース</h1>
 <p>REG_SZ を格納するときには <code>cbData</code> には NULL 文字を含めたバイト数を渡してあげる必要がある。</p>
 <p><code>test</code> を書き込むにはそれぞれ次のようなパラメータを与えると、ANSI の場合には5バイト分、Unicode の場合には10バイト分がレジストリに書き込まれる。</p>
@@ -127,7 +126,6 @@
 <p><code>RegQueryValue</code> も現在は利用を推奨されていないが、途中に NULL 文字を含む文字列も取得できることが確認できた。</p>
 <h1>ソース</h1>
 <p>今回の実験に使ったソースを掲載しておく。</p>
-<div class="fix-height-syntax">
 <div class="highlight"><pre><span class="cp">#include &lt;windows.h&gt;</span>
 <span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;tchar.h&gt;</span>
@@ -199,7 +197,6 @@
     <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">));</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 </section>
 
 </div>
