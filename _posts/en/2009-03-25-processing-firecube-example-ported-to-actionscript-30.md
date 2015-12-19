@@ -10,7 +10,7 @@ Processing example [FireCube](http://processing.org/learning/topics/firecube.htm
 
 The result is...
 
-<center><script src="http://www.gmodules.com/ig/ifr?url=http://nitoyon.googlepages.com/embed_flash.xml&amp;up_url=http%3A%2F%2Ftech.nitoyon.com%2Fmisc%2Fswf%2FFireCube.swf&amp;up_background=%23ffffff&amp;synd=open&amp;w=400&amp;h=300&amp;title=AS3.0+FireCube&amp;border=%23ffffff%7C3px%2C1px+solid+%23999999&amp;output=js"> </script><noscript>(Flash Player 9  or later required)</noscript></center>
+{% include flash.html src="/misc/swf/FireCube.swf" width="400" height="300" %}
 
 Performance improvement
 =======================
