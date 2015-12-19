@@ -8,18 +8,7 @@ I created a globe using Google Maps API for Flash.
 
 It is impossible to get the image data by `BitmapData.draw()`, so I used a `DisplacementMapFilter`.
 
-<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="200"
-	height="200" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
-	<param name="src" value="http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf"/>
-	<param name="play" value="true"/>
-	<param name="loop" value="true"/>
-	<param name="bgcolor" value="#000000"/>
-	<param name="quality" value="high"/>
-	<embed src="http://tech.nitoyon.com/misc/swf/GoogleEarthAs3_2.swf" width="200" height="200" bgcolor="#000000" play="true" loop="true"
-	quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
-	</embed>
-</object>
-<noscript>(Flash Player 9 or above required)</noscript>
+{% include flash.html src="/misc/swf/GoogleEarthAs3_2.swf" bgcolor="#ffffff" width="200" height="200" %}
 
 Here is the code(70 lines):
 

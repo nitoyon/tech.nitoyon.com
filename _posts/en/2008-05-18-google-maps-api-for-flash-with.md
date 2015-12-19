@@ -8,18 +8,7 @@ In the [Google Maps API for Flash](http://code.google.com/apis/maps/documentatio
 
 The following sample demonstrates how to rotate and blur the map without MXML.
 
-<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="400"
-	height="300" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
-	<param name="src" value="http://tech.nitoyon.com/misc/swf/GoogleGuruGuru.swf"/>
-	<param name="play" value="true"/>
-	<param name="loop" value="true"/>
-	<param name="bgcolor" value="#ffffff"/>
-	<param name="quality" value="high"/>
-	<embed src="http://tech.nitoyon.com/misc/swf/GoogleGuruGuru.swf" width="400" height="300" bgcolor="#ffffff" play="true" loop="true"
-	quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
-	</embed>
-</object>
-<noscript>(Flash Player 9 or above required)</noscript>
+{% include flash.html src="/misc/swf/GoogleGuruGuru.swf" bgcolor="#ffffff" width="400" height="300" %}
 
 Here is the code:
 
