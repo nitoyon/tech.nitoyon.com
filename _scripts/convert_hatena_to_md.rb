@@ -47,6 +47,10 @@ def main(post, opt, out_ext)
     data = $1 + "---\n"
   end
 
+  # quick fix: >{% ... %}<  -> {% ... %}
+  # 「pタグ停止記法 + プラグイン」を正しく解釈できないので暫定修正
+  content.gsub!(/>{%(.*)%}</, '{%\1%}')
+
   parser = HParser::Parser.new
   md = parser.parse(content).map {|e| e.to_md(opt) }.join("\n")
 
