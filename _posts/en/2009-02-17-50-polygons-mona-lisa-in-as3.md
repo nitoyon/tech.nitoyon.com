@@ -19,18 +19,7 @@ It's waste of CPU.., but very interesting.
 
 Published SWF (CAUSION: TOO HEAVY CPU 60%~)
 
-<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="450"
-	height="420" codebase="http://active.macromedia.com/flash7/cabs/swflash.cab#version=9,0,0,0">
-	<param name="src" value="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf"/>
-	<param name="play" value="true"/>
-	<param name="loop" value="true"/>
-	<param name="bgcolor" value="#ffffff"/>
-	<param name="quality" value="high"/>
-	<embed src="http://tech.nitoyon.com/misc/swf/MonalisaEvolve.swf" width="450" height="420" bgcolor="#ffffff" play="true" loop="true"
-	quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash">
-	</embed>
-</object>
-<noscript>(Flash Player 9 or above required)</noscript>
+{% include flash.html src="/misc/swf/MonalisaEvolve.swf" bgcolor="#ffffff" width="450" height="420" %}
 
 Because this program uses `BitmapData.compare()` to improve performance, it is about 10 times faster than the [JavaScript version](http://alteredqualia.com/visualization/evolve/). The original [C# version](http://rogeralsing.com/2008/12/11/genetic-programming-mona-lisa-source-code-and-binaries/) is about 3 times faster than mine.
 
