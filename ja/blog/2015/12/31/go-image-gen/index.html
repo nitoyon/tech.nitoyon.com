@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Go 言語でソースコードから画像生成する - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Go 言語でソースコードから画像生成する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Go 言語には画像生成する image パッケージが標準で入っている。imagemagick や GD を導入する必要がないので、気軽に画像を生成できて便利そうだったので試してみた。ただ、標準ではピクセル単位で色を設定することしかできないので、線を引いたり色を塗ったりするには、何らかのライブラリーに頼る必要がある。今回は、ライブラリーには頼らず、標準で提供されている機能だけでできることを試してみた。一番簡単な例簡単な画像を生成する例は次の通り。1つ点を打つだけの例。package mainimport &quot;image&quot;import &quot;image/color&amp;q..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/rgb2.png"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<article>
+<header>
+<div class="post-date">2015年12月31日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+
+<h1>Go 言語でソースコードから画像生成する</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語でソースコードから画像生成する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" data-lang="ja" data-size="horizontal" data-text="Go 言語でソースコードから画像生成する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Go 言語には画像生成する image パッケージが標準で入っている。imagemagick や GD を導入する必要がないので、気軽に画像を生成できて便利そうだったので試してみた。</p>
+
+<p>ただ、標準ではピクセル単位で色を設定することしかできないので、線を引いたり色を塗ったりするには、何らかのライブラリーに頼る必要がある。</p>
+
+<p>今回は、ライブラリーには頼らず、標準で提供されている機能だけでできることを試してみた。</p>
+
+<h1>一番簡単な例</h1>
+
+<p>簡単な画像を生成する例は次の通り。1つ点を打つだけの例。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="s">&quot;image&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;image/color&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;image/png&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;os&quot;</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 100×50 の画像を作成する</span>
+    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+
+    <span class="c1">// (2, 3) に赤い点をうつ</span>
+    <span class="nx">img</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">})</span>
+
+    <span class="c1">// out.png に保存する</span>
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;out.png&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">png</span><span class="p">.</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="nx">img</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>もっと複雑な例</h1>
+
+<p>こんな画像を生成してみる。</p>
+
+<p><center><img src="rgb1.png" width="280" height="240"></center></p>
+
+<p>コードはこうなった。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&quot;fmt&quot;</span>
+    <span class="s">&quot;image&quot;</span>
+    <span class="s">&quot;image/color&quot;</span>
+    <span class="s">&quot;image/png&quot;</span>
+    <span class="s">&quot;math&quot;</span>
+    <span class="s">&quot;os&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span> <span class="nx">Circle</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span><span class="p">,</span> <span class="nx">R</span> <span class="kt">float64</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Circle</span><span class="p">)</span> <span class="nx">Brightness</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">uint8</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dx</span><span class="p">,</span> <span class="nx">dy</span> <span class="kt">float64</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">X</span> <span class="o">-</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Y</span> <span class="o">-</span> <span class="nx">y</span>
+    <span class="nx">d</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">dx</span><span class="o">*</span><span class="nx">dx</span><span class="o">+</span><span class="nx">dy</span><span class="o">*</span><span class="nx">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nx">c</span><span class="p">.</span><span class="nx">R</span>
+    <span class="k">if</span> <span class="nx">d</span> <span class="p">&gt;</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">255</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">280</span><span class="p">,</span> <span class="mi">240</span>
+    <span class="kd">var</span> <span class="nx">hw</span><span class="p">,</span> <span class="nx">hh</span> <span class="kt">float64</span> <span class="p">=</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nx">r</span> <span class="o">:=</span> <span class="mf">40.0</span>
+    <span class="nx">θ</span> <span class="o">:=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Pi</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="nx">cr</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{</span><span class="nx">hw</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sin</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">hh</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Cos</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="mi">60</span><span class="p">}</span>
+    <span class="nx">cg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{</span><span class="nx">hw</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sin</span><span class="p">(</span><span class="nx">θ</span><span class="p">),</span> <span class="nx">hh</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Cos</span><span class="p">(</span><span class="nx">θ</span><span class="p">),</span> <span class="mi">60</span><span class="p">}</span>
+    <span class="nx">cb</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{</span><span class="nx">hw</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sin</span><span class="p">(</span><span class="o">-</span><span class="nx">θ</span><span class="p">),</span> <span class="nx">hh</span> <span class="o">-</span> <span class="nx">r</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Cos</span><span class="p">(</span><span class="o">-</span><span class="nx">θ</span><span class="p">),</span> <span class="mi">60</span><span class="p">}</span>
+
+    <span class="nx">m</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">))</span>
+    <span class="k">for</span> <span class="nx">x</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="p">&lt;</span> <span class="nx">w</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="nx">y</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="p">&lt;</span> <span class="nx">h</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span> <span class="p">{</span>
+            <span class="nx">c</span> <span class="o">:=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span>
+                <span class="nx">cr</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                <span class="nx">cg</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                <span class="nx">cb</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                <span class="mi">255</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="nx">m</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">c</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;rgb.png&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">png</span><span class="p">.</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>Circle</code> 構造体を定義して、円の中に入っているかどうかを判定する処理をメソッドとして定義している。</p>
+
+<p>ちょっとしたテクニックとして、色を決定する部分は次のようにしている。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="nx">c</span> <span class="o">:=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span>
+    <span class="nx">cr</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+    <span class="nx">cg</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+    <span class="nx">cb</span><span class="p">.</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+    <span class="mi">255</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>赤い色の中のときは赤色成分は <code>255</code>、外のときは <code>0</code> としている。他の成分も同じ。</p>
+
+<h1>周辺をぼかしてみる</h1>
+
+<p>色がくっきりしすぎているので、画像の周りをぼかしてみた。</p>
+
+<p><center><img src="rgb2.png" width="280" height="240"></center></p>
+
+<p>円の中のときに <code>return 255</code> としていた部分を書きかえるだけでできた。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Circle</span><span class="p">)</span> <span class="nx">Brightness</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">uint8</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dx</span><span class="p">,</span> <span class="nx">dy</span> <span class="kt">float64</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">X</span> <span class="o">-</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Y</span> <span class="o">-</span> <span class="nx">y</span>
+    <span class="nx">d</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">dx</span><span class="o">*</span><span class="nx">dx</span><span class="o">+</span><span class="nx">dy</span><span class="o">*</span><span class="nx">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nx">c</span><span class="p">.</span><span class="nx">R</span>
+    <span class="k">if</span> <span class="nx">d</span> <span class="p">&gt;</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="c1">// 円の外のとき</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// 円の中のとき</span>
+        <span class="k">return</span> <span class="nb">uint8</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Pow</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>math.Pow</code> で 5 乗しているのは、ぼけすぎないようにするための工夫。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語でソースコードから画像生成する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" data-lang="ja" data-size="horizontal" data-text="Go 言語でソースコードから画像生成する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2015年12月31日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2015-12-31-go-image-gen.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+</div>
+
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2015/11/20/try-vscode/" rel="previous"><b>&laquo;</b><span class="title">Visual Studio Code は JavaScript 開発が超絶便利になる可能性を秘めている！</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>

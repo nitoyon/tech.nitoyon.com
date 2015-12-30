@@ -5,15 +5,16 @@ var Site = {
 };
 
 Site.archives.posts = [
+	{url: "/ja/blog/2015/12/31/go-image-gen/", title: "Go 言語でソースコードから画像生成する"},
 	{url: "/ja/blog/2015/11/20/try-vscode/", title: "Visual Studio Code は JavaScript 開発が超絶便利になる可能性を秘めている！"},
 	{url: "/ja/blog/2015/11/18/death-of-oo/", title: "Object.observe の死 (ECMAScript の提案取り下げ、V8 からも削除予定)"},
 	{url: "/ja/blog/2014/07/18/data-binding/", title: "JavaScript フレームワークがデータバインディングを実現する４通りの手法"},
-	{url: "/ja/blog/2014/06/30/vue-js-hook/", title: "Vue.js が data に渡した値を激しく書き換える件について"},
-	{url: "/ja/blog/2014/05/30/ruby-https-cert/", title: "Ruby で HTTPS 接続するときの証明書で悩んだ話"}
+	{url: "/ja/blog/2014/06/30/vue-js-hook/", title: "Vue.js が data に渡した値を激しく書き換える件について"}
 ];
 
 Site.archives.months = [
-  "201511"
+  "201512"
+, "201511"
 , "201407"
 , "201406"
 , "201405"

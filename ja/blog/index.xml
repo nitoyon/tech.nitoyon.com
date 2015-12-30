@@ -6,10 +6,142 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Sat, 05 Dec 2015 17:18:13 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 31 Dec 2015 02:57:24 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
+
+		<item>
+			<title>Go 言語でソースコードから画像生成する</title>
+			<link>http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/</guid>
+			<pubDate>Thu, 31 Dec 2015 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Go 言語には画像生成する image パッケージが標準で入っている。imagemagick や GD を導入する必要がないので、気軽に画像を生成できて便利そうだったので試してみた。</p>
+
+<p>ただ、標準ではピクセル単位で色を設定することしかできないので、線を引いたり色を塗ったりするには、何らかのライブラリーに頼る必要がある。</p>
+
+<p>今回は、ライブラリーには頼らず、標準で提供されている機能だけでできることを試してみた。</p>
+
+<h1>一番簡単な例</h1>
+
+<p>簡単な画像を生成する例は次の通り。1つ点を打つだけの例。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import &quot;image&quot;
+import &quot;image/color&quot;
+import &quot;image/png&quot;
+import &quot;os&quot;
+
+func main() {
+    // 100×50 の画像を作成する
+    img := image.NewRGBA(image.Rect(0, 0, 100, 50))
+
+    // (2, 3) に赤い点をうつ
+    img.Set(2, 3, color.RGBA{255, 0, 0, 255})
+
+    // out.png に保存する
+    f, _ := os.OpenFile(&quot;out.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    png.Encode(f, img)
+}
+</code></pre></div>
+<h1>もっと複雑な例</h1>
+
+<p>こんな画像を生成してみる。</p>
+
+<p><center><img src="rgb1.png" width="280" height="240"></center></p>
+
+<p>コードはこうなった。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;image&quot;
+    &quot;image/color&quot;
+    &quot;image/png&quot;
+    &quot;math&quot;
+    &quot;os&quot;
+)
+
+type Circle struct {
+    X, Y, R float64
+}
+
+func (c *Circle) Brightness(x, y float64) uint8 {
+    var dx, dy float64 = c.X - x, c.Y - y
+    d := math.Sqrt(dx*dx+dy*dy) / c.R
+    if d &gt; 1 {
+        return 0
+    } else {
+        return 255
+    }
+}
+
+func main() {
+    var w, h int = 280, 240
+    var hw, hh float64 = float64(w / 2), float64(h / 2)
+    r := 40.0
+    θ := 2 * math.Pi / 3
+    cr := &amp;Circle{hw - r*math.Sin(0), hh - r*math.Cos(0), 60}
+    cg := &amp;Circle{hw - r*math.Sin(θ), hh - r*math.Cos(θ), 60}
+    cb := &amp;Circle{hw - r*math.Sin(-θ), hh - r*math.Cos(-θ), 60}
+
+    m := image.NewRGBA(image.Rect(0, 0, w, h))
+    for x := 0; x &lt; w; x++ {
+        for y := 0; y &lt; h; y++ {
+            c := color.RGBA{
+                cr.Brightness(float64(x), float64(y)),
+                cg.Brightness(float64(x), float64(y)),
+                cb.Brightness(float64(x), float64(y)),
+                255,
+            }
+            m.Set(x, y, c)
+        }
+    }
+
+    f, err := os.OpenFile(&quot;rgb.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    defer f.Close()
+    png.Encode(f, m)
+}
+</code></pre></div>
+<p><code>Circle</code> 構造体を定義して、円の中に入っているかどうかを判定する処理をメソッドとして定義している。</p>
+
+<p>ちょっとしたテクニックとして、色を決定する部分は次のようにしている。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">c := color.RGBA{
+    cr.Brightness(float64(x), float64(y)),
+    cg.Brightness(float64(x), float64(y)),
+    cb.Brightness(float64(x), float64(y)),
+    255,
+}
+</code></pre></div>
+<p>赤い色の中のときは赤色成分は <code>255</code>、外のときは <code>0</code> としている。他の成分も同じ。</p>
+
+<h1>周辺をぼかしてみる</h1>
+
+<p>色がくっきりしすぎているので、画像の周りをぼかしてみた。</p>
+
+<p><center><img src="rgb2.png" width="280" height="240"></center></p>
+
+<p>円の中のときに <code>return 255</code> としていた部分を書きかえるだけでできた。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">func (c *Circle) Brightness(x, y float64) uint8 {
+    var dx, dy float64 = c.X - x, c.Y - y
+    d := math.Sqrt(dx*dx+dy*dy) / c.R
+    if d &gt; 1 {
+        // 円の外のとき
+        return 0
+    } else {
+        // 円の中のとき
+        return uint8((1 - math.Pow(d, 5)) * 255)
+    }
+}
+</code></pre></div>
+<p><code>math.Pow</code> で 5 乗しているのは、ぼけすぎないようにするための工夫。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Visual Studio Code は JavaScript 開発が超絶便利になる可能性を秘めている！</title>
@@ -538,92 +670,6 @@ console.log(deepCopy(vm.$data));
 <li>この努力は ECMAScript 5 の限界ゆえ</li>
 <li>ECMAScript に <code>Object.observe()</code> がやってきたら、<a href="http://vuejs.org/">Vue.js</a> の実装もシンプルになるし、もっと楽な API になる</li>
 </ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>Ruby で HTTPS 接続するときの証明書で悩んだ話</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/05/30/ruby-https-cert/</guid>
-			<pubDate>Fri, 30 May 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>flickr の API が HTTPS のみになるというので、<a href="/ja/blog/2012/11/06/flickr-auto-update/">以前作ったスクリプト</a>に手を入れようとしたら無駄に手こずったので、ググって得た知見をメモしておく。</p>
-
-<h1>Ruby 1.8 系で証明書を検証しない問題</h1>
-
-<p>上記のスクリプトは、さくらのレンタルサーバーにて Ruby で動かしている。</p>
-
-<p>2014 年にどうかという話だけど、Ruby のバージョンは 1.8.7 である・・・。</p>
-
-<p>Net::HTTP で https に接続したら</p>
-
-<blockquote>
-<p>warning: peer certificate won&#39;t be verified in this SSL session</p>
-</blockquote>
-
-<p>という警告が出てきて困ったので調べてみた。</p>
-
-<p>つかったコードはこんなやつ。</p>
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby">require &#39;net/https&#39;
-https = Net::HTTP.new(&#39;www.google.com&#39;, 443)
-https.use_ssl = true
-https.start { |h|
-}
-</code></pre></div>
-<h2>警告が出る理由</h2>
-
-<p>Ruby 1.8 の時点では上記のようなコードで HTTPS 接続したときには、デフォルトでは証明書を検証しないポリシーになっていた。</p>
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby">    unless @ssl_context.verify_mode
-      warn &quot;warning: peer certificate won&#39;t be verified in this SSL session&quot;
-      @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    end
-</code></pre></div>
-<p>(<a href="https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566">https://github.com/ruby/ruby/blob/v1_8_7/lib/net/http.rb#L563-566</a> より)</p>
-
-<p>デフォルトで証明書検証しないというのは罠なので、そのことを教えようとしている warning のようだ。</p>
-
-<h2>警告を消す方法</h2>
-
-<p>上のコードをみたら分かる通り、明示的にポリシーを指定すれば警告は消える。</p>
-
-<ul>
-<li>証明書を検証したい場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_PEER</code> を追加する</li>
-<li>証明書を検証したくない場合: <code>https.verify_mode = OpenSSL::SSL::VERIFY_NONE</code> を追加する</li>
-</ul>
-
-<h2>1.9 系で変わってる</h2>
-
-<p>ちなみに、「デフォルトでは証明書を検証しない」という挙動は、1.9 系では<a href="https://github.com/ruby/ruby/commit/c6920177f3e561f779f54534e511f0c9f0de6edd">修正されている</a>。</p>
-
-<h1>ルート証明書どうするの問題</h1>
-
-<p>証明書を検証する設定にしたら、「証明書の検証に失敗したぜ」というような例外がでるようになった。</p>
-
-<blockquote>
-<p>OpenSSL::SSL::SSLError: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</p>
-</blockquote>
-
-<p>これはどうも、自分の環境にルート証明書が正しく入ってないっぽい。</p>
-
-<p>いかんせんレンタルサーバーなので、何ともできない。仕方がないので、どこかからルート証明書を取ってくることにした。</p>
-
-<p>ググると <a href="http://curl.haxx.se/docs/caextract.html">http://curl.haxx.se/docs/caextract.html</a> が有名っぽい。cURL の人が mozilla.org のデータを PEM 形式に変換してくれているヤツ。</p>
-
-<p>ここにある cacert.pem を拾ってきて、<code>ca_file</code> に cacert.pem のパスを指定すればおしまい。</p>
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby">require &#39;net/https&#39;
-https = Net::HTTP.new(&#39;www.google.com&#39;, 443)
-https.use_ssl = true
-https.verify_mode = OpenSSL::SSL::VERIFY_PEER
-https.ca_file = &#39;/path/to/cacert.pem&#39;
-https.start { |h|
-}
-</code></pre></div>
-<h1>まとめ</h1>
-
-<p>新しい OS を新規セットアップした場合はたぶんまったく問題にならないであろうことに苦しめられつつ、以上の無駄な知見を得た。</p>
-
-<p>flickr の更新用に使っていた flickraw というライブラリーは <code>verify_mode</code> や <code>ca_file</code> を指定するオプションがなかったので、<a href="https://github.com/hanklords/flickraw/pull/75">「追加してね」という pull request</a> を投げたらマージしてもらえた。めでたし。</p>
-
-<p>あと、<a href="http://www.happytrap.jp/blogs/2010/02/23/2919/">Ruby 「warning: peer certificate won&#8217;t be verified in this SSL session」 | HAPPY*TRAP</a> が非常に役に立った。ありがたや。</p>
 ]]></description>
 		</item>
 
