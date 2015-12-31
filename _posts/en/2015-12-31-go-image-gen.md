@@ -1,24 +1,24 @@
 ---
 layout: post
-title: Go 言語でソースコードから画像生成する
+title: Generate an image programmatically with Golang
 tags: Go
-lang: ja
+lang: en
 thumbnail: http://tech.nitoyon.com/ja/blog/2015/12/31/go-image-gen/rgb2.png
 alternate:
-  lang: en_US
-  url: /en/blog/2015/12/31/go-image-gen/
+  lang: ja_JP
+  url: /ja/blog/2015/12/31/go-image-gen/
 ---
-Go 言語には画像生成する image パッケージが標準で入っている。imagemagick や GD を導入する必要がないので、気軽に画像を生成できて便利そうだったので試してみた。
+Golang makes it easy to generate an image using image package. We don't have to build imagemagick nor GD. Just use golang.
 
-ただ、標準ではピクセル単位で色を設定することしかできないので、線を引いたり色を塗ったりするには、何らかのライブラリーに頼る必要がある。
+But, image package offers us a method for changing color of a pixel. If we want to draw lines or paint colors, we have to use other libraries such as [draw2d](https://github.com/llgcode/draw2d).
 
-今回は、ライブラリーには頼らず、標準で提供されている機能だけでできることを試してみた。
+This article shows how to generate an image only using standard library.
 
 
-一番簡単な例
-============
+Simplest Example
+================
 
-簡単な画像を生成する例は次の通り。1つ点を打つだけの例。
+First, let's make a simple image.
 
 ```go
 package main
@@ -29,13 +29,13 @@ import "image/png"
 import "os"
 
 func main() {
-    // 100×50 の画像を作成する
+    // Create an 100 x 50 image
     img := image.NewRGBA(image.Rect(0, 0, 100, 50))
 
-    // (2, 3) に赤い点をうつ
+    // Draw a red dot at (2, 3)
     img.Set(2, 3, color.RGBA{255, 0, 0, 255})
 
-    // out.png に保存する
+    // Save to out.png
     f, _ := os.OpenFile("out.png", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     png.Encode(f, img)
@@ -43,14 +43,14 @@ func main() {
 ```
 
 
-もっと複雑な例
-==============
+More Complecated Example
+========================
 
-こんな画像を生成してみる。
+Then, let's make more complected image!
 
-<center><img src="rgb1.png" width="280" height="240"></center>
+<center><img src="/ja/blog/2015/12/31/go-image-gen/rgb1.png" width="280" height="240"></center>
 
-コードはこうなった。
+The code is as follows:
 
 ```go
 package main
@@ -110,9 +110,7 @@ func main() {
 }
 ```
 
-`Circle` 構造体を定義して、円の中に入っているかどうかを判定する処理をメソッドとして定義している。
-
-ちょっとしたテクニックとして、色を決定する部分は次のようにしている。
+We define `Circle` struct, and determine color by calling its `Brightness` method.
 
 ```go
 c := color.RGBA{
@@ -123,30 +121,28 @@ c := color.RGBA{
 }
 ```
 
-赤い色の中のときは赤色成分は `255`、外のときは `0` としている。他の成分も同じ。
+`Brightness` returns `255` when (x, y) is in red circle and returns `0` when not.
 
 
-周辺をぼかしてみる
-==================
+Blur Circles
+============
 
-色がくっきりしすぎているので、画像の周りをぼかしてみた。
+Finally, let's blur circles.
 
-<center><img src="rgb2.png" width="280" height="240"></center>
+<center><img src="/ja/blog/2015/12/31/go-image-gen/rgb2.png" width="280" height="240"></center>
 
-円の中のときに `return 255` としていた部分を書きかえるだけでできた。
+We only modified `return 255` to `uint8((1 - math.Pow(d, 5)) * 255)`.
 
 ```go
 func (c *Circle) Brightness(x, y float64) uint8 {
     var dx, dy float64 = c.X - x, c.Y - y
     d := math.Sqrt(dx*dx+dy*dy) / c.R
     if d > 1 {
-        // 円の外のとき
+        // outside
         return 0
     } else {
-        // 円の中のとき
+        // inside
         return uint8((1 - math.Pow(d, 5)) * 255)
     }
 }
 ```
-
-`math.Pow` で 5 乗しているのは、ぼけすぎないようにするための工夫。
