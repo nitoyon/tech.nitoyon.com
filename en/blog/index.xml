@@ -6,10 +6,138 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>en</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Fri, 20 Nov 2015 14:54:18 +0000</lastBuildDate>
+		<lastBuildDate>Fri, 01 Jan 2016 00:52:06 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/en/blog/index.xml" rel="self" type="application/rss+xml" />
 
+
+		<item>
+			<title>Generate an image programmatically with Golang</title>
+			<link>http://tech.nitoyon.com/en/blog/2015/12/31/go-image-gen/</link>
+			<guid>http://tech.nitoyon.com/en/blog/2015/12/31/go-image-gen/</guid>
+			<pubDate>Thu, 31 Dec 2015 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Golang makes it easy to generate an image using image package. We don&#39;t have to build imagemagick nor GD. Just use golang.</p>
+
+<p>But, image package offers us a method for changing color of a pixel. If we want to draw lines or paint colors, we have to use other libraries such as <a href="https://github.com/llgcode/draw2d">draw2d</a>.</p>
+
+<p>This article shows how to generate an image only using standard library.</p>
+
+<h1>Simplest Example</h1>
+
+<p>First, let&#39;s make a simple image.</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import &quot;image&quot;
+import &quot;image/color&quot;
+import &quot;image/png&quot;
+import &quot;os&quot;
+
+func main() {
+    // Create an 100 x 50 image
+    img := image.NewRGBA(image.Rect(0, 0, 100, 50))
+
+    // Draw a red dot at (2, 3)
+    img.Set(2, 3, color.RGBA{255, 0, 0, 255})
+
+    // Save to out.png
+    f, _ := os.OpenFile(&quot;out.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    png.Encode(f, img)
+}
+</code></pre></div>
+<h1>More Complecated Example</h1>
+
+<p>Then, let&#39;s make more complected image!</p>
+
+<p><center><img src="/ja/blog/2015/12/31/go-image-gen/rgb1.png" width="280" height="240"></center></p>
+
+<p>The code is as follows:</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;image&quot;
+    &quot;image/color&quot;
+    &quot;image/png&quot;
+    &quot;math&quot;
+    &quot;os&quot;
+)
+
+type Circle struct {
+    X, Y, R float64
+}
+
+func (c *Circle) Brightness(x, y float64) uint8 {
+    var dx, dy float64 = c.X - x, c.Y - y
+    d := math.Sqrt(dx*dx+dy*dy) / c.R
+    if d &gt; 1 {
+        return 0
+    } else {
+        return 255
+    }
+}
+
+func main() {
+    var w, h int = 280, 240
+    var hw, hh float64 = float64(w / 2), float64(h / 2)
+    r := 40.0
+    θ := 2 * math.Pi / 3
+    cr := &amp;Circle{hw - r*math.Sin(0), hh - r*math.Cos(0), 60}
+    cg := &amp;Circle{hw - r*math.Sin(θ), hh - r*math.Cos(θ), 60}
+    cb := &amp;Circle{hw - r*math.Sin(-θ), hh - r*math.Cos(-θ), 60}
+
+    m := image.NewRGBA(image.Rect(0, 0, w, h))
+    for x := 0; x &lt; w; x++ {
+        for y := 0; y &lt; h; y++ {
+            c := color.RGBA{
+                cr.Brightness(float64(x), float64(y)),
+                cg.Brightness(float64(x), float64(y)),
+                cb.Brightness(float64(x), float64(y)),
+                255,
+            }
+            m.Set(x, y, c)
+        }
+    }
+
+    f, err := os.OpenFile(&quot;rgb.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    defer f.Close()
+    png.Encode(f, m)
+}
+</code></pre></div>
+<p>We define <code>Circle</code> struct, and determine color by calling its <code>Brightness</code> method.</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">c := color.RGBA{
+    cr.Brightness(float64(x), float64(y)),
+    cg.Brightness(float64(x), float64(y)),
+    cb.Brightness(float64(x), float64(y)),
+    255,
+}
+</code></pre></div>
+<p><code>Brightness</code> returns <code>255</code> when (x, y) is in red circle and returns <code>0</code> when not.</p>
+
+<h1>Blur Circles</h1>
+
+<p>Finally, let&#39;s blur circles.</p>
+
+<p><center><img src="/ja/blog/2015/12/31/go-image-gen/rgb2.png" width="280" height="240"></center></p>
+
+<p>We only modified <code>return 255</code> to <code>uint8((1 - math.Pow(d, 5)) * 255)</code>.</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">func (c *Circle) Brightness(x, y float64) uint8 {
+    var dx, dy float64 = c.X - x, c.Y - y
+    d := math.Sqrt(dx*dx+dy*dy) / c.R
+    if d &gt; 1 {
+        // outside
+        return 0
+    } else {
+        // inside
+        return uint8((1 - math.Pow(d, 5)) * 255)
+    }
+}
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>Jenkins: How to change JENKINS_HOME on Windows</title>
@@ -282,165 +410,6 @@ This watcher is continuously tested on Mac, Linux, Win platforms.</p>
     }
 </code></pre></div>
 <p>Enjoy!</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>Difference between fs.watch() and fs.watchFile()</title>
-			<link>http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/</link>
-			<guid>http://tech.nitoyon.com/en/blog/2013/10/02/node-watch-impl/</guid>
-			<pubDate>Wed, 02 Oct 2013 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>Node.js has two functions for file watching. <code>fs.watch()</code> and <code>fs.watchFile()</code>.</p>
-
-<p>These functions look similar. What&#39;s the difference?</p>
-
-<h1>Official Document</h1>
-
-<p>According to official <a href="http://nodejs.org/docs/v0.8.0/api/fs.html#fs_fs_watchfile_filename_options_listener">document (v0.8.0)</a>,</p>
-
-<blockquote>
-<h2>fs.watchFile(filename, [options], listener)</h2>
-
-<p>Stability: 2 - Unstable.  Use fs.watch instead, if available.</p>
-
-<p>Watch for changes on <code>filename</code>.</p>
-
-<h2>fs.watch(filename, [options], [listener])</h2>
-
-<p>Stability: 2 - Unstable.  Not available on all platforms.</p>
-
-<p>Watch for changes on <code>filename</code>, where <code>filename</code> is either a file or a directory.</p>
-</blockquote>
-
-<p>we can say</p>
-
-<ul>
-<li><code>fs.watch()</code> is recommended.</li>
-<li><code>fs.watch()</code> is not available on all platforms.</li>
-<li><code>fs.watch()</code> watches a file or a directory. <code>fs.watchFile()</code> watches a file.</li>
-</ul>
-
-<h1>ChangeLog</h1>
-
-<p>According to <a href="https://github.com/joyent/node/blob/master/ChangeLog">ChangeLog</a>, I found that</p>
-
-<ul>
-<li><code>fs.watchFile()</code> is older API which is implemented on v0.1.18 as <code>process.watchFile()</code>.</li>
-<li><code>fs.watch()</code> is newer API which is implemented on v0.5.9.</li>
-</ul>
-
-<h1>Source Code</h1>
-
-<p>I cannot found official information any more, so I looked at source code for more understanding.</p>
-
-<h2>fs.watch()</h2>
-
-<p>Let&#39;s look at implementation of <code>fs.watch()</code>. (We use source code for <a href="https://github.com/joyent/node/tree/v0.10.19">v0.10.19</a>)</p>
-
-<p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/fs_event_wrap.cc#L102"><code>src/fs_event_wrap.cc</code></a>, I found <code>fs.watch()</code> is implemented by <code>uv_fs_event_init()</code> function.</p>
-
-<p>The functions whose name start with <code>uv</code> is defined by libuv. libuv is multi-platform support library for Node.js. It has features like asynchronous IO, thread pool, timer and so on.</p>
-
-<p>So, look at <code>uv_fs_event_init()</code> function. I grepped under <code>deps/uv/src</code>. The results are as follows:</p>
-
-<ul>
-<li>unix\aix.c</li>
-<li>unix\cygwin.c</li>
-<li>unix\kqueue.c</li>
-<li>unix\linux-inotify.c</li>
-<li>unix\sunos.c</li>
-<li>win\fs-event.c</li>
-</ul>
-
-<p>Each file has implementation for different platforms.</p>
-
-<table><thead>
-<tr>
-<th>Platform</th>
-<th>How to implement</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Linux</td>
-<td>inotify</td>
-</tr>
-<tr>
-<td>MacOS、*BSD</td>
-<td>kqueue</td>
-</tr>
-<tr>
-<td>Windows</td>
-<td><code>ReadDirectoryChangesW()</code></td>
-</tr>
-<tr>
-<td>Solaris</td>
-<td>Event Ports</td>
-</tr>
-<tr>
-<td>AIX</td>
-<td>(Not supported)</td>
-</tr>
-<tr>
-<td>Cygwin</td>
-<td>(Not supported)</td>
-</tr>
-</tbody></table>
-
-<p>Conclusion: <strong>fs.watch() uses native API</strong>.</p>
-
-<h2>fs.watchFile()</h2>
-
-<p>Let&#39;s look at <code>fs.watchFile()</code>.</p>
-
-<p>After I looked at <a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> and <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a>, I found <code>fs.watchFile()</code> is implemented by <code>uv_fs_poll_start()</code> function.</p>
-
-<p>OK. Let&#39;s read <code>uv_fs_poll_start()</code> defined in <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a>.</p>
-<div class="highlight"><pre><code class="language-c" data-lang="c">int uv_fs_poll_start(uv_fs_poll_t* handle,
-                     uv_fs_poll_cb cb,
-                     const char* path,
-                     unsigned int interval) {
-  // snip initialization
-
-  if (uv_fs_stat(loop, &amp;ctx-&gt;fs_req, ctx-&gt;path, poll_cb))
-    abort();
-</code></pre></div>
-<p>The point is <code>uv_fs_stat()</code>. This function executes  asynchronous <code>stat()</code>. The callback <code>poll_cb</code> is called when it completes.</p>
-
-<p>Next, <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a>.</p>
-<div class="highlight"><pre><code class="language-c" data-lang="c">static void poll_cb(uv_fs_t* req) {
-  // snip: trigger event, error handling, and so on
-
-  /* Reschedule timer, subtract the delay from doing the stat(). */
-  interval = ctx-&gt;interval;
-  interval -= (uv_now(ctx-&gt;loop) - ctx-&gt;start_time) % interval;
-
-  if (uv_timer_start(&amp;ctx-&gt;timer_handle, timer_cb, interval, 0))
-    abort();
-}
-</code></pre></div>
-<p>First it analyzes the stat result, and then it starts next timer so that <code>timer_cb()</code> will be called <code>interval</code> later.</p>
-
-<p><code>timer_cb()</code> calls <code>uv_fs_stat()</code> again. I got it! <code>fs.stat()</code> is called periodically.</p>
-
-<p>Conclusion: <strong>fs.watchFile() periodically executes fs.stat()</strong>.</p>
-
-<h1>Conclusion</h1>
-
-<p><code>fs.watch()</code>:</p>
-
-<ul>
-<li>is newer API and recommended.</li>
-<li>uses native watching functions supported by OS, so doesn&#39;t waste CPU on waiting.</li>
-<li>doesn&#39;t support all platforms such as AIX and Cygwin.</li>
-</ul>
-
-<p><code>fs.watchFile()</code>:</p>
-
-<ul>
-<li>is old API and not recommended.</li>
-<li>calls stat periodically, so uses CPU even when nothing changes.</li>
-<li>runs on any platforms.</li>
-</ul>
 ]]></description>
 		</item>
 
