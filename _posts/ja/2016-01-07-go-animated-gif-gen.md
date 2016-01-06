@@ -67,7 +67,7 @@ func main() {
 ビデオから生成
 ==============
 
-[MPlayer](http://www.mplayerhq.hu/) を使って各フレームの画像を抽出してから、[goanigiffy](https://github.com/srinathh/goanigiffy) で GIF アニメーションを生成する (詳しくは [GoAniGiffy](http://srinathh.github.io/opensource/goanigiffy/)  を参照)。
+[MPlayer](http://www.mplayerhq.hu/) を使って各フレームの画像を抽出してから、[goanigiffy](https://github.com/srinathh/goanigiffy) で GIF アニメーションを生成する。MPlayer にもアニメーション GIF を生成する機能はあるようだが、ディザリングがしょぼいので、この方法がよいらしい (詳しくは [GoAniGiffy](http://srinathh.github.io/opensource/goanigiffy/)  を参照)。
 
 
 Go 言語で最初から生成
