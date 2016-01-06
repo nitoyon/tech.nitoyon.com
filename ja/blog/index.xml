@@ -6,10 +6,181 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 31 Dec 2015 02:57:24 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 07 Jan 2016 03:05:43 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
+
+		<item>
+			<title>Go 言語でアニメーション GIF を作成する</title>
+			<link>http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/</guid>
+			<pubDate>Thu, 07 Jan 2016 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>Golang でアニメーション GIF を作る手順を 3 通り紹介します。</p>
+
+<ul>
+<li>フレームごとの画像から生成</li>
+<li>ビデオから生成</li>
+<li>Go 言語で最初から生成</li>
+</ul>
+
+<h1>フレームごとの画像から生成</h1>
+
+<p>こんな GIF 画像があったとします (<a href="http://qiita.com/mattn/items/b7889e3c036b408ae8bd">ここ</a> より拝借)。</p>
+
+<p><img src="/ja/blog/2016/01/07/go-animated-gif-gen/g1.gif" width="200" height="200">
+<img src="/ja/blog/2016/01/07/go-animated-gif-gen/g2.gif" width="200" height="200">
+<img src="/ja/blog/2016/01/07/go-animated-gif-gen/g3.gif" width="200" height="200"></p>
+
+<p>変換結果はこんな感じ。</p>
+
+<p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/gopher.gif" width="200" height="200"></center></p>
+
+<p>生成するためのコードはこんな感じ。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import &quot;image&quot;
+import &quot;image/gif&quot;
+import &quot;os&quot;
+
+func main() {
+    files := []string{&quot;g1.gif&quot;, &quot;g2.gif&quot;,&quot;g3.gif&quot;, &quot;g2.gif&quot;}
+
+    // 各フレームの画像を GIF で読み込んで outGif を構築する
+    outGif := &amp;gif.GIF{}
+    for _, name := range files {
+        f, _ := os.Open(name)
+        inGif, _ := gif.Decode(f)
+        f.Close()
+
+        outGif.Image = append(outGif.Image, inGif.(*image.Paletted))
+        outGif.Delay = append(outGif.Delay, 0)
+    }
+
+    // out.gif に保存する
+    f, _ := os.OpenFile(&quot;out.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    gif.EncodeAll(f, outGif)
+}
+</code></pre></div>
+<p>注意したいポイントは次の通り。</p>
+
+<ul>
+<li>フレームの GIF を順番に <code>gif.Decode</code> で読み込んでいる。JPEG から生成するには、GIF への変換処理を実装する必要がある (<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> では <code>gif.Encode</code> と <code>gif.Decode</code> を呼んで変換している)。</li>
+<li>GIF アニメーションを生成するには <code>gif.EncodeAll</code> を呼ぶ。</li>
+</ul>
+
+<h1>ビデオから生成</h1>
+
+<p><a href="http://www.mplayerhq.hu/">MPlayer</a> を使って各フレームの画像を抽出してから、<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> で GIF アニメーションを生成する (詳しくは <a href="http://srinathh.github.io/opensource/goanigiffy/">GoAniGiffy</a>  を参照)。</p>
+
+<h1>Go 言語で最初から生成</h1>
+
+<p>こんな感じのものを作ってみた。</p>
+
+<p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/rgb.gif" width="240" height="240"></center></p>
+
+<p>各フレームの画像を Go 言語で描画して <code>[]*image.Paletted</code> を作って、<code>gif.EncodeAll</code> に渡している。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">    var images []*image.Paletted
+    var delays []int
+
+    // 20 個の画像を生成して円を描く
+    for step := 0; step &lt; 20; step++ {
+        img := image.NewPaletted(image.Rect(0, 0, w, h), palette)
+        images = append(images, img)
+        delays = append(delays, 0)
+
+        // 描画処理 (長いので省略)
+    }
+
+    // rgb.gif に保存する
+    f, _ := os.OpenFile(&quot;rgb.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    gif.EncodeAll(f, &amp;gif.GIF{
+        Image: images,
+        Delay: delays,
+    })
+</code></pre></div>
+<p>全体のコードはこんな感じ。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;image&quot;
+    &quot;image/color&quot;
+    &quot;image/gif&quot;
+    &quot;math&quot;
+    &quot;os&quot;
+)
+
+type Circle struct {
+    X, Y, R float64
+}
+
+func (c *Circle) Brightness(x, y float64) uint8 {
+    var dx, dy float64 = c.X - x, c.Y - y
+    d := math.Sqrt(dx*dx+dy*dy) / c.R
+    if d &gt; 1 {
+        return 0
+    } else {
+        return 255
+    }
+}
+
+func main() {
+    var w, h int = 240, 240
+    var hw, hh float64 = float64(w / 2), float64(h / 2)
+    circles := []*Circle{&amp;Circle{}, &amp;Circle{}, &amp;Circle{}}
+
+    var palette = []color.Color{
+        color.RGBA{0x00, 0x00, 0x00, 0xff},
+        color.RGBA{0x00, 0x00, 0xff, 0xff},
+        color.RGBA{0x00, 0xff, 0x00, 0xff},
+        color.RGBA{0x00, 0xff, 0xff, 0xff},
+        color.RGBA{0xff, 0x00, 0x00, 0xff},
+        color.RGBA{0xff, 0x00, 0xff, 0xff},
+        color.RGBA{0xff, 0xff, 0x00, 0xff},
+        color.RGBA{0xff, 0xff, 0xff, 0xff},
+    }
+
+    var images []*image.Paletted
+    var delays []int
+    steps := 20
+    for step := 0; step &lt; steps; step++ {
+        img := image.NewPaletted(image.Rect(0, 0, w, h), palette)
+        images = append(images, img)
+        delays = append(delays, 0)
+
+        θ := 2.0 * math.Pi / float64(steps) * float64(step)
+        for i, circle := range circles {
+            θ0 := 2 * math.Pi / 3 * float64(i)
+            circle.X = hw - 40*math.Sin(θ0) - 20*math.Sin(θ0+θ)
+            circle.Y = hh - 40*math.Cos(θ0) - 20*math.Cos(θ0+θ)
+            circle.R = 50
+        }
+
+        for x := 0; x &lt; w; x++ {
+            for y := 0; y &lt; h; y++ {
+                img.Set(x, y, color.RGBA{
+                    circles[0].Brightness(float64(x), float64(y)),
+                    circles[1].Brightness(float64(x), float64(y)),
+                    circles[2].Brightness(float64(x), float64(y)),
+                    255,
+                })
+            }
+        }
+    }
+
+    f, _ := os.OpenFile(&quot;rgb.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    gif.EncodeAll(f, &amp;gif.GIF{
+        Image: images,
+        Delay: delays,
+    })
+}
+</code></pre></div>
+<p>以上です。</p>
+]]></description>
+		</item>
 
 		<item>
 			<title>Go 言語でソースコードから画像生成する</title>
@@ -489,186 +660,6 @@ Knockout.js は少しマシで <code>hoge()</code> で取得し <code>hoge(value
 <li>オブジェクト指向的なモデル クラスを使う方式が主流。</li>
 <li><a href="(https://angularjs.org/)">AngularJS</a> や <a href="http://vuejs.org/">Vue.js</a> はネイティブな値をモデルとして扱うために頑張っている。</li>
 <li><code>Object.observe()</code> が使えるようになれば、フレームワークの苦しみが減る。<a href="(http://www.polymer-project.org/)">Polymer</a> はそこを見据えている。</li>
-</ul>
-]]></description>
-		</item>
-
-		<item>
-			<title>Vue.js が data に渡した値を激しく書き換える件について</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/06/30/vue-js-hook/</guid>
-			<pubDate>Mon, 30 Jun 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>最近、JavaScript の MV* フレームワークの中で <a href="http://vuejs.org/">Vue.js</a> が少しずつ注目を浴びてきているようであります。</p>
-
-<ul>
-<li><a href="http://www.infiniteloop.co.jp/blog/2014/06/5min_vuejs/">5分でわかるVue.jsと、jQueryで頑張ってはいけない理由 | 株式会社インフィニットループ技術ブログ</a></li>
-<li><a href="http://qiita.com/icoxfog417/items/49f7301be502bc2ad897">Vue.jsから手軽に始めるJavaScriptフレームワーク - Qiita</a></li>
-<li><a href="http://mizchi.hatenablog.com/entry/2014/02/13/153742">軽量でパワフルなデータバインディングMVVM, vue.jsで遊んでみた - mizchi&#39;s blog</a></li>
-</ul>
-
-<p>そんなわけで、自分も Vue.js (v0.10.5) を触ってみたのですが、<code>data</code> で渡した値を激しく書き換えるところに面食らったので記事にしておきます。</p>
-
-<h1>自作クラスのオブジェクトを Vue.js に渡すと壊される</h1>
-
-<p>何らかのビジネスロジックを持ったモデルを作って、それを Vue.js のデータバインディングで HTML に反映しようすると破綻します。</p>
-
-<p>簡単な例として、よくある <code>Animal</code> クラスを作ったとしましょう。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">function Animal(name) {
-  this.name = name;
-};
-Animal.prototype.say = function() {
-  console.log(this.name);
-};
-
-var dog = new Animal(&#39;dog&#39;);
-dog.bark(); // I&#39;m a dog
-</code></pre></div>
-<p>まぁ、当然動きます。</p>
-
-<p>では、<code>dog</code> をデータバインディングで HTML に表示してみます。</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">&lt;body&gt;
-&lt;p&gt;{{animal.name}}&lt;/p&gt;
-&lt;script src=&quot;vue.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
-function Animal(name) {
-  this.name = name;
-};
-Animal.prototype.bark = function() {
-  console.log(&quot;I&#39;m a &quot; + this.name);
-};
-
-var dog = new Animal(&#39;dog&#39;);
-dog.bark(); // I&#39;m a dog
-
-new Vue({
-  el: &quot;body&quot;,
-  data: { animal: dog }
-});
-&lt;/script&gt;
-&lt;/body&gt;
-</code></pre></div>
-<p>期待通り、<code>{{animal.name}}</code> の部分が <code>dog</code> になります。</p>
-
-<p>JavaScript コンソールにて、<code>dog.name = &quot;dog!!!&quot;</code> とすると、HTML は <code>dog!!!</code> に書き換わります。ちゃんと動いてるようにみえますね。</p>
-
-<p>しかし・・・JavaScript コンソールで <code>dog.bark()</code> と入力すると・・・。</p>
-
-<p><center><img src="https://farm4.staticflickr.com/3912/14348658487_b188ef6abc_o.png" width="477" height="195"></center></p>
-
-<p>さっきまで動いていたコードが動かなくなりました・・・。恐怖！</p>
-
-<h2>激しく書き換えられた犬と書き換えられる前の猫</h2>
-
-<p>Vue.js では、data に渡した値を書き換えます。激しく書き換えます。</p>
-
-<p>ためしに、dog を表示してみます。</p>
-
-<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
-
-<p>ははは。プロトタイプ (<code>__proto__</code>) が別のオブジェクトになってしまっていますよ。<code>bark()</code> がなくてエラーになるのも無理はありません。</p>
-
-<p>ちなみに、普通にインスタンス化した猫はこうなってますよ。当たり前だけども、<code>bark()</code> あります。</p>
-
-<p><center><img src="https://farm4.staticflickr.com/3842/14533637664_2e67ac0ca8_o.png" width="410" height="104"></center></p>
-
-<p><a href="http://vuejs.org/">Vue.js</a> さんは、<code>new Vue()</code> の <code>data</code> に渡した値を書き換えてしまうのです。恐ろしい子！</p>
-
-<h2>なぜにあなたは書き換える？</h2>
-
-<p>Vue.js は <code>data</code> に変更が加わったことを検知するために、data の値を書き換えているようです。</p>
-
-<p>たとえば、<code>dog.name</code> というキーは ECMAScript 5 のプロパティーに置き換えられます。<code>get name</code> と <code>set name</code> が定義されてますね。</p>
-
-<p><center><img src="https://farm4.staticflickr.com/3901/14348658407_745e69d963_o.png" width="411" height="149"></center></p>
-
-<p>このようにすることで、<code>dog.name</code> が書き換えられた瞬間に <code>set name</code> が呼ばれるので、Vue.js はデータの書き換えを検知するわけでございます。</p>
-
-<p>じゃ、なんで prototype まで置き換えるのか。</p>
-
-<p><a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> によると、ECMAScript 5 ではキーの追加・削除は検知できないので、<code>$add</code> と <code>$delete</code> を使ってくれ、ということのようです (ざっくりと日本語訳してみた)。</p>
-
-<blockquote>
-<p>In ECMAScript 5 there is no way to detect when a new property is added to an Object, or when a property is deleted from an Object. To counter for that, observed objects will be augmented with two methods: $add(key, value) and $delete(key). These methods can be used to add / delete properties from observed objects while triggering the desired View updates.</p>
-
-<blockquote>
-<p>ECMAScript 5 では、Object に対するプロパティーの追加や削除を検出する方法がないんだぜ。だから、監視対象の Object には $add(key, value) と $delete(key) の 2 つのメソッドを追加するんだよ。このメソッドを使ってプロパティーを追加・削除すると、View への反映をトリガーできるんだぜ。</p>
-</blockquote>
-</blockquote>
-
-<p><code>$add</code> と <code>$delete</code> を追加するのには、そういう理由があったわけですね。</p>
-
-<p>さて、自作のクラスを渡せないのは明らかにバグっぽいので修正したいところではあります。</p>
-
-<p>(追記) よくよく公式ドキュメントの <a href="http://vuejs.org/api/instantiation-options.html#data">Instantiation Options - vue.js</a> を読んでみると</p>
-
-<blockquote>
-<p>The object must be JSON-compliant (no circular references)</p>
-
-<blockquote>
-<p><code>data</code> に渡すオブジェクトは JSON の仕様に従っていて、循環参照してないものにしてね</p>
-</blockquote>
-</blockquote>
-
-<p>とあるので、自作クラスのオブジェクトを渡せないのは仕方ないようです。</p>
-
-<h1>Array も激しく書き換える</h1>
-
-<p>Vue.js が激しく書き換えるのは Object だけではありません。配列も猛烈に書き換えます。</p>
-
-<p>そのことは、ドキュメントの <a href="http://vuejs.org/guide/list.html">Displaying a List - vue.js</a> からも伝わってきます (先ほどと同じくざっくりと日本語訳してる)。</p>
-
-<blockquote>
-<p>Under the hood, Vue.js intercepts an observed Array&#39;s mutating methods (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) so they will also trigger View updates.</p>
-
-<p>You should avoid directly setting elements of a data-bound Array with indices, because those changes will not be picked up by Vue.js. Instead, use the agumented <code>$set()</code> method.</p>
-
-<blockquote>
-<p>内部的に、Vue.js は Array の状態を変更するメソッド (<code>push()</code>, <code>pop()</code>, <code>shift()</code>, <code>unshift()</code>, <code>splice()</code>, <code>sort()</code> and <code>reverse()</code>) の呼び出しを監視して、View が更新されるように処理をしてるんだぜ。</p>
-
-<p>インデックスを指定しての値を変更すると Vue.js が検知できないのでやめてほしいよ。その代り、<code>$set()</code> メソッドってのを用意したから、こっちを使ってほしいんだぜ。</p>
-</blockquote>
-</blockquote>
-
-<p>まぁ、こんな感じで、扱うには少し工夫が必要であります。</p>
-
-<h1>data に渡した Object が console.log() で見にくい問題の対処方法</h1>
-
-<p><code>data</code> に渡した値を <code>console.log()</code> すると getter, setter の山になるわけで、値がどうなっているかを確認しにくいですね。</p>
-
-<p>これをなんとかするには <code>JSON.stringify</code> を使う回避方法が <a href="http://vuejs.org/api/instantiation-options.html#data">Instantiation Options - vue.js</a> にて示されております。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">var vm = new Vue({
-  el: &quot;body&quot;,
-  data: {
-    animal: { name: &quot;foo&quot; }
-  }
-});
-
-console.log(JSON.stringify(vm.$data));
-// {&quot;animal&quot;:{&quot;name&quot;:&quot;foo&quot;}} 
-</code></pre></div>
-<p>やや面倒だし、巨大なデータを渡したときは見つけるのが大変そうであります。そんなときは、さらに <code>JSON.parse()</code> で Object に変換すればよい。</p>
-
-<p>面倒だから、Object に復元する関数でも作っておくとよいでしょう。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">function deepCopy(o) {
-  return JSON.parse(JSON.stringify(o));
-}
-
-console.log(deepCopy(vm.$data));
-</code></pre></div>
-<h1>Object.observe に期待</h1>
-
-<p>こんな面倒なことになっているのも、Vue.js が ECMAScript 5 の世界で頑張っているからです。</p>
-
-<p>ECMAScript に提案されている <code>Object.observe()</code> が使える世界になれば、Object や Array の置き換えも不要になるし、Vue.js の設計もシンプルになることでしょう。</p>
-
-<p><a href="http://vuejs.org/">Vue.js</a> の <a href="https://github.com/yyx990803/vue/issues/78">ロードマップ</a> には 0.11 で <code>Object.observe()</code> が使えるなら使うようにする、と書いてあります。</p>
-
-<h1>まとめ</h1>
-
-<ul>
-<li><a href="http://vuejs.org/">Vue.js</a> はオブジェクトの監視を行うために、Object のキーをプロパティーに置き換えたり、<code>Array.push()</code> を置き換えたりする</li>
-<li>この努力は ECMAScript 5 の限界ゆえ</li>
-<li>ECMAScript に <code>Object.observe()</code> がやってきたら、<a href="http://vuejs.org/">Vue.js</a> の実装もシンプルになるし、もっと楽な API になる</li>
 </ul>
 ]]></description>
 		</item>

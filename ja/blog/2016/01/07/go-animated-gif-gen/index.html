@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Go 言語でアニメーション GIF を作成する - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Go 言語でアニメーション GIF を作成する"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="Golang でアニメーション GIF を作る手順を 3 通り紹介します。フレームごとの画像から生成ビデオから生成Go 言語で最初から生成フレームごとの画像から生成こんな GIF 画像があったとします (ここ より拝借)。変換結果はこんな感じ。生成するためのコードはこんな感じ。package mainimport &quot;image&quot;import &quot;image/gif&quot;import &quot;os&quot;func main() { files := []string{&quot;g1.gif&quot;, &quot;g2.gif&quot;,&amp;q..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/rgb.gif"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2016/01/07/go-animated-gif-gen/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2016/01/07/go-animated-gif-gen/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2016/01/07/go-animated-gif-gen/</span>.</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">2016年01月07日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+
+<h1>Go 言語でアニメーション GIF を作成する</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語でアニメーション GIF を作成する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" data-lang="ja" data-size="horizontal" data-text="Go 言語でアニメーション GIF を作成する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>Golang でアニメーション GIF を作る手順を 3 通り紹介します。</p>
+
+<ul>
+<li>フレームごとの画像から生成</li>
+<li>ビデオから生成</li>
+<li>Go 言語で最初から生成</li>
+</ul>
+
+<h1>フレームごとの画像から生成</h1>
+
+<p>こんな GIF 画像があったとします (<a href="http://qiita.com/mattn/items/b7889e3c036b408ae8bd">ここ</a> より拝借)。</p>
+
+<p><img src="/ja/blog/2016/01/07/go-animated-gif-gen/g1.gif" width="200" height="200">
+<img src="/ja/blog/2016/01/07/go-animated-gif-gen/g2.gif" width="200" height="200">
+<img src="/ja/blog/2016/01/07/go-animated-gif-gen/g3.gif" width="200" height="200"></p>
+
+<p>変換結果はこんな感じ。</p>
+
+<p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/gopher.gif" width="200" height="200"></center></p>
+
+<p>生成するためのコードはこんな感じ。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="s">&quot;image&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;image/gif&quot;</span>
+<span class="kn">import</span> <span class="s">&quot;os&quot;</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">files</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&quot;g1.gif&quot;</span><span class="p">,</span> <span class="s">&quot;g2.gif&quot;</span><span class="p">,</span><span class="s">&quot;g3.gif&quot;</span><span class="p">,</span> <span class="s">&quot;g2.gif&quot;</span><span class="p">}</span>
+
+    <span class="c1">// 各フレームの画像を GIF で読み込んで outGif を構築する</span>
+    <span class="nx">outGif</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">gif</span><span class="p">.</span><span class="nx">GIF</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">name</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">files</span> <span class="p">{</span>
+        <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span>
+        <span class="nx">inGif</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">gif</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="nx">f</span><span class="p">)</span>
+        <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+        <span class="nx">outGif</span><span class="p">.</span><span class="nx">Image</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">outGif</span><span class="p">.</span><span class="nx">Image</span><span class="p">,</span> <span class="nx">inGif</span><span class="p">.(</span><span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span><span class="p">))</span>
+        <span class="nx">outGif</span><span class="p">.</span><span class="nx">Delay</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">outGif</span><span class="p">.</span><span class="nx">Delay</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// out.gif に保存する</span>
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;out.gif&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">gif</span><span class="p">.</span><span class="nx">EncodeAll</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="nx">outGif</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>注意したいポイントは次の通り。</p>
+
+<ul>
+<li>フレームの GIF を順番に <code>gif.Decode</code> で読み込んでいる。JPEG から生成するには、GIF への変換処理を実装する必要がある (<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> では <code>gif.Encode</code> と <code>gif.Decode</code> を呼んで変換している)。</li>
+<li>GIF アニメーションを生成するには <code>gif.EncodeAll</code> を呼ぶ。</li>
+</ul>
+
+<h1>ビデオから生成</h1>
+
+<p><a href="http://www.mplayerhq.hu/">MPlayer</a> を使って各フレームの画像を抽出してから、<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> で GIF アニメーションを生成する (詳しくは <a href="http://srinathh.github.io/opensource/goanigiffy/">GoAniGiffy</a>  を参照)。</p>
+
+<h1>Go 言語で最初から生成</h1>
+
+<p>こんな感じのものを作ってみた。</p>
+
+<p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/rgb.gif" width="240" height="240"></center></p>
+
+<p>各フレームの画像を Go 言語で描画して <code>[]*image.Paletted</code> を作って、<code>gif.EncodeAll</code> に渡している。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">    <span class="kd">var</span> <span class="nx">images</span> <span class="p">[]</span><span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span>
+    <span class="kd">var</span> <span class="nx">delays</span> <span class="p">[]</span><span class="kt">int</span>
+
+    <span class="c1">// 20 個の画像を生成して円を描く</span>
+    <span class="k">for</span> <span class="nx">step</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">step</span> <span class="p">&lt;</span> <span class="mi">20</span><span class="p">;</span> <span class="nx">step</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">),</span> <span class="nx">palette</span><span class="p">)</span>
+        <span class="nx">images</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">images</span><span class="p">,</span> <span class="nx">img</span><span class="p">)</span>
+        <span class="nx">delays</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">delays</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1">// 描画処理 (長いので省略)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// rgb.gif に保存する</span>
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;rgb.gif&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">gif</span><span class="p">.</span><span class="nx">EncodeAll</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">gif</span><span class="p">.</span><span class="nx">GIF</span><span class="p">{</span>
+        <span class="nx">Image</span><span class="p">:</span> <span class="nx">images</span><span class="p">,</span>
+        <span class="nx">Delay</span><span class="p">:</span> <span class="nx">delays</span><span class="p">,</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>全体のコードはこんな感じ。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&quot;image&quot;</span>
+    <span class="s">&quot;image/color&quot;</span>
+    <span class="s">&quot;image/gif&quot;</span>
+    <span class="s">&quot;math&quot;</span>
+    <span class="s">&quot;os&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span> <span class="nx">Circle</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span><span class="p">,</span> <span class="nx">R</span> <span class="kt">float64</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Circle</span><span class="p">)</span> <span class="nx">Brightness</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">uint8</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dx</span><span class="p">,</span> <span class="nx">dy</span> <span class="kt">float64</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">X</span> <span class="o">-</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Y</span> <span class="o">-</span> <span class="nx">y</span>
+    <span class="nx">d</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nx">dx</span><span class="o">*</span><span class="nx">dx</span><span class="o">+</span><span class="nx">dy</span><span class="o">*</span><span class="nx">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nx">c</span><span class="p">.</span><span class="nx">R</span>
+    <span class="k">if</span> <span class="nx">d</span> <span class="p">&gt;</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">255</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">240</span><span class="p">,</span> <span class="mi">240</span>
+    <span class="kd">var</span> <span class="nx">hw</span><span class="p">,</span> <span class="nx">hh</span> <span class="kt">float64</span> <span class="p">=</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nx">circles</span> <span class="o">:=</span> <span class="p">[]</span><span class="o">*</span><span class="nx">Circle</span><span class="p">{</span><span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{},</span> <span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{},</span> <span class="o">&amp;</span><span class="nx">Circle</span><span class="p">{}}</span>
+
+    <span class="kd">var</span> <span class="nx">palette</span> <span class="p">=</span> <span class="p">[]</span><span class="nx">color</span><span class="p">.</span><span class="nx">Color</span><span class="p">{</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+        <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">images</span> <span class="p">[]</span><span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span>
+    <span class="kd">var</span> <span class="nx">delays</span> <span class="p">[]</span><span class="kt">int</span>
+    <span class="nx">steps</span> <span class="o">:=</span> <span class="mi">20</span>
+    <span class="k">for</span> <span class="nx">step</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">step</span> <span class="p">&lt;</span> <span class="nx">steps</span><span class="p">;</span> <span class="nx">step</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">),</span> <span class="nx">palette</span><span class="p">)</span>
+        <span class="nx">images</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">images</span><span class="p">,</span> <span class="nx">img</span><span class="p">)</span>
+        <span class="nx">delays</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">delays</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="nx">θ</span> <span class="o">:=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Pi</span> <span class="o">/</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">steps</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">step</span><span class="p">)</span>
+        <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">circle</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">circles</span> <span class="p">{</span>
+            <span class="nx">θ0</span> <span class="o">:=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Pi</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+            <span class="nx">circle</span><span class="p">.</span><span class="nx">X</span> <span class="p">=</span> <span class="nx">hw</span> <span class="o">-</span> <span class="mi">40</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sin</span><span class="p">(</span><span class="nx">θ0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">20</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sin</span><span class="p">(</span><span class="nx">θ0</span><span class="o">+</span><span class="nx">θ</span><span class="p">)</span>
+            <span class="nx">circle</span><span class="p">.</span><span class="nx">Y</span> <span class="p">=</span> <span class="nx">hh</span> <span class="o">-</span> <span class="mi">40</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Cos</span><span class="p">(</span><span class="nx">θ0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">20</span><span class="o">*</span><span class="nx">math</span><span class="p">.</span><span class="nx">Cos</span><span class="p">(</span><span class="nx">θ0</span><span class="o">+</span><span class="nx">θ</span><span class="p">)</span>
+            <span class="nx">circle</span><span class="p">.</span><span class="nx">R</span> <span class="p">=</span> <span class="mi">50</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="nx">x</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="p">&lt;</span> <span class="nx">w</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span> <span class="p">{</span>
+            <span class="k">for</span> <span class="nx">y</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="p">&lt;</span> <span class="nx">h</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span> <span class="p">{</span>
+                <span class="nx">img</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span>
+                    <span class="nx">circles</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                    <span class="nx">circles</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                    <span class="nx">circles</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">Brightness</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">x</span><span class="p">),</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">y</span><span class="p">)),</span>
+                    <span class="mi">255</span><span class="p">,</span>
+                <span class="p">})</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;rgb.gif&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">gif</span><span class="p">.</span><span class="nx">EncodeAll</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">gif</span><span class="p">.</span><span class="nx">GIF</span><span class="p">{</span>
+        <span class="nx">Image</span><span class="p">:</span> <span class="nx">images</span><span class="p">,</span>
+        <span class="nx">Delay</span><span class="p">:</span> <span class="nx">delays</span><span class="p">,</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>以上です。</p>
+
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語でアニメーション GIF を作成する - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" data-lang="ja" data-size="horizontal" data-text="Go 言語でアニメーション GIF を作成する - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2016/01/07/go-animated-gif-gen/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2016年01月07日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2016-01-07-go-animated-gif-gen.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+</div>
+
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2015/12/31/go-image-gen/" rel="previous"><b>&laquo;</b><span class="title">Go 言語でソースコードから画像生成する</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
