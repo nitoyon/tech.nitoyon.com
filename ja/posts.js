@@ -5,11 +5,11 @@ var Site = {
 };
 
 Site.archives.posts = [
+	{url: "/ja/blog/2016/01/18/space-travel-animated-gif/", title: "Go 言語で宇宙旅行風のアニメーション GIF を作った"},
 	{url: "/ja/blog/2016/01/07/go-animated-gif-gen/", title: "Go 言語でアニメーション GIF を作成する"},
 	{url: "/ja/blog/2015/12/31/go-image-gen/", title: "Go 言語でソースコードから画像生成する"},
 	{url: "/ja/blog/2015/11/20/try-vscode/", title: "Visual Studio Code は JavaScript 開発が超絶便利になる可能性を秘めている！"},
-	{url: "/ja/blog/2015/11/18/death-of-oo/", title: "Object.observe の死 (ECMAScript の提案取り下げ、V8 からも削除予定)"},
-	{url: "/ja/blog/2014/07/18/data-binding/", title: "JavaScript フレームワークがデータバインディングを実現する４通りの手法"}
+	{url: "/ja/blog/2015/11/18/death-of-oo/", title: "Object.observe の死 (ECMAScript の提案取り下げ、V8 からも削除予定)"}
 ];
 
 Site.archives.months = [

@@ -6,10 +6,190 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Thu, 07 Jan 2016 03:05:43 +0000</lastBuildDate>
+		<lastBuildDate>Mon, 18 Jan 2016 01:33:01 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
+
+		<item>
+			<title>Go 言語で宇宙旅行風のアニメーション GIF を作った</title>
+			<link>http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/</link>
+			<guid>http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/</guid>
+			<pubDate>Mon, 18 Jan 2016 00:00:00 +0900</pubDate>
+			<description><![CDATA[<p>宇宙旅行風のアニメーション GIF を Golang で生成してみました。完成品はこちら。</p>
+
+<p><img src="/ja/blog/2016/01/18/space-travel-animated-gif/space.gif" width="500" height="250"></p>
+
+<p>ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。</p>
+
+<h1>draw2d を使って描画する</h1>
+
+<p>Golang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、<a href="https://github.com/llgcode/draw2d">draw2d</a> を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。</p>
+
+<p>次のコードでは、<code>draw2dimg</code> と <code>draw2dkit</code> を使って、#808080 の四角を描画する例。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;github.com/llgcode/draw2d/draw2dimg&quot;
+    &quot;github.com/llgcode/draw2d/draw2dkit&quot;
+    &quot;image&quot;
+    &quot;image/color&quot;
+)
+
+func main() {
+    img := image.NewRGBA(image.Rect(0, 0, 200, 200))
+    gc := draw2dimg.NewGraphicContext(img)
+
+    // Draw rectangle (#808080)
+    gc.SetFillColor(color.Gray{0x80})
+    draw2dkit.Rectangle(gc, 50, 50, 100, 100)
+    gc.Fill()
+    gc.Close()
+}
+</code></pre></div>
+<p><code>draw2dimg.NewGraphicContext</code> は引数に <code>image.RGBA</code> (透明度つきの RGB 画像) を渡す必要があるんだけど、アニメーション GIF を <code>gif.EncodeAll</code> で作るときには <code>image.Palettted</code> (パレットの色だけを使った画像) を渡さなきゃいけない。</p>
+
+<p>つまり、draw2d でアニメーション GIF を作るには、次のような処理が必要になる。</p>
+
+<ol>
+<li><code>iamge.RBGA</code> を作る</li>
+<li>draw2d を使って描画する</li>
+<li><code>image.RBGA</code> を <code>image.Paletted</code> に変換する</li>
+<li><code>gif.EncodeAll</code> に <code>[]*image.Paletted</code> を渡して、アニメーション GIF を作る</li>
+</ol>
+
+<h1><code>image.RBGA</code> を <code>image.Paletted</code> に変換する方法</h1>
+
+<p>1 枚の GIF を生成する <code>gif.Encode</code> は自動的に <code>image.RBGA</code> を <code>image.Paletted</code> に変換するんだけど、アニメーション GIF を生成する <code>gif.EncodeAll</code> は変換してくれない。</p>
+
+<p>なので、自分で変換処理を実装する必要がある。といっても、<code>gif.Encode</code> と同じように、標準ライブラリで用意された <code>draw.FloydSteinberg</code> を使って <a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89-%E3%82%B9%E3%82%BF%E3%82%A4%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B0%E3%83%BB%E3%83%87%E3%82%A3%E3%82%B6%E3%83%AA%E3%83%B3%E3%82%B0">フロイド-スタインバーグ・ディザリング</a> を使うと簡単。こんな風に。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;image&quot;
+    &quot;image/color&quot;
+    &quot;image/draw&quot;
+)
+
+func main() {
+    img := image.NewRGBA(image.Rect(0, 0, 200, 200))
+
+    // パレットを準備 (#ffffff, #000000, #ff0000)
+    var palette color.Palette = color.Palette{}
+    palette = append(palette, color.White)
+    palette = append(palette, color.Black)
+    palette = append(palette, color.RGBA{0xff, 0x00, 0x00, 0xff})
+
+    // ディザリングする
+    pm := image.NewPaletted(img.Bounds(), palette)
+    draw.FloydSteinberg.Draw(pm, img.Bounds(), img, image.ZP)
+}
+</code></pre></div>
+<h1>ソースコード全体</h1>
+
+<p>全部で 100 行になってます。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go">package main
+
+import (
+    &quot;github.com/llgcode/draw2d/draw2dimg&quot;
+    &quot;github.com/llgcode/draw2d/draw2dkit&quot;
+    &quot;image&quot;
+    &quot;image/color&quot;
+    &quot;image/draw&quot;
+    &quot;image/gif&quot;
+    &quot;math&quot;
+    &quot;math/rand&quot;
+    &quot;os&quot;
+)
+
+var w, h float64 = 500, 250
+var palette color.Palette = color.Palette{}
+var zCycle float64 = 8
+var zMin, zMax float64 = 1, 15
+
+type Point struct {
+    X, Y float64
+}
+
+type Circle struct {
+    X, Y, Z, R float64
+}
+
+// ループするように星を描画する
+func (c *Circle) Draw(gc *draw2dimg.GraphicContext, ratio float64) {
+    z := c.Z - ratio*zCycle
+
+    for z &lt; zMax {
+        if z &gt;= zMin {
+            x, y, r := c.X/z, c.Y/z, c.R/z
+            gc.SetFillColor(color.White)
+            gc.Fill()
+            draw2dkit.Circle(gc, w/2+x, h/2+y, r)
+            gc.Close()
+        }
+        z += zCycle
+    }
+}
+
+func drawFrame(circles []Circle, ratio float64) *image.Paletted {
+    img := image.NewRGBA(image.Rect(0, 0, int(w), int(h)))
+    gc := draw2dimg.NewGraphicContext(img)
+
+    // 背景を描画
+    gc.SetFillColor(color.Gray{0x11})
+    draw2dkit.Rectangle(gc, 0, 0, w, h)
+    gc.Fill()
+    gc.Close()
+
+    // 星を描画
+    for _, circle := range circles {
+        circle.Draw(gc, ratio)
+    }
+
+    // ディザリングする
+    pm := image.NewPaletted(img.Bounds(), palette)
+    draw.FloydSteinberg.Draw(pm, img.Bounds(), img, image.ZP)
+    return pm
+}
+
+func main() {
+    // 4000 個の星を準備
+    circles := []Circle{}
+    for len(circles) &lt; 4000 {
+        x, y := rand.Float64()*8-4, rand.Float64()*8-4
+        if math.Abs(x) &lt; 0.5 &amp;&amp; math.Abs(y) &lt; 0.5 {
+            continue
+        }
+        z := rand.Float64() * zCycle
+        circles = append(circles, Circle{x * w, y * h, z, 5})
+    }
+
+    // パレットを準備 (#000000, #111111, ..., #ffffff)
+    palette = color.Palette{}
+    for i := 0; i &lt; 16; i++ {
+        palette = append(palette, color.Gray{uint8(i) * 0x11})
+    }
+
+    // 30 個の画像を作成
+    var images []*image.Paletted
+    var delays []int
+    count := 30
+    for i := 0; i &lt; count; i++ {
+        pm := drawFrame(circles, float64(i)/float64(count))
+        images = append(images, pm)
+        delays = append(delays, 4)
+    }
+
+    // gif を出力
+    f, _ := os.OpenFile(&quot;space.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    defer f.Close()
+    gif.EncodeAll(f, &amp;gif.GIF{
+        Image: images,
+        Delay: delays,
+    })
+}
+</code></pre></div>]]></description>
+		</item>
 
 		<item>
 			<title>Go 言語でアニメーション GIF を作成する</title>
@@ -72,7 +252,7 @@ func main() {
 
 <h1>ビデオから生成</h1>
 
-<p><a href="http://www.mplayerhq.hu/">MPlayer</a> を使って各フレームの画像を抽出してから、<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> で GIF アニメーションを生成する (詳しくは <a href="http://srinathh.github.io/opensource/goanigiffy/">GoAniGiffy</a>  を参照)。</p>
+<p><a href="http://www.mplayerhq.hu/">MPlayer</a> を使って各フレームの画像を抽出してから、<a href="https://github.com/srinathh/goanigiffy">goanigiffy</a> で GIF アニメーションを生成する。MPlayer にもアニメーション GIF を生成する機能はあるようだが、ディザリングがしょぼいので、この方法がよいらしい (詳しくは <a href="http://srinathh.github.io/opensource/goanigiffy/">GoAniGiffy</a>  を参照)。</p>
 
 <h1>Go 言語で最初から生成</h1>
 
@@ -513,154 +693,6 @@ func main() {
 <h1>まとめ</h1>
 
 <p><code>Object.observe()</code> は ECMAScript 7 に入ることはなくなったので、他のブラウザーに 実装される可能性はなくなったし、Google Chrome でも近い将来、使えなくなるだろう。</p>
-]]></description>
-		</item>
-
-		<item>
-			<title>JavaScript フレームワークがデータバインディングを実現する４通りの手法</title>
-			<link>http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/</link>
-			<guid>http://tech.nitoyon.com/ja/blog/2014/07/18/data-binding/</guid>
-			<pubDate>Fri, 18 Jul 2014 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>最近流行りの JavaScript MV* フレームワークは、どれもデータバインディングをサポートしているが、実現方法はフレームワークによって異なる。</p>
-
-<p>この記事では、各種フレームワークが<strong>どのようにモデルの変更を検知しているか</strong>を次の 4 つのパターンに分類して紹介する。</p>
-
-<ol>
-<li>モデル クラス方式 (Ember.js、Backbone.js、Ractive.js、Knockout.js など)</li>
-<li>力ずく方式 (AngualrJS)</li>
-<li>モデル書き換え方式 (Vue.js)</li>
-<li>Object.observe 方式 (Polymer)</li>
-</ol>
-
-<p>パターン名は私が勝手に名づけたものだけど、このへんの雰囲気が理解できれば、フレームワークごとの個性が分かるだろうし、利用イメージもわきやすいんじゃないかと思っている。</p>
-
-<h1>1. モデル クラス方式</h1>
-
-<p>「モデルとして扱えるのはフレームワークが用意したモデル クラスのインスタンスだけ」という制約を課すのがこの方式。</p>
-
-<p>たとえば、Ember.js では <code>{title: &quot;てっく煮&quot;}</code> という情報をデータバインディングで利用しようと思ったら、次のようにしてモデル クラスのインスタンスを作る必要がある。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">var a = Ember.Object.create({title: &quot;てっく煮&quot;})
-console.log(a.get(&#39;title&#39;)); // てっく煮
-</code></pre></div>
-<p>モデルを変更するには <code>set()</code> メソッドを使う。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">a.set(&#39;title&#39;, &#39;!!!!&#39;);
-console.log(a.get(&#39;title&#39;)); // !!!!
-</code></pre></div>
-<p>当然、フレームワーク側はモデルの値が変更されたことを検知できる。検知したら、あとはフレームワークは新しい値に応じて DOM を書き換えればよい。とてもシンプルな構造だ。</p>
-
-<p>使う側の視点でみると、<code>get()</code> や <code>set()</code> を呼ぶのが面倒だし、ラッパーの API は JavaScript の <code>Object</code> や <code>Array</code> と扱い方が違うし、さらに、既存のモデルがある場合は流用できない (作成・取得・変更処理を全部置き換える必要がある) し・・・、と不便な印象がある。</p>
-
-<p>これ以降の方式は、ネイティブな <code>Object</code> や <code>Array</code> などをモデルとして扱えるように工夫している。</p>
-
-<h2>この方式を採用するフレームワークが多い</h2>
-
-<p>現時点においては、この方式を採用するフレームワークが多数派である。</p>
-
-<p><a href="http://qiita.com/tekkoc/items/eb5ab65524c3e5b4a11c">Backbone.jsなどのライブラリのgetter, setterがダサい理由と、その解消方法 - Qiita</a> によると、Backbone.js、Knockout.js、Ractive.js も同じ方式を採用しているらしい。</p>
-
-<blockquote>
-<p>Backbone.js と Ractive.js は <code>get(&quot;hoge&quot;)</code> や <code>set(&quot;hoge&quot;, value)</code> という形式。
-Knockout.js は少しマシで <code>hoge()</code> で取得し <code>hoge(value)</code> で設定する形式。</p>
-</blockquote>
-
-<h1>2. 力ずく方式</h1>
-
-<p>お次は <a href="(https://angularjs.org/)">AngularJS</a> が採用しているヤツを説明しよう。英語では &quot;dirty check&quot; と呼んでいる。</p>
-
-<p>AngularJS はネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せるし、独自クラスのオブジェクトだって渡せる。</p>
-
-<p>たとえば、モデルが <code>{title: &#39;てっく煮&#39;}</code> だったとしよう。モデルはネイティブなオブジェクトなので、変更をプッシュ通知で受け取るのは諦めている。</p>
-
-<p>そんな前提なので、AngularJS は <strong>何かあるごとに</strong> <code>title</code> の値が変化したかどうかを自力でチェックする。変化してれば DOM を書き換える。オブジェクトの参照が変わってしまうこともあるので、「前回の値」はディープコピーして覚えている。</p>
-
-<p>とても力技なので処理にはオーバーヘッドがある。ソースコードも複雑になっている。</p>
-
-<h2>「何かあるごとに」はいつか？</h2>
-
-<p>さて、さきほど「何かあるごとに」と書いたが、前回の値と今の値を比較するタイミングはいつだろうか。</p>
-
-<p>正解は「AngularJS 経由で JavaScript のコードを実行したとき」である。</p>
-
-<p>たとえば、ボタンのクリックイベントに関しては <code>&lt;button ng-click=&quot;foo()&quot;&gt;</code> のように書くと、AngularJS 経由で <code>foo()</code> が呼ばれる。<code>setTimeout()</code> の処理であれば、<code>$timeout</code> を使えば AngularJS 経由でコールバックが呼ばれる。</p>
-
-<p>コールバックを読んだとき、モデルの値は変更されるかもしれないし、実際には変更されないかもしれない。変更されたか調べるために、呼び終わったあとに、力ずくで調べるのだ。</p>
-
-<p>直接 DOM イベントを監視するようなときには AngularJS を経由させるのは難しい。そういうときには <code>$scope.$apply()</code> に関数を渡すと、関数を呼んだあとに力ずくの比較処理をやってくれる。</p>
-
-<p>AngularJS を使う側の視点からすると、モデルへの変更を HTML に確実に反映させるには、<code>ng-click</code> や <code>$timeout</code>、<code>$scope.$apply()</code> など使って AngularJS 経由でモデルを変更する必要がある。</p>
-
-<h2>力ずく方式のまとめ</h2>
-
-<ul>
-<li><code>Object</code> や <code>Array</code> や独自クラスのインスタンスをモデルにできる</li>
-<li>比較処理がトリガーされるかどうかを意識する必要がある</li>
-<li>比較処理のオーバーヘッドがある</li>
-</ul>
-
-<h1>3. モデル書き換え方式</h1>
-
-<p>こちらは <a href="http://vuejs.org/">Vue.js</a> が採用している方式である。</p>
-
-<p>Vue.js もネイティブな <code>Object</code> や <code>Array</code> をモデルとして渡せる。</p>
-
-<p>たとえば、オブジェクトのキーの変更を検知するために、キーを (ECMAScript 5 的な) プロパティーに書き換える。配列の変更を検知するために、<code>Array.prototype</code> を書き換えて <code>push()</code> メソッドなどを置き換える。</p>
-
-<p>AngularJS のように力ずくの比較は行わないので動作は速いのが利点。Vue.js のサイトでも <a href="http://vuejs.org/perf/">他のフレームワークより速いこと</a> を自慢している。</p>
-
-<p>一方の弱点は、次の通り。</p>
-
-<ul>
-<li>モデルとして受け取ったオブジェクトを書き換えてしまう</li>
-<li>完全に変更を検知できない (完全に検知できないので、一部の変更処理については、<code>$set()</code> や <code>$add()</code> といったメソッドを使う必要がある。ラッパー オブジェクト的な要素が残っているといえる)。</li>
-</ul>
-
-<p>詳しくは <a href="/ja/blog/2014/06/30/vue-js-hook/">Vue.js が data に渡した値を激しく書き換える件について</a> に書いたので見てほしい。</p>
-
-<h1>4. Object.observe() 方式</h1>
-
-<p>現在、ECMAScript には「オブジェクトの変更を検知する」という機能を持つ <code>Object.observe()</code> というメソッドが提案されていて、仕様決定に先立って <a href="http://www.chromestatus.com/features/6147094632988672">Google Chrome 36 ではデフォルトで有効</a> になっている。</p>
-
-<p>ためしに Google Chrome 36 の JavaScript コンソールで使ってみる。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">&gt; a = {foo: 1}
-&gt; Object.observe(a, function(changes) { console.log(changes); })
-&gt; a.foo = 3
-  [Object]
-      0: Object
-          name: &quot;foo&quot;
-          object: Object
-              foo: 3
-          oldValue: 1
-          type: &quot;update&quot;
-&gt; a.bar = 10
-  [Object]
-      0: Object
-          name: &quot;bar&quot;
-          object: Object
-              bar: 10
-              foo: 3
-          type: &quot;add&quot;
-</code></pre></div>
-<p>まさにデータバインディングで使ってくれといっているようなメソッドである。</p>
-
-<p><a href="(http://www.polymer-project.org/)">Polymer</a> は <code>Object.observe()</code> を前提としている。さらに、先ほどから紹介していた各種ライブラリーについても、AngularJS は 2.0 での対応を<a href="http://blog.angularjs.org/2014/03/angular-20.html">検討している</a> し、Vue.js は v0.11.x で<a href="https://github.com/yyx990803/vue/issues/78">対応予定</a> となっている。</p>
-
-<p>ECMAScript に <code>Object.observe()</code> が取り込まれれば、ここまで紹介したようなややこしいデータバインディングの仕組みは不要となる。まさに、データバインディングのための API であるが、ECMAScript 6 にも入っておらず、すべてのブラウザーで使えるようになるには時間がかかりそうだ。
-<code>Object.observe()</code> については以下のページが詳しかった。</p>
-
-<ul>
-<li><a href="http://d.hatena.ne.jp/jovi0608/20121206/1354762082">次世代JavaScriptでデータバインディング： Object.observe() を試す - ぼちぼち日記</a></li>
-<li><a href="http://www.html5rocks.com/en/tutorials/es7/observe/">Data-binding Revolutions with Object.observe() - HTML5 Rocks</a></li>
-</ul>
-
-<h1>まとめ</h1>
-
-<p>MV* フレームワークが「どのようにモデルの変更を検知しているか」を 4 通り紹介した。</p>
-
-<ul>
-<li>オブジェクト指向的なモデル クラスを使う方式が主流。</li>
-<li><a href="(https://angularjs.org/)">AngularJS</a> や <a href="http://vuejs.org/">Vue.js</a> はネイティブな値をモデルとして扱うために頑張っている。</li>
-<li><code>Object.observe()</code> が使えるようになれば、フレームワークの苦しみが減る。<a href="(http://www.polymer-project.org/)">Polymer</a> はそこを見据えている。</li>
-</ul>
 ]]></description>
 		</item>
 

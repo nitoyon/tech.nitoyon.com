@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ja">
+
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Go 言語で宇宙旅行風のアニメーション GIF を作った - てっく煮ブログ</title>
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="/stylesheets/screen.css" type="text/css" />
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<meta property="og:title" content="Go 言語で宇宙旅行風のアニメーション GIF を作った"/>
+	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/"/>
+	<meta property="og:type" content="article"/>
+	<meta property="og:description" content="宇宙旅行風のアニメーション GIF を Golang で生成してみた。完成品はこちら。ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。draw2d を使って描画するGolang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、draw2d を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。次のコードでは、draw2dimg と draw2dkit を使って、#808080 の四角を描画する例。package mainimport ( &quot;github.com/..."/>
+	<meta property="og:image" content="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/space-thumb.gif"/>
+	<meta property="og:site_name" content="てっく煮ブログ"/>
+	<meta property="fb:admins" content="1297551349" />
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:site" content="nitoyon">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/ja/blog/index.xml" />
+	<link rel="alternate" hreflang="en_US" href="http://tech.nitoyon.com/en/blog/2016/01/18/space-travel-animated-gif/">
+</head>
+<body class="ja">
+<header class="wrap page-header">
+<div class="wrapped">
+	<h1 id="logo">
+		
+		<a href="/ja/blog/" id="logo-blog-ja">てっく煮ブログ</a>
+		
+	</h1>
+	<nav>
+		<ul>
+<li class="home"><a href="/ja/">HOME</a></li><li class="about"><a href="/ja/about/">ABOUT</a></li><li class="blog"><a href="/ja/blog/">BLOG(ja)</a></li><li class="blog-en"><a href="/en/blog/">BLOG(en)</a></li>
+		</ul>
+	</nav>
+</div>
+</header>
+<div class="wrap">
+<div class="wrapped">
+
+<div id="alternate-en-notice" class="alternate-notice">
+<a href="/en/blog/2016/01/18/space-travel-animated-gif/">English Translation is Available at <span>http://tech.nitoyon.com/en/blog/2016/01/18/space-travel-animated-gif/</span>.</a>
+</div>
+
+<article>
+<header>
+<div class="post-date">2016年01月18日</div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+
+<h1>Go 言語で宇宙旅行風のアニメーション GIF を作った</h1>
+
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語で宇宙旅行風のアニメーション GIF を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" data-lang="ja" data-size="horizontal" data-text="Go 言語で宇宙旅行風のアニメーション GIF を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</header>
+
+<div id="entry">
+<div class="entry-body">
+<section>
+<p>宇宙旅行風のアニメーション GIF を Golang で生成してみた。完成品はこちら。</p>
+
+<p><img src="http://img.gifmagazine.net/gifmagazine/images/704479/original.gif" width="500" height="250" alt="宇宙旅行風 (463KB)"></p>
+
+<p>ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。</p>
+
+<h1>draw2d を使って描画する</h1>
+
+<p>Golang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、<a href="https://github.com/llgcode/draw2d">draw2d</a> を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。</p>
+
+<p>次のコードでは、<code>draw2dimg</code> と <code>draw2dkit</code> を使って、#808080 の四角を描画する例。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&quot;github.com/llgcode/draw2d/draw2dimg&quot;</span>
+    <span class="s">&quot;github.com/llgcode/draw2d/draw2dkit&quot;</span>
+    <span class="s">&quot;image&quot;</span>
+    <span class="s">&quot;image/color&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+    <span class="nx">gc</span> <span class="o">:=</span> <span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">NewGraphicContext</span><span class="p">(</span><span class="nx">img</span><span class="p">)</span>
+
+    <span class="c1">// Draw rectangle (#808080)</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="mh">0x80</span><span class="p">})</span>
+    <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Rectangle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>draw2dimg.NewGraphicContext</code> は引数に <code>image.RGBA</code> (透明度つきの RGB 画像) を渡す必要があるんだけど、アニメーション GIF を <code>gif.EncodeAll</code> で作るときには <code>image.Palettted</code> (パレットの色だけを使った画像) を渡さなきゃいけない。</p>
+
+<p>つまり、draw2d でアニメーション GIF を作るには、次のような処理が必要になる。</p>
+
+<ol>
+<li><code>iamge.RBGA</code> を作る</li>
+<li>draw2d を使って描画する</li>
+<li><code>image.RBGA</code> を <code>image.Paletted</code> に変換する</li>
+<li><code>gif.EncodeAll</code> に <code>[]*image.Paletted</code> を渡して、アニメーション GIF を作る</li>
+</ol>
+
+<h1><code>image.RBGA</code> を <code>image.Paletted</code> に変換する方法</h1>
+
+<p>1 枚の GIF を生成する <code>gif.Encode</code> は自動的に <code>image.RBGA</code> を <code>image.Paletted</code> に変換するんだけど、アニメーション GIF を生成する <code>gif.EncodeAll</code> は変換してくれない。</p>
+
+<p>なので、自分で変換処理を実装する必要がある。といっても、<code>gif.Encode</code> と同じように、標準ライブラリで用意された <code>draw.FloydSteinberg</code> を使って <a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89-%E3%82%B9%E3%82%BF%E3%82%A4%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B0%E3%83%BB%E3%83%87%E3%82%A3%E3%82%B6%E3%83%AA%E3%83%B3%E3%82%B0">フロイド-スタインバーグ・ディザリング</a> を使うと簡単。こんな風に。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&quot;image&quot;</span>
+    <span class="s">&quot;image/color&quot;</span>
+    <span class="s">&quot;image/draw&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+
+    <span class="c1">// パレットを準備 (#ffffff, #000000, #ff0000)</span>
+    <span class="kd">var</span> <span class="nx">palette</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
+    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">White</span><span class="p">)</span>
+    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Black</span><span class="p">)</span>
+    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">})</span>
+
+    <span class="c1">// ディザリングする</span>
+    <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">palette</span><span class="p">)</span>
+    <span class="nx">draw</span><span class="p">.</span><span class="nx">FloydSteinberg</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">pm</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">image</span><span class="p">.</span><span class="nx">ZP</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>ソースコード全体</h1>
+
+<p>全部で 100 行になってます。</p>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&quot;github.com/llgcode/draw2d/draw2dimg&quot;</span>
+    <span class="s">&quot;github.com/llgcode/draw2d/draw2dkit&quot;</span>
+    <span class="s">&quot;image&quot;</span>
+    <span class="s">&quot;image/color&quot;</span>
+    <span class="s">&quot;image/draw&quot;</span>
+    <span class="s">&quot;image/gif&quot;</span>
+    <span class="s">&quot;math&quot;</span>
+    <span class="s">&quot;math/rand&quot;</span>
+    <span class="s">&quot;os&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">250</span>
+<span class="kd">var</span> <span class="nx">palette</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
+<span class="kd">var</span> <span class="nx">zCycle</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">8</span>
+<span class="kd">var</span> <span class="nx">zMin</span><span class="p">,</span> <span class="nx">zMax</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">15</span>
+
+<span class="kd">type</span> <span class="nx">Point</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span> <span class="kt">float64</span>
+<span class="p">}</span>
+
+<span class="kd">type</span> <span class="nx">Circle</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span><span class="p">,</span> <span class="nx">Z</span><span class="p">,</span> <span class="nx">R</span> <span class="kt">float64</span>
+<span class="p">}</span>
+
+<span class="c1">// ループするように星を描画する</span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Circle</span><span class="p">)</span> <span class="nx">Draw</span><span class="p">(</span><span class="nx">gc</span> <span class="o">*</span><span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">GraphicContext</span><span class="p">,</span> <span class="nx">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">z</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Z</span> <span class="o">-</span> <span class="nx">ratio</span><span class="o">*</span><span class="nx">zCycle</span>
+
+    <span class="k">for</span> <span class="nx">z</span> <span class="p">&lt;</span> <span class="nx">zMax</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="nx">z</span> <span class="o">&gt;=</span> <span class="nx">zMin</span> <span class="p">{</span>
+            <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">r</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">X</span><span class="o">/</span><span class="nx">z</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Y</span><span class="o">/</span><span class="nx">z</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">R</span><span class="o">/</span><span class="nx">z</span>
+            <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">White</span><span class="p">)</span>
+            <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
+            <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Circle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="nx">w</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="nx">x</span><span class="p">,</span> <span class="nx">h</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="nx">y</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
+            <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="nx">z</span> <span class="o">+=</span> <span class="nx">zCycle</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">drawFrame</span><span class="p">(</span><span class="nx">circles</span> <span class="p">[]</span><span class="nx">Circle</span><span class="p">,</span> <span class="nx">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span> <span class="p">{</span>
+    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nx">w</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nx">h</span><span class="p">)))</span>
+    <span class="nx">gc</span> <span class="o">:=</span> <span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">NewGraphicContext</span><span class="p">(</span><span class="nx">img</span><span class="p">)</span>
+
+    <span class="c1">// 背景を描画</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="mh">0x11</span><span class="p">})</span>
+    <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Rectangle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
+    <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+    <span class="c1">// 星を描画</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">circle</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">circles</span> <span class="p">{</span>
+        <span class="nx">circle</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="nx">ratio</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// ディザリングする</span>
+    <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">palette</span><span class="p">)</span>
+    <span class="nx">draw</span><span class="p">.</span><span class="nx">FloydSteinberg</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">pm</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">image</span><span class="p">.</span><span class="nx">ZP</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nx">pm</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 4000 個の星を準備</span>
+    <span class="nx">circles</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Circle</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="nb">len</span><span class="p">(</span><span class="nx">circles</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mi">4000</span> <span class="p">{</span>
+        <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="o">:=</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span><span class="o">*</span><span class="mi">8</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span><span class="o">*</span><span class="mi">8</span><span class="o">-</span><span class="mi">4</span>
+        <span class="k">if</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Abs</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mf">0.5</span> <span class="o">&amp;&amp;</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Abs</span><span class="p">(</span><span class="nx">y</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mf">0.5</span> <span class="p">{</span>
+            <span class="k">continue</span>
+        <span class="p">}</span>
+        <span class="nx">z</span> <span class="o">:=</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span> <span class="o">*</span> <span class="nx">zCycle</span>
+        <span class="nx">circles</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">circles</span><span class="p">,</span> <span class="nx">Circle</span><span class="p">{</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">,</span> <span class="nx">z</span><span class="p">,</span> <span class="mi">5</span><span class="p">})</span>
+    <span class="p">}</span>
+
+    <span class="c1">// パレットを準備 (#000000, #111111, ..., #ffffff)</span>
+    <span class="nx">palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">16</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="nb">uint8</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x11</span><span class="p">})</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 30 個の画像を作成</span>
+    <span class="kd">var</span> <span class="nx">images</span> <span class="p">[]</span><span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span>
+    <span class="kd">var</span> <span class="nx">delays</span> <span class="p">[]</span><span class="kt">int</span>
+    <span class="nx">count</span> <span class="o">:=</span> <span class="mi">30</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">count</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">drawFrame</span><span class="p">(</span><span class="nx">circles</span><span class="p">,</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="o">/</span><span class="nb">float64</span><span class="p">(</span><span class="nx">count</span><span class="p">))</span>
+        <span class="nx">images</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">images</span><span class="p">,</span> <span class="nx">pm</span><span class="p">)</span>
+        <span class="nx">delays</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">delays</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1">// gif を出力</span>
+    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;space.gif&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="nx">gif</span><span class="p">.</span><span class="nx">EncodeAll</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">gif</span><span class="p">.</span><span class="nx">GIF</span><span class="p">{</span>
+        <span class="nx">Image</span><span class="p">:</span> <span class="nx">images</span><span class="p">,</span>
+        <span class="nx">Delay</span><span class="p">:</span> <span class="nx">delays</span><span class="p">,</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</code></pre></div>
+</section>
+
+</div>
+
+<footer>
+
+<div id="post-ad">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle my_adslot_1"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="4154719447"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<ins class="adsbygoogle my_adslot_2"
+     style="display:inline-block"
+     data-ad-client="ca-pub-5030829344952718"
+     data-ad-slot="5631452649"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+</div>
+
+<div class="share">
+
+<div class="share">
+	<a href="http://b.hatena.ne.jp/entry/tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" class="hatena-bookmark-button" data-hatena-bookmark-title="Go 言語で宇宙旅行風のアニメーション GIF を作った - てっく煮ブログ"  data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a>
+	<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" data-lang="ja" data-size="horizontal" data-text="Go 言語で宇宙旅行風のアニメーション GIF を作った - てっく煮ブログ" data-related="nitoyon" data-dnt="true">Tweet</a>
+	<div class="fb-like" data-href="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/" data-send="false" data-layout="button_count" data-width="90" data-show-faces="false"></div>
+</div>
+
+</div>
+
+<div class="entry-data">
+<div class="post-date">2016年01月18日 <span class="edit-history"><a href="https://github.com/nitoyon/tech.nitoyon.com/commits/master/_posts/ja/2016-01-18-space-travel-animated-gif.md">編集履歴</a></span></div>
+
+<div class="post-tags"><a href="/ja/blog/tags/go/">Go</a></div>
+</div>
+
+
+<div class="seealso">
+<h4>関連する記事</h4>
+<ul>
+
+<li><a href="/ja/blog/2016/01/07/go-animated-gif-gen/">Go 言語でアニメーション GIF を作成する</a></li>
+
+<li><a href="/ja/blog/2015/12/31/go-image-gen/">Go 言語でソースコードから画像生成する</a></li>
+
+</ul>
+</div>
+
+
+<div id="pager">
+	
+	<div class="previous">
+		<a href="/ja/blog/2016/01/07/go-animated-gif-gen/" rel="previous"><b>&laquo;</b><span class="title">Go 言語でアニメーション GIF を作成する</span></a>
+	</div>
+	
+	
+</div>
+
+<div id="disqus_thread"></div>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</footer>
+</div><!--entry-->
+
+</article>
+
+</div>
+</div>
+
+<footer class="page-footer">
+<h2>About</h2>
+<div class="wrapped">
+<div id="footer-right-column" class="column">
+	<div id="profile">
+		<h3>Profile</h3>
+
+		<a href="/about.html" id="prof_pic"><img alt="Photo" src="/img/icon/pic.jpg"></a>
+		<p>nitoyon (にとよん)</p>
+		<p>京都のベンチャー会社勤務。プログラマ、たまに趣味でデザイン。</p>
+		<p class="seemore"><a href="/ja/about/">詳細</a></p>
+	</div>
+
+	
+	<div id="subscribe">
+		<h3>Subscribe</h3>
+		<ul>
+			<li><a href="https://twitter.com/nitoyon" class="twitter-icon32">twitter: @nitoyon</a></li>
+			<li><a href="https://www.facebook.com/TechNiBlogJa" class="facebook-icon32">Facebook ページ</a></li>
+			<li><a href="/ja/blog/index.xml" class="rss-icon32">RSS</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="footer-left-column" class="column">
+	<div id="recententries">
+		<h3>Recent Entries</h3>
+		<ul id="recententries_list">
+			<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+		</ul>
+	</div>
+</div>
+</div><!--wrapped-->
+
+<div class="wrapped">
+	<div id="archive">
+	<h3>Archive</h3>
+	<ul id="archive_month_list">
+		<li><img src="/images/loading.gif"><noscript>(JavaScript required)</noscript></li>
+	</ul>
+	</div>
+</div><!-- wrapped -->
+
+<div class="wrap copy">
+&copy; nitoyon 2002-2014. All rights reserved.
+</div>
+</footer>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="/ja/posts.js"></script>
+<script src="/javascripts/techni.js"></script>
+<div id="fb-root"></div>
+</body>
+</html>
