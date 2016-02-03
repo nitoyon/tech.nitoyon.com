@@ -39,6 +39,8 @@ git-new-workdir <repository> <new_workdir> [<branch>]
 
 これは活用しない手はない。
 
+(追記) Git 2.5 では **worktree コマンドが正式に導入された**ので、そちらを使うのがお勧めです。詳しくは [Git 2.x シリーズの 6 つの素晴らしいフィーチャー - Atlassian Japan](http://japan.blogs.atlassian.com/2015/10/cool-features-git-2-x/) をご覧ください。
+
 
 git-new-workdir はこんなに便利
 ------------------------------
