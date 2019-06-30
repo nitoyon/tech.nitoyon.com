@@ -1,5 +1,5 @@
 module Jekyll
-  module Filters
+  module TagFilter
     # Convert tag name to URL
     #
     # input - text
@@ -27,10 +27,11 @@ module Jekyll
     # Returns the translated String "BLOG BLOG BLOG".
     # If there's no entry in the locale file, returns the given text.
     def tag2displayname(input)
-      lang = 'en'
-      lang = @context['page']['lang'] if @context['page'].has_key?('lang')
       site = @context.registers[:site]
+      lang = site.config['lang']
       Jekyll::Tag.tag2displayname(site, lang, input)
     end
   end
 end
+
+Liquid::Template.register_filter(Jekyll::TagFilter)
