@@ -19,8 +19,8 @@ module Jekyll
       end
       
       posts.each do |post|
-        if post.class != Post then
-          puts "#{post} is not Post (#{post.class})"
+        if post.class != Document then
+          puts "#{post} is not Document (#{post.class})"
           next
         end
 
