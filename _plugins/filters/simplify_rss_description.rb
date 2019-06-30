@@ -1,5 +1,5 @@
 module Jekyll
-  module Filters
+  module SimplifyRssFilters
     # Simplify RSS description.
     #
     # Remove <span class='xxx'>xxx</span> from input string.
@@ -12,3 +12,5 @@ module Jekyll
     end
   end
 end
+
+Liquid::Template.register_filter(Jekyll::SimplifyRssFilters)

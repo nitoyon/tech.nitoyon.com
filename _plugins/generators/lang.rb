@@ -25,7 +25,7 @@ module Jekyll
 
       base = File.join(site.source, '_lang')
       return unless File.exists?(base)
-      entries = Dir.chdir(base) { site.filter_entries(Dir['**/*']) }
+      entries = Dir.chdir(base) { site.reader.filter_entries(Dir['**/*']) }
       payload = site.site_payload
 
       # process each entries and languages
