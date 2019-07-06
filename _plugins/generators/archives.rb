@@ -18,7 +18,7 @@ module Jekyll
         h[k] = Hash.new { |h, k| h[k] = Array.new }
       end
       
-      posts.each do |post|
+      posts.docs.each do |post|
         if post.class != Document then
           puts "#{post} is not Document (#{post.class})"
           next
