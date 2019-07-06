@@ -94,7 +94,7 @@ module Jekyll
 
       # Find post or page
       post = nil
-      (site.posts + site.pages).each do |p|
+      (site.posts.docs + site.pages).each do |p|
         if p.url == url
           # stop enumerating if url exactly matches
           post = p
