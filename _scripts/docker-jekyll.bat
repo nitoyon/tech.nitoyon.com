@@ -4,6 +4,9 @@ REM
 REM ex) build site
 REM   docker-jekyll.bat build --config _config.yml,_config.ja.yml
 REM
+REM ex) build and start server
+REM   docker-jekyll.bat serve --config _config.yml,_config.ja.yml
+REM
 REM ex) start bash
 REM   docker-jekyll.bat bash
 
@@ -19,6 +22,7 @@ docker run ^
   --rm ^
   --volume="%~dp0/../:/srv/jekyll" ^
   --volume="%~dp0/../vendor/bundle:/usr/local/bundle" ^
+  -p 4000:4000 ^
   -it ^
   jekyll/jekyll:3.8 ^
   %CMD%
