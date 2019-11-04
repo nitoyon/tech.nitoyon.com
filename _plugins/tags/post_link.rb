@@ -67,7 +67,8 @@ module Jekyll
       (site.posts.docs + site.pages).each do |p|
         post_url = p.url
         post_url = p.cleaned_relative_path if p.class == Document
-        if post_url == url
+        post_url_without_lang = post_url.sub(/^.*\//, '/')
+        if post_url == url || post_url_without_lang == url
           # stop enumerating if url exactly matches
           post = p
           break
