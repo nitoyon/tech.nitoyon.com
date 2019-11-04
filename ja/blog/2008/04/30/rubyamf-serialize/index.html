@@ -13,7 +13,7 @@
 	<meta property="og:title" content="RubyAmf のシリアライザだけを使う"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/04/30/rubyamf-serialize/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。require &#39;app/amf&#39;require &#39;io/amf_serializer&#39;amfobj = RubyAMF::AMF::AMFObject.new()serializer = RubyAMF::IO::AMFSerializer.new(amfobj)serializer.reset_referencables..."/>
+	<meta property="og:description" content="RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。require &#39;app/amf&#39;require &#39;io/amf_serializer&#39;amfobj = RubyAMF::AMF::AMFObject.new()serializer = RubyAMF::IO::AMFSerializer.new(amfobj)serializer.reset_referencablesserializer.write..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -62,44 +62,42 @@
 
 <p>RubyAmf は元々は Flash Remoting のためのライブラリなんだけど、シリアライザだけを使うのも面白いかもしれない。</p>
 <p>例えば、これを実行すると、[3, 4] という配列をシリアライズした test というファイルができる。</p>
-<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;app/amf&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;io/amf_serializer&#39;</span>
+<pre class="ruby">require 'app/amf'
+require 'io/amf_serializer'
 
-<span class="n">amfobj</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">AMF</span><span class="o">::</span><span class="no">AMFObject</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="n">serializer</span> <span class="o">=</span> <span class="no">RubyAMF</span><span class="o">::</span><span class="no">IO</span><span class="o">::</span><span class="no">AMFSerializer</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">amfobj</span><span class="p">)</span>
+amfobj = RubyAMF::AMF::AMFObject.new()
+serializer = RubyAMF::IO::AMFSerializer.new(amfobj)
 
-<span class="n">serializer</span><span class="o">.</span><span class="n">reset_referencables</span>
-<span class="n">serializer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="o">]</span><span class="p">)</span>
+serializer.reset_referencables
+serializer.write([3, 4])
 
-<span class="nb">open</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">binmode</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span> <span class="n">serializer</span><span class="o">.</span><span class="n">stream</span>
-<span class="k">end</span>
-</pre></div>
+open(&quot;test&quot;, &quot;w&quot;) do |f|
+    f.binmode
+    f.write serializer.stream
+end</pre>
 <p>Flash 側で開くには、次のようにする。</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">net</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package{
+    import flash.display.*;
+    import flash.net.*;
+    import flash.events.*;
+    import flash.utils.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Client</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Client</span><span class="p">(){</span>
-            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">dataFormat</span> <span class="o">=</span> <span class="s2">&quot;binary&quot;</span><span class="p">;</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">));</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">bytes</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">data</span> <span class="nx">as</span> <span class="nx">ByteArray</span><span class="p">;</span>
-                <span class="nx">bytes</span><span class="p">.</span><span class="nx">objectEncoding</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// AMFのバージョン</span>
+    public class Client extends Sprite{
+        public function Client(){
+            var loader:URLLoader = new URLLoader();
+            loader.dataFormat = &quot;binary&quot;;
+            loader.load(new URLRequest('test'));
+            loader.addEventListener(&quot;complete&quot;, function(event:Event):void{
+                var bytes:ByteArray = loader.data as ByteArray;
+                bytes.objectEncoding = 0; // AMFのバージョン
 
-                <span class="c1">// AS3 でデシリアライズ</span>
-                <span class="kd">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">readObject</span><span class="p">();</span>
-                <span class="nx">trace</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span> <span class="c1">// [3, 4]</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+                // AS3 でデシリアライズ
+                var obj:Object = bytes.readObject();
+                trace(obj); // [3, 4]
+            });
+        }
+    }
+}</pre>
 <p>trace の結果、[3, 4] と表示される。Ruby でシリアライズした配列を、ActionScript で復元できたことになる。</p>
 <p>今回は静的なファイルに書き込んだけど、Ruby を CGI として使って動的にシリアライズした結果を返してもよいだろう。Flash Remoting を SOAP 的だと解釈するなら、こちらの方法は REST 的。リクエストがバイナリじゃない分、デバッグはしやすいと思う。</p>
 <p>以下、細かい補足。</p>

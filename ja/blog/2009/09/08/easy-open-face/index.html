@@ -69,25 +69,23 @@
 <ol><li>TextField を表示</li><li>TextField に <code>GlowFilter</code> で縁取りを作成する</li></ol>
 <p>通常、<code>GlowFilter</code> は、ぼんやりと光る効果のために利用することが多い。しかし、<code>strength</code> を大きい値にすることで「ぼんやり」が「くっきり」になる。</p>
 <p><code>GlowFilter</code> のコンストラクタは次のような定義になっている。</p>
-<div class="highlight"><pre><span class="nx">GlowFilter</span><span class="p">(</span>
-  <span class="nx">color</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="mh">0xFF0000</span><span class="p">,</span>  <span class="c1">// 光の色</span>
-  <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>     <span class="c1">// 光の透明度</span>
-  <span class="nx">blurX</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span>     <span class="c1">// 水平方向のぼかし量</span>
-  <span class="nx">blurY</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span>     <span class="c1">// 垂直方向のぼかし量</span>
-  <span class="nx">strength</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>    <span class="c1">// 強さ（後述）</span>
-  <span class="nx">quality</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>        <span class="c1">// 適用回数</span>
-  <span class="nx">inner</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>  <span class="c1">// 内側かどうか</span>
-  <span class="nx">knockout</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">)</span> <span class="c1">// trueならグロー以外を消す</span>
-</pre></div>
+<pre class="javascript">GlowFilter(
+  color:uint = 0xFF0000,  // 光の色
+  alpha:Number = 1.0,     // 光の透明度
+  blurX:Number = 6.0,     // 水平方向のぼかし量
+  blurY:Number = 6.0,     // 垂直方向のぼかし量
+  strength:Number = 2,    // 強さ（後述）
+  quality:int = 1,        // 適用回数
+  inner:Boolean = false,  // 内側かどうか
+  knockout:Boolean = false) // trueならグロー以外を消す</pre>
 <p>たとえば、幅 8px の縁取りを行うには次のように <code>GlowFilter</code> を利用する。</p>
-<div class="highlight"><pre><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span>
-  <span class="mh">0x000000</span><span class="p">,</span>   <span class="c1">// color (縁取りの色)</span>
-  <span class="mf">1.0</span><span class="p">,</span>        <span class="c1">// alpha</span>
-  <span class="mi">8</span><span class="p">,</span>          <span class="c1">// blurX (X方向の幅: 8px)</span>
-  <span class="mi">8</span><span class="p">,</span>          <span class="c1">// blurY (Y方向の幅: 8px)</span>
-  <span class="mi">16</span>          <span class="c1">// strength (ある程度大きい値)</span>
-<span class="p">)</span>
-</pre></div>
+<pre class="javascript">new GlowFilter(
+  0x000000,   // color (縁取りの色)
+  1.0,        // alpha
+  8,          // blurX (X方向の幅: 8px)
+  8,          // blurY (Y方向の幅: 8px)
+  16          // strength (ある程度大きい値)
+)</pre>
 <p><code>strength</code> が大きいときには <code>blurX</code> や <code>blurY</code> でぼかした結果を塗りにする感じだ。Photoshop 的な言葉で表現すると「blur した後に <code>strength</code> の大きさに応じてトーンカーブを下方向に移動させる」というイメージだ。</p>
 <p><code>GlowFilter</code> の代わりに <code>GradientGlowFilter</code> を使えば、複数の色での袋文字を作れそうだ。</p>
 <h1>弱点</h1>
@@ -98,35 +96,34 @@
 <h1>まとめ</h1>
 <p>ご利用は計画的に。</p>
 <p>ソースコードは以下に（28行）。</p>
-<div class="highlight"><pre><span class="c1">// Easy Open Face with GlowFilter</span>
-<span class="c1">//--------------------------------------------------</span>
-<span class="c1">// GlowFilter で簡単袋文字</span>
-<span class="kr">package</span><span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">// Easy Open Face with GlowFilter
+//--------------------------------------------------
+// GlowFilter で簡単袋文字
+package{
+import flash.display.*;
+import flash.filters.GlowFilter;
+import flash.text.*;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;450&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;80&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">EasyOpenFaceWithGlowFilter</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">EasyOpenFaceWithGlowFilter</span><span class="p">(){</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#ffffff&quot;, width=&quot;450&quot;, height=&quot;80&quot;)]
+public class EasyOpenFaceWithGlowFilter extends Sprite{
+    public function EasyOpenFaceWithGlowFilter(){
+        stage.scaleMode = &quot;noScale&quot;;
 
-        <span class="c1">// initialize canvas.</span>
-        <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">())</span> <span class="nx">as</span> <span class="nx">Bitmap</span><span class="p">;</span>
+        // initialize canvas.
+        var bmp:Bitmap = addChild(new Bitmap()) as Bitmap;
 
-        <span class="c1">// Show original text (input)</span>
-        <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;50&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="o">&gt;</span><span class="nx">HELLO</span> <span class="nx">WORLD</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.autoSize = &quot;left&quot;;
+        text.type = &quot;input&quot;;
+        text.htmlText = &lt;font size=&quot;50&quot; color=&quot;#ffffff&quot;&gt;HELLO WORLD&lt;/font&gt;.toXMLString();
+        addChild(text);
 
-        <span class="c1">// Glow it</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">)];</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // Glow it
+        text.filters = [new GlowFilter(0x000000, 1, 8, 8, 16, 1)];
+    }
+}
+}</pre>
 </section>
 
 </div>

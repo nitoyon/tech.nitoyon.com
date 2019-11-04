@@ -69,46 +69,45 @@
 <h1>やってること</h1>
 <ol><li><code>TextField</code> を表示</li><li>マスクされる <code>Sprite</code> を作成</li><li><code>Sprite</code> のマスクを <code>TextField</code> に設定する</li><li><code>TextField</code> と <code>Sprite</code> の両方の <code>cacheAsBitmap</code> を <code>true</code> にする</li></ol>
 <p>ソースコードは以下に（39行）。</p>
-<div class="highlight"><pre><span class="c1">// Easy Dynamic Text Mask</span>
-<span class="kr">package</span><span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">// Easy Dynamic Text Mask
+package{
+import flash.display.*;
+import flash.events.Event;
+import flash.text.*;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;450&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;80&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">EasyDynamicTextMask</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">EasyDynamicTextMask</span><span class="p">(){</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#ffffff&quot;, width=&quot;450&quot;, height=&quot;80&quot;)]
+public class EasyDynamicTextMask extends Sprite{
+    public function EasyDynamicTextMask(){
+        stage.scaleMode = &quot;noScale&quot;;
 
-        <span class="c1">// Show original text (input)</span>
-        <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;50&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="o">&gt;</span><span class="nx">HELLO</span> <span class="nx">WORLD</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.type = &quot;input&quot;;
+        text.autoSize = &quot;left&quot;;
+        text.htmlText = &lt;font size=&quot;50&quot; color=&quot;#000000&quot;&gt;HELLO WORLD&lt;/font&gt;.toXMLString();
+        addChild(text);
 
-        <span class="c1">// Create sprite</span>
-        <span class="kd">var</span> <span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">sprite</span><span class="p">);</span>
+        // Create sprite
+        var sprite:Sprite = new Sprite();
+        addChild(sprite);
 
-        <span class="c1">// Set text as mask</span>
-        <span class="nx">sprite</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">text</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="nx">sprite</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        // Set text as mask
+        sprite.mask = text;
+        text.cacheAsBitmap = sprite.cacheAsBitmap = true;
         
-        <span class="c1">// Draw sprite</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">450</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">50</span><span class="p">);</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        // Draw sprite
+        addEventListener(&quot;enterFrame&quot;, function(event:Event):void{
+            sprite.graphics.beginFill(Math.random() * 0xffffff);
+            sprite.graphics.drawCircle(Math.random() * 450, Math.random() * 80, Math.random() * 50);
+            sprite.graphics.endFill();
 
-            <span class="k">if</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">.</span><span class="mi">02</span><span class="p">){</span>
-                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            if (Math.random() &lt; .02){
+                sprite.graphics.clear();
+            }
+        });
+    }
+}
+}</pre>
 </section>
 
 </div>

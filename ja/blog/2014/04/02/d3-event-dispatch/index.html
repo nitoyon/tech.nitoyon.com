@@ -13,7 +13,7 @@
 	<meta property="og:title" content="D3.js で自作クラスにイベント発行機能を追加する"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2014/04/02/d3-event-dispatch/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="D3.js を使っていると、自作クラスのイベント発行も D3.js を使いたくなる。そんなときには d3.dispatch を使うとよい。使う側の実装イメージしやすいように、最初に使う側のコードを示しておく。var myButton = new MyButton(d3.select(&quot;button&quot;));myButton.on(&quot;myclick&quot;, function(e) { alert(e.name); // MyEvent console.log(this, e); // MyButton, { name: &quot;MyEvent&amp;quot..."/>
+	<meta property="og:description" content="D3.js を使っていると、自作クラスのイベント発行も D3.js を使いたくなる。そんなときには d3.dispatch を使うとよい。使う側の実装イメージしやすいように、最初に使う側のコードを示しておく。var myButton = new MyButton(d3.select(&quot;button&quot;));myButton.on(&quot;myclick&quot;, function(e) { alert(e.name); // MyEvent console.log(this, e); // MyButton, { name: &quot;MyEvent&quot;, MouseEvent }});こんな感じで、自作の M..."/>
 	<meta property="og:image" content="http://farm4.staticflickr.com/3767/10434503954_f41fb09ca6_o.jpg"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -65,10 +65,10 @@
 <h1>使う側の実装</h1>
 
 <p>イメージしやすいように、最初に使う側のコードを示しておく。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">));</span>
-<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="dl">"</span><span class="s2">button</span><span class="dl">"</span><span class="p">));</span>
+<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">"</span><span class="s2">myclick</span><span class="dl">"</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">alert</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span> <span class="c1">// MyEvent</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: &quot;MyEvent&quot;, MouseEvent }</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: "MyEvent", MouseEvent }</span>
 <span class="p">});</span>
 </code></pre></div>
 <p>こんな感じで、自作の <code>MyButton</code> クラスで <code>myclick</code> イベントを発行したい。</p>
@@ -78,10 +78,10 @@
 <p>では、さっそく <code>MyButton</code> の実装。最初はコンストラクターから。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// ボタンがクリックされたときに onClick を呼ぶ</span>
-  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
 
   <span class="c1">// myclick イベントを発行する dispatcher を作成</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="dl">"</span><span class="s2">myclick</span><span class="dl">"</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
 <p><code>d3.dispatch</code> の引数に「発行したいイベント名」を渡して、dispatcher オブジェクトを取得している。複数のイベントを出す場合は <code>d3.dispatch(&quot;event1&quot;, &quot;event2&quot;);</code> のようにする。</p>
@@ -98,8 +98,8 @@
 <p>イベントの発行処理からみていこう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyButton</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">onClick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">.</span><span class="nx">myclick</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="p">{</span>
-    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;MyEvent&quot;</span><span class="p">,</span>
-    <span class="nx">event</span><span class="o">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
+    <span class="na">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">MyEvent</span><span class="dl">"</span><span class="p">,</span>
+    <span class="na">event</span><span class="p">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
   <span class="p">});</span>
 <span class="p">};</span>
 </code></pre></div>
@@ -116,11 +116,11 @@
 </code></pre></div>
 <p>単純に中継しているだけなので、もっと簡略化して書けそうである。そう、<a href="https://github.com/mbostock/d3/wiki/Internals#d3_rebind"><code>d3.rebind</code></a> を使えばね。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="dl">"</span><span class="s2">myclick</span><span class="dl">"</span><span class="p">);</span>
 
   <span class="c1">// !!! ここが追加 !!!</span>
-  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="s2">&quot;on&quot;</span><span class="p">);</span>
+  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="dl">"</span><span class="s2">on</span><span class="dl">"</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>コンストラクターに 1 行追加したおかげで、<code>MyButton.prototype.on()</code> が不要になった。コードは短くなったが、<code>d3.rebind()</code> の学習コストが増えたので微妙なところではある。</p>
@@ -134,7 +134,7 @@
 <span class="kd">function</span> <span class="nx">d3_rebind</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">source</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">method</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">source</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">value</span> <span class="o">===</span> <span class="nx">source</span> <span class="o">?</span> <span class="nx">target</span> <span class="o">:</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">value</span> <span class="o">===</span> <span class="nx">source</span> <span class="p">?</span> <span class="nx">target</span> <span class="p">:</span> <span class="nx">value</span><span class="p">;</span>
   <span class="p">};</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -142,29 +142,29 @@
 
 <p>完成後の全体のソースコードを貼っておく。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://d3js.org/d3.v3.min.js&quot;</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"http://d3js.org/d3.v3.min.js"</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;body&gt;</span>
 <span class="nt">&lt;button&gt;</span>click me<span class="nt">&lt;/button&gt;</span>
 
 <span class="nt">&lt;script&gt;</span>
 <span class="kd">function</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">selector</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">);</span>
-  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="s2">&quot;on&quot;</span><span class="p">);</span>
+  <span class="nx">selector</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">(</span><span class="dl">"</span><span class="s2">myclick</span><span class="dl">"</span><span class="p">);</span>
+  <span class="nx">d3</span><span class="p">.</span><span class="nx">rebind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">,</span> <span class="dl">"</span><span class="s2">on</span><span class="dl">"</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="nx">MyButton</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">onClick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">dispatcher</span><span class="p">.</span><span class="nx">myclick</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="p">{</span>
-    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;MyEvent&quot;</span><span class="p">,</span>
-    <span class="nx">event</span><span class="o">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
+    <span class="na">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">MyEvent</span><span class="dl">"</span><span class="p">,</span>
+    <span class="na">event</span><span class="p">:</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">event</span>
   <span class="p">});</span>
 <span class="p">};</span>
 
-<span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">));</span>
-<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;myclick&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+<span class="kd">var</span> <span class="nx">myButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyButton</span><span class="p">(</span><span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="dl">"</span><span class="s2">button</span><span class="dl">"</span><span class="p">));</span>
+<span class="nx">myButton</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="dl">"</span><span class="s2">myclick</span><span class="dl">"</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">alert</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span> <span class="c1">// MyEvent</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: &quot;MyEvent&quot;, MouseEvent }</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span> <span class="c1">// MyButton, { name: "MyEvent", MouseEvent }</span>
 <span class="p">});</span>
 <span class="nt">&lt;/script&gt;</span>
 <span class="nt">&lt;/body&gt;</span>

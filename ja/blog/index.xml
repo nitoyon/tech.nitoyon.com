@@ -6,7 +6,7 @@
 		<description>All Technology is Boiled in This Site.</description>
 		<language>ja</language>
 		<copyright>Copyright nitoyon.</copyright>
-		<lastBuildDate>Mon, 18 Jan 2016 01:33:01 +0000</lastBuildDate>
+		<lastBuildDate>Mon, 04 Nov 2019 10:33:44 +0000</lastBuildDate>
 		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
 		<atom:link href="http://tech.nitoyon.com/ja/blog/index.xml" rel="self" type="application/rss+xml" />
 
@@ -16,9 +16,9 @@
 			<link>http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/</link>
 			<guid>http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/</guid>
 			<pubDate>Mon, 18 Jan 2016 00:00:00 +0900</pubDate>
-			<description><![CDATA[<p>宇宙旅行風のアニメーション GIF を Golang で生成してみました。完成品はこちら。</p>
+			<description><![CDATA[<p>宇宙旅行風のアニメーション GIF を Golang で生成してみた。完成品はこちら。</p>
 
-<p><img src="/ja/blog/2016/01/18/space-travel-animated-gif/space.gif" width="500" height="250"></p>
+<p><img src="http://img.gifmagazine.net/gifmagazine/images/704479/original.gif" width="500" height="250" alt="宇宙旅行風 (463KB)"></p>
 
 <p>ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。</p>
 
@@ -27,13 +27,14 @@
 <p>Golang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、<a href="https://github.com/llgcode/draw2d">draw2d</a> を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。</p>
 
 <p>次のコードでは、<code>draw2dimg</code> と <code>draw2dkit</code> を使って、#808080 の四角を描画する例。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
 import (
-    &quot;github.com/llgcode/draw2d/draw2dimg&quot;
-    &quot;github.com/llgcode/draw2d/draw2dkit&quot;
-    &quot;image&quot;
-    &quot;image/color&quot;
+    "github.com/llgcode/draw2d/draw2dimg"
+    "github.com/llgcode/draw2d/draw2dkit"
+    "image"
+    "image/color"
 )
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
     gc.Close()
 }
 </code></pre></div>
+
 <p><code>draw2dimg.NewGraphicContext</code> は引数に <code>image.RGBA</code> (透明度つきの RGB 画像) を渡す必要があるんだけど、アニメーション GIF を <code>gif.EncodeAll</code> で作るときには <code>image.Palettted</code> (パレットの色だけを使った画像) を渡さなきゃいけない。</p>
 
 <p>つまり、draw2d でアニメーション GIF を作るには、次のような処理が必要になる。</p>
@@ -63,12 +65,13 @@ func main() {
 <p>1 枚の GIF を生成する <code>gif.Encode</code> は自動的に <code>image.RBGA</code> を <code>image.Paletted</code> に変換するんだけど、アニメーション GIF を生成する <code>gif.EncodeAll</code> は変換してくれない。</p>
 
 <p>なので、自分で変換処理を実装する必要がある。といっても、<code>gif.Encode</code> と同じように、標準ライブラリで用意された <code>draw.FloydSteinberg</code> を使って <a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89-%E3%82%B9%E3%82%BF%E3%82%A4%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B0%E3%83%BB%E3%83%87%E3%82%A3%E3%82%B6%E3%83%AA%E3%83%B3%E3%82%B0">フロイド-スタインバーグ・ディザリング</a> を使うと簡単。こんな風に。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
 import (
-    &quot;image&quot;
-    &quot;image/color&quot;
-    &quot;image/draw&quot;
+    "image"
+    "image/color"
+    "image/draw"
 )
 
 func main() {
@@ -85,21 +88,23 @@ func main() {
     draw.FloydSteinberg.Draw(pm, img.Bounds(), img, image.ZP)
 }
 </code></pre></div>
+
 <h1>ソースコード全体</h1>
 
 <p>全部で 100 行になってます。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
 import (
-    &quot;github.com/llgcode/draw2d/draw2dimg&quot;
-    &quot;github.com/llgcode/draw2d/draw2dkit&quot;
-    &quot;image&quot;
-    &quot;image/color&quot;
-    &quot;image/draw&quot;
-    &quot;image/gif&quot;
-    &quot;math&quot;
-    &quot;math/rand&quot;
-    &quot;os&quot;
+    "github.com/llgcode/draw2d/draw2dimg"
+    "github.com/llgcode/draw2d/draw2dkit"
+    "image"
+    "image/color"
+    "image/draw"
+    "image/gif"
+    "math"
+    "math/rand"
+    "os"
 )
 
 var w, h float64 = 500, 250
@@ -181,14 +186,15 @@ func main() {
     }
 
     // gif を出力
-    f, _ := os.OpenFile(&quot;space.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, _ := os.OpenFile("space.gif", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     gif.EncodeAll(f, &amp;gif.GIF{
         Image: images,
         Delay: delays,
     })
 }
-</code></pre></div>]]></description>
+</code></pre></div>
+]]></description>
 		</item>
 
 		<item>
@@ -217,14 +223,15 @@ func main() {
 <p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/gopher.gif" width="200" height="200"></center></p>
 
 <p>生成するためのコードはこんな感じ。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
-import &quot;image&quot;
-import &quot;image/gif&quot;
-import &quot;os&quot;
+import "image"
+import "image/gif"
+import "os"
 
 func main() {
-    files := []string{&quot;g1.gif&quot;, &quot;g2.gif&quot;,&quot;g3.gif&quot;, &quot;g2.gif&quot;}
+    files := []string{"g1.gif", "g2.gif","g3.gif", "g2.gif"}
 
     // 各フレームの画像を GIF で読み込んで outGif を構築する
     outGif := &amp;gif.GIF{}
@@ -238,11 +245,12 @@ func main() {
     }
 
     // out.gif に保存する
-    f, _ := os.OpenFile(&quot;out.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, _ := os.OpenFile("out.gif", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     gif.EncodeAll(f, outGif)
 }
 </code></pre></div>
+
 <p>注意したいポイントは次の通り。</p>
 
 <ul>
@@ -261,6 +269,7 @@ func main() {
 <p><center><img src="/ja/blog/2016/01/07/go-animated-gif-gen/rgb.gif" width="240" height="240"></center></p>
 
 <p>各フレームの画像を Go 言語で描画して <code>[]*image.Paletted</code> を作って、<code>gif.EncodeAll</code> に渡している。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">    var images []*image.Paletted
     var delays []int
 
@@ -274,22 +283,25 @@ func main() {
     }
 
     // rgb.gif に保存する
-    f, _ := os.OpenFile(&quot;rgb.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, _ := os.OpenFile("rgb.gif", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     gif.EncodeAll(f, &amp;gif.GIF{
         Image: images,
         Delay: delays,
     })
+
 </code></pre></div>
+
 <p>全体のコードはこんな感じ。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
 import (
-    &quot;image&quot;
-    &quot;image/color&quot;
-    &quot;image/gif&quot;
-    &quot;math&quot;
-    &quot;os&quot;
+    "image"
+    "image/color"
+    "image/gif"
+    "math"
+    "os"
 )
 
 type Circle struct {
@@ -350,7 +362,7 @@ func main() {
         }
     }
 
-    f, _ := os.OpenFile(&quot;rgb.gif&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, _ := os.OpenFile("rgb.gif", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     gif.EncodeAll(f, &amp;gif.GIF{
         Image: images,
@@ -358,6 +370,7 @@ func main() {
     })
 }
 </code></pre></div>
+
 <p>以上です。</p>
 ]]></description>
 		</item>
@@ -376,12 +389,13 @@ func main() {
 <h1>一番簡単な例</h1>
 
 <p>簡単な画像を生成する例は次の通り。1つ点を打つだけの例。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
-import &quot;image&quot;
-import &quot;image/color&quot;
-import &quot;image/png&quot;
-import &quot;os&quot;
+import "image"
+import "image/color"
+import "image/png"
+import "os"
 
 func main() {
     // 100×50 の画像を作成する
@@ -391,11 +405,12 @@ func main() {
     img.Set(2, 3, color.RGBA{255, 0, 0, 255})
 
     // out.png に保存する
-    f, _ := os.OpenFile(&quot;out.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, _ := os.OpenFile("out.png", os.O_WRONLY|os.O_CREATE, 0600)
     defer f.Close()
     png.Encode(f, img)
 }
 </code></pre></div>
+
 <h1>もっと複雑な例</h1>
 
 <p>こんな画像を生成してみる。</p>
@@ -403,15 +418,16 @@ func main() {
 <p><center><img src="rgb1.png" width="280" height="240"></center></p>
 
 <p>コードはこうなった。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">package main
 
 import (
-    &quot;fmt&quot;
-    &quot;image&quot;
-    &quot;image/color&quot;
-    &quot;image/png&quot;
-    &quot;math&quot;
-    &quot;os&quot;
+    "fmt"
+    "image"
+    "image/color"
+    "image/png"
+    "math"
+    "os"
 )
 
 type Circle struct {
@@ -450,7 +466,7 @@ func main() {
         }
     }
 
-    f, err := os.OpenFile(&quot;rgb.png&quot;, os.O_WRONLY|os.O_CREATE, 0600)
+    f, err := os.OpenFile("rgb.png", os.O_WRONLY|os.O_CREATE, 0600)
     if err != nil {
         fmt.Println(err)
         return
@@ -459,9 +475,11 @@ func main() {
     png.Encode(f, m)
 }
 </code></pre></div>
+
 <p><code>Circle</code> 構造体を定義して、円の中に入っているかどうかを判定する処理をメソッドとして定義している。</p>
 
 <p>ちょっとしたテクニックとして、色を決定する部分は次のようにしている。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">c := color.RGBA{
     cr.Brightness(float64(x), float64(y)),
     cg.Brightness(float64(x), float64(y)),
@@ -469,6 +487,7 @@ func main() {
     255,
 }
 </code></pre></div>
+
 <p>赤い色の中のときは赤色成分は <code>255</code>、外のときは <code>0</code> としている。他の成分も同じ。</p>
 
 <h1>周辺をぼかしてみる</h1>
@@ -478,6 +497,7 @@ func main() {
 <p><center><img src="rgb2.png" width="280" height="240"></center></p>
 
 <p>円の中のときに <code>return 255</code> としていた部分を書きかえるだけでできた。</p>
+
 <div class="highlight"><pre><code class="language-go" data-lang="go">func (c *Circle) Brightness(x, y float64) uint8 {
     var dx, dy float64 = c.X - x, c.Y - y
     d := math.Sqrt(dx*dx+dy*dy) / c.R
@@ -490,6 +510,7 @@ func main() {
     }
 }
 </code></pre></div>
+
 <p><code>math.Pow</code> で 5 乗しているのは、ぼけすぎないようにするための工夫。</p>
 ]]></description>
 		</item>
@@ -678,8 +699,9 @@ func main() {
 </blockquote>
 
 <p>ざっと上記のページを見た感じでは、次のような感じでデータバインディングに使うプロパティーを宣言しておくらしい。</p>
+
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  Polymer({
-    is: &#39;custom-element&#39;,
+    is: 'custom-element',
     properties: {
       someProp: {
         type: String,
@@ -688,6 +710,7 @@ func main() {
     }
   });
 </code></pre></div>
+
 <p>スレッドには、他にも「ブラウザーでは使われないかもしれないけど、Node.js のエコシステムには大きな影響があるかもしれないから、そんなに急に削除しないでくれ」と Node.js の中の人が書き込んでいたり、「Firefox の <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/watch">Object.watch()</a> はデバッガーで使われてるからすぐに削除されることはないはず」といった書き込みがあったりして興味深い。</p>
 
 <h1>まとめ</h1>

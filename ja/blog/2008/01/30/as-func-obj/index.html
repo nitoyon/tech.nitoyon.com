@@ -75,44 +75,40 @@
 <p>Proxy クラスを使ってみたけども、キャスト時の挙動は決められないようだ。</p>
 <h1>ひらめいた</h1>
 <p>Object にしちゃえばよかったんだ！</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kr">const</span> <span class="nx">$</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">){</span>
-            <span class="nx">$</span><span class="p">.</span><span class="nx">each</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;each called&quot;</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+<pre class="javascript">package {
+    public const $:Object = function():void {
+        if(!$.each){
+            $.each = function():void{
+                trace(&quot;each called&quot;);
+            }
+        }
 
-        <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;$ called&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        trace(&quot;$ called&quot;);
+    }
+}</pre>
 <p>Object なので $.each のチェックは実行時。よって、コンパイルが通る。</p>
 <p>実行結果はこんな具合。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">();</span>       <span class="c1">// $ called</span>
-<span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">();</span>  <span class="c1">// each called</span>
-</pre></div>
+<pre class="javascript">$();       // $ called
+$.each();  // each called</pre>
 <p>ただ、これだと $() を呼んだあとじゃないと、$.each が使えない。</p>
 <p>ちょっと泥臭く対応したらこうなった。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kr">const</span> <span class="nx">$</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nb">Function</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;$ called&quot;</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="nx">f</span><span class="p">.</span><span class="nx">each</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;each called&quot;</span><span class="p">);</span>
-        <span class="p">}</span>
+<pre class="javascript">package {
+    public const $:Object = function():Function {
+        var f:Function = function():void{
+            trace(&quot;$ called&quot;);
+        }
+        f.each = function():void{
+            trace(&quot;each called&quot;);
+        }
 
-        <span class="k">return</span> <span class="nx">f</span><span class="p">;</span>
-    <span class="p">}();</span>
-<span class="p">}</span>
-</pre></div>
+        return f;
+    }();
+}</pre>
 <p>無名関数の中で、のちほど $ になる関数 f を宣言しておいて、each を代入している。</p>
 <p>$ 自体は public なオブジェクトなのでプログラムの最初のほうで初期化される。初期化時に無名関数が評価されて、each が設定された f が $ に代入されるというわけだ。</p>
 <p>実行結果はこんな具合。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">();</span>  <span class="c1">// each called</span>
-<span class="nx">$</span><span class="p">();</span>       <span class="c1">// $ called</span>
-</pre></div>
+<pre class="javascript">$.each();  // each called
+$();       // $ called</pre>
 <h1>感想</h1>
 <p>なんだか JavaScript ちっくで楽しい。同じようにすれば、JavaScript 風のクラス定義もできるような気がする。</p>
 </section>

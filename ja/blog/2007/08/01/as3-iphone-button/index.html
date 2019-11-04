@@ -66,58 +66,57 @@
 <p>参考にしたサイトは <a href="http://blog.jotlet.net/2007/07/05/iphone-style-icon-tutorial/">iPhone style icon tutorial ≪ Jotlet Developer Blog</a>。Photoshop 用のチュートリアルとはいえ、使っている機能は、角丸四角、ドロップシャドウ、楕円、グラデーション、オーバーレイ(レイヤースタイル)程度だったので、ほとんど苦労なく AS3 に移植できました。</p>
 <p>完成品が上の画像。文字はあとから Photoshop を使って追加しましたが、それ以外のところは正真正銘、AS3 だけで描画しています。</p>
 <p>ソースは以下の通り。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
     
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">iPhoneButton</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">color</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x1960CA</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">ROUND</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+    public class iPhoneButton extends Sprite
+    {
+        private const color:int = 0x1960CA;
+        private const SIZE:int = 60;
+        private const ROUND:int = 20;
         
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">iPhoneButton</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+        public function iPhoneButton():void
+        {
+            var matrix:Matrix = new Matrix();
+            matrix.createGradientBox(SIZE, SIZE, Math.PI / 2);
             
-            <span class="kd">var</span> <span class="nx">base</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">base</span><span class="p">);</span>
+            var base:Shape = new Shape();
+            base.graphics.beginFill(color);
+            base.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            addChild(base);
 
-            <span class="kd">var</span> <span class="nx">border</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">border</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-            <span class="nx">border</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineGradientStyle</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">border</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">border</span><span class="p">.</span><span class="nx">blendMode</span> <span class="o">=</span> <span class="nx">BlendMode</span><span class="p">.</span><span class="nx">OVERLAY</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">border</span><span class="p">);</span>
+            var border:Shape = new Shape();
+            border.graphics.lineStyle(1, 0xffffff, 1);
+            border.graphics.lineGradientStyle(&quot;linear&quot;, [0xffffff, 0xffffff, 0xffffff], [1, 0.3, 1], [0, 128, 255], matrix);
+            border.graphics.drawRoundRect(1, 1, SIZE - 2, SIZE - 2, ROUND, ROUND);
+            border.blendMode = BlendMode.OVERLAY;
+            addChild(border);
 
-            <span class="kd">var</span> <span class="nx">glowTop</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">glowTop</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">glowTop</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawEllipse</span><span class="p">(</span><span class="o">-</span><span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="nx">glowTop</span><span class="p">.</span><span class="nx">blendMode</span> <span class="o">=</span> <span class="nx">BlendMode</span><span class="p">.</span><span class="nx">OVERLAY</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">glowTop</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">mask</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">mask</span><span class="p">);</span>
-            <span class="nx">glowTop</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">mask</span><span class="p">;</span>
+            var glowTop:Shape = new Shape();
+            glowTop.graphics.beginGradientFill(&quot;linear&quot;, [0xffffff, 0xffffff], [1, 0.2], [0, 128], matrix);
+            glowTop.graphics.drawEllipse(-SIZE / 2, -SIZE / 2, SIZE * 2, SIZE);
+            glowTop.blendMode = BlendMode.OVERLAY;
+            addChild(glowTop);
+            var mask:Shape = new Shape();
+            mask.graphics.beginFill(0);
+            mask.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            addChild(mask);
+            glowTop.mask = mask;
 
-            <span class="kd">var</span> <span class="nx">glowBottom</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">glowBottom</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">224</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">glowBottom</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">glowBottom</span><span class="p">.</span><span class="nx">blendMode</span> <span class="o">=</span> <span class="nx">BlendMode</span><span class="p">.</span><span class="nx">OVERLAY</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">glowBottom</span><span class="p">);</span>
+            var glowBottom:Shape = new Shape();
+            glowBottom.graphics.beginGradientFill(&quot;linear&quot;, [0xffffff, 0xffffff], [0, 1], [224, 255], matrix);
+            glowBottom.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            glowBottom.blendMode = BlendMode.OVERLAY;
+            addChild(glowBottom);
 
-            <span class="kd">var</span> <span class="nx">filter</span><span class="o">:</span><span class="nx">DropShadowFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DropShadowFilter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mh">0x000000</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">);</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="nx">filter</span><span class="p">];</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            var filter:DropShadowFilter = new DropShadowFilter(2, 90, 0x000000, 0.7);
+            base.filters = [filter];
+        }
+    }
+}</pre>
 <p>(2007.08.07 追記)</p>
 <ul><li>b:<a href="http://d.hatena.ne.jp/trickstar_os/">id:trickstar_os</a> さんのコメントを受けて、Shape を使うようにしました。</li><li>glowTop がはみ出ていたので、マスクで隠すようにしました。</li></ul>
 

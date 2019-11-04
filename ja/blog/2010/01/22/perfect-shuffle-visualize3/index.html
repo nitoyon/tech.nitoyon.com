@@ -65,96 +65,95 @@
 <div style="text-align:center;width:465px;"><script type="text/javascript" src="http://wonderfl.net/blogparts/sGG8/js"></script><a href="http://wonderfl.net/code/c90ff184a40f4e4c20df21031d145447c5fcd0d4" title="Perfect Shuffle Visualization 3 - wonderfl build flash online">Perfect Shuffle Visualization 3 - wonderfl build flash online</a></div>
 <p>長々と3回に渡ってやってきたけど、「<a href="http://d.hatena.ne.jp/nishiohirokazu/20100107/1262835414">続: パーフェクトシャッフルは何回で元に戻るか - 西尾泰和のはてなダイアリー</a> の直線が円になるところをアニメーションさせてみたい」という当初の欲望は果たせたので満足した。</p>
 <p>以下、ソース（104行）。</p>
-<div class="highlight"><pre><span class="kd">package</span> <span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nb">Event</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nb">Point</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nb">BlurFilter</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">BetweenAS3</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">tweens</span><span class="p">.</span><span class="nx">ITween</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">betweenas3</span><span class="p">.</span><span class="nx">easing</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">frocessing</span><span class="p">.</span><span class="nx">color</span><span class="p">.</span><span class="nx">ColorHSV</span><span class="o">;</span>
+<pre class="actionscript">package {
+import flash.display.*;
+import flash.events.Event;
+import flash.geom.Point;
+import flash.filters.BlurFilter;
+import org.libspark.betweenas3.BetweenAS3;
+import org.libspark.betweenas3.tweens.ITween;
+import org.libspark.betweenas3.easing.*;
+import frocessing.color.ColorHSV;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">PerfectShuffleVisualization3</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
-    <span class="kd">public</span> <span class="k">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">6400</span><span class="o">;</span>
-    <span class="kd">public</span> <span class="k">var</span> <span class="nx">d</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
-    <span class="kd">public</span> <span class="k">var</span> <span class="nx">angle</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">3</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="k">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">NUM</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">POINT_PER_LINE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">CANVAS_SIZE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">475</span><span class="o">;</span>
+[SWF(backgroundColor=&quot;0x000000&quot;)]
+public class PerfectShuffleVisualization3 extends Sprite {
+    public var r:Number = 6400;
+    public var d:Number = 300;
+    public var angle:Number = 3;
+    private var canvas:Sprite = new Sprite();
+    private const NUM:int = 5;
+    private const SIZE:int = 30;
+    private const POINT_PER_LINE:Number = 10;
+    private const CANVAS_SIZE:Number = 475;
 
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">PerfectShuffleVisualization3</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
+    public function PerfectShuffleVisualization3() {
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
 
-        <span class="c1">// draw background</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="nx">CANVAS_SIZE</span><span class="o">,</span> <span class="nx">CANVAS_SIZE</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span> 
+        // draw background
+        graphics.beginFill(0x000000);
+        graphics.drawRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        graphics.endFill(); 
 
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">CANVAS_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">CANVAS_SIZE</span> <span class="sr">/ 2 + d /</span> <span class="mi">2</span><span class="o">;</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">BlurFilter</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">3</span><span class="p">)];</span>
-        <span class="nx">draw</span><span class="p">();</span>
+        addChild(canvas);
+        canvas.x = CANVAS_SIZE / 2;
+        canvas.y = CANVAS_SIZE / 2 + d / 2;
+        canvas.filters = [new BlurFilter(3, 3)];
+        draw();
 
-        <span class="k">var</span> <span class="nx">tween</span><span class="o">:</span><span class="nx">ITween</span> <span class="o">=</span> <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">parallel</span><span class="p">(</span>
-            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">r</span><span class="o">:</span> <span class="mi">30</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Quint</span><span class="p">.</span><span class="nx">easeOut</span><span class="p">)</span><span class="o">,</span>
-            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">d</span><span class="o">:</span> <span class="mi">160</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Cubic</span><span class="p">.</span><span class="nx">easeOut</span><span class="p">)</span><span class="o">,</span>
-            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">{</span> <span class="nx">angle</span><span class="o">:</span> <span class="mi">360</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="nx">Sine</span><span class="p">.</span><span class="nx">easeIn</span><span class="p">)</span><span class="o">,</span>
-            <span class="nx">BetweenAS3</span><span class="p">.</span><span class="nx">tween</span><span class="p">(</span><span class="nx">canvas</span><span class="o">,</span> <span class="p">{</span> <span class="nx">y</span><span class="o">:</span> <span class="nx">CANVAS_SIZE</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">}</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">5</span><span class="p">)</span>
-        <span class="p">);</span>
-        <span class="nx">tween</span><span class="p">.</span><span class="nx">onUpdate</span> <span class="o">=</span> <span class="nx">draw</span><span class="o">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span> <span class="nx">tween</span><span class="p">.</span><span class="nx">gotoAndPlay</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="p">});</span>
-        <span class="nx">tween</span><span class="p">.</span><span class="nx">play</span><span class="p">();</span>
-    <span class="p">}</span>
+        var tween:ITween = BetweenAS3.parallel(
+            BetweenAS3.tween(this, { r: 30 }, null, 5, Quint.easeOut),
+            BetweenAS3.tween(this, { d: 160 }, null, 5, Cubic.easeOut),
+            BetweenAS3.tween(this, { angle: 360 }, null, 5, Sine.easeIn),
+            BetweenAS3.tween(canvas, { y: CANVAS_SIZE / 2 }, null, 5)
+        );
+        tween.onUpdate = draw;
+        stage.addEventListener(&quot;click&quot;, function(event:Event):void { tween.gotoAndPlay(0); });
+        tween.play();
+    }
 
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
-        <span class="k">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Point</span><span class="p">();</span>
-        <span class="k">var</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Graphics</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="o">;</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+    private function draw():void {
+        var p:Point = new Point();
+        var g:Graphics = canvas.graphics;
+        g.clear();
 
-        <span class="c1">// draw lines</span>
-        <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">yy</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">yy</span> <span class="o">&lt;</span> <span class="nx">SIZE</span><span class="o">;</span> <span class="nx">yy</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">var</span> <span class="nx">num</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="nx">yy</span><span class="o">,</span> <span class="nx">prev_num</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">yy</span><span class="o">;</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="o">,</span> <span class="k">new</span> <span class="nx">ColorHSV</span><span class="p">(</span><span class="nx">yy</span> <span class="o">*</span> <span class="mi">270</span> <span class="o">/</span> <span class="nx">SIZE</span><span class="o">,</span> <span class="p">.</span><span class="mi">7</span><span class="p">).</span><span class="nx">value</span><span class="o">,</span> <span class="p">.</span><span class="mi">7</span><span class="p">);</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">num</span><span class="o">;</span> <span class="nx">getXY</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="o">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">xx</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">xx</span> <span class="o">&lt;</span> <span class="nx">NUM</span><span class="o">;</span> <span class="nx">xx</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">num</span> <span class="o">=</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
-                <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">POINT_PER_LINE</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="k">var</span> <span class="nx">ratio</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="nx">POINT_PER_LINE</span><span class="o">;</span>
-                    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">xx</span> <span class="o">+</span> <span class="nx">ratio</span><span class="o">;</span>
-                    <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">prev_num</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">ratio</span><span class="p">)</span> <span class="o">+</span> <span class="nx">num</span> <span class="o">*</span> <span class="nx">ratio</span><span class="o">;</span>
-                    <span class="nx">getXY</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-                    <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="o">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">prev_num</span> <span class="o">=</span> <span class="nx">num</span><span class="o">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // draw lines
+        for (var yy:int = 0; yy &lt; SIZE; yy++) {
+            var num:int = yy, prev_num:Number = yy;
+            g.lineStyle(3, new ColorHSV(yy * 270 / SIZE, .7).value, .7);
+            p.x = 0; p.y = num; getXY(p);
+            g.moveTo(p.x, p.y);
+            for (var xx:int = 0; xx &lt; NUM; xx++) {
+                num = getNext(num);
+                for (var i:int = 0; i &lt; POINT_PER_LINE; i++) {
+                    var ratio:Number = (i + 1.0) / POINT_PER_LINE;
+                    p.x = xx + ratio;
+                    p.y = prev_num * (1 - ratio) + num * ratio;
+                    getXY(p);
+                    g.lineTo(p.x, p.y);
+                }
+                prev_num = num;
+            }
+        }
+    }
 
-    <span class="c1">// get next position after perfect shuffle</span>
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nb">int</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">num</span> <span class="o">&lt;</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">num</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">;</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="p">(</span><span class="nx">num</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="o">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    // get next position after perfect shuffle
+    private function getNext(num:int):int {
+        if (num &lt; SIZE / 2) {
+            return num * 2 + 1;
+        } else {
+            return (num - SIZE / 2) * 2;
+        }
+    }
 
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getXY</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nb">Point</span><span class="p">)</span><span class="o">:</span><span class="nb">Point</span> <span class="p">{</span>
-        <span class="k">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="nx">angle</span> <span class="sr">/ 2.0 + angle * pt.x /</span> <span class="nx">NUM</span><span class="p">)</span> <span class="o">/</span> <span class="mf">180.0</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">;</span>
-        <span class="nx">pt</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">r</span> <span class="o">+</span> <span class="nx">d</span> <span class="o">/</span> <span class="p">(</span><span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
-        <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nx">r</span> <span class="o">+</span> <span class="nx">d</span> <span class="sr">/ (SIZE - 1) * pt.y) * Math.cos(rad) + r * Math.cos(angle /</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nx">pt</span><span class="o">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function getXY(pt:Point):Point {
+        var rad:Number = (-angle / 2.0 + angle * pt.x / NUM) / 180.0 * Math.PI;
+        pt.x =  (r + d / (SIZE - 1) * pt.y) * Math.sin(rad);
+        pt.y = -(r + d / (SIZE - 1) * pt.y) * Math.cos(rad) + r * Math.cos(angle / 2 / 180 * Math.PI);
+        return pt;
+    }
+}
+}</pre>
 
 </div>
 

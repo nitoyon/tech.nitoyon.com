@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Perl でひらがなをカタカナに変換する"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2004/03/18/p2/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="EUC限定で全角のみに対応。sub hiragana2katakana{ my $ascii = &#39;[\x00-\x7F]&#39;; my $twoBytes = &#39;[\x8E\xA1-\xFE][\xA1-\xFE]&#39;; my $threeBytes = &#39;\x8F[\xA1-\xFE][\xA1-\xFE]&#39;; my @chars = $_[0] =~ /$ascii|$twoBytes|$threeBytes/og; my $ret; foreach(@chars){ if(/^\xA4([\xA1-\xF3])$/){ $ret .= &amp;..."/>
+	<meta property="og:description" content="EUC限定で全角のみに対応。sub hiragana2katakana{ my $ascii = &#39;[\x00-\x7F]&#39;; my $twoBytes = &#39;[\x8E\xA1-\xFE][\xA1-\xFE]&#39;; my $threeBytes = &#39;\x8F[\xA1-\xFE][\xA1-\xFE]&#39;; my @chars = $_[0] =~ /$ascii|$twoBytes|$threeBytes/og; my $ret; foreach(@chars){ if(/^\xA4([\xA1-\xF3])$/){ $ret .= &quot;\xA5&quot;.$1; } el..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -61,28 +61,26 @@
 <div class="entry-body">
 
 <p>EUC限定で全角のみに対応。</p>
-<div class="highlight"><pre><span class="k">sub </span><span class="nf">hiragana2katakana</span><span class="p">{</span>
-    <span class="k">my</span> <span class="nv">$ascii</span> <span class="o">=</span> <span class="s">&#39;[\x00-\x7F]&#39;</span><span class="p">;</span>
-    <span class="k">my</span> <span class="nv">$twoBytes</span> <span class="o">=</span> <span class="s">&#39;[\x8E\xA1-\xFE][\xA1-\xFE]&#39;</span><span class="p">;</span>
-    <span class="k">my</span> <span class="nv">$threeBytes</span> <span class="o">=</span> <span class="s">&#39;\x8F[\xA1-\xFE][\xA1-\xFE]&#39;</span><span class="p">;</span>
-    <span class="k">my</span> <span class="nv">@chars</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=~</span><span class="sr"> /$ascii|$twoBytes|$threeBytes/og</span><span class="p">;</span>
+<pre class="perl">sub hiragana2katakana{
+    my $ascii = '[\x00-\x7F]';
+    my $twoBytes = '[\x8E\xA1-\xFE][\xA1-\xFE]';
+    my $threeBytes = '\x8F[\xA1-\xFE][\xA1-\xFE]';
+    my @chars = $_[0] =~ /$ascii|$twoBytes|$threeBytes/og;
     
-    <span class="k">my</span> <span class="nv">$ret</span><span class="p">;</span>
-    <span class="k">foreach</span><span class="p">(</span><span class="nv">@chars</span><span class="p">){</span>
-        <span class="k">if</span><span class="p">(</span><span class="sr">/^\xA4([\xA1-\xF3])$/</span><span class="p">){</span>
-            <span class="nv">$ret</span> <span class="o">.=</span> <span class="s">&quot;\xA5&quot;</span><span class="o">.</span><span class="nv">$1</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span><span class="p">{</span>
-             <span class="nv">$ret</span> <span class="o">.=</span> <span class="nv">$_</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$ret</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    my $ret;
+    foreach(@chars){
+        if(/^\xA4([\xA1-\xF3])$/){
+            $ret .= &quot;\xA5&quot;.$1;
+        }
+        else{
+             $ret .= $_;
+        }
+    }
+    return $ret;
+}</pre>
 <p>出力例</p>
-<div class="highlight"><pre><span class="k">print</span> <span class="o">&amp;</span><span class="n">hiragana2katakana</span><span class="p">(</span><span class="s">&quot;出力例はこんな感じ&quot;</span><span class="p">);</span>
-<span class="c1"># 出力例ハコンナ感ジ</span>
-</pre></div>
+<pre class="perl">print &amp;hiragana2katakana(&quot;出力例はこんな感じ&quot;);
+# 出力例ハコンナ感ジ</pre>
 <p>参考にしたページは...</p>
 <ul><li><a href="http://www.din.or.jp/~ohzaki/perl.htm#JP_Split">文字単位に分割する</a>＠<a href="http://www.din.or.jp/~ohzaki/perl.htm">Perlメモ</a></li><li><a href="http://ash.jp/code/codetbl2.htm">JIS X 0208 文字コード表</a></li><li><a href="http://x68000.startshop.co.jp/~68user/webcgi/char-code-2.html">文字コードとエンコーディング (2)</a>＠ネットワークプログラミングの基礎知識</li></ul>
 

@@ -67,21 +67,19 @@
 <p>左側に入力して、[Run Program] ボタンを押すと、結果を右側でプレビューできる。実行環境の全てのモジュールにアクセスできるので、Datastore だけでなく、その他の機能の簡単な確認も確実に行える。</p>
 <p>ただ、[Run Program] ボタンを押すためにマウスを触るか Tab キーを押す必要あって不便だったので、[Ctrl]+[Enter] で実行できるようにしてみた。</p>
 <p>次の JavaScript を実行すればよい。</p>
-<div class="highlight"><pre><span class="nb">document</span><span class="p">.</span><span class="nx">onkeydown</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span><span class="nx">e</span><span class="o">=</span><span class="nx">e</span><span class="o">||</span><span class="nb">window</span><span class="p">.</span><span class="nx">event</span><span class="p">;</span><span class="k">if</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">ctrlKey</span><span class="o">&amp;&amp;</span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="o">==</span><span class="mi">13</span><span class="p">){</span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">).</span><span class="nx">form</span><span class="p">.</span><span class="nx">submit</span><span class="p">()}};</span>
-</pre></div>
+<pre class="javascript">document.onkeydown = function(e){e=e||window.event;if(e.ctrlKey&amp;&amp;e.keyCode==13){document.getElementById(&quot;code&quot;).form.submit()}};</pre>
 <p>毎回実行するのは面倒なので SDK のソースコードを直接書き換えてみる。<code>google_appengine\google\appengine\ext\admin\templates\interactive.html</code> の最後の <code>&lt;script&gt;</code> 部分に上のスクリプトを突っ込んでおけばよい。</p>
-<div class="highlight"><pre><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;code&#39;</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
+<pre class="javascript">document.getElementById('code').focus();
 
-<span class="nb">document</span><span class="p">.</span><span class="nx">onkeydown</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-  <span class="nx">e</span><span class="o">=</span><span class="nx">e</span><span class="o">||</span><span class="nb">window</span><span class="p">.</span><span class="nx">event</span><span class="p">;</span>
-  <span class="k">if</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">ctrlKey</span> <span class="o">&amp;&amp;</span> <span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="o">==</span><span class="mi">13</span><span class="p">){</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">).</span><span class="nx">form</span><span class="p">.</span><span class="nx">submit</span><span class="p">()</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-<span class="c1">//]]&gt;</span>
-<span class="o">&lt;</span><span class="err">/script&gt;</span>
-<span class="p">{</span><span class="o">%</span> <span class="nx">endblock</span> <span class="o">%</span><span class="p">}</span>
-</pre></div>
+document.onkeydown = function(e){
+  e=e||window.event;
+  if(e.ctrlKey &amp;&amp; e.keyCode==13){
+    document.getElementById(&quot;code&quot;).form.submit()
+  }
+};
+//]]&gt;
+&lt;/script&gt;
+{% endblock %}</pre>
 <p>これで簡単に試験できて幸せ。IE, Firefox, Google Chrome で動くようになったことを確認した。</p>
 </section>
 

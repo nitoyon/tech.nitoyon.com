@@ -70,22 +70,21 @@
 <p>名前から判断するに、Skype と一緒にインストールされる Skype Extension for Firefox が動的に挿入するもののようだ。</p>
 <h1>どこが悪かったのか</h1>
 <p>で、改めて自分が書いたスクリプトを見てみると CSS 関係で次のような処理があった。</p>
-<div class="highlight"><pre><span class="nx">addStyle</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">selector</span><span class="p">,</span> <span class="nx">property</span><span class="p">){</span>
-  <span class="c1">// 一番最後のスタイルシートオブジェクトを取得</span>
-  <span class="kd">var</span> <span class="nx">sheets</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">styleSheets</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">sheet</span> <span class="o">=</span> <span class="nx">sheets</span><span class="p">[</span><span class="nx">sheets</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+<pre class="javascript">addStyle: function(selector, property){
+  // 一番最後のスタイルシートオブジェクトを取得
+  var sheets = document.styleSheets;
+  var sheet = sheets[sheets.length - 1];
 
-  <span class="c1">// CSS の最後に追加</span>
-  <span class="c1">// IE では addRule を、Firefox では insertRule を使う</span>
-  <span class="k">if</span><span class="p">(</span><span class="nx">sheet</span><span class="p">.</span><span class="nx">addRule</span><span class="p">){</span>
-    <span class="nx">sheet</span><span class="p">.</span><span class="nx">addRule</span><span class="p">(</span><span class="nx">selector</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="nx">property</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> 
-      <span class="nx">sheet</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
-  <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">sheet</span><span class="p">.</span><span class="nx">insertRule</span><span class="p">){</span>
-    <span class="nx">sheet</span><span class="p">.</span><span class="nx">insertRule</span><span class="p">(</span><span class="nx">selector</span> <span class="o">+</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="nx">property</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> 
-      <span class="nx">sheet</span><span class="p">.</span><span class="nx">cssRules</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">},</span>
-</pre></div>
+  // CSS の最後に追加
+  // IE では addRule を、Firefox では insertRule を使う
+  if(sheet.addRule){
+    sheet.addRule(selector, &quot;{&quot; + property + &quot;}&quot;, 
+      sheet.rules.length);
+  }else if(sheet.insertRule){
+    sheet.insertRule(selector + &quot;{&quot; + property + &quot;}&quot;, 
+      sheet.cssRules.length);
+  }
+},</pre>
 <p>最後のスタイルシートオブジェクトに対して insertRule で CSS のルールを追加しようとしてる。</p>
 <p>ところが、Skype のプラグインが追加で CSS を突っ込んでいたため、「最後のスタイルシートオブジェクト」は Skype プラグインのものになってしまっていた。ここに insertRule しようとして、サンドボックスが異なってエラーになってたようだ。</p>
 <h1>これも相性問題か</h1>

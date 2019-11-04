@@ -75,7 +75,7 @@
 <p>大きいレポジトリーだと結構時間かかる。cygwin だと超絶に時間がかかったので、UNIX 上で実行した。Git for Windows には <code>git-cvsimport</code> がない。</p>
 
 <p>自分は次のように実行した。</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">git cvsimport -v -i -R -A author-conv-file.txt \
+<div class="highlight"><pre><code class="language-" data-lang="">git cvsimport -v -i -R -A author-conv-file.txt \
 -d :local:/path/to/CVS &lt;module&gt;
 </code></pre></div>
 <p>それぞれのパラメータの意味は次の通り。詳しくは <a href="https://www.kernel.org/pub/software/scm/git/docs/git-cvsimport.html">git-cvsimport</a> を参照のこと。</p>
@@ -94,7 +94,7 @@
 <h2>author-conv-file の書き方</h2>
 
 <p>author-conv-file には「CVS のユーザー名」から「Git の Author 名・メールアドレス」への対応を記述していく。</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">user1=User 1 &lt;user1@example.com&gt;
+<div class="highlight"><pre><code class="language-" data-lang="">user1=User 1 &lt;user1@example.com&gt;
 user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 </code></pre></div>
 <p>1.8.1 からはタイムゾーンも指定できるようになっている。それ以前のバージョンだと、すべて UTC でのコミットとなってしまう。</p>
@@ -112,39 +112,39 @@ user2=User 2 &lt;user1@example.com&gt; Asia/Tokyo
 <p>コミットログやファイル名が UTF-8 でない場合は、ちょいとソースコードを修正する必要がある。</p>
 
 <p>以下は 1.7.3.1 の <code>git-cvsimport</code> に対する修正。</p>
-<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gd">--- /usr/local/libexec/git-core/git-cvsimport.bak</span>
-<span class="gi">+++ /usr/local/libexec/git-core/git-cvsimport</span>
-<span class="gu">@@ -722,6 +722,11 @@</span>
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gd">--- /usr/local/libexec/git-core/git-cvsimport.bak
+</span><span class="gi">+++ /usr/local/libexec/git-core/git-cvsimport
+</span><span class="p">@@ -722,6 +722,11 @@</span>
  sub update_index (\@\@) {
         my $old = shift;
         my $new = shift;
-<span class="gi">+</span>
-<span class="gi">+       # file name</span>
-<span class="gi">+       use Encode qw/decode encode/;</span>
-<span class="gi">+       $_ = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_)) for @$old;</span>
-<span class="gi">+       $_-&gt;[2] = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $_-&gt;[2])) for @$new;</span>
-<span class="gi">+</span>
-        open(my $fh, &#39;|-&#39;, qw(git update-index -z --index-info))
-                or die &quot;unable to open git update-index: $!&quot;;
+<span class="gi">+
++       # file name
++       use Encode qw/decode encode/;
++       $_ = encode('utf8', decode('shift-jis', $_)) for @$old;
++       $_-&gt;[2] = encode('utf8', decode('shift-jis', $_-&gt;[2])) for @$new;
++
+</span>        open(my $fh, '|-', qw(git update-index -z --index-info))
+                or die "unable to open git update-index: $!";
         print $fh
-<span class="gu">@@ -810,6 +816,11 @@</span>
-        substr($logmsg,32767) = &quot;&quot; if length($logmsg) &gt; 32767;
+<span class="p">@@ -810,6 +816,11 @@</span>
+        substr($logmsg,32767) = "" if length($logmsg) &gt; 32767;
         $logmsg =~ s/[\s\n]+\z//;
 
-<span class="gi">+       # commit log</span>
-<span class="gi">+       use Encode qw/encode decode/;</span>
-<span class="gi">+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;shift-jis&#39;, $logmsg));</span>
-<span class="gi">+</span>
-        if (@skipped) {
-            $logmsg .= &quot;\n\n\nSKIPPED:\n\t&quot;;
-            $logmsg .= join(&quot;\n\t&quot;, @skipped) . &quot;\n&quot;;
++       # commit log
+<span class="gi">+       use Encode qw/encode decode/;
++       $logmsg = encode('utf8', decode('shift-jis', $logmsg));
++
+</span>        if (@skipped) {
+            $logmsg .= "\n\n\nSKIPPED:\n\t";
+            $logmsg .= join("\n\t", @skipped) . "\n";
 </code></pre></div>
 <p>ここではコミットログやファイル名が Shift_JIS だという前提で書いてある。</p>
 
 <p>自動判定したい場合は</p>
-<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gi">+       use Encode::Guess qw/euc-jp shiftjis/;</span>
-<span class="gi">+       $logmsg = encode(&#39;utf8&#39;, decode(&#39;guess&#39;, $logmsg));</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gi">+       use Encode::Guess qw/euc-jp shiftjis/;
++       $logmsg = encode('utf8', decode('guess', $logmsg));
+</span></code></pre></div>
 <p>のように書けばいける。</p>
 
 <h2>歴史の書き換え</h2>

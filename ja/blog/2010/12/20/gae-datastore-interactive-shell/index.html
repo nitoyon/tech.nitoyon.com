@@ -63,62 +63,59 @@
 <p>いまさらながらに Google App Engine をちょろちょろと触っている。</p>
 <p>Datastore を対話シェルから使えると便利そうなので、やり方を確立してみた。</p>
 <p>結論としては次のコードを対話シェル上で実行すれば使えるようになった。(Google App Engine SDK for Python Windows 版 1.4.0 にて確認)</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">tempfile</span>
+<pre class="python">import os
+import sys
+import tempfile
 
-<span class="n">DIR_PATH</span> <span class="o">=</span> <span class="s">r&quot;C:\Program Files\Google\google_appengine&quot;</span>
-<span class="n">APP_ID</span> <span class="o">=</span> <span class="s">&quot;helloworld&quot;</span>
+DIR_PATH = r&quot;C:\Program Files\Google\google_appengine&quot;
+APP_ID = &quot;helloworld&quot;
 
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span> <span class="o">+=</span> <span class="p">[</span>
-  <span class="n">DIR_PATH</span><span class="p">,</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;antlr3&#39;</span><span class="p">),</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;django&#39;</span><span class="p">),</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;fancy_urllib&#39;</span><span class="p">),</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;ipaddr&#39;</span><span class="p">),</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;webob&#39;</span><span class="p">),</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;yaml&#39;</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">),</span>
-<span class="p">]</span>
-<span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">apiproxy_stub_map</span><span class="p">,</span><span class="n">datastore_file_stub</span>
+sys.path += [
+  DIR_PATH,
+  os.path.join(DIR_PATH, 'lib', 'antlr3'),
+  os.path.join(DIR_PATH, 'lib', 'django'),
+  os.path.join(DIR_PATH, 'lib', 'fancy_urllib'),
+  os.path.join(DIR_PATH, 'lib', 'ipaddr'),
+  os.path.join(DIR_PATH, 'lib', 'webob'),
+  os.path.join(DIR_PATH, 'lib', 'yaml', 'lib'),
+]
+from google.appengine.api import apiproxy_stub_map,datastore_file_stub
 
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;APPLICATION_ID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">APP_ID</span>
+os.environ['APPLICATION_ID'] = APP_ID
 
-<span class="n">datastore_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="s">&#39;dev_appserver.datastore&#39;</span><span class="p">)</span>
-<span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">apiproxy</span> <span class="o">=</span> <span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">APIProxyStubMap</span><span class="p">()</span>
-<span class="n">datastore</span> <span class="o">=</span> <span class="n">datastore_file_stub</span><span class="o">.</span><span class="n">DatastoreFileStub</span><span class="p">(</span><span class="n">APP_ID</span><span class="p">,</span> <span class="n">datastore_path</span><span class="p">)</span>
-<span class="n">apiproxy_stub_map</span><span class="o">.</span><span class="n">apiproxy</span><span class="o">.</span><span class="n">RegisterStub</span><span class="p">(</span><span class="s">&#39;datastore_v3&#39;</span><span class="p">,</span> <span class="n">datastore</span><span class="p">)</span>
-</pre></div>
+datastore_path = os.path.join(tempfile.gettempdir(), 'dev_appserver.datastore')
+apiproxy_stub_map.apiproxy = apiproxy_stub_map.APIProxyStubMap()
+datastore = datastore_file_stub.DatastoreFileStub(APP_ID, datastore_path)
+apiproxy_stub_map.apiproxy.RegisterStub('datastore_v3', datastore)</pre>
 <p>Windows 版以外でも、<code>DIR_PATH</code> のところをインストール先のパスに変更すれば動くと思う。<code>APP_ID</code> は <code>helloworld</code> にしているが、自分のアプリケーションの ID に変えると、ローカルでテスト中のデータを読み取れる。</p>
 <p>こんな感じに試せて嬉しい。</p>
-<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">db</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">t</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">()</span>
-<span class="o">...</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
-<span class="n">datastore_types</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span><span class="s">u&#39;A&#39;</span><span class="p">,</span> <span class="il">1L</span><span class="p">,</span> <span class="n">_app</span><span class="o">=</span><span class="s">u&#39;helloworld&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="o">.</span><span class="n">id</span><span class="p">()</span>
-<span class="il">1L</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">t</span>
-<span class="s">&#39;test&#39;</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-<span class="mi">1</span>
-</pre></div>
+<pre class="python">&gt;&gt;&gt; from google.appengine.ext import db
+&gt;&gt;&gt; class A(db.Model):
+...     t = db.StringProperty()
+...
+&gt;&gt;&gt; a = A()
+&gt;&gt;&gt; a.t = 'test'
+&gt;&gt;&gt; a.put()
+datastore_types.Key.from_path(u'A', 1L, _app=u'helloworld')
+&gt;&gt;&gt; a.key().id()
+1L
+&gt;&gt;&gt; a.t
+'test'
+&gt;&gt;&gt; A.all().count()
+1</pre>
 <p>Web から使う DB と同じものを参照しているので、Web で設定した内容をインタラクティブ シェル上で確認することもできて嬉しい。</p>
 <h1>スクリプトを作るまで</h1>
 <p>何も考えずにスクリプト パスを通して DataStore の API を叩いてみると次の例外が発生した。</p>
 <pre>google.appengine.api.datastore_errors.BadArgumentError: app must not be empty.</pre>
 <p>datastore_types.py にて次のようにして APPLICATION_ID を参照していたので、</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">ResolveAppId</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Validate app id, providing a default.</span>
-<span class="sd">  (snip)</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-  <span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-    <span class="n">app</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;APPLICATION_ID&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-  <span class="n">ValidateString</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">datastore_errors</span><span class="o">.</span><span class="n">BadArgumentError</span><span class="p">)</span>
-  <span class="k">return</span> <span class="n">app</span>
-</pre></div>
+<pre class="python">def ResolveAppId(app):
+  &quot;&quot;&quot;Validate app id, providing a default.
+  (snip)
+  &quot;&quot;&quot;
+  if app is None:
+    app = os.environ.get('APPLICATION_ID', '')
+  ValidateString(app, 'app', datastore_errors.BadArgumentError)
+  return app</pre>
 <p>MS-DOS 上で環境変数 APPLICATION_ID を設定してやった。</p>
 <pre>set APPLICATION_ID=test</pre>
 <p>すると、次のようなエラーが。</p>
@@ -126,9 +123,8 @@
 <p>このへんで諦めつつ検索したら、<a href="http://tech.einaregilsson.com/2010/10/11/unit-testing-model-classes-in-google-app-engine/">Unit testing model classes in Google App Engine</a> に単体テストの手順があったのでソースを奪ってきた。</p>
 <p>ここのソースでは DatastoreFileStub に <code>&#39;/dev/null&#39;</code> を渡していて、一時的な DataStore を作成していた。(<code>&#39;/dev/null&#39;</code> と聞くと Windows では動かなさそうに見えたが、App Engine SDK で <code>&#39;/dev/null&#39;</code> のときは特別扱いしていたので関係ない)</p>
 <p>今回は Web 側のデータを読み込みたかったので、SDK のソースを辿っていたら、<code>tools\dev_appserver_main.py</code> に DataStore として</p>
-<div class="highlight"><pre><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span>
-             <span class="s">&#39;dev_appserver.datastore&#39;</span><span class="p">),</span>
-</pre></div>
+<pre class="python">os.path.join(tempfile.gettempdir(),
+             'dev_appserver.datastore'),</pre>
 <p>が利用されてることが分かったので、この値を利用するようにしてみた。</p>
 </section>
 

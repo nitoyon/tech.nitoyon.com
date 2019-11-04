@@ -63,47 +63,43 @@
 <p>※ AS3 にはブロックスコープがないよ、という内容です</p>
 <p><a href="http://level0.kayac.com/2009/01/localvariables_optimization.php">一時変数の効率化｜_level0.KAYAC</a> という記事に怪しいことが書いてあったので突っ込んでおきます。</p>
 <p>この記事によると、for の中で変数を宣言するよりも</p>
-<div class="highlight"><pre><span class="c1">// 中バージョン</span>
-<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i &lt; 10; i++){
+    var a:Object = new Object();
+  }
+}</pre>
 <p>外で宣言をしたほうが</p>
-<div class="highlight"><pre><span class="c1">// 外バージョン</span>
-<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i &lt; 10; i++){
+    a = new Object();
+  }
+}</pre>
 <p>a が宣言される回数が少ないので効率的だとしています。</p>
 <p>けれども、<strong>これは間違い</strong>です。</p>
 <p>for の中で宣言したとしても、for のあとで変数は生き残ってます。さらに、for の前でも参照できます。</p>
 <h1>実証コードを見てみよう</h1>
 <p>以下に実証コードを。</p>
-<div class="highlight"><pre><span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                       <span class="c1">// NaN</span>
+<pre class="javascript">trace(a);                       // NaN
 
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-  <span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                     <span class="c1">// 0, 1, ..., 9</span>
-<span class="p">}</span>
+for(var i = 0; i &lt; 10; i++){
+  var a:Number = new Number(i);
+  trace(a);                     // 0, 1, ..., 9
+}
 
-<span class="nx">trace</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>                       <span class="c1">// 9</span>
-</pre></div>
+trace(a);                       // 9</pre>
 <p>for の中で var a を宣言していますが、for を抜けたあとも 9 ですね。また、for の前では NaN（Number の初期値） になっています。</p>
 <p>ということで、var は実はどこに書いても同じ。全て<strong>関数の冒頭に宣言した場合と同じ</strong>になるわけです。</p>
 <h1>ブロックスコープと let</h1>
 <p>この性質のことを専門用語でいうと、「<strong>ActionScript 3はブロックスコープを持たない</strong>」といえます。var 宣言は <strong>関数スコープ</strong> 内に変数を作成します。</p>
 <p>そういえば、次の警告に出くわしたことある人も多いのでは。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span><span class="p">;</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-  <span class="c1">// 警告: 変数定義が重複しています。</span>
-  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">var a;
+for(var i = 0; i &lt; 10; i++){
+  // 警告: 変数定義が重複しています。
+  var a:Number = new Number(i);
+}</pre>
 <p>この警告からも、AS3 がブロックスコープを持たないのが分かりますね。</p>
 <p>対して、C++ や Java はブロックスコープを持つので、ブロックでだけ有効な変数を宣言することができます。</p>
 <p>ちなみに、JavaScript だと with を使ってブロックスコープを再現できるのですが、AS3 では with はなかったことになってるので使えません。（関連）<a href="http://d.hatena.ne.jp/amachang/20090119/1232331329">for 文と無名関数のイディオム - IT戦記</a></p>
@@ -115,148 +111,139 @@
 <ul><li>var を for の中に置く場合 （中バージョン）</li><li>var を for の外に置く場合 （外バージョン）</li></ul>
 <p>でバイトコードがどう変わるかを見てみた。</p>
 <p>これが検証用のソースコード。</p>
-<div class="highlight"><pre><span class="c1">// 中バージョン</span>
-<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
+<pre class="javascript">// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i &lt; 10; i++){
+    var a:Object = new Object();
+  }
+}
 
-<span class="c1">// 外バージョン</span>
-<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i &lt; 10; i++){
+    a = new Object();
+  }
+}</pre>
 <p>Flex SDK 3.2 の asc.jar でコンパイルして、Tamarin 付属の abcdump でバイトコードを眺めてみた。</p>
 <p>中バージョンではこんな感じになった。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="kc">undefined</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>    <span class="cm">/* disp_id 0*/</span>
-<span class="p">{</span>
-  <span class="c1">// local_count=3 max_scope=0 max_stack=2 code_len=33</span>
-  <span class="mi">0</span>         <span class="nx">pushnull</span>
-  <span class="mi">1</span>         <span class="nx">coerce</span>              <span class="nb">Object</span>
-  <span class="mi">3</span>         <span class="nx">setlocal2</span>
-  <span class="mi">4</span>         <span class="nx">pushbyte</span>            <span class="mi">0</span>
-  <span class="mi">6</span>         <span class="nx">convert_i</span>
-  <span class="mi">7</span>         <span class="nx">setlocal1</span>
-  <span class="mi">8</span>         <span class="nx">jump</span>                <span class="nx">L1</span>
+<pre class="javascript">var undefined():void    /* disp_id 0*/
+{
+  // local_count=3 max_scope=0 max_stack=2 code_len=33
+  0         pushnull
+  1         coerce              Object
+  3         setlocal2
+  4         pushbyte            0
+  6         convert_i
+  7         setlocal1
+  8         jump                L1
 
-  <span class="nx">L2</span><span class="o">:</span>
-  <span class="mi">12</span>        <span class="nx">label</span>
-  <span class="mi">13</span>        <span class="nx">findpropstrict</span>      <span class="nb">Object</span>
-  <span class="mi">15</span>        <span class="nx">constructprop</span>       <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-  <span class="mi">18</span>        <span class="nx">coerce</span>              <span class="nb">Object</span>
-  <span class="mi">20</span>        <span class="nx">setlocal2</span>
-  <span class="mi">21</span>        <span class="nx">getlocal1</span>
-  <span class="mi">22</span>        <span class="nx">increment_i</span>
-  <span class="mi">23</span>        <span class="nx">convert_i</span>
-  <span class="mi">24</span>        <span class="nx">setlocal1</span>
+  L2:
+  12        label
+  13        findpropstrict      Object
+  15        constructprop       Object (0)
+  18        coerce              Object
+  20        setlocal2
+  21        getlocal1
+  22        increment_i
+  23        convert_i
+  24        setlocal1
 
-  <span class="nx">L1</span><span class="o">:</span>
-  <span class="mi">25</span>        <span class="nx">getlocal1</span>
-  <span class="mi">26</span>        <span class="nx">pushbyte</span>            <span class="mi">10</span>
-  <span class="mi">28</span>        <span class="nx">iflt</span>                <span class="nx">L2</span>
+  L1:
+  25        getlocal1
+  26        pushbyte            10
+  28        iflt                L2
 
-  <span class="mi">32</span>        <span class="nx">returnvoid</span>
-<span class="p">}</span>
-</pre></div>
+  32        returnvoid
+}</pre>
 <p>いっぱい出てきたが、焦らずにゆっくり見ていこう。</p>
 <h1>最初にローカル変数の準備</h1>
 <p>まずは冒頭の7行。</p>
 <p>コメントでバイトコードにほぼ等しい AS3 の該当するコードを補っておいた。</p>
-<div class="highlight"><pre><span class="c1">// var a:Object = null</span>
-  <span class="mi">0</span>  <span class="nx">pushnull</span>          <span class="c1">// null をスタックに積む</span>
-  <span class="mi">1</span>  <span class="nx">coerce</span>     <span class="nb">Object</span> <span class="c1">// スタック1番上を Object にキャスト</span>
-  <span class="mi">3</span>  <span class="nx">setlocal2</span>         <span class="c1">// pop して register 2 に代入</span>
+<pre class="javascript">// var a:Object = null
+  0  pushnull          // null をスタックに積む
+  1  coerce     Object // スタック1番上を Object にキャスト
+  3  setlocal2         // pop して register 2 に代入
 
-<span class="c1">// var i:int = 0</span>
-  <span class="mi">4</span>  <span class="nx">pushbyte</span>   <span class="mi">0</span>      <span class="c1">// 0 をスタックに積む</span>
-  <span class="mi">6</span>  <span class="nx">convert_i</span>         <span class="c1">// スタック1番上を int にキャストする</span>
-  <span class="mi">7</span>  <span class="nx">setlocal1</span>         <span class="c1">// pop して register 1 に代入</span>
+// var i:int = 0
+  4  pushbyte   0      // 0 をスタックに積む
+  6  convert_i         // スタック1番上を int にキャストする
+  7  setlocal1         // pop して register 1 に代入
 
-  <span class="mi">8</span>  <span class="nx">jump</span>       <span class="nx">L1</span>     <span class="c1">// L1 に移動</span>
-</pre></div>
+  8  jump       L1     // L1 に移動</pre>
 <p>関数の最初ではローカル変数 a と i を準備していることが分かる。</p>
 <p>ここまでのバイトコードは、「外バージョン」も「中バージョン」も同じだった。<strong>ローカル変数は宣言した場所によらず、関数の冒頭で確保される</strong>ようだ。</p>
 <h1>for を抜けるチェック</h1>
 <p>次、L1 の処理を見ていく。</p>
-<div class="highlight"><pre><span class="nx">L1</span><span class="o">:</span>
-<span class="c1">// i &lt; 10</span>
-  <span class="mi">25</span> <span class="nx">getlocal1</span>         <span class="c1">// i (register 1)をスタックに積む</span>
-  <span class="mi">26</span> <span class="nx">pushbyte</span>   <span class="mi">10</span>     <span class="c1">// 10 をスタックに積む</span>
-  <span class="mi">28</span> <span class="nx">iflt</span>       <span class="nx">L2</span>     <span class="c1">// スタック上の2つの値を比較して、</span>
-                       <span class="c1">// i が小さければ L2 にジャンプする</span>
+<pre class="javascript">L1:
+// i &lt; 10
+  25 getlocal1         // i (register 1)をスタックに積む
+  26 pushbyte   10     // 10 をスタックに積む
+  28 iflt       L2     // スタック上の2つの値を比較して、
+                       // i が小さければ L2 にジャンプする
 
-  <span class="mi">32</span> <span class="nx">returnvoid</span>        <span class="c1">// void を返す</span>
-</pre></div>
+  32 returnvoid        // void を返す</pre>
 <p>i &lt; 10 である限りは、L2 にジャンプし続けるわけですな。実はここも、外バージョンと中バージョンで同じ。</p>
 <h1>いよいよ for の中を解析</h1>
 <p>最後に L2。ここで外と中の違いがでてくる。</p>
 <p>まずは中バージョン（<code>var a:Object = new Object()</code>）。</p>
-<div class="highlight"><pre><span class="nx">L2</span><span class="o">:</span>
-  <span class="mi">12</span>  <span class="nx">label</span>
+<pre class="javascript">L2:
+  12  label
 
-<span class="c1">// a = new Object()</span>
-  <span class="mi">13</span> <span class="nx">findpropstrict</span>  <span class="nb">Object</span>
-  <span class="mi">15</span> <span class="nx">constructprop</span>   <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1">// new Object() する</span>
-  <span class="mi">18</span> <span class="nx">coerce</span>          <span class="nb">Object</span>     <span class="c1">// Object にキャストする</span>
-  <span class="mi">20</span> <span class="nx">setlocal2</span>                  <span class="c1">// a (register 2) に代入</span>
+// a = new Object()
+  13 findpropstrict  Object
+  15 constructprop   Object (0) // new Object() する
+  18 coerce          Object     // Object にキャストする
+  20 setlocal2                  // a (register 2) に代入
 
-<span class="c1">// i++</span>
-  <span class="mi">21</span> <span class="nx">getlocal1</span>        <span class="c1">// i (register 1) をスタックに取り出す</span>
-  <span class="mi">22</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
-  <span class="mi">23</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
-  <span class="mi">24</span> <span class="nx">setlocal1</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
-</pre></div>
+// i++
+  21 getlocal1        // i (register 1) をスタックに取り出す
+  22 increment_i      // スタック1番上を 1 加算する
+  23 convert_i        // スタック1番上を int にキャストする
+  24 setlocal1        // スタック1番上を register 1 に代入</pre>
 <p>素直な感じ。</p>
 <p>次は外バージョン（<code>a = new Object()</code>）。</p>
-<div class="highlight"><pre><span class="c1">// var c:* = new Object()</span>
-  <span class="mi">13</span> <span class="nx">findpropstrict</span>  <span class="nb">Object</span>
-  <span class="mi">15</span> <span class="nx">constructprop</span>   <span class="nb">Object</span> <span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1">// new Object() する</span>
-  <span class="mi">18</span> <span class="nx">dup</span>                        <span class="c1">// スタック上で複製する</span>
-  <span class="mi">19</span> <span class="nx">setlocal3</span>                  <span class="c1">// pop して register 3 に代入</span>
+<pre class="javascript">// var c:* = new Object()
+  13 findpropstrict  Object
+  15 constructprop   Object (0) // new Object() する
+  18 dup                        // スタック上で複製する
+  19 setlocal3                  // pop して register 3 に代入
 
-<span class="c1">// a = (new の結果)</span>
-  <span class="mi">20</span> <span class="nx">coerce</span>    <span class="nb">Object</span> <span class="c1">// スタック1番上を Object にキャストする</span>
-  <span class="mi">22</span> <span class="nx">setlocal1</span>        <span class="c1">// a (register 2) に代入</span>
+// a = (new の結果)
+  20 coerce    Object // スタック1番上を Object にキャストする
+  22 setlocal1        // a (register 2) に代入
 
-<span class="c1">// c = null</span>
-  <span class="mi">23</span> <span class="nx">getlocal3</span>        <span class="c1">// c (register 3) をスタックに複製する</span>
-  <span class="mi">24</span> <span class="nx">kill</span>      <span class="mi">3</span>      <span class="c1">// register 3 を undefined に初期化する</span>
-  <span class="mi">26</span> <span class="nx">pop</span>              <span class="c1">// スタックの1番上を取り除く</span>
+// c = null
+  23 getlocal3        // c (register 3) をスタックに複製する
+  24 kill      3      // register 3 を undefined に初期化する
+  26 pop              // スタックの1番上を取り除く
 
-<span class="c1">// i++</span>
-  <span class="mi">27</span> <span class="nx">getlocal2</span>        <span class="c1">// i (register 1) をスタックに取り出す</span>
-  <span class="mi">28</span> <span class="nx">increment_i</span>      <span class="c1">// スタック1番上を 1 加算する</span>
-  <span class="mi">29</span> <span class="nx">convert_i</span>        <span class="c1">// スタック1番上を int にキャストする</span>
-  <span class="mi">30</span> <span class="nx">setlocal2</span>        <span class="c1">// スタック1番上を register 1 に代入</span>
-</pre></div>
+// i++
+  27 getlocal2        // i (register 1) をスタックに取り出す
+  28 increment_i      // スタック1番上を 1 加算する
+  29 convert_i        // スタック1番上を int にキャストする
+  30 setlocal2        // スタック1番上を register 1 に代入</pre>
 <p>ということで、new の結果を一時変数 var c:* に代入したような扱いになっている。</p>
 <p>一時変数がどこからでてくるのかがよく分からなかったが、もしかしたら、</p>
-<div class="highlight"><pre><span class="nx">x</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">x = y = new Object();</pre>
 <p>のような構文で <code>y = new Object()</code> の結果を <code>x</code> に代入するための一時オブジェクトなのかもしれない。</p>
 <p>C++ でいうコピーコンストラクタと代入演算子の違いのような感じ。</p>
 <h1>バイトコードを見た感想</h1>
 <p>こうやって見ると、</p>
-<div class="highlight"><pre><span class="c1">// 中バージョン</span>
-<span class="kd">function</span> <span class="nx">foo1</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// 中バージョン
+function foo1():void{
+  for(var i:int = 0; i &lt; 10; i++){
+    var a:Object = new Object();
+  }
+}</pre>
 <p>の方が</p>
-<div class="highlight"><pre><span class="c1">// 外バージョン</span>
-<span class="kd">function</span> <span class="nx">foo2</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Object</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// 外バージョン
+function foo2():void{
+  var a:Object;
+  for(var i:int = 0; i &lt; 10; i++){
+    a = new Object();
+  }
+}</pre>
 <p>よりも多少効率がよかった。とはいえ、ほんとうに些細な違いであり、無視していいレベルのはずだ。普通にコードを書いたら、ボトルネックは別の場所に出てくるだろう。</p>
 <h1>結論</h1>
 <ul><li>AS3 は関数スコープ</li><li>書きやすいほうで書け</li></ul>

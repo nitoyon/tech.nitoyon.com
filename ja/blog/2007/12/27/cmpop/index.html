@@ -61,54 +61,50 @@
 <div class="entry-body">
 <section>
 <p>jQuery のソースコードを見ていて面白いのがあった。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="nx">addImpl</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">||</span> <span class="nx">a</span><span class="p">);</span>
-<span class="p">}</span>
+<pre class="javascript">function add(a, b){
+    addImpl(b &amp;&amp; a, b || a);
+}
 
 
-<span class="kd">function</span> <span class="nx">addImpl</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+function addImpl(a, b){
+    // ...
+}</pre>
 <p>理解するためには、論理演算子を詳しく理解する必要がある。</p>
 <h1>論理演算子詳細</h1>
 <p>JavaScript（というか ECMAScript）の論理演算子は、評価結果が true/false で返される訳ではなく、結果が確定した時点で評価した値が返される。</p>
 <p>まずは、|| を試してみよう。</p>
-<div class="highlight"><pre><span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">||</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 2</span>
-<span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">||</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 2</span>
-<span class="nx">alert</span><span class="p">({}</span> <span class="o">||</span> <span class="kc">null</span><span class="p">)</span>      <span class="c1">// [object Object]</span>
+<pre class="javascript">alert(2 || 0);         // 2
+alert(2 || 3);         // 2
+alert({} || null)      // [object Object]
 
-<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 3</span>
-<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 0</span>
-<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">||</span> <span class="kc">undefined</span><span class="p">);</span> <span class="c1">// undefined</span>
-</pre></div>
+alert(0 || 3);         // 3
+alert(0 || 0);         // 0
+alert(0 || undefined); // undefined</pre>
 <p>左オペランドが true として評価できるなら、左オペランドの値自身が返る。右オペランドはどんな値だったとしても評価結果が返る。</p>
 <p>ECMAScript の仕様書から抜き出すと、こういう手順になってる。</p>
 <ol><li>左オペランドを評価する</li><li>左オペランドの結果を Boolean に変換</li><li>変換結果が true なら、<strong>左オペランドの評価結果</strong>を返す</li><li>右オペランドを評価</li><li><strong>右オペランドの評価結果</strong>を返す</li></ol>
 <p>alert(0 || 0) と alert(0 || undefined) の結果が違うあたりが面白い。</p>
 <p>次は、&amp;&amp;。</p>
-<div class="highlight"><pre><span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">&amp;&amp;</span> <span class="mi">3</span><span class="p">);</span>         <span class="c1">// 3</span>
-<span class="nx">alert</span><span class="p">(</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="p">{})</span>         <span class="c1">// [object Object]</span>
+<pre class="javascript">alert(2 &amp;&amp; 3);         // 3
+alert(1 &amp;&amp; {})         // [object Object]
 
-<span class="nx">alert</span><span class="p">(</span><span class="mi">2</span> <span class="o">&amp;&amp;</span> <span class="mi">0</span><span class="p">);</span>         <span class="c1">// 0</span>
-<span class="nx">alert</span><span class="p">(</span><span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="mi">3</span><span class="p">);</span>      <span class="c1">// null</span>
-<span class="nx">alert</span><span class="p">(</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="kc">undefined</span><span class="p">);</span> <span class="c1">// 0</span>
-</pre></div>
+alert(2 &amp;&amp; 0);         // 0
+alert(null &amp;&amp; 3);      // null
+alert(0 &amp;&amp; undefined); // 0</pre>
 <p>左オペランドが true として評価できるなら、右オペランドの評価結果が返り、そうでない場合は左オペランドの結果が返る。</p>
 <p>ECMAScript の仕様書には次のようにある。</p>
 <ol><li>左オペランドを評価する</li><li>左オペランドの結果を Boolean に変換</li><li>変換結果が false なら、<strong>左オペランドの結果</strong>を返す</li><li>右オペランドを評価する</li><li><strong>右オペランドの評価結果</strong>を返す</li></ol>
 <p>ということで、ECMAScriptは、論理演算子の結果が Boolean とは限らないわけだ。Perl や Ruby でも似たような感じなので、スクリプト系ではこういう仕様が多いのかな。</p>
 <p>ちなみに、3 &gt; 1 は 3 とはならずに true となるので注意が必要。</p>
 <h1>で、最初の例に戻る。</h1>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="nx">addImpl</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">||</span> <span class="nx">a</span><span class="p">);</span>
-<span class="p">}</span>
+<pre class="javascript">function add(a, b){
+    addImpl(b &amp;&amp; a, b || a);
+}
 
 
-<span class="kd">function</span> <span class="nx">addImpl</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+function addImpl(a, b){
+    // ...
+}</pre>
 <p>add が呼ばれたときに、a と b が undefined でない場合、</p>
 <ul><li>b &amp;&amp; a =&gt; a</li><li>b || a =&gt; b</li></ul>
 <p>なので、addImpl に適切に a と b が渡る。</p>
@@ -116,11 +112,9 @@
 <ul><li>b &amp;&amp; a =&gt; undefined</li><li>b || a =&gt; a</li></ul>
 <p>となる。</p>
 <h1>まとめると、</h1>
-<div class="highlight"><pre><span class="nx">add</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">add(3);</pre>
 <p>と</p>
-<div class="highlight"><pre><span class="nx">add</span><span class="p">(</span><span class="kc">undefined</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">add(undefined, 3);</pre>
 <p>が同じになる。第１引数を省略できるわけだ。</p>
 <h1>感想</h1>
 <p>デフォルト引数の感覚からいくと、省略可能な引数は後ろにあってほしいんだけどな…。</p>

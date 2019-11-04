@@ -68,100 +68,99 @@
 <p>FlashGraphics オブジェクトのコールバック関数 f で歪め方を定義する。そこそこ汎用的に遊べるんじゃないかと思う。</p>
 <p>フォントの座標情報が手中にあるんだから、なんかしら面白いことができそうなんだけど、これぐらいしか思いつかないなぁ…。</p>
 <p>ソースは以下に。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">SWF</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">Shape</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">ShapeRecord</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">structures</span><span class="p">.</span><span class="nx">ShapeRecordTypeConstants</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">inprogress</span><span class="p">.</span><span class="nx">swf</span><span class="p">.</span><span class="nx">ShapeCollector</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">ShapeDrawer</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">ShapeOutlineDrawer</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+    import flash.geom.Point;
+    import org.libspark.swfassist.io.*;
+    import org.libspark.swfassist.swf.io.*;
+    import org.libspark.swfassist.swf.structures.SWF;
+    import org.libspark.swfassist.swf.structures.Shape;
+    import org.libspark.swfassist.swf.structures.ShapeRecord;
+    import org.libspark.swfassist.swf.structures.ShapeRecordTypeConstants;
+    import org.libspark.swfassist.inprogress.swf.ShapeCollector;
+    import org.libspark.swfassist.flash.display.ShapeDrawer;
+    import org.libspark.swfassist.flash.display.ShapeOutlineDrawer;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">frameRate</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">FuzzyFontDemo</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;アニトＭ-教漢.TTF&#39;</span><span class="p">,</span> <span class="nx">fontName</span><span class="o">=</span><span class="s1">&#39;anito&#39;</span><span class="p">,</span> <span class="nx">unicodeRange</span><span class="o">=</span><span class="s1">&#39;U+5922&#39;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">font</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;#000000&quot;, frameRate=&quot;6&quot;)]
+    public class FuzzyFontDemo extends Sprite {
+        [Embed(source='アニトＭ-教漢.TTF', fontName='anito', unicodeRange='U+5922')]
+        private var font:Class;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FuzzyFontDemo</span><span class="p">(){</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+        public function FuzzyFontDemo(){
+            stage.align = &quot;TL&quot;;
+            stage.scaleMode = &quot;noScale&quot;;
 
-            <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">DataInput</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ByteArrayInputStream</span><span class="p">(</span><span class="nx">loaderInfo</span><span class="p">.</span><span class="nx">bytes</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">ReadingContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ReadingContext</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">reader</span><span class="o">:</span><span class="nx">SWFReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SWFReader</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">swf</span><span class="o">:</span><span class="nx">SWF</span> <span class="o">=</span> <span class="nx">reader</span><span class="p">.</span><span class="nx">readSWF</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span>
+            var input:DataInput = new ByteArrayInputStream(loaderInfo.bytes);
+            var context:ReadingContext = new ReadingContext();
+            var reader:SWFReader = new SWFReader();
+            var swf:SWF = reader.readSWF(input, context);
 
-            <span class="kd">var</span> <span class="nx">shapeCollector</span><span class="o">:</span><span class="nx">ShapeCollector</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ShapeCollector</span><span class="p">();</span>
-            <span class="nx">swf</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="nx">shapeCollector</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">shape</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="nx">shapeCollector</span><span class="p">.</span><span class="nx">shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+            var shapeCollector:ShapeCollector = new ShapeCollector();
+            swf.visit(shapeCollector);
+            var shape:Shape = shapeCollector.shapes[1];
 
-            <span class="kd">var</span> <span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">sprite</span><span class="p">);</span>
+            var sprite:Sprite = new Sprite();
+            addChild(sprite);
 
-            <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+            var rad:Number = 0;
+            addEventListener(&quot;enterFrame&quot;, function(event:Event):void{
+                sprite.graphics.clear();
 
-                <span class="kd">var</span> <span class="nx">fuzzy</span><span class="o">:</span><span class="nx">FuzzyFlashGraphics</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FuzzyFlashGraphics</span><span class="p">(</span><span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">;</span>
-                <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
-                <span class="nx">fuzzy</span><span class="p">.</span><span class="nx">f</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span><span class="p">{</span>
-                    <span class="nx">pt</span><span class="p">.</span><span class="nx">x</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="nx">a</span><span class="p">;</span>
-                    <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="nx">a</span><span class="p">;</span>
-                    <span class="k">return</span> <span class="nx">pt</span><span class="p">;</span>
-                <span class="p">}</span>
+                var fuzzy:FuzzyFlashGraphics = new FuzzyFlashGraphics(sprite.graphics);
+                var a:Number = Math.sin(rad / 180 * Math.PI) * 4;
+                rad = (rad + 4) % 360;
+                fuzzy.f = function(pt:Point):Point{
+                    pt.x += (Math.random() - .5) * a;
+                    pt.y += (Math.random() - .5) * a;
+                    return pt;
+                }
 
-                <span class="kd">var</span> <span class="nx">drawer</span><span class="o">:</span><span class="nx">ShapeOutlineDrawer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ShapeOutlineDrawer</span><span class="p">();</span>
-                <span class="nx">drawer</span><span class="p">.</span><span class="nx">graphics</span> <span class="o">=</span> <span class="nx">fuzzy</span><span class="p">;</span>
+                var drawer:ShapeOutlineDrawer = new ShapeOutlineDrawer();
+                drawer.graphics = fuzzy;
 
-                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
-                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-                <span class="nx">drawer</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">shape</span><span class="p">);</span>
-                <span class="nx">sprite</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="p">});</span>
+                sprite.graphics.lineStyle(0, 0xffffff);
+                sprite.graphics.beginFill(0xffffff);
+                drawer.draw(shape);
+                sprite.graphics.endFill();
+            });
 
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-            <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+            sprite.y = 50;
+            scaleX = scaleY = 5;
+        }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">libspark</span><span class="p">.</span><span class="nx">swfassist</span><span class="p">.</span><span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">FlashGraphics</span><span class="p">;</span>
+import flash.display.Graphics;
+import flash.geom.Point;
+import org.libspark.swfassist.flash.display.FlashGraphics;
 
-<span class="kr">class</span> <span class="nx">FuzzyFlashGraphics</span> <span class="kr">extends</span> <span class="nx">FlashGraphics</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FuzzyFlashGraphics</span><span class="p">(</span><span class="nx">graphics</span><span class="o">:</span><span class="nx">Graphics</span> <span class="o">=</span> <span class="kc">null</span><span class="p">){</span>
-        <span class="kr">super</span><span class="p">(</span><span class="nx">graphics</span><span class="p">);</span>
-        <span class="nx">_f</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">pt</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span><span class="p">{</span><span class="k">return</span> <span class="nx">pt</span><span class="p">;}</span>
-    <span class="p">}</span>
+class FuzzyFlashGraphics extends FlashGraphics{
+    public function FuzzyFlashGraphics(graphics:Graphics = null){
+        super(graphics);
+        _f = function(pt:Point):Point{return pt;}
+    }
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_f</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">f</span><span class="p">()</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span><span class="k">return</span> <span class="nx">_f</span><span class="p">;}</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">f</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="nb">Function</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">_f</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;}</span>
+    private var _f:Function = null;
+    public function get f():Function{return _f;}
+    public function set f(value:Function):void{_f = value;}
 
-    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">curveTo</span><span class="p">(</span><span class="nx">controlX</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">controlY</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">anchorX</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">anchorY</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">controlX</span><span class="p">,</span> <span class="nx">controlY</span><span class="p">));</span>
-        <span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">anchorX</span><span class="p">,</span> <span class="nx">anchorY</span><span class="p">));</span>
-        <span class="kr">super</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-    <span class="p">}</span>
+    public override function curveTo(controlX:Number, controlY:Number, anchorX:Number, anchorY:Number):void{
+        var p1:Point = _f(new Point(controlX, controlY));
+        var p2:Point = _f(new Point(anchorX, anchorY));
+        super.curveTo(p1.x, p1.y, p2.x, p2.y);
+    }
 
-    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">lineTo</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">));</span>
-        <span class="kr">super</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-    <span class="p">}</span>
+    public override function lineTo(x:Number, y:Number):void{
+        var p:Point = _f(new Point(x, y));
+        super.lineTo(p.x, p.y);
+    }
 
-    <span class="kr">public</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">moveTo</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">_f</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">));</span>
-        <span class="kr">super</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    public override function moveTo(x:Number, y:Number):void{
+        var p:Point = _f(new Point(x, y));
+        super.moveTo(p.x, p.y);
+    }
+}</pre>
 
 </div>
 

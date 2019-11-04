@@ -67,27 +67,26 @@
 <p>といった動作になっている。</p>
 <p>いままでいろんなライブラリの擬似モーダル実装を見てきたが、Tab キーを押したらこっそり裏側の部分にフォーカスを移せるものばかりだったので、Tab キーにちゃんと対処していたところに驚いた。</p>
 <p>どうやって実装してるんだろうと思って <code>jquery.ui.dialog.js</code> を見てみたら、次のように泥臭く実装していた。</p>
-<div class="highlight"><pre>    <span class="c1">// prevent tabbing out of modal dialogs</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">modal</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">uiDialog</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">&#39;keypress.ui-dialog&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">!==</span> <span class="nx">$</span><span class="p">.</span><span class="nx">ui</span><span class="p">.</span><span class="nx">keyCode</span><span class="p">.</span><span class="nx">TAB</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">return</span><span class="p">;</span>
-            <span class="p">}</span>
+<pre class="javascript">    // prevent tabbing out of modal dialogs
+    if (options.modal) {
+        uiDialog.bind('keypress.ui-dialog', function(event) {
+            if (event.keyCode !== $.ui.keyCode.TAB) {
+                return;
+            }
 
-            <span class="kd">var</span> <span class="nx">tabbables</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;:tabbable&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">),</span>
-                <span class="nx">first</span> <span class="o">=</span> <span class="nx">tabbables</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="s1">&#39;:first&#39;</span><span class="p">),</span>
-                <span class="nx">last</span>  <span class="o">=</span> <span class="nx">tabbables</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="s1">&#39;:last&#39;</span><span class="p">);</span>
+            var tabbables = $(':tabbable', this),
+                first = tabbables.filter(':first'),
+                last  = tabbables.filter(':last');
 
-            <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span> <span class="o">===</span> <span class="nx">last</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">event</span><span class="p">.</span><span class="nx">shiftKey</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">first</span><span class="p">.</span><span class="nx">focus</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span> <span class="o">===</span> <span class="nx">first</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">event</span><span class="p">.</span><span class="nx">shiftKey</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">last</span><span class="p">.</span><span class="nx">focus</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
-</pre></div>
+            if (event.target === last[0] &amp;&amp; !event.shiftKey) {
+                first.focus(1);
+                return false;
+            } else if (event.target === first[0] &amp;&amp; event.shiftKey) {
+                last.focus(1);
+                return false;
+            }
+        });
+    }</pre>
 <p>Tab キーが押されたら、ダイアログ外にフォーカスが移らないよう、無理やりダイアログ内にフォーカスを設定している。</p>
 <p>ちなみに、ソース中に <code>:tabbable</code> という CSS 擬似クラスが登場しているが、これは <code>jquery.ui.core.js</code> で独自定義されているもので、標準の CSS や生の jQuery では利用できないので注意が必要だ。</p>
 <p>フォーカスを無理やりなんとかするようなブラウザ拡張がインストールされていたら対処しきれないが、多くの場合ではこの実装で問題なさそうだ。</p>

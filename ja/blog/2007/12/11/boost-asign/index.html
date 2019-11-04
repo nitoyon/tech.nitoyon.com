@@ -61,79 +61,74 @@
 <div class="entry-body">
 <section>
 <p><a href="http://d.hatena.ne.jp/faith_and_brave/20071127/1196154125">boost::assign使ってみた - Faith and Brave - C++で遊ぼう</a> にて boost::assign の使い方が紹介されていた。</p>
-<div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
-<span class="cp">#include &lt;vector&gt;</span>
-<span class="cp">#include &lt;shand/foreach.hpp&gt;</span>
-<span class="cp">#include &lt;boost/assign/std/vector.hpp&gt;</span>
+<pre class="cpp">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;shand/foreach.hpp&gt;
+#include &lt;boost/assign/std/vector.hpp&gt;
 
-<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
-<span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">assign</span><span class="p">;</span>
+using namespace std;
+using namespace boost::assign;
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span><span class="p">;</span>
+int main()
+{
+    vector&lt;int&gt; v;
 
-    <span class="n">v</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// ！！！</span>
+    v += 3, 1, 4; // ！！！
 
-    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
-        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    for(unsigned int i = 0; i &lt; v.size(); i++)
+        cout &lt;&lt; v[i] &lt;&lt; endl;
 
-    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    return 0;
+}</pre>
 <p>おおおおお、なんかすごい…！</p>
 <p>普通なら</p>
-<div class="highlight"><pre>    <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
-    <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
-</pre></div>
+<pre class="cpp">    v.push_back(3);
+    v.push_back(1);
+    v.push_back(4);</pre>
 <p>と書かなきゃならないところを</p>
-<div class="highlight"><pre>    <span class="n">v</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">;</span>
-</pre></div>
+<pre class="cpp">    v += 3, 1, 4;</pre>
 <p>と書ける。</p>
 <p>自分の C++ の常識からするとびっくりするような書き方なのだけど、C++ ではカンマ演算子は一番優先度が低く設定されていて、</p>
-<div class="highlight"><pre>    <span class="p">((</span><span class="n">v</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">4</span><span class="p">;</span>
-</pre></div>
+<pre class="cpp">    ((v += 3), 1), 4;</pre>
 <p>という順番で実行されるわけだ。+= 演算子では、戻り値として list_inserter クラスが返されていて、これのカンマ演算子がオーバーロードされているらしい。</p>
 <h1>boostのソースを再現</h1>
 <p>試しに、boost のソースに当たってみたが、テンプレート使いまくりで理解が困難だったので、このサンプルを動かすのに必要な機能だけを抽出してみた。</p>
-<div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
-<span class="cp">#include &lt;vector&gt;</span>
+<pre class="cpp">#include &lt;iostream&gt;
+#include &lt;vector&gt;
 
-<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+using namespace std;
 
-<span class="c1">// list_inserter クラスの定義</span>
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
-<span class="k">class</span> <span class="nc">list_inserter</span>
-<span class="p">{</span>
-<span class="k">private</span><span class="o">:</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">c</span><span class="p">;</span>
+// list_inserter クラスの定義
+template&lt;class T&gt;
+class list_inserter
+{
+private:
+    std::vector&lt;T&gt;&amp; c;
 
-<span class="k">public</span><span class="o">:</span>
-    <span class="n">list_inserter</span><span class="p">(</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">c</span> <span class="p">)</span> <span class="o">:</span> <span class="n">c</span><span class="p">(</span> <span class="n">c</span><span class="p">)</span>
-    <span class="p">{}</span>
+public:
+    list_inserter( vector&lt;T&gt;&amp; c ) : c( c)
+    {}
     
-    <span class="n">list_inserter</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">,(</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">r</span> <span class="p">)</span>
-    <span class="p">{</span>
-        <span class="n">c</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span> <span class="n">r</span> <span class="p">);</span>
-        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
-    <span class="p">}</span>
+    list_inserter&amp; operator,( const T&amp; r )
+    {
+        c.push_back( r );
+        return *this;
+    }
 
-    <span class="n">list_inserter</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">()(</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">t</span> <span class="p">)</span>
-    <span class="p">{</span>
-        <span class="n">c</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span> <span class="n">t</span> <span class="p">);</span>
-        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
+    list_inserter&amp; operator()( const T&amp; t )
+    {
+        c.push_back( t );
+        return *this;
+    }
+};
 
-<span class="c1">// += 演算子の定義</span>
-<span class="k">template</span><span class="o">&lt;</span> <span class="k">class</span> <span class="nc">T</span> <span class="o">&gt;</span>
-<span class="kr">inline</span> <span class="n">list_inserter</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
-<span class="k">operator</span><span class="o">+=</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">c</span><span class="p">,</span> <span class="n">T</span> <span class="n">v</span> <span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">return</span> <span class="n">list_inserter</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span> <span class="n">c</span> <span class="p">)(</span> <span class="n">v</span> <span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+// += 演算子の定義
+template&lt; class T &gt;
+inline list_inserter&lt;T&gt;
+operator+=( std::vector&lt;T&gt;&amp; c, T v )
+{
+    return list_inserter&lt;T&gt;( c )( v );
+}</pre>
 <p>operator+=( std::vector<T>&amp; c, T v ) で vector に対する += 演算子を定義している。普通なら、vector に push_back するだけなんだけど、ここで list_inserter を作成して返している。</p>
 <p>結果として、次のカンマで list_inserter のカンマ演算子オーバーロードが呼ばれて、vector に push_back されるというわけだ。</p>
 <h1>list_inserter を汎用的に</h1>

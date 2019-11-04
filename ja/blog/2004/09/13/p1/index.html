@@ -13,7 +13,7 @@
 	<meta property="og:title" content="WinForms のショートカットキーで使えるキーを増やす方法"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2004/09/13/p1/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content=" .NET Framework では、MenuItem のプロパティでショートカットキーを選べるのだけども、この選択肢が現実的なアプリケーションで想定するものよりもかなり少ない。Ctrl や Alt と方向キー・Home・Enter などとの組み合わせすら存在しない（System.Windows.Form.Shortcut 列挙体 参照）。これらのショートカットを利用できるようにするには、ソースコードレベルでショートカットを割り当てる必要がある。そのためには、親 Form の ProcessCmdKey をオーバーライドすればよい。ProcessCmdKey は全てのコントロールに存在し..."/>
+	<meta property="og:description" content=".NET Framework では、MenuItem のプロパティでショートカットキーを選べるのだけども、この選択肢が現実的なアプリケーションで想定するものよりもかなり少ない。Ctrl や Alt と方向キー・Home・Enter などとの組み合わせすら存在しない（System.Windows.Form.Shortcut 列挙体 参照）。これらのショートカットを利用できるようにするには、ソースコードレベルでショートカットを割り当てる必要がある。そのためには、親 Form の ProcessCmdKey をオーバーライドすればよい。ProcessCmdKey は全てのコントロールに存在し..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -64,16 +64,15 @@
 <p>これらのショートカットを利用できるようにするには、ソースコードレベルでショートカットを割り当てる必要がある。そのためには、親 Form の ProcessCmdKey をオーバーライドすればよい。</p>
 <p>ProcessCmdKey は全てのコントロールに存在し、フォーカスのあるコントロールから順に親 Form までキーストロークが処理されるまで呼ばれ続けるらしい。</p>
 <p>例えば、Alt+Home で特定のメニューをキックするなら次の通り。</p>
-<div class="highlight"><pre><span class="k">protected</span> <span class="k">override</span> <span class="kt">bool</span> <span class="nf">ProcessCmdKey</span><span class="p">(</span><span class="k">ref</span> <span class="n">Message</span> <span class="n">msg</span><span class="p">,</span> <span class="n">Keys</span> <span class="n">keyData</span><span class="p">)</span>
-<span class="p">{</span>
-	<span class="k">if</span><span class="p">(</span><span class="n">keyData</span> <span class="p">==</span> <span class="p">(</span><span class="n">Keys</span><span class="p">.</span><span class="n">Home</span> <span class="p">|</span> <span class="n">Keys</span><span class="p">.</span><span class="n">Alt</span><span class="p">))</span>
-	<span class="p">{</span>
-		<span class="n">menuXXXX_Click</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="k">null</span><span class="p">);</span>
-	<span class="p">}</span>
+<pre class="cs">protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+{
+	if(keyData == (Keys.Home | Keys.Alt))
+	{
+		menuXXXX_Click(this, null);
+	}
 
-	<span class="k">return</span> <span class="k">base</span><span class="p">.</span><span class="n">ProcessCmdKey</span><span class="p">(</span><span class="k">ref</span> <span class="n">msg</span><span class="p">,</span> <span class="n">keyData</span><span class="p">);</span> 
-<span class="p">}</span>
-</pre></div>
+	return base.ProcessCmdKey(ref msg, keyData); 
+}</pre>
 <h1>参照ページ</h1>
 <ul><li><a href="http://www.syncfusion.com/FAQ/WinForms/FAQ_c94c.asp#q961q">http://www.syncfusion.com/FAQ/WinForms/FAQ_c94c.asp#q961q</a></li><li><a href="http://pc2.2ch.net/tech/kako/1039/10396/1039646808.html">http://pc2.2ch.net/tech/kako/1039/10396/1039646808.html</a>の247-</li></ul>
 </section>

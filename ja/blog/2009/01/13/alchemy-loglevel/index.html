@@ -63,8 +63,7 @@
 <p>LOGLEVEL を設定すると、Alchemy の内部ログが出力されるようになる。</p>
 <p>libc 部分の組み込み関数や Alchemy の内部処理の情報が出力されるので、デバッグ時に役立つ。</p>
 <p>cygwin ではこんな感じ。</p>
-<div class="highlight"><pre><span class="nv">$ </span><span class="nb">export </span><span class="nv">LOGLEVEL</span><span class="o">=</span>6
-</pre></div>
+<pre class="sh">$ export LOGLEVEL=6</pre>
 <p>LOGLEVEL は1～5まである模様。数字が大きいほど細かいログも出力するようになる。6だと1～5の全部を吐く。</p>
 <p>ログは trace として吐かれる。注意しなきゃいけないのは、LOGLEVEL の値はコンパイル時に埋め込まれるので、レベルを変更するには再コンパイルする必要がある。</p>
 <h1>ログの例</h1>
@@ -79,36 +78,34 @@ Caught AlchemyLibInit 3</pre>
 <h1>コンパイル時の流れ</h1>
 <p>gcc のソースを見てみる。</p>
 <p>LOGLEVEL 環境変数の値がコンパイル時のパラメータとして渡されている。</p>
-<div class="highlight"><pre><span class="nv">$confShell</span> <span class="o">=</span> <span class="nv">$avmshell</span> <span class="p">?</span> <span class="s">&quot;true&quot;</span> <span class="p">:</span> <span class="s">&quot;false&quot;</span><span class="p">;</span>
-<span class="nv">$confNoShell</span> <span class="o">=</span> <span class="nv">$avmshell</span> <span class="p">?</span> <span class="s">&quot;false&quot;</span> <span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">;</span>
-<span class="nv">$confLogLevel</span> <span class="o">=</span> <span class="nv">$ENV</span><span class="p">{</span><span class="n">LOGLEVEL</span><span class="p">}</span> <span class="o">||</span> <span class="s">&quot;0&quot;</span><span class="p">;</span>
-<span class="nv">$confVector</span> <span class="o">=</span> <span class="nv">$ENV</span><span class="p">{</span><span class="n">NOASVECTOR</span><span class="p">}</span> <span class="p">?</span> <span class="s">&quot;false&quot;</span> <span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">;</span>
-<span class="nv">$confNoVector</span> <span class="o">=</span> <span class="nv">$ENV</span><span class="p">{</span><span class="n">NOASVECTOR</span><span class="p">}</span> <span class="p">?</span> <span class="s">&quot;true&quot;</span> <span class="p">:</span> <span class="s">&quot;false&quot;</span><span class="p">;</span>
-<span class="nv">$setjmpAbuse</span> <span class="o">=</span> <span class="nv">$ENV</span><span class="p">{</span><span class="n">SETJMPABUSE</span><span class="p">}</span> <span class="p">?</span> <span class="s">&quot;true&quot;</span> <span class="p">:</span> <span class="s">&quot;false&quot;</span><span class="p">;</span>
-<span class="nv">$confDebugger</span> <span class="o">=</span> <span class="nv">$debug</span> <span class="p">?</span> <span class="s">&quot;true&quot;</span> <span class="p">:</span> <span class="s">&quot;false&quot;</span><span class="p">;</span>
-<span class="nv">$confNoDebugger</span> <span class="o">=</span> <span class="nv">$debug</span> <span class="p">?</span> <span class="s">&quot;false&quot;</span> <span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">;</span>
-<span class="nb">push</span><span class="p">(</span><span class="nv">@asc</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::Debugger=$confDebugger&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::NoDebugger=$confNoDebugger&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::Shell=$confShell&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::NoShell=$confNoShell&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::LogLevel=$confLogLevel&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::Vector=$confVector&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::NoVector=$confNoVector&quot;</span><span class="p">,</span>
-  <span class="s">&quot;-config&quot;</span><span class="p">,</span> <span class="s">&quot;Alchemy::SetjmpAbuse=$setjmpAbuse&quot;</span>
-<span class="p">);</span>
-</pre></div>
+<pre class="perl">$confShell = $avmshell ? &quot;true&quot; : &quot;false&quot;;
+$confNoShell = $avmshell ? &quot;false&quot; : &quot;true&quot;;
+$confLogLevel = $ENV{LOGLEVEL} || &quot;0&quot;;
+$confVector = $ENV{NOASVECTOR} ? &quot;false&quot; : &quot;true&quot;;
+$confNoVector = $ENV{NOASVECTOR} ? &quot;true&quot; : &quot;false&quot;;
+$setjmpAbuse = $ENV{SETJMPABUSE} ? &quot;true&quot; : &quot;false&quot;;
+$confDebugger = $debug ? &quot;true&quot; : &quot;false&quot;;
+$confNoDebugger = $debug ? &quot;false&quot; : &quot;true&quot;;
+push(@asc,
+  &quot;-config&quot;, &quot;Alchemy::Debugger=$confDebugger&quot;,
+  &quot;-config&quot;, &quot;Alchemy::NoDebugger=$confNoDebugger&quot;,
+  &quot;-config&quot;, &quot;Alchemy::Shell=$confShell&quot;,
+  &quot;-config&quot;, &quot;Alchemy::NoShell=$confNoShell&quot;,
+  &quot;-config&quot;, &quot;Alchemy::LogLevel=$confLogLevel&quot;,
+  &quot;-config&quot;, &quot;Alchemy::Vector=$confVector&quot;,
+  &quot;-config&quot;, &quot;Alchemy::NoVector=$confNoVector&quot;,
+  &quot;-config&quot;, &quot;Alchemy::SetjmpAbuse=$setjmpAbuse&quot;
+);</pre>
 <h1>AS のコード</h1>
 <p>gcc が吐き出す AS3 のコードはこんな感じ。</p>
 <p>（※中間ファイルの吐き出し方は <a href="/ja/blog/2009/01/09/alchemy-keep-intermediate-files/">Alchemy で中間ファイルを消さない設定</a> を参照）</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kd">var</span> <span class="nx">glogLvl</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">Alchemy</span><span class="o">::</span><span class="nx">LogLevel</span><span class="p">;</span>
+<pre class="javascript">public var glogLvl:int = Alchemy::LogLevel;
 
-<span class="kr">public</span> <span class="kd">function</span> <span class="nx">log</span><span class="p">(</span><span class="nx">lvl</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">msg</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-<span class="p">{</span>
-  <span class="k">if</span><span class="p">(</span><span class="nx">lvl</span> <span class="o">&lt;</span> <span class="nx">glogLvl</span><span class="p">)</span>
-    <span class="nx">trace</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+public function log(lvl:int, msg:String):void
+{
+  if(lvl &lt; glogLvl)
+    trace(msg);
+}</pre>
 <p>Alchemy::LogLevel の値はコンパイル時に -config で指定された値が設定される。つまり、glogLvl には LOGLEVEL の値が格納される。</p>
 <p>よって、log 関数では LOGLEVEL の値よりも小さいログレベルのログが trace に吐かれることとなる。</p>
 <h1>ちなみに</h1>

@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Go 言語で宇宙旅行風のアニメーション GIF を作った"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="宇宙旅行風のアニメーション GIF を Golang で生成してみた。完成品はこちら。ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。draw2d を使って描画するGolang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、draw2d を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。次のコードでは、draw2dimg と draw2dkit を使って、#808080 の四角を描画する例。package mainimport ( &quot;github.com/..."/>
+	<meta property="og:description" content="宇宙旅行風のアニメーション GIF を Golang で生成してみた。完成品はこちら。ソースコードはこの記事の末尾に掲載しています。以下では使ったライブラリーやテクニックを簡単に説明します。draw2d を使って描画するGolang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、draw2d を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。次のコードでは、draw2dimg と draw2dkit を使って、#808080 の四角を描画する例。package mainimport ( &quot;github.com/llgco..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/ja/blog/2016/01/18/space-travel-animated-gif/space-thumb.gif"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -76,24 +76,24 @@
 <p>Golang の標準ライブラリーだけでは複雑な図形を描画するのは難しいので、<a href="https://github.com/llgcode/draw2d">draw2d</a> を使ってみることにした。こいつを使えば、線とか弧とかベジェ曲線を描けるし、線の色や塗る色も設定できる。</p>
 
 <p>次のコードでは、<code>draw2dimg</code> と <code>draw2dkit</code> を使って、#808080 の四角を描画する例。</p>
-<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="k">package</span> <span class="n">main</span>
 
-<span class="kn">import</span> <span class="p">(</span>
-    <span class="s">&quot;github.com/llgcode/draw2d/draw2dimg&quot;</span>
-    <span class="s">&quot;github.com/llgcode/draw2d/draw2dkit&quot;</span>
-    <span class="s">&quot;image&quot;</span>
-    <span class="s">&quot;image/color&quot;</span>
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"github.com/llgcode/draw2d/draw2dimg"</span>
+    <span class="s">"github.com/llgcode/draw2d/draw2dkit"</span>
+    <span class="s">"image"</span>
+    <span class="s">"image/color"</span>
 <span class="p">)</span>
 
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
-    <span class="nx">gc</span> <span class="o">:=</span> <span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">NewGraphicContext</span><span class="p">(</span><span class="nx">img</span><span class="p">)</span>
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">img</span> <span class="o">:=</span> <span class="n">image</span><span class="o">.</span><span class="n">NewRGBA</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">200</span><span class="p">,</span> <span class="m">200</span><span class="p">))</span>
+    <span class="n">gc</span> <span class="o">:=</span> <span class="n">draw2dimg</span><span class="o">.</span><span class="n">NewGraphicContext</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
-    <span class="c1">// Draw rectangle (#808080)</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="mh">0x80</span><span class="p">})</span>
-    <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Rectangle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="c">// Draw rectangle (#808080)</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">SetFillColor</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">Gray</span><span class="p">{</span><span class="m">0x80</span><span class="p">})</span>
+    <span class="n">draw2dkit</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="m">50</span><span class="p">,</span> <span class="m">50</span><span class="p">,</span> <span class="m">100</span><span class="p">,</span> <span class="m">100</span><span class="p">)</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">Fill</span><span class="p">()</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
 <span class="p">}</span>
 </code></pre></div>
 <p><code>draw2dimg.NewGraphicContext</code> は引数に <code>image.RGBA</code> (透明度つきの RGB 画像) を渡す必要があるんだけど、アニメーション GIF を <code>gif.EncodeAll</code> で作るときには <code>image.Palettted</code> (パレットの色だけを使った画像) を渡さなきゃいけない。</p>
@@ -112,129 +112,129 @@
 <p>1 枚の GIF を生成する <code>gif.Encode</code> は自動的に <code>image.RBGA</code> を <code>image.Paletted</code> に変換するんだけど、アニメーション GIF を生成する <code>gif.EncodeAll</code> は変換してくれない。</p>
 
 <p>なので、自分で変換処理を実装する必要がある。といっても、<code>gif.Encode</code> と同じように、標準ライブラリで用意された <code>draw.FloydSteinberg</code> を使って <a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89-%E3%82%B9%E3%82%BF%E3%82%A4%E3%83%B3%E3%83%90%E3%83%BC%E3%82%B0%E3%83%BB%E3%83%87%E3%82%A3%E3%82%B6%E3%83%AA%E3%83%B3%E3%82%B0">フロイド-スタインバーグ・ディザリング</a> を使うと簡単。こんな風に。</p>
-<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="k">package</span> <span class="n">main</span>
 
-<span class="kn">import</span> <span class="p">(</span>
-    <span class="s">&quot;image&quot;</span>
-    <span class="s">&quot;image/color&quot;</span>
-    <span class="s">&quot;image/draw&quot;</span>
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"image"</span>
+    <span class="s">"image/color"</span>
+    <span class="s">"image/draw"</span>
 <span class="p">)</span>
 
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">img</span> <span class="o">:=</span> <span class="n">image</span><span class="o">.</span><span class="n">NewRGBA</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">200</span><span class="p">,</span> <span class="m">200</span><span class="p">))</span>
 
-    <span class="c1">// パレットを準備 (#ffffff, #000000, #ff0000)</span>
-    <span class="kd">var</span> <span class="nx">palette</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
-    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">White</span><span class="p">)</span>
-    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Black</span><span class="p">)</span>
-    <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">RGBA</span><span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">})</span>
+    <span class="c">// パレットを準備 (#ffffff, #000000, #ff0000)</span>
+    <span class="k">var</span> <span class="n">palette</span> <span class="n">color</span><span class="o">.</span><span class="n">Palette</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">Palette</span><span class="p">{}</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">color</span><span class="o">.</span><span class="n">White</span><span class="p">)</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">color</span><span class="o">.</span><span class="n">Black</span><span class="p">)</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">color</span><span class="o">.</span><span class="n">RGBA</span><span class="p">{</span><span class="m">0xff</span><span class="p">,</span> <span class="m">0x00</span><span class="p">,</span> <span class="m">0x00</span><span class="p">,</span> <span class="m">0xff</span><span class="p">})</span>
 
-    <span class="c1">// ディザリングする</span>
-    <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">palette</span><span class="p">)</span>
-    <span class="nx">draw</span><span class="p">.</span><span class="nx">FloydSteinberg</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">pm</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">image</span><span class="p">.</span><span class="nx">ZP</span><span class="p">)</span>
+    <span class="c">// ディザリングする</span>
+    <span class="n">pm</span> <span class="o">:=</span> <span class="n">image</span><span class="o">.</span><span class="n">NewPaletted</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">Bounds</span><span class="p">(),</span> <span class="n">palette</span><span class="p">)</span>
+    <span class="n">draw</span><span class="o">.</span><span class="n">FloydSteinberg</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">pm</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">Bounds</span><span class="p">(),</span> <span class="n">img</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">ZP</span><span class="p">)</span>
 <span class="p">}</span>
 </code></pre></div>
 <h1>ソースコード全体</h1>
 
 <p>全部で 100 行になってます。</p>
-<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><code class="language-go" data-lang="go"><span class="k">package</span> <span class="n">main</span>
 
-<span class="kn">import</span> <span class="p">(</span>
-    <span class="s">&quot;github.com/llgcode/draw2d/draw2dimg&quot;</span>
-    <span class="s">&quot;github.com/llgcode/draw2d/draw2dkit&quot;</span>
-    <span class="s">&quot;image&quot;</span>
-    <span class="s">&quot;image/color&quot;</span>
-    <span class="s">&quot;image/draw&quot;</span>
-    <span class="s">&quot;image/gif&quot;</span>
-    <span class="s">&quot;math&quot;</span>
-    <span class="s">&quot;math/rand&quot;</span>
-    <span class="s">&quot;os&quot;</span>
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"github.com/llgcode/draw2d/draw2dimg"</span>
+    <span class="s">"github.com/llgcode/draw2d/draw2dkit"</span>
+    <span class="s">"image"</span>
+    <span class="s">"image/color"</span>
+    <span class="s">"image/draw"</span>
+    <span class="s">"image/gif"</span>
+    <span class="s">"math"</span>
+    <span class="s">"math/rand"</span>
+    <span class="s">"os"</span>
 <span class="p">)</span>
 
-<span class="kd">var</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">250</span>
-<span class="kd">var</span> <span class="nx">palette</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
-<span class="kd">var</span> <span class="nx">zCycle</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">8</span>
-<span class="kd">var</span> <span class="nx">zMin</span><span class="p">,</span> <span class="nx">zMax</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">15</span>
+<span class="k">var</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="kt">float64</span> <span class="o">=</span> <span class="m">500</span><span class="p">,</span> <span class="m">250</span>
+<span class="k">var</span> <span class="n">palette</span> <span class="n">color</span><span class="o">.</span><span class="n">Palette</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">Palette</span><span class="p">{}</span>
+<span class="k">var</span> <span class="n">zCycle</span> <span class="kt">float64</span> <span class="o">=</span> <span class="m">8</span>
+<span class="k">var</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span> <span class="kt">float64</span> <span class="o">=</span> <span class="m">1</span><span class="p">,</span> <span class="m">15</span>
 
-<span class="kd">type</span> <span class="nx">Point</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span> <span class="kt">float64</span>
+<span class="k">type</span> <span class="n">Point</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="kt">float64</span>
 <span class="p">}</span>
 
-<span class="kd">type</span> <span class="nx">Circle</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">X</span><span class="p">,</span> <span class="nx">Y</span><span class="p">,</span> <span class="nx">Z</span><span class="p">,</span> <span class="nx">R</span> <span class="kt">float64</span>
+<span class="k">type</span> <span class="n">Circle</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">R</span> <span class="kt">float64</span>
 <span class="p">}</span>
 
-<span class="c1">// ループするように星を描画する</span>
-<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Circle</span><span class="p">)</span> <span class="nx">Draw</span><span class="p">(</span><span class="nx">gc</span> <span class="o">*</span><span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">GraphicContext</span><span class="p">,</span> <span class="nx">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">z</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Z</span> <span class="o">-</span> <span class="nx">ratio</span><span class="o">*</span><span class="nx">zCycle</span>
+<span class="c">// ループするように星を描画する</span>
+<span class="k">func</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span><span class="n">Circle</span><span class="p">)</span> <span class="n">Draw</span><span class="p">(</span><span class="n">gc</span> <span class="o">*</span><span class="n">draw2dimg</span><span class="o">.</span><span class="n">GraphicContext</span><span class="p">,</span> <span class="n">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">z</span> <span class="o">:=</span> <span class="n">c</span><span class="o">.</span><span class="n">Z</span> <span class="o">-</span> <span class="n">ratio</span><span class="o">*</span><span class="n">zCycle</span>
 
-    <span class="k">for</span> <span class="nx">z</span> <span class="p">&lt;</span> <span class="nx">zMax</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="nx">z</span> <span class="o">&gt;=</span> <span class="nx">zMin</span> <span class="p">{</span>
-            <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">r</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">X</span><span class="o">/</span><span class="nx">z</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Y</span><span class="o">/</span><span class="nx">z</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">R</span><span class="o">/</span><span class="nx">z</span>
-            <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">White</span><span class="p">)</span>
-            <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
-            <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Circle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="nx">w</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="nx">x</span><span class="p">,</span> <span class="nx">h</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="nx">y</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
-            <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="n">zMax</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="o">&gt;=</span> <span class="n">zMin</span> <span class="p">{</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span> <span class="o">:=</span> <span class="n">c</span><span class="o">.</span><span class="n">X</span><span class="o">/</span><span class="n">z</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">Y</span><span class="o">/</span><span class="n">z</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">R</span><span class="o">/</span><span class="n">z</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">SetFillColor</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">White</span><span class="p">)</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">Fill</span><span class="p">()</span>
+            <span class="n">draw2dkit</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="n">w</span><span class="o">/</span><span class="m">2</span><span class="o">+</span><span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="o">/</span><span class="m">2</span><span class="o">+</span><span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
         <span class="p">}</span>
-        <span class="nx">z</span> <span class="o">+=</span> <span class="nx">zCycle</span>
+        <span class="n">z</span> <span class="o">+=</span> <span class="n">zCycle</span>
     <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="nx">drawFrame</span><span class="p">(</span><span class="nx">circles</span> <span class="p">[]</span><span class="nx">Circle</span><span class="p">,</span> <span class="nx">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span> <span class="p">{</span>
-    <span class="nx">img</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewRGBA</span><span class="p">(</span><span class="nx">image</span><span class="p">.</span><span class="nx">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nx">w</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nx">h</span><span class="p">)))</span>
-    <span class="nx">gc</span> <span class="o">:=</span> <span class="nx">draw2dimg</span><span class="p">.</span><span class="nx">NewGraphicContext</span><span class="p">(</span><span class="nx">img</span><span class="p">)</span>
+<span class="k">func</span> <span class="n">drawFrame</span><span class="p">(</span><span class="n">circles</span> <span class="p">[]</span><span class="n">Circle</span><span class="p">,</span> <span class="n">ratio</span> <span class="kt">float64</span><span class="p">)</span> <span class="o">*</span><span class="n">image</span><span class="o">.</span><span class="n">Paletted</span> <span class="p">{</span>
+    <span class="n">img</span> <span class="o">:=</span> <span class="n">image</span><span class="o">.</span><span class="n">NewRGBA</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="kt">int</span><span class="p">(</span><span class="n">h</span><span class="p">)))</span>
+    <span class="n">gc</span> <span class="o">:=</span> <span class="n">draw2dimg</span><span class="o">.</span><span class="n">NewGraphicContext</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
-    <span class="c1">// 背景を描画</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">SetFillColor</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="mh">0x11</span><span class="p">})</span>
-    <span class="nx">draw2dkit</span><span class="p">.</span><span class="nx">Rectangle</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">Fill</span><span class="p">()</span>
-    <span class="nx">gc</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+    <span class="c">// 背景を描画</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">SetFillColor</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">Gray</span><span class="p">{</span><span class="m">0x11</span><span class="p">})</span>
+    <span class="n">draw2dkit</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">Fill</span><span class="p">()</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
 
-    <span class="c1">// 星を描画</span>
-    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">circle</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">circles</span> <span class="p">{</span>
-        <span class="nx">circle</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">gc</span><span class="p">,</span> <span class="nx">ratio</span><span class="p">)</span>
+    <span class="c">// 星を描画</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">circle</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">circles</span> <span class="p">{</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">gc</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="c1">// ディザリングする</span>
-    <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">image</span><span class="p">.</span><span class="nx">NewPaletted</span><span class="p">(</span><span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">palette</span><span class="p">)</span>
-    <span class="nx">draw</span><span class="p">.</span><span class="nx">FloydSteinberg</span><span class="p">.</span><span class="nx">Draw</span><span class="p">(</span><span class="nx">pm</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">Bounds</span><span class="p">(),</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">image</span><span class="p">.</span><span class="nx">ZP</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nx">pm</span>
+    <span class="c">// ディザリングする</span>
+    <span class="n">pm</span> <span class="o">:=</span> <span class="n">image</span><span class="o">.</span><span class="n">NewPaletted</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">Bounds</span><span class="p">(),</span> <span class="n">palette</span><span class="p">)</span>
+    <span class="n">draw</span><span class="o">.</span><span class="n">FloydSteinberg</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">pm</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">Bounds</span><span class="p">(),</span> <span class="n">img</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">ZP</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pm</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// 4000 個の星を準備</span>
-    <span class="nx">circles</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Circle</span><span class="p">{}</span>
-    <span class="k">for</span> <span class="nb">len</span><span class="p">(</span><span class="nx">circles</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mi">4000</span> <span class="p">{</span>
-        <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="o">:=</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span><span class="o">*</span><span class="mi">8</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span><span class="o">*</span><span class="mi">8</span><span class="o">-</span><span class="mi">4</span>
-        <span class="k">if</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Abs</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mf">0.5</span> <span class="o">&amp;&amp;</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Abs</span><span class="p">(</span><span class="nx">y</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mf">0.5</span> <span class="p">{</span>
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c">// 4000 個の星を準備</span>
+    <span class="n">circles</span> <span class="o">:=</span> <span class="p">[]</span><span class="n">Circle</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="nb">len</span><span class="p">(</span><span class="n">circles</span><span class="p">)</span> <span class="o">&lt;</span> <span class="m">4000</span> <span class="p">{</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">rand</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span><span class="o">*</span><span class="m">8</span><span class="o">-</span><span class="m">4</span><span class="p">,</span> <span class="n">rand</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span><span class="o">*</span><span class="m">8</span><span class="o">-</span><span class="m">4</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">Abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="m">0.5</span> <span class="o">&amp;&amp;</span> <span class="n">math</span><span class="o">.</span><span class="n">Abs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="m">0.5</span> <span class="p">{</span>
             <span class="k">continue</span>
         <span class="p">}</span>
-        <span class="nx">z</span> <span class="o">:=</span> <span class="nx">rand</span><span class="p">.</span><span class="nx">Float64</span><span class="p">()</span> <span class="o">*</span> <span class="nx">zCycle</span>
-        <span class="nx">circles</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">circles</span><span class="p">,</span> <span class="nx">Circle</span><span class="p">{</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">y</span> <span class="o">*</span> <span class="nx">h</span><span class="p">,</span> <span class="nx">z</span><span class="p">,</span> <span class="mi">5</span><span class="p">})</span>
+        <span class="n">z</span> <span class="o">:=</span> <span class="n">rand</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span> <span class="o">*</span> <span class="n">zCycle</span>
+        <span class="n">circles</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">circles</span><span class="p">,</span> <span class="n">Circle</span><span class="p">{</span><span class="n">x</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">h</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="m">5</span><span class="p">})</span>
     <span class="p">}</span>
 
-    <span class="c1">// パレットを準備 (#000000, #111111, ..., #ffffff)</span>
-    <span class="nx">palette</span> <span class="p">=</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Palette</span><span class="p">{}</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">16</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
-        <span class="nx">palette</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">palette</span><span class="p">,</span> <span class="nx">color</span><span class="p">.</span><span class="nx">Gray</span><span class="p">{</span><span class="nb">uint8</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mh">0x11</span><span class="p">})</span>
+    <span class="c">// パレットを準備 (#000000, #111111, ..., #ffffff)</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">Palette</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="m">16</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">color</span><span class="o">.</span><span class="n">Gray</span><span class="p">{</span><span class="kt">uint8</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="m">0x11</span><span class="p">})</span>
     <span class="p">}</span>
 
-    <span class="c1">// 30 個の画像を作成</span>
-    <span class="kd">var</span> <span class="nx">images</span> <span class="p">[]</span><span class="o">*</span><span class="nx">image</span><span class="p">.</span><span class="nx">Paletted</span>
-    <span class="kd">var</span> <span class="nx">delays</span> <span class="p">[]</span><span class="kt">int</span>
-    <span class="nx">count</span> <span class="o">:=</span> <span class="mi">30</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">count</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
-        <span class="nx">pm</span> <span class="o">:=</span> <span class="nx">drawFrame</span><span class="p">(</span><span class="nx">circles</span><span class="p">,</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="o">/</span><span class="nb">float64</span><span class="p">(</span><span class="nx">count</span><span class="p">))</span>
-        <span class="nx">images</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">images</span><span class="p">,</span> <span class="nx">pm</span><span class="p">)</span>
-        <span class="nx">delays</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">delays</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="c">// 30 個の画像を作成</span>
+    <span class="k">var</span> <span class="n">images</span> <span class="p">[]</span><span class="o">*</span><span class="n">image</span><span class="o">.</span><span class="n">Paletted</span>
+    <span class="k">var</span> <span class="n">delays</span> <span class="p">[]</span><span class="kt">int</span>
+    <span class="n">count</span> <span class="o">:=</span> <span class="m">30</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">pm</span> <span class="o">:=</span> <span class="n">drawFrame</span><span class="p">(</span><span class="n">circles</span><span class="p">,</span> <span class="kt">float64</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="kt">float64</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">pm</span><span class="p">)</span>
+        <span class="n">delays</span> <span class="o">=</span> <span class="nb">append</span><span class="p">(</span><span class="n">delays</span><span class="p">,</span> <span class="m">4</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="c1">// gif を出力</span>
-    <span class="nx">f</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">&quot;space.gif&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">O_WRONLY</span><span class="p">|</span><span class="nx">os</span><span class="p">.</span><span class="nx">O_CREATE</span><span class="p">,</span> <span class="mo">0600</span><span class="p">)</span>
-    <span class="k">defer</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
-    <span class="nx">gif</span><span class="p">.</span><span class="nx">EncodeAll</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">gif</span><span class="p">.</span><span class="nx">GIF</span><span class="p">{</span>
-        <span class="nx">Image</span><span class="p">:</span> <span class="nx">images</span><span class="p">,</span>
-        <span class="nx">Delay</span><span class="p">:</span> <span class="nx">delays</span><span class="p">,</span>
+    <span class="c">// gif を出力</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">_</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">OpenFile</span><span class="p">(</span><span class="s">"space.gif"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_WRONLY</span><span class="o">|</span><span class="n">os</span><span class="o">.</span><span class="n">O_CREATE</span><span class="p">,</span> <span class="m">0600</span><span class="p">)</span>
+    <span class="k">defer</span> <span class="n">f</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+    <span class="n">gif</span><span class="o">.</span><span class="n">EncodeAll</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">gif</span><span class="o">.</span><span class="n">GIF</span><span class="p">{</span>
+        <span class="n">Image</span><span class="o">:</span> <span class="n">images</span><span class="p">,</span>
+        <span class="n">Delay</span><span class="o">:</span> <span class="n">delays</span><span class="p">,</span>
     <span class="p">})</span>
 <span class="p">}</span>
 </code></pre></div>

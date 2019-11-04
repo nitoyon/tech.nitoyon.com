@@ -182,7 +182,7 @@
 <p><a href="https://github.com/joyent/node/blob/v0.10.19/lib/fs.js"><code>lib/fs.js</code></a> → <a href="https://github.com/joyent/node/blob/v0.10.19/src/node_stat_watcher.cc#L112"><code>src/node_stat_watcher.cc</code></a> の順にたどっていくと、<code>uv_fs_poll_start()</code> 関数が本丸だと分かった。</p>
 
 <p>あとは、<code>uv_fs_poll_start()</code> の流れをつかめばおしまい。<a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L56"><code>deps/uv/src/fs-poll.c</code></a> を見てみよう。なんとなくポーリングをしていそうな名前である。</p>
-<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">uv_fs_poll_start</span><span class="p">(</span><span class="kt">uv_fs_poll_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">uv_fs_poll_start</span><span class="p">(</span><span class="n">uv_fs_poll_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
                      <span class="n">uv_fs_poll_cb</span> <span class="n">cb</span><span class="p">,</span>
                      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                      <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">interval</span><span class="p">)</span> <span class="p">{</span>
@@ -194,7 +194,7 @@
 <p>肝は <code>uv_fs_stat()</code> の呼び出し。この関数は、Node.js で言うところの <code>fs.stat()</code> 相当の処理だろう。ファイルの更新日時の取得を依頼して、取得が完了したら、<code>poll_cb()</code> が呼ばれる。</p>
 
 <p>その <a href="https://github.com/joyent/node/blob/v0.10.19/deps/uv/src/fs-poll.c#L139"><code>poll_cb()</code></a> を見てみよう。</p>
-<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="k">static</span> <span class="kt">void</span> <span class="nf">poll_cb</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="k">static</span> <span class="kt">void</span> <span class="nf">poll_cb</span><span class="p">(</span><span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// 異常処理とか、前回と違ってたらイベント発行する処理とか</span>
 
   <span class="cm">/* Reschedule timer, subtract the delay from doing the stat(). */</span>
@@ -204,6 +204,7 @@
   <span class="k">if</span> <span class="p">(</span><span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">timer_handle</span><span class="p">,</span> <span class="n">timer_cb</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
     <span class="n">abort</span><span class="p">();</span>
 <span class="p">}</span>
+
 </code></pre></div>
 <p>実行結果の解析が終わったら、<code>interval</code> 後に <code>timer_cb()</code> が呼ばれるようにタイマーを開始している。</p>
 

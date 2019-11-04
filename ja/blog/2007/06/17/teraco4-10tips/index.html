@@ -88,15 +88,13 @@
 <p>スタティックリンクの感覚に近い。</p>
 <h1>5. _root を自作クラスに</h1>
 <p>ステージの１フレーム目には</p>
-<div class="highlight"><pre><span class="nx">App</span><span class="p">.</span><span class="nx">main</span><span class="p">(</span><span class="nx">_root</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">App.main(_root);</pre>
 <p>と書いておく。</p>
 <p>App.main() の実装は次の通り。</p>
-<div class="highlight"><pre><span class="kr">static</span> <span class="kr">public</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">(</span><span class="nx">target</span><span class="o">:</span><span class="nx">MovieClip</span><span class="p">)</span><span class="o">:</span><span class="nx">Void</span> <span class="p">{</span>
-    <span class="nx">target</span><span class="p">.</span><span class="nx">__proto__</span> <span class="o">=</span> <span class="nx">App</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
-    <span class="nb">Function</span><span class="p">(</span><span class="nx">App</span><span class="p">).</span><span class="nx">apply</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">static public function main(target:MovieClip):Void {
+    target.__proto__ = App.prototype;
+    Function(App).apply(target, null);
+}</pre>
 <p>何をやってるかというと...</p>
 <ul><li>prototype を書き換えることにより、_root を App クラスにしてしまう</li><li>App のコンストラクタが呼ばれたことにする</li></ul>
 <p>ということ。__proto__ とか apply あたりは、かなり技術的に込み入ってるので、分からない人は おまじない と考えてもよいかも。</p>
@@ -104,50 +102,46 @@
 <p>（補足）CS3 からは DocumentClass を設定できるようになるので、こういうバッドノウハウも必要なし。</p>
 <h1>6. FuseKit でアニメーション</h1>
 <p>var f:Fuse = new Fuse({...}) 形式でコンストラクタの中に全部書いちゃう。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">f</span><span class="o">:</span><span class="nx">Fuse</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Fuse</span><span class="p">(</span>
-    <span class="p">{</span> <span class="nx">target</span><span class="o">:</span><span class="k">this</span><span class="p">.</span><span class="nx">bg_mc</span><span class="p">,</span> <span class="nx">alpha</span><span class="o">:</span><span class="mi">100</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">easing</span><span class="o">:</span><span class="s1">&#39;linear&#39;</span> <span class="p">},</span>
-    <span class="p">[</span>
-        <span class="p">{</span> <span class="nx">target</span><span class="o">:</span><span class="k">this</span><span class="p">.</span><span class="nx">_memberImg_mc</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">easing</span><span class="o">:</span><span class="s1">&#39;easeOutCubic&#39;</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">target</span><span class="o">:</span><span class="k">this</span><span class="p">.</span><span class="nx">_mirrorImg_mc</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="mi">130</span><span class="o">+</span><span class="mi">120</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">easing</span><span class="o">:</span><span class="s1">&#39;easeOutCubic&#39;</span> <span class="p">}</span>
-    <span class="p">]</span>
-    <span class="p">{</span> <span class="nx">target</span><span class="o">:</span><span class="k">this</span><span class="p">.</span><span class="nx">name_mc</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="mi">135</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">easing</span><span class="o">:</span><span class="s1">&#39;easeOutCubic&#39;</span> <span class="p">},</span>
-    <span class="p">{</span> <span class="nx">target</span><span class="o">:</span><span class="k">this</span><span class="p">,</span> <span class="nx">alpha</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">delay</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span><span class="mf">0.5</span><span class="p">,</span> <span class="nx">easing</span><span class="o">:</span><span class="s1">&#39;linear&#39;</span> <span class="p">},</span>
-    <span class="p">{</span> <span class="nx">scope</span><span class="o">:</span><span class="nx">_root</span><span class="p">,</span> <span class="nx">func</span><span class="o">:</span><span class="nx">_root</span><span class="p">.</span><span class="nx">showAllMembers</span> <span class="p">}</span>
-<span class="p">);</span>
-<span class="nx">f</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">var f:Fuse = new Fuse(
+    { target:this.bg_mc, alpha:100, time:1, easing:'linear' },
+    [
+        { target:this._memberImg_mc, y:10, time:2, easing:'easeOutCubic' },
+        { target:this._mirrorImg_mc, y:130+120, time:2, easing:'easeOutCubic' }
+    ]
+    { target:this.name_mc, y:135, time:1, easing:'easeOutCubic' },
+    { target:this, alpha:0, delay:2, time:0.5, easing:'linear' },
+    { scope:_root, func:_root.showAllMembers }
+);
+f.start();</pre>
 <p>それぞれの MC は Flash 8 で アルファ 0% にしておくのを忘れずに。</p>
 <p>（感想）FuseKit は使い方を覚えたら簡単そうだ。Trick7 さんの <a href="http://www.trick7.com/blog/2006/11/05-110726.php">Fuseアニメーションの実行順序</a> が分かりよい。</p>
 <h1>7. MovieClipUtil.attachMovieRegisterClass() で MC をステージに配置</h1>
 <p>CASA フレームワークの MovieClipUtil.attachMovieRegisterClass() を使えば、MC とクラスを関連付けてステージに配置できる。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">mc</span><span class="o">:</span><span class="nx">MovieClip</span> <span class="o">=</span> 
-    <span class="nx">MovieClipUtil</span><span class="p">.</span><span class="nx">attachMovieRegisterClass</span><span class="p">(</span>
-        <span class="nx">LogoAnimation</span><span class="p">,</span>    <span class="c1">// クラス名</span>
-        <span class="k">this</span><span class="p">,</span>             <span class="c1">// 親 MC</span>
-        <span class="s1">&#39;Logo Animation&#39;</span><span class="p">,</span> <span class="c1">// リンゲージ名</span>
-        <span class="s1">&#39;_logo&#39;</span>           <span class="c1">// インスタンス名</span>
-    <span class="p">);</span>
-</pre></div>
+<pre class="javascript">var mc:MovieClip = 
+    MovieClipUtil.attachMovieRegisterClass(
+        LogoAnimation,    // クラス名
+        this,             // 親 MC
+        'Logo Animation', // リンゲージ名
+        '_logo'           // インスタンス名
+    );</pre>
 <p>１つの MC に対して、複数の実装を割り当てられるわけで、これはちょっと面白い。</p>
 <p>attachMovieRegisterClass は、内部で Object.registerClass を呼んでいるようだ。リンゲージプロパティの 「AS 2.0 クラス」をいじる関数の模様。なるほどなるほど。</p>
 <br />
 <h1>8. XmlUtil.xmlToObject() で XML をオブジェクトに変換</h1>
 <p>CASA フレームワークの便利な関数。XML を受け取って、Object にして返してくれる。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">XmlUtil</span><span class="p">.</span><span class="nx">xmlToObject</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_xmlLoad</span><span class="p">.</span><span class="nx">getXml</span><span class="p">())</span>
-</pre></div>
+<pre class="javascript">var obj:Object = XmlUtil.xmlToObject(this._xmlLoad.getXml())</pre>
 <p>Perl で言うところの XML::Simple、JavaScript で言うところの <a href="http://www.kawa.net/works/js/jkl/parsexml.html">JKL.ParseXML</a> みたいなもの。</p>
 <p>（補足）AS3.0 には E4X があるから、こういうのは不要かな。</p>
 <h1>9. LoadGroup 便利</h1>
 <p>またまた CASA フレームワークから。LoadGroup は URL を複数登録しておいて、まとめてロード、全部読み込み終わったら教えてもらえる。</p>
 <p>１～２個の画像なら手作業でも書けるけど、たくさんの画像を読み込む場合はかなり便利。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">loadGroup</span><span class="o">:</span><span class="nx">LoadGroup</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LoadGroup</span><span class="p">();</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">info</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">mc</span><span class="o">:</span><span class="nx">MovieClip</span> <span class="o">=</span> <span class="nx">MovieClipUtil</span><span class="p">.</span><span class="nx">createEmptyMovieClip</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s1">&#39;img&#39;</span> <span class="o">+</span> <span class="nx">i</span><span class="p">);</span>
-    <span class="nx">loadGroup</span><span class="p">.</span><span class="nx">addLoad</span><span class="p">(</span><span class="k">new</span> <span class="nx">MediaLoad</span><span class="p">(</span><span class="nx">mc</span><span class="p">,</span> <span class="s1">&#39;images/&#39;</span> <span class="o">+</span> <span class="nx">info</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">image</span><span class="p">,</span> <span class="kc">false</span><span class="p">));</span>
-<span class="p">}</span>
-<span class="nx">loadGroup</span><span class="p">.</span><span class="nx">addEventObserver</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">LoadGroup</span><span class="p">.</span><span class="nx">EVENT_LOAD_COMPLETE</span><span class="p">,</span> <span class="s1">&#39;handleLoadComplete&#39;</span><span class="p">);</span>
-<span class="nx">loadGroup</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">var loadGroup:LoadGroup = new LoadGroup();
+for (var i:Number = 0; i &lt; info.length; i++) {
+    var mc:MovieClip = MovieClipUtil.createEmptyMovieClip(this, 'img' + i);
+    loadGroup.addLoad(new MediaLoad(mc, 'images/' + info[i].image, false));
+}
+loadGroup.addEventObserver(this, LoadGroup.EVENT_LOAD_COMPLETE, 'handleLoadComplete');
+loadGroup.start();</pre>
 <h1>10. さくーしゃさんでも、はまる</h1>
 <p>途中、Saqoosha さんが、うまくいかずに30分ぐらい(?)、はまっていた。</p>
 <p>問題解決までのプロセスまで知れるっていうのは、ライブコーディングの魅力。</p>

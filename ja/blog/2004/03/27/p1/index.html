@@ -65,17 +65,15 @@
 <p>かといって自作でバイナリを解析するつもりは毛頭ない。</p>
 <p>PHPがインストールされていて、外部プロセスを起動する負荷を厭わなければ、<strong>PHP のgetimagesize関数を使う</strong>のが一番気楽だろう。この関数はGDがなくても動くのがうれしいところ。</p>
 <p>で、PHPのスクリプトはこんな感じ。仮に getsize.php という名前で保存するとしよう。</p>
-<div class="highlight"><pre><span class="cp">&lt;?</span>
-<span class="k">if</span><span class="p">(</span><span class="nb">is_file</span><span class="p">(</span><span class="nv">$argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-<span class="p">{</span>
-    <span class="k">list</span><span class="p">(</span><span class="nv">$w</span><span class="p">,</span> <span class="nv">$h</span><span class="p">)</span> <span class="o">=</span> <span class="nb">getimagesize</span><span class="p">(</span><span class="nv">$argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-    <span class="k">print</span> <span class="s2">&quot;</span><span class="si">$w</span><span class="s2">,</span><span class="si">$h</span><span class="s2">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</pre></div>
+<pre class="php">&lt;?
+if(is_file($argv[1]))
+{
+    list($w, $h) = getimagesize($argv[1]);
+    print &quot;$w,$h&quot;;
+}
+?&gt;</pre>
 <p>Perl では、</p>
-<div class="highlight"><pre><span class="k">my</span> <span class="p">(</span><span class="nv">$w</span><span class="p">,</span> <span class="nv">$h</span><span class="p">)</span> <span class="o">=</span> <span class="nb">split</span><span class="p">(</span><span class="sr">/,/</span><span class="p">,</span> <span class="sb">`php -f getsize.php &lt;画像のパス&gt;`</span><span class="p">);</span>
-</pre></div>
+<pre class="perl">my ($w, $h) = split(/,/, `php -f getsize.php &lt;画像のパス&gt;`);</pre>
 <p>とすりゃーよいだけ。</p>
 <p>蛇足ながら...</p>
 <ul><li>php や getsize.php はフルパスで書きましょう。</li><li>$w と $h が defined されているかチェックしましょう。</li><li>画像へのパスを利用者に入力させるのであれば、; や &amp; など怪しい文字列が含まれていないかチェックしましょう</li></ul>

@@ -67,89 +67,87 @@
 <br />
 <p>twitter にぶつくさつぶやきながら悩んでたら、c0rin さんに <a href="http://twitter.com/k0rin/status/3068226068">tiled を試すべし</a> と教えてもらえたので試してみた。</p>
 <p>重要なコードはココ。敷き詰める数を5にしている。</p>
-<div class="highlight"><pre><span class="c1">// tiled を true に、maxU, maxV に敷き詰める数を渡す</span>
-<span class="nx">m</span><span class="p">.</span><span class="nx">tiled</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-<span class="nx">m</span><span class="p">.</span><span class="nx">maxU</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-<span class="nx">m</span><span class="p">.</span><span class="nx">maxV</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-</pre></div>
+<pre class="javascript">// tiled を true に、maxU, maxV に敷き詰める数を渡す
+m.tiled = true;
+m.maxU = 5;
+m.maxV = 5;</pre>
 <p>で、試してみた完成品がこちら。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FPV3DTextureTest.swf&amp;bgcolor=%23ffffff" width="300" height="300" class="flash"></iframe></center></p>
 <p>PV3D のバージョンは 2.0.883</p>
 <p>本当なら Cube のサイズに応じて画像を敷き詰めてほしいんだけど、そういうことを実現してくれる Material はないようだ(?)。</p>
 <p>ソースはこれ。<a href="http://wonderfl.net/code/e3208d6ab7e4cda9232a95990a58397ab8ca7f1e">wonderfl にも post してる</a>。</p>
-<div class="highlight"><pre><span class="c1">// Papervision3d の BitmapMaterial の tiled 機能を利用して</span>
-<span class="c1">// 画像をテクスチャとして敷き詰めます。</span>
-<span class="c1">//</span>
-<span class="c1">// 左上に表示中の画像が利用する素材です。</span>
-<span class="c1">// これを５×５のサイズで立方体の面に貼り付けています。</span>
-<span class="c1">// キーワードは tiled, maxU, maxV です。 package {</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">ByteArray</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">objects</span><span class="p">.</span><span class="nx">primitives</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">view</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">materials</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">materials</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">MaterialsList</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">mx</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Base64Decoder</span><span class="p">;</span>
+<pre class="javascript">// Papervision3d の BitmapMaterial の tiled 機能を利用して
+// 画像をテクスチャとして敷き詰めます。
+//
+// 左上に表示中の画像が利用する素材です。
+// これを５×５のサイズで立方体の面に貼り付けています。
+// キーワードは tiled, maxU, maxV です。 package {
+import flash.display.*;
+import flash.events.Event;
+import flash.utils.ByteArray;
+import org.papervision3d.objects.primitives.*;
+import org.papervision3d.view.*;
+import org.papervision3d.materials.*;
+import org.papervision3d.materials.utils.MaterialsList;
+import mx.utils.Base64Decoder;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">PV3DTextureTest</span> <span class="kr">extends</span> <span class="nx">BasicView</span> <span class="p">{</span>
-    <span class="c1">// 表示する立方体</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cube</span><span class="o">:</span><span class="nx">Cube</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#000000&quot;, width=&quot;475&quot;, height=&quot;475&quot;)]
+public class PV3DTextureTest extends BasicView {
+    // 表示する立方体
+    private var cube:Cube;
 
-    <span class="c1">// 画像を BASE64 エンコードしたもの</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">ImageBase64</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="s2">&quot;R0lGODlhEAAQAJkAAOdfEwAAAPDQsAAAACH5BAAAAAAALAAAAAAQABAAAAI2hI4XhgYPXxBxxkqhvTJ33i0fuATm4l1TsnEt8GIymZ5uCiviqFG6ictBEDGhCmeCnZKCZbIAADs=&quot;</span><span class="p">;</span>
+    // 画像を BASE64 エンコードしたもの
+    private static var ImageBase64:String = &quot;R0lGODlhEAAQAJkAAOdfEwAAAPDQsAAAACH5BAAAAAAALAAAAAAQABAAAAI2hI4XhgYPXxBxxkqhvTJ33i0fuATm4l1TsnEt8GIymZ5uCiviqFG6ictBEDGhCmeCnZKCZbIAADs=&quot;;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">PV3DTextureTest</span><span class="p">(){</span>
-        <span class="c1">// 画像をロードして BitmapData に変換する</span>
-        <span class="c1">// 変換後、loadComplete 関数が呼ばれる</span>
-        <span class="nx">base64ToBitmapData</span><span class="p">(</span><span class="nx">ImageBase64</span><span class="p">,</span> <span class="nx">loadComplete</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function PV3DTextureTest(){
+        // 画像をロードして BitmapData に変換する
+        // 変換後、loadComplete 関数が呼ばれる
+        base64ToBitmapData(ImageBase64, loadComplete);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">loadComplete</span><span class="p">(</span><span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="c1">// 表示するテクスチャを右上に表示</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd</span><span class="p">));</span>
+    private function loadComplete(bmd:BitmapData):void{
+        // 表示するテクスチャを右上に表示
+        addChild(new Bitmap(bmd));
 
-        <span class="c1">// BitmapMaterial に BitmapData を渡す</span>
-        <span class="kd">var</span> <span class="nx">m</span><span class="o">:</span><span class="nx">BitmapMaterial</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapMaterial</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+        // BitmapMaterial に BitmapData を渡す
+        var m:BitmapMaterial = new BitmapMaterial(bmd, true);
 
-        <span class="c1">// tiled を true に、maxU, maxV に敷き詰める数を渡す</span>
-        <span class="nx">m</span><span class="p">.</span><span class="nx">tiled</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">m</span><span class="p">.</span><span class="nx">maxU</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="nx">m</span><span class="p">.</span><span class="nx">maxV</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        // tiled を true に、maxU, maxV に敷き詰める数を渡す
+        m.tiled = true;
+        m.maxU = 5;
+        m.maxV = 5;
 
-        <span class="c1">// Cube の面に貼り付ける</span>
-        <span class="nx">cube</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="k">new</span> <span class="nx">MaterialsList</span><span class="p">({</span><span class="nx">all</span><span class="o">:</span><span class="nx">m</span><span class="p">}));</span>
-        <span class="nx">scene</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">cube</span><span class="p">);</span>
+        // Cube の面に貼り付ける
+        cube = new Cube(new MaterialsList({all:m}));
+        scene.addChild(cube);
 
-        <span class="c1">// 描画を開始する</span>
-        <span class="nx">startRendering</span><span class="p">();</span>
-    <span class="p">}</span>
+        // 描画を開始する
+        startRendering();
+    }
 
-    <span class="kr">protected</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">onRenderTick</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">Event</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="nx">cube</span><span class="p">.</span><span class="nx">rotationX</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">cube</span><span class="p">.</span><span class="nx">rotationY</span> <span class="o">+=</span> <span class="p">.</span><span class="mi">8</span><span class="p">;</span>
-        <span class="kr">super</span><span class="p">.</span><span class="nx">onRenderTick</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
-    <span class="p">}</span>
+    protected override function onRenderTick(e:Event = null):void{
+        cube.rotationX += 1;
+        cube.rotationY += .8;
+        super.onRenderTick(e);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">base64ToBitmapData</span><span class="p">(</span><span class="nx">base64</span><span class="o">:</span><span class="nb">String</span><span class="p">,</span> <span class="nx">callback</span><span class="o">:</span><span class="nb">Function</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">decoder</span><span class="o">:</span><span class="nx">Base64Decoder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Base64Decoder</span><span class="p">();</span>
-        <span class="nx">decoder</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">base64</span><span class="p">);</span>
+    private function base64ToBitmapData(base64:String, callback:Function):void{
+        var decoder:Base64Decoder = new Base64Decoder();
+        decoder.decode(base64);
 
-        <span class="kd">var</span> <span class="nx">bytes</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">toByteArray</span><span class="p">();</span>
-        <span class="nx">bytes</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">loadBytes</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-            <span class="nx">callback</span><span class="p">(</span><span class="nx">bmd</span><span class="p">);</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span> 
-</pre></div>
+        var bytes:ByteArray = decoder.toByteArray();
+        bytes.position = 0;
+        var loader:Loader = new Loader();
+        loader.loadBytes(bytes);
+        var bmd:BitmapData = new BitmapData(16, 16);
+        loader.contentLoaderInfo.addEventListener(&quot;complete&quot;, function(event:Event):void{
+            var bmd:BitmapData = new BitmapData(loader.width, loader.height);
+            bmd.draw(loader);
+            callback(bmd);
+        });
+    }
+}
+} </pre>
 
 </div>
 

@@ -62,54 +62,47 @@
 <section>
 <p>文字列置換のお話。</p>
 <p>通常、replace は１回しか置換してくれない。</p>
-<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;aaaa&quot;</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">)</span>
-<span class="s2">&quot;Aaaa&quot;</span>
-</pre></div>
+<pre class="javascript">&gt;&gt;&gt; &quot;aaaa&quot;.replace(&quot;a&quot;, &quot;A&quot;)
+&quot;Aaaa&quot;</pre>
 <p>何度も置換させるには、正規表現を使うのが手っ取り早い。</p>
-<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;aaaa&quot;</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/a/g</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">)</span>
-<span class="s2">&quot;AAAA&quot;</span>
-</pre></div>
+<pre class="javascript">&gt;&gt;&gt; &quot;aaaa&quot;.replace(/a/g, &quot;A&quot;)
+&quot;AAAA&quot;</pre>
 <p>置換前の文字列を文字列で受け取ったときには、正規表現オブジェクトを作ればよい。RegExp コンストラクタの第二引数がフラグ。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">){</span>
-  <span class="kd">var</span> <span class="nx">reg</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="nx">before</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">);</span>
-  <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">reg</span><span class="p">,</span> <span class="nx">after</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="s2">&quot;aaaa&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">);</span>  <span class="c1">// AAAA</span>
-</pre></div>
+<pre class="javascript">function myReplaceGlobal(str, before, after){
+  var reg = new RegExp(before, &quot;g&quot;);
+  return str.replace(reg, after);
+}
+myReplaceGlobal(&quot;aaaa&quot;, &quot;a&quot;, &quot;A&quot;);  // AAAA</pre>
 <p>ただ、ドット(<code>.</code>)が任意の文字にマッチしてしまったりと、弊害もある。</p>
-<div class="highlight"><pre><span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="s2">&quot;foo.bar.&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">);</span>  <span class="c1">// AAAAAAAA</span>
-</pre></div>
+<pre class="javascript">myReplaceGlobal(&quot;foo.bar.&quot;, &quot;.&quot;, &quot;A&quot;);  // AAAAAAAA</pre>
 <p>ドット(<code>.</code>)は正規表現で任意の文字を表しちゃう。</p>
 <p>さぁ、どうしよう、というのが今回のお題。３つの対策を考えてみた。</p>
 <h1>escape!!</h1>
 <p>正規表現をエスケープする。とりあえず、ドット(<code>.</code>)のみ。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">){</span>
-  <span class="kd">var</span> <span class="nx">reg</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="nx">before</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/./g</span><span class="p">,</span> <span class="s2">&quot;\\.&quot;</span><span class="p">),</span> <span class="s2">&quot;g&quot;</span><span class="p">);</span>
-  <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">reg</span><span class="p">,</span> <span class="nx">after</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="s2">&quot;foo.bar.&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">);</span>  <span class="c1">// fooAbarA</span>
-</pre></div>
+<pre class="javascript">function myReplaceGlobal(str, before, after){
+  var reg = new RegExp(before.replace(/./g, &quot;\\.&quot;), &quot;g&quot;);
+  return str.replace(reg, after);
+}
+myReplaceGlobal(&quot;foo.bar.&quot;, &quot;.&quot;, &quot;A&quot;);  // fooAbarA</pre>
 <p>ドット(<code>.</code>)以外にも対応しなきゃいけないし、将来的に JavaScript の正規表現が拡張されたときの対応が大変。</p>
 <p>可能な限り避けたい方法。</p>
 <p>(追記) コメント欄で教えてもらいました。replace(/([^0-9A-Za-z_])/g, &#39;\\$1&#39;); でエスケープできるとのこと。</p>
 <h1>while!!</h1>
 <p>泥臭い方法。</p>
 <p>正規表現を使わず、文字列の replace を使う。１回しか置換してくれないので、while で値が変わらなくなるまで回す。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">){</span>
-  <span class="k">while</span><span class="p">(</span><span class="nx">str</span> <span class="o">!=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">)){</span>
-    <span class="nx">str</span> <span class="o">=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="nx">str</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="s2">&quot;foo.bar.&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">);</span>  <span class="c1">// fooAbarA</span>
-</pre></div>
+<pre class="javascript">function myReplaceGlobal(str, before, after){
+  while(str != str.replace(before, after)){
+    str = str.replace(before, after);
+  }
+  return str;
+}
+myReplaceGlobal(&quot;foo.bar.&quot;, &quot;.&quot;, &quot;A&quot;);  // fooAbarA</pre>
 <h1>split &amp; join</h1>
 <p>１行で書けて、ちょっとかっこいい。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span><span class="p">){</span>
-  <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">before</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">after</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="nx">myReplaceGlobal</span><span class="p">(</span><span class="s2">&quot;foo.bar.&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">);</span>  <span class="c1">// fooAbarA</span>
-</pre></div>
+<pre class="javascript">function myReplaceGlobal(str, before, after){
+  return str.split(before).join(after);
+}
+myReplaceGlobal(&quot;foo.bar.&quot;, &quot;.&quot;, &quot;A&quot;);  // fooAbarA</pre>
 <p>&quot;foo.bar.&quot; を . で split したら [&quot;foo&quot;, &quot;bar&quot;, &quot;&quot;] になって、それを A で join するので意図した結果が得られる。</p>
 <h1>まとめ</h1>
 <p>３つ示した。どれが好き？</p>

@@ -62,34 +62,32 @@
 
 <p>microsoft.com のポップアップメニューはどのようにして実現されているかを調べてみた。</p>
 <p>どうやら、スタイルシートで behavior を指定してるらしい（<a href="http://www.microsoft.com/library/flyoutmenu/default.css">http://www.microsoft.com/library/flyoutmenu/default.css</a>より）。</p>
-<div class="highlight"><pre><span class="nc">.flyoutMenu</span> <span class="p">{</span>
-    <span class="p">(</span><span class="n">snip</span><span class="p">)</span>
-    <span class="n">behavior</span><span class="o">:</span> <span class="sx">url(/library/flyoutmenu/default.htc)</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="css">.flyoutMenu {
+    (snip)
+    behavior: url(/library/flyoutmenu/default.htc);
+}</pre>
 <p>behavior ってIE限定の機能じゃん。開発効率が上がるけど、クロスブラウザを考えると嫌ですな。この時点で、さすがMSのサイト！という雰囲気がぷんぷん。</p>
 <p>気になったのが、ポップアップメニューに影がついているのはどうやっているか(上図参照)。若干後ろの画像が透けてます。デフォルトのfilterを使っただけじゃ、ああはならないはずなのに。調べてみて驚愕。影を表示する関数を抜粋するとこんな感じ（<a href="http://www.microsoft.com/library/flyoutmenu/default.htc">http://www.microsoft.com/library/flyoutmenu/default.htc</a>より抜粋）。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">makeRectangularDropShadow</span><span class="p">(</span><span class="nx">el</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">size</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">i</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">--</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">rect</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">rs</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">.</span><span class="nx">style</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="s1">&#39;absolute&#39;</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">left</span> <span class="o">=</span> <span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">posLeft</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">top</span> <span class="o">=</span> <span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">posTop</span> <span class="o">+</span> <span class="nx">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">offsetWidth</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">offsetHeight</span> <span class="o">+</span> <span class="s1">&#39;px&#39;</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">zIndex</span> <span class="o">=</span> <span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">zIndex</span> <span class="o">-</span> <span class="nx">i</span><span class="p">;</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">backgroundColor</span> <span class="o">=</span> <span class="nx">color</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">opacity</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">/</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
-        <span class="nx">rs</span><span class="p">.</span><span class="nx">filter</span> <span class="o">=</span> <span class="s1">&#39;alpha(opacity=&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="nx">opacity</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">;</span>
-        <span class="nx">el</span><span class="p">.</span><span class="nx">insertAdjacentElement</span><span class="p">(</span><span class="s1">&#39;afterEnd&#39;</span><span class="p">,</span> <span class="nx">rect</span><span class="p">);</span>
-        <span class="nx">global</span><span class="p">.</span><span class="nx">fo_shadows</span><span class="p">[</span><span class="nx">global</span><span class="p">.</span><span class="nx">fo_shadows</span><span class="p">.</span><span class="nx">length</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rect</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function makeRectangularDropShadow(el, color, size)
+{
+    var i;
+    for (i=size; i&gt;0; i--)
+    {
+        var rect = document.createElement('div');
+        var rs = rect.style
+        rs.position = 'absolute';
+        rs.left = (el.style.posLeft + i) + 'px';
+        rs.top = (el.style.posTop + i) + 'px';
+        rs.width = el.offsetWidth + 'px';
+        rs.height = el.offsetHeight + 'px';
+        rs.zIndex = el.style.zIndex - i;
+        rs.backgroundColor = color;
+        var opacity = 1 - i / (i + 1);
+        rs.filter = 'alpha(opacity=' + (100 * opacity) + ')';
+        el.insertAdjacentElement('afterEnd', rect);
+        global.fo_shadows[global.fo_shadows.length] = rect;
+    }
+}</pre>
 <p>el は親エレメント、colorが影の色、sizeが影のサイズ（4で固定みたい）として呼び出されます。なんと、div エレメントを影のサイズ分だけ作成し、それぞれの場所を1pxずつ右下に配置し、どんどん透明にしていっている模様。ひえー、無茶苦茶するなぁ！</p>
 
 </div>

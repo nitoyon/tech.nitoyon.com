@@ -65,46 +65,44 @@
 <p>の２つのパターンがあるようだ。</p>
 <p>トゥイーンでエフェクトを作っていくのはプログラマの頭にはちょっと堪え難い。１つのエフェクトを適用するためだけに、トゥイーンを作っていくのが手間に感じてしまうし美しくない。ムービークリップを使えば多少OOPっぽく管理できるが、インスタンスでいじれるのが色ぐらいなのは寂しい。もっとOOP的にエフェクトを実現したい、と思うのがプログラマ的発想。</p>
 <p>そこでこんなクラスを定義してみた。</p>
-<div class="highlight"><pre><span class="kr">class</span> <span class="nx">Appear</span><span class="p">{</span>
-	<span class="kd">var</span> <span class="nx">elm</span><span class="p">;</span>
-	<span class="kd">var</span> <span class="nx">delay</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
-	<span class="kd">var</span> <span class="nx">counter</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+<pre class="javascript">class Appear{
+	var elm;
+	var delay:Number;
+	var counter:Number;
 
-	<span class="kd">function</span> <span class="nx">Appear</span><span class="p">(</span><span class="nx">_elm</span><span class="o">:</span><span class="nx">MovieClip</span><span class="p">,</span> <span class="nx">d</span><span class="p">){</span>
-		<span class="k">this</span><span class="p">.</span><span class="nx">elm</span> <span class="o">=</span> <span class="nx">_elm</span><span class="p">;</span>
-		<span class="k">this</span><span class="p">.</span><span class="nx">elm</span><span class="p">.</span><span class="nx">_alpha</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-		<span class="k">this</span><span class="p">.</span><span class="nx">delay</span> <span class="o">=</span> <span class="nx">d</span><span class="p">;</span>
-		<span class="k">if</span><span class="p">(</span><span class="nx">d</span> <span class="o">==</span> <span class="kc">undefined</span><span class="p">){</span>
-			<span class="k">this</span><span class="p">.</span><span class="nx">delay</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-		<span class="p">}</span>
+	function Appear(_elm:MovieClip, d){
+		this.elm = _elm;
+		this.elm._alpha = 0;
+		this.delay = d;
+		if(d == undefined){
+			this.delay = 10;
+		}
 
-		<span class="k">this</span><span class="p">.</span><span class="nx">elm</span><span class="p">.</span><span class="nx">onEnterFrame</span> <span class="o">=</span> <span class="nx">appearClosure</span><span class="p">(</span><span class="nx">elm</span><span class="p">,</span> <span class="nx">delay</span><span class="p">);</span>
-	<span class="p">}</span>
+		this.elm.onEnterFrame = appearClosure(elm, delay);
+	}
 
-	<span class="kd">function</span> <span class="nx">appearClosure</span><span class="p">(</span><span class="nx">mc</span><span class="p">,</span> <span class="nx">d</span><span class="p">){</span>
-		<span class="kd">var</span> <span class="nx">delay</span> <span class="o">=</span> <span class="nx">d</span><span class="p">;</span>
-		<span class="kd">var</span> <span class="nx">diff</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span><span class="nx">d</span><span class="p">;</span>
-		<span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-		<span class="k">return</span> <span class="kd">function</span><span class="p">(){</span>
-			<span class="nx">mc</span><span class="p">.</span><span class="nx">_alpha</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">_alpha</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">);</span>
-			<span class="nx">count</span><span class="o">++</span><span class="p">;</span>
-			<span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="nx">delay</span><span class="p">){</span>
-				<span class="k">delete</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">onEnterFrame</span><span class="p">;</span>
-			<span class="p">}</span>
-		<span class="p">}</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+	function appearClosure(mc, d){
+		var delay = d;
+		var diff = 100 /d;
+		var count = 0;
+		return function(){
+			mc._alpha = Math.min(100, mc._alpha + diff);
+			count++;
+			if(count &gt; delay){
+				delete mc.onEnterFrame;
+			}
+		}
+	}
+}</pre>
 <p>ムービークリップ mc_name に対して、new Appear(mc_name, 10); というスクリプトを書くだけで 10フレームつかってフェードインしてくれる。</p>
 <p>と思ったら、Flash のヘルプにこんなサンプルが。うーん、単純・・・。</p>
-<div class="highlight"><pre><span class="nx">img1_mc</span><span class="p">.</span><span class="nx">onEnterFrame</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">img1_mc</span><span class="p">.</span><span class="nx">_alpha</span> <span class="o">-=</span> <span class="mi">5</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">img1_mc</span><span class="p">.</span><span class="nx">_alpha</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">img1_mc</span><span class="p">.</span><span class="nx">_visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="k">delete</span> <span class="nx">img1_mc</span><span class="p">.</span><span class="nx">onEnterFrame</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
+<pre class="javascript">img1_mc.onEnterFrame = function() {
+    img1_mc._alpha -= 5;
+    if (img1_mc._alpha &lt;= 0) {
+        img1_mc._visible = false;
+        delete img1_mc.onEnterFrame;
+    }
+};</pre>
 <p>ActionScript2.0はECMAScriptだから、script.aculo.us から知恵を拝借しつつ、互換のライブラリを組んだらおもしろいかな。</p>
 
 </div>

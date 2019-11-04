@@ -77,13 +77,12 @@
 <h1>4. SVG を座標データに変換する</h1>
 <p>ActionScript で座標を扱いやすくするために、SVG を座標データに変換しました。</p>
 <p>例えば、北海道の座標では、SVG には次のようなデータが含まれています。</p>
-<div class="highlight"><pre><span class="nt">&lt;path</span> <span class="na">i:knockout=</span><span class="s">&quot;Off&quot;</span> <span class="na">fill=</span><span class="s">&quot;#FFFFFF&quot;</span> <span class="na">d=</span><span class="s">&quot;</span>
-  <span class="err">M122.377,</span> <span class="err">57.787</span>
-  <span class="err">c</span>     <span class="err">0,</span>      <span class="err">0,</span> <span class="err">-5.191,</span> <span class="err">-2.143,</span> <span class="err">-8.04,</span>  <span class="err">-3.73</span>
-  <span class="err">c-2.848,</span> <span class="err">-1.588,</span> <span class="err">-3.957,</span> <span class="err">-2.445,</span> <span class="err">-4.058,</span> <span class="err">-2.672</span>
-  <span class="err">c-0.102,</span> <span class="err">-0.227,</span>  <span class="err">0.024,</span> <span class="err">-1.008,</span> <span class="err">-0.353,</span> <span class="err">-1.234</span>
-  <span class="err">...</span> <span class="err">以下略</span>
-</pre></div>
+<pre class="xml">&lt;path i:knockout=&quot;Off&quot; fill=&quot;#FFFFFF&quot; d=&quot;
+  M122.377, 57.787
+  c     0,      0, -5.191, -2.143, -8.04,  -3.73
+  c-2.848, -1.588, -3.957, -2.445, -4.058, -2.672
+  c-0.102, -0.227,  0.024, -1.008, -0.353, -1.234
+  ... 以下略</pre>
 <p>この記号の羅列が座標を知る鍵です。最初の、<code>M122.377, 57.787</code> は (122.377, 57.787) まで移動しろということで、次の c が３次ベジェ曲線を<code>(-8.04, -3.73)</code> まで描け、ということです。</p>
 <p>こんな感じで、SVG の中身をパースして、図形を描画するところまでできました。ベジェ曲線は途中のカーブは無視して始点と終点だけを結んで描画してます。それなりに再現できてたので曲線の描画は省略しました。</p>
 <center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090422/20090422011512.png" border="1"></center>
@@ -106,16 +105,15 @@
 <h1>7. 反発係数や摩擦を調整する</h1>
 <p>ただ落とすだけでも十分面白かったのですが、都道府県ごとに個性を持たせるようにしました。例えば、「岩手県は名前も堅そうだし形もごつごつしているのでほとんど跳ねないようにしよう」とか「栃木県は丸いからスーパーボールみたいに弾みそうだよね」とか「石川県が立ったら面白いに違いない」とかそんな感じです。</p>
 <p>完成したパラメータは <a href="http://github.com/nitoyon/hokkaido/blob/f946f80e0263cc4a5461c72fc6d611f5141bcc43/PrefBox2d.as">こんな感じ</a> になりました。</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-<span class="kr">public</span> <span class="kd">var</span> <span class="nx">PrefBox2d</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;北海道&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span> <span class="mf">0.71</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span> <span class="p">.</span><span class="mi">12</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;青森県&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">2.5</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;岩手県&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span> <span class="p">.</span><span class="mi">4</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;秋田県&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">1.6</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span> <span class="mf">0.55</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span> <span class="p">.</span><span class="mi">1</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;宮城県&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span> <span class="mf">0.66</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span> <span class="p">.</span><span class="mi">6</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;山形県&#39;</span><span class="p">,</span>   <span class="nx">zoom</span><span class="o">:</span> <span class="mf">2.2</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span> <span class="mf">0.88</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span> <span class="p">.</span><span class="mi">2</span><span class="p">},</span>
-<span class="c1">// ...以下略</span>
-</pre></div>
+<pre class="javascript">package{
+public var PrefBox2d:Array = [
+  {name: '北海道',   zoom: 1.0, r: 0.71, f: .12},
+  {name: '青森県',   zoom: 2.5},
+  {name: '岩手県',   zoom: 2.0, r: 0.25, f: .4},
+  {name: '秋田県',   zoom: 1.6, r: 0.55, f: .1},
+  {name: '宮城県',   zoom: 2.0, r: 0.66, f: .6},
+  {name: '山形県',   zoom: 2.2, r: 0.88, f: .2},
+// ...以下略</pre>
 <p><code>r</code> が反発係数、<code>f</code> が摩擦係数です。全ての都道府県について何か見所があるようにパラメータを調整したつもりです。</p>
 <h1>8. 細かな調整</h1>
 <p>完成度を上げるところが一番地味ですが重要なところです。表示のタイミングを調整したり、都道府県を選ぶ UI を作ったり、選んだあとはドラッグできるようにしたり…。状態遷移が複雑になってきたので、State パターンみたいな感じで状態を定義しました。</p>

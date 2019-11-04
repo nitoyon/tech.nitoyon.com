@@ -69,27 +69,24 @@
 <ul><li><a href="http://osflash-xray.googlecode.com/svn/trunk/as3/trunk/">http://osflash-xray.googlecode.com/svn/trunk/as3/trunk/</a></li></ul>
 <p>では、自分の Flash に仕込んでみましょう。</p>
 <p>ActionScript のソースコードに import 文を追加します。</p>
-<div class="highlight"><pre><span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">blitzagency</span><span class="p">.</span><span class="nx">xray</span><span class="p">.</span><span class="nx">inspector</span><span class="p">.</span><span class="nx">Xray</span><span class="p">;</span>
-</pre></div>
+<pre class="javascript">import com.blitzagency.xray.inspector.Xray;</pre>
 <p>スクリプトの最初のほうで、インスタンスを作って addChild してあげます。</p>
-<div class="highlight"><pre><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Xray</span><span class="p">());</span>
-</pre></div>
+<pre class="javascript">addChild(new Xray());</pre>
 <p>この２行だけで準備は完了です。</p>
 <p>あ、Flex の場合は、専用の Flex2Xray というクラスを new するだけで OK です。こんな感じです。</p>
-<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
-<span class="nt">&lt;mx:Application</span> <span class="na">xmlns:mx=</span><span class="s">&quot;http://www.adobe.com/2006/mxml&quot;</span>
-    <span class="na">applicationComplete=</span><span class="s">&quot;init()&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;mx:Script&gt;</span>
-        <span class="cp">&lt;![CDATA[</span>
-<span class="cp">            import com.blitzagency.xray.inspector.flex2.Flex2Xray;</span>
+<pre class="xml">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot;
+    applicationComplete=&quot;init()&quot;&gt;
+    &lt;mx:Script&gt;
+        &lt;![CDATA[
+            import com.blitzagency.xray.inspector.flex2.Flex2Xray;
 
-<span class="cp">            private function init():void{</span>
-<span class="cp">               var xray:Flex2Xray = new Flex2Xray();</span>
-<span class="cp">            }</span>
-<span class="cp">        ]]&gt;</span>
-    <span class="nt">&lt;/mx:Script&gt;</span>
-<span class="nt">&lt;/mx:Application&gt;</span>
-</pre></div>
+            private function init():void{
+               var xray:Flex2Xray = new Flex2Xray();
+            }
+        ]]&gt;
+    &lt;/mx:Script&gt;
+&lt;/mx:Application&gt;</pre>
 <h1>ビューワを起動する</h1>
 <p>ログを表示するビューワは別途 SWF の形で提供されています。以下の URL からダウンロードして、ブラウザで表示するなり、スタンドアロン版 Flash Player で起動するなりしてください。</p>
 <ul><li><a href="http://www.rockonflash.com/xray/flex/Xray.zip">http://www.rockonflash.com/xray/flex/Xray.zip</a></li></ul>
@@ -98,18 +95,17 @@
 <p>選択した DisplayObject は右側でプロパティが表示されてます。値を修正して反映することもできるので、ちょっとした動作チェックも可能です。このあたりは、まさに Firebug みたいな感じですね。</p>
 <h1>デバッグログを出力する</h1>
 <p>スクリプト側で次のようにすると、XRay にログを出力できます。</p>
-<div class="highlight"><pre><span class="c1">// 最初のほう</span>
-<span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">blitzagency</span><span class="p">.</span><span class="nx">xray</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">XrayLog</span><span class="p">;</span>
+<pre class="javascript">// 最初のほう
+import com.blitzagency.xray.logger.XrayLog;
 
-<span class="c1">// スクリプトのどこか</span>
-<span class="kd">var</span> <span class="nx">log</span><span class="o">:</span><span class="nx">XrayLog</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XrayLog</span><span class="p">();</span>
+// スクリプトのどこか
+var log:XrayLog = new XrayLog();
 
-<span class="nx">log</span><span class="p">.</span><span class="nx">debug</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
-<span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
-<span class="nx">log</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
-<span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
-<span class="nx">log</span><span class="p">.</span><span class="nx">fatal</span><span class="p">(</span><span class="s2">&quot;StringMessage&quot;</span><span class="p">,</span> <span class="nx">object</span> <span class="p">[,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">object</span><span class="p">...]);</span>
-</pre></div>
+log.debug(&quot;StringMessage&quot;, object [, object, object...]);
+log.info(&quot;StringMessage&quot;, object [, object, object...]);
+log.warn(&quot;StringMessage&quot;, object [, object, object...]);
+log.error(&quot;StringMessage&quot;, object [, object, object...]);
+log.fatal(&quot;StringMessage&quot;, object [, object, object...]);</pre>
 <p>出力したログを XRay のビューワで確認できます。レベルごとに絞り込み表示したり、検索したりも可能です。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081015/20081015004410.png" width="450" height="276"></center>
 <p>ただ、ログの表示はお世辞にも見やすいとは言えない感じで、あまり魅力的ではありません。別のツールを併用したほうがよいかもしれません。</p>

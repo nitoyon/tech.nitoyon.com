@@ -66,80 +66,75 @@
 <p>イベントオブジェクトにパラメータをくっつけて dispatch する。リンク先で紹介されている方法がこれ。</p>
 <p>イベントを送信するコードを自分が作る場合は一番素直かと。パラメータは全ての listener に伝達される。</p>
 <p>個人的には、イベントの種類ごとにクラスを定義するのはめんどくさい。そんな人には、DynamicEvent クラスを作っておくのがお薦め。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.events.Event;
 
-    <span class="kr">public</span> <span class="nx">dynamic</span> <span class="kr">class</span> <span class="nx">DynamicEvent</span> <span class="kr">extends</span> <span class="nx">Event</span> <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">DynamicEvent</span><span class="p">(</span><span class="nx">type</span><span class="o">:</span><span class="nb">String</span><span class="p">,</span> 
-                                     <span class="nx">bubbles</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
-                                     <span class="nx">cancelable</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kr">super</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">bubbles</span><span class="p">,</span> <span class="nx">cancelable</span><span class="p">);</span>
-        <span class="p">}</span>
+    public dynamic class DynamicEvent extends Event {
+        public function DynamicEvent(type:String, 
+                                     bubbles:Boolean = false,
+                                     cancelable:Boolean = false) {
+            super(type, bubbles, cancelable);
+        }
 
-        <span class="nx">override</span> <span class="kr">public</span> <span class="kd">function</span> <span class="nx">clone</span><span class="p">()</span><span class="o">:</span><span class="nx">Event</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="k">new</span> <span class="nx">DynamicEvent</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">bubbles</span><span class="p">,</span> <span class="nx">cancelable</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        override public function clone():Event {
+            return new DynamicEvent(type, bubbles, cancelable);
+        }
+    }
+}</pre>
 <p>Flex SDK には mx.events.DynamicEvent というクラスが定義されている。中身も同じ。SDK で開発してる人は、そっちを使うのがよろしいかと。</p>
 <p>送信側はこう。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">event</span><span class="o">:</span><span class="nx">DynamicEvent</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DynamicEvent</span><span class="p">(</span><span class="s2">&quot;myEvent&quot;</span><span class="p">);</span>
-<span class="nx">event</span><span class="p">.</span><span class="nx">param1</span> <span class="o">=</span> <span class="s2">&quot;文字列&quot;</span><span class="p">;</span>
-<span class="nx">event</span><span class="p">.</span><span class="nx">param2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>  <span class="c1">// 配列もOK</span>
-<span class="nx">dispatchEvent</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var event:DynamicEvent = new DynamicEvent(&quot;myEvent&quot;);
+event.param1 = &quot;文字列&quot;;
+event.param2 = [1, 2, 3];  // 配列もOK
+dispatchEvent(event);</pre>
 <p>受信する側はこう。</p>
-<div class="highlight"><pre><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;myEvent&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">DynamicEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-    <span class="nx">trace</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">param1</span><span class="p">);</span> <span class="c1">// 文字列</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">addEventListener(&quot;myEvent&quot;, function(event:DynamicEvent):void {
+    trace(event.param1); // 文字列
+});</pre>
 <p>dynamic クラスなので、コード補完してくれないし、入力ミスしたときにエラーにもならない。それが嫌ならクラスとして定義すべきなんだけど、めんどくさいときはこれでいくのが楽なのでおすすめ。</p>
 <h1>受信側で追加する場合</h1>
 <p>送信側に手が出せないときとか、受信側で追加のパラメータを付け加えるときには、クロージャ使うのが手軽。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.Sprite;
+    import flash.events.Event;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">MyClass</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="c1">// コンストラクタ</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">MyClass</span><span class="p">()</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">counter</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">clickHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">counter</span><span class="o">++</span><span class="p">);</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+    public class MyClass extends Sprite {
+        // コンストラクタ
+        public function MyClass() {
+            var counter:int = 0;
+            stage.addEventListener(&quot;click&quot;, function(event:Event):void {
+                clickHandler(event, counter++);
+            });
+        }
 
-        <span class="c1">// イベントハンドラ</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">clickHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">,</span> <span class="nx">counter</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">counter</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // イベントハンドラ
+        private function clickHandler(event:Event, counter:int):void {
+            trace(counter);
+        }
+    }
+}</pre>
 <p>プライベートな変数にしてもいいけど、その場合はクラス内全体からアクセスする必要がある場合に絞ったほうがよいだろう。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.Sprite;
+    import flash.events.Event;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="c1">// プライベート変数に</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">counter</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    public class Test extends Sprite {
+        // プライベート変数に
+        private var counter:int;
 
-        <span class="c1">// コンストラクタ</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">clickHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+        // コンストラクタ
+        public function Test() {
+            counter = 0;
+            stage.addEventListener(&quot;click&quot;, clickHandler);
+        }
 
-        <span class="c1">// イベントハンドラ</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">clickHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">counter</span><span class="p">);</span>
-            <span class="nx">counter</span><span class="o">++</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // イベントハンドラ
+        private function clickHandler(event:Event):void {
+            trace(counter);
+            counter++;
+        }
+    }
+}</pre>
 </section>
 
 </div>

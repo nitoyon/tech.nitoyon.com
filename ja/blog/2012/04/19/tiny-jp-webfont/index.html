@@ -106,47 +106,45 @@
 <p>動作には Python 2.X、が必要です。</p>
 <blockquote><ol><li>Python 2.X の実行環境を用意します。</li><li><a href="http://numpy.scipy.org/">Numpy</a> をダウンロードして、インストールします。</li><li><a href="http://sourceforge.net/projects/fonttools/files/">fonttools-2.3.tar.gz</a> をダウンロードして、展開します。</li></ol><cite><a href="http://d.hatena.ne.jp/project_the_tower2/20101106/1289060546">Webフォント変換サービスを作ろう　その１（　´_ゝ`） - Webと文字</a></cite></blockquote>
 <p>実行するには次のようにします。</p>
-<div class="highlight"><pre>python compact.py FontName.ttf &lt; test.txt
-</pre></div>
+<pre class="sh">python compact.py FontName.ttf &lt; test.txt</pre>
 <ul><li>第一引数にサイズを小さくするフォントを指定する</li><li>取り出す文字を含んだ文章を UTF-8 で保存して、標準入力から渡す</li><li>変換に成功すると <code>converted-FontName.ttf</code> が出力される</li><li>出力フォントに半角の数字や記号が含まれないバグあり (グリフ名が <code>zero</code>、<code>plus</code> などになっていて機械的変換できなかった。本気でやるなら <code>cmap</code> を見るべきなのだが面倒だった。)</li></ul>
 <p>ソースコードは以下の通りです。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">fontTools.ttLib.tables</span>
-<span class="kn">import</span> <span class="nn">fontTools.ttLib</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">os.path</span>
+<pre class="python">import fontTools.ttLib.tables
+import fontTools.ttLib
+import sys
+import os.path
 
-<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;font file not specified&quot;</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+if len(sys.argv) &lt; 2:
+    print &quot;font file not specified&quot;
+    sys.exit(1)
 
-<span class="n">path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="k">print</span> <span class="s">&quot;file not found: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+path = sys.argv[1]
+if not os.path.exists(path):
+    print &quot;file not found: %s&quot; % path
+    sys.exit()
 
-<span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
-<span class="n">s</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+s = ''.join(sys.stdin.readlines())
+s = unicode(s, 'utf-8')
 
-<span class="n">chars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
-    <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
-        <span class="n">chars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">chars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;uni</span><span class="si">%04X</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
-<span class="n">chars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;.notdef&#39;</span><span class="p">)</span>
+chars = set()
+for c in s:
+    if ord(c) &lt; 256:
+        chars.add(c)
+    else:
+        chars.add(&quot;uni%04X&quot; % ord(c));
+chars.add('.notdef')
 
-<span class="n">tt</span> <span class="o">=</span> <span class="n">fontTools</span><span class="o">.</span><span class="n">ttLib</span><span class="o">.</span><span class="n">TTFont</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+tt = fontTools.ttLib.TTFont(path)
 
-<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">chars</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&quot;skipping </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">g</span>
-        <span class="k">continue</span>
-    <span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">fontTools</span><span class="o">.</span><span class="n">ttLib</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">_g_l_y_f</span><span class="o">.</span><span class="n">Glyph</span><span class="p">()</span>
+for g in dict(tt['glyf'].glyphs):
+    if g in chars:
+        print &quot;skipping %s&quot; % g
+        continue
+    tt['glyf'].glyphs[g] = fontTools.ttLib.tables._g_l_y_f.Glyph()
 
-<span class="n">output_path</span> <span class="o">=</span> <span class="s">&quot;converted-</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span>
-<span class="n">tt</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;wrote </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">output_path</span>
-</pre></div>
+output_path = &quot;converted-%s&quot; % path
+tt.save(output_path)
+print &quot;wrote %s&quot; % output_path</pre>
 </section>
 
 </div>

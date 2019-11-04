@@ -67,20 +67,18 @@
 <p>毎回、プレゼンするときにソースコードを改善していってるんだけど、ちょっと前から as3Query を使い始めている。</p>
 <p>やっぱり as3Query すごい。</p>
 <p>例えば、次のページに移るときのアニメーションはこう書いてる。</p>
-<div class="highlight"><pre><span class="c1">// 前面のオブジェクトをスライド</span>
-<span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">children</span><span class="p">()</span>
-  <span class="p">.</span><span class="nx">addTween</span><span class="p">({</span>
-    <span class="nx">x</span> <span class="o">:</span> <span class="nx">WIDTH</span> <span class="o">*</span> <span class="p">(</span><span class="nx">next</span> <span class="o">?</span> <span class="o">-</span><span class="mf">1.5</span> <span class="o">:</span> <span class="mf">1.5</span><span class="p">),</span>
-    <span class="nx">time</span><span class="o">:</span> <span class="mf">1.5</span><span class="p">,</span>
-    <span class="nx">onComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-      <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">remove</span><span class="p">();</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-</pre></div>
+<pre class="javascript">// 前面のオブジェクトをスライド
+$(this).children()
+  .addTween({
+    x : WIDTH * (next ? -1.5 : 1.5),
+    time: 1.5,
+    onComplete: function():void{
+      $(this).remove();
+    }
+  });</pre>
 <p>as3Query で列挙した子供に対して Tween を追加している。as3Query＋Tweener 最強。このコードは全ての x 座標が 0 という前提があるんだけど。</p>
 <p>連続してスクロールされたときに、もしもスクロール中のものがあったら、上のコードでは誤動作する。そこで、スクロール中のものは事前にステージから取り除いておく。これも as3Query なら超簡単。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&gt; *[x != 0]&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">).</span><span class="nx">remove</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">$(&quot;&gt; *[x != 0]&quot;, this).remove();</pre>
 <p>this 直下の x 座標が 0 でないものはアニメーション中のはずなので削除する。うひー、楽ちん。</p>
 <p>ソースコード全体はこちら。</p>
 <ul><li><a href="http://tech.nitoyon.com/misc/java-ja6/Slide.as">http://tech.nitoyon.com/misc/java-ja6/Slide.as</a></li></ul>

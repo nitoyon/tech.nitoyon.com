@@ -13,7 +13,7 @@
 	<meta property="og:title" content="jQuery で JSONP ２通り"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2007/12/13/jquery-jsonp/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="jQuery を使って JSONP でリクエストする方法を２通り紹介するよ。その１: $(&quot;&lt;script&gt;&quot;)document.createElement() を $() を使って実現する。$(&quot;&lt;script&gt;&quot;) .attr(&#39;type&#39;, &#39;text/javascript&#39;) .attr(&#39;src&#39;, &quot;http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback&quot;) ...."/>
+	<meta property="og:description" content="jQuery を使って JSONP でリクエストする方法を２通り紹介するよ。その１: $(&quot;&lt;script&gt;&quot;)document.createElement() を $() を使って実現する。$(&quot;&lt;script&gt;&quot;) .attr(&#39;type&#39;, &#39;text/javascript&#39;) .attr(&#39;src&#39;, &quot;http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback&quot;) .appendTo($(&quot;head&amp;qu..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -63,50 +63,47 @@
 <p>jQuery を使って JSONP でリクエストする方法を２通り紹介するよ。</p>
 <h1>その１: $(&quot;&lt;script&gt;&quot;)</h1>
 <p><code>document.createElement()</code> を <code>$()</code> を使って実現する。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;script&gt;&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/javascript&#39;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="s2">&quot;http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">appendTo</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;head&quot;</span><span class="p">));</span>
+<pre class="javascript">$(&quot;&lt;script&gt;&quot;)
+    .attr('type', 'text/javascript')
+    .attr('src', &quot;http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback&quot;)
+    .appendTo($(&quot;head&quot;));
 
-<span class="kd">function</span> <span class="nx">myCallback</span><span class="p">(</span><span class="nx">json</span><span class="p">){</span>
-    <span class="c1">// ロード完了時にここが呼ばれる</span>
-<span class="p">}</span>
-</pre></div>
+function myCallback(json){
+    // ロード完了時にここが呼ばれる
+}</pre>
 <p><a href="http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback">http://www.example.com/jsonp.cgi?param1=value1&amp;callback=myCallback</a> にリクエストがいく。</p>
 <p><code>callback</code> のところは、サービスによって指定の仕方が違うかもね。</p>
 <h1>その２: $.ajax</h1>
 <p><code>$.ajax</code> の <code>dataType</code> で <code>jsonp</code> が使える。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-    <span class="nx">url</span> <span class="o">:</span> <span class="s2">&quot;http://www.example.com/jsonp.cgi&quot;</span><span class="p">,</span>
-    <span class="nx">dataType</span> <span class="o">:</span> <span class="s2">&quot;jsonp&quot;</span><span class="p">,</span>
-    <span class="nx">data</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">param1</span> <span class="o">:</span> <span class="s2">&quot;value1&quot;</span>
-    <span class="p">},</span>
-    <span class="nx">success</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">json</span><span class="p">){</span>
-        <span class="c1">// ロード完了時にここが呼ばれる</span>
-    <span class="p">},</span>
-    <span class="nx">error</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
-        <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">$.ajax({
+    url : &quot;http://www.example.com/jsonp.cgi&quot;,
+    dataType : &quot;jsonp&quot;,
+    data : {
+        param1 : &quot;value1&quot;
+    },
+    success : function(json){
+        // ロード完了時にここが呼ばれる
+    },
+    error : function(){
+        alert('error');
+    }
+});</pre>
 <p>こっちの方がシンプルに書ける。コールバック用の関数は jQuery が自動的に生成して、結果に応じて <code>success</code> や <code>error</code> を呼び出してくれる。</p>
 <p>API によってはコールバックを指定するためのパラメータが <code>callback</code> ではなくて、別の名前の場合がある。このときは <code>jsonp</code> パラメータを指定する。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-    <span class="nx">url</span> <span class="o">:</span> <span class="s2">&quot;http://www.example.com/jsonp.cgi&quot;</span><span class="p">,</span>
-    <span class="nx">dataType</span> <span class="o">:</span> <span class="s2">&quot;jsonp&quot;</span><span class="p">,</span>
-    <span class="nx">data</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">param1</span> <span class="o">:</span> <span class="s2">&quot;value1&quot;</span>
-    <span class="p">},</span>
-    <span class="nx">jsonp</span> <span class="o">:</span> <span class="s2">&quot;jsoncallback&quot;</span><span class="p">,</span> <span class="c1">// ← !!!これ!!!</span>
-    <span class="nx">success</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">json</span><span class="p">){</span>
-        <span class="c1">// ロード完了時にここが呼ばれる</span>
-    <span class="p">},</span>
-    <span class="nx">error</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
-        <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">$.ajax({
+    url : &quot;http://www.example.com/jsonp.cgi&quot;,
+    dataType : &quot;jsonp&quot;,
+    data : {
+        param1 : &quot;value1&quot;
+    },
+    jsonp : &quot;jsoncallback&quot;, // ← !!!これ!!!
+    success : function(json){
+        // ロード完了時にここが呼ばれる
+    },
+    error : function(){
+        alert('error');
+    }
+});</pre>
 <p>裏側では、<a href="http://www.example.com/jsonp.cgi?jsoncallback=jsonp1197507452843&amp;_=1197507453671&amp;param1=value1">http://www.example.com/jsonp.cgi?jsoncallback=jsonp1197507452843&amp;_=1197507453671&amp;param1=value1</a> という URL にリクエストが行く。<code>jsonp1197507452843</code> というのが jQuery が動的に生成するコールバック関数。呼び終わったら、ちゃんと自分自身を <code>undefined</code> にしているので、グローバル名前空間を汚すのも一瞬で済むようだ。</p>
 </section>
 

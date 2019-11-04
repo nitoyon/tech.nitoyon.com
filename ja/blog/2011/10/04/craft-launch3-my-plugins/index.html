@@ -70,17 +70,16 @@
 <p>入力例：</p>
 <ul><li><code>@nitoyon</code> と入力して Enter を押すと <a href="http://twitter.com/nitoyon">http://twitter.com/nitoyon</a> を開く</li><li><code>rfc822</code> と入力して Enter を押すと <a href="http://www.ietf.org/rfc/rfc822.txt">http://www.ietf.org/rfc/rfc822.txt</a> を開く</li></ul>
 <p>登録は、<code>config.py</code> に次のようにして正規表現で定義します。</p>
-<div class="highlight"><pre><span class="c"># config.py の configure() 関数に次のように記載します</span>
+<pre class="python"># config.py の configure() 関数に次のように記載します
 
-<span class="kn">import</span> <span class="nn">url_alias</span>
-<span class="c">#reload(url_alias)</span>
-<span class="n">url_alias</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> 
-                   <span class="p">{</span> <span class="s">&#39;regex&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^rfc(\d+)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span> 
-                     <span class="s">&#39;url&#39;</span><span class="p">:</span> <span class="s">&#39;http://www.ietf.org/rfc/rfc%param%.txt&#39;</span> <span class="p">},</span>
-                   <span class="p">{</span> <span class="s">&#39;regex&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^@(\w+)$&#39;</span><span class="p">),</span> 
-                     <span class="s">&#39;url&#39;</span><span class="p">:</span> <span class="s">&#39;http://twitter.com/%param%&#39;</span> <span class="p">},</span>
-                  <span class="p">)</span>
-</pre></div>
+import url_alias
+#reload(url_alias)
+url_alias.register(window, 
+                   { 'regex': re.compile('^rfc(\d+)$', re.IGNORECASE), 
+                     'url': 'http://www.ietf.org/rfc/rfc%param%.txt' },
+                   { 'regex': re.compile('^@(\w+)$'), 
+                     'url': 'http://twitter.com/%param%' },
+                  )</pre>
 <p>BTS やメーリングリストの番号をブラウザで開けるようにするとお仕事でも便利！</p>
 <h1>control_panel - コントロールパネルや管理ツールをコマンド化する プラグイン</h1>
 <p>コントロールパネルや管理ツールのアイテムを開けます。</p>
@@ -88,9 +87,8 @@
 <p>コントロールパネルや管理ツールの各アイテムは日本語版 Windows ではキーボードでアクセスしにくいので、キーボード派の人には便利じゃないでしょうか。</p>
 <p>どういうコマンドが登録されるかは、<code><a href="https://github.com/nitoyon/clnch3_extensions/blob/master/control_panel.py#L45">ControlCommandList.__init__()</a></code> を見るとだいたい分かると思います。</p>
 <p><code>cpl:</code> を入力するのが面倒な人は、<code>prefix=&#39;&#39;</code> とすればプレフィックスなしで登録できますが、不要なものまで登録されて名前空間が汚染されるので嫌な人も多いでしょう。そんな人は、後述の <code>misc.py</code> の <code>addAlias</code> 関数で別名を登録するほうがお勧めです。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">misc</span>
-<span class="n">misc</span><span class="o">.</span><span class="n">addAlias</span><span class="p">(</span> <span class="n">window</span><span class="p">,</span> <span class="s">u&#39;cpl:Date/Time&#39;</span><span class="p">,</span> <span class="s">u&#39;ClockSet&#39;</span> <span class="p">)</span>
-</pre></div>
+<pre class="python">import misc
+misc.addAlias( window, u'cpl:Date/Time', u'ClockSet' )</pre>
 <h1>path_plus - 相対パス・フォルダエイリアスを可能にするプラグイン</h1>
 <p>登録したコマンドからサブフォルダに移動しやすくなります。</p>
 <p>たとえば、マイ ドキュメントを <code>~</code> コマンドとして登録しておけば、</p>
@@ -105,16 +103,15 @@
 <h1>python_console - Python のインタラクティブシェルが使えるプラグイン</h1>
 <p>Python が使えるんなら、Python のコードの評価も CraftLaunch 上でできるようにしてしまおうというプラグインです。</p>
 <p><code>&gt;&gt;&gt; </code> を先頭に入力することで、Python のインタラクティブ シェルと同等の動作をしてくれます。</p>
-<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
-<span class="o">...</span>     <span class="k">print</span> <span class="n">i</span>
-<span class="o">...</span> 
-<span class="mi">1</span>
-<span class="mi">3</span>
-<span class="mi">5</span>
-</pre></div>
+<pre class="python">&gt;&gt;&gt; a = [1,3,5]
+&gt;&gt;&gt; a
+[1, 3, 5]
+&gt;&gt;&gt; for i in a:
+...     print i
+... 
+1
+3
+5</pre>
 <p>すごいことをしてそうですが、標準ライブラリの <code>code.InteractiveConsole</code> の機能にほとんどの処理を任せています。ただ、CraftLaunch ではスペースキーが入力できないようになっているので、これを迂回するためのハックを施しています。</p>
 <h1>run_as_administrator - 管理者として実行できるプラグイン</h1>
 <p>管理者として実行させたいコマンドを Ctrl-Shift-Enter で実行すると、管理者権限で実行してくれます。Vista 以降で UAC を有効のまま使っている人には便利です。</p>

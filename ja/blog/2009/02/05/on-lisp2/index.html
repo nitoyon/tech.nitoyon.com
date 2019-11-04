@@ -67,32 +67,28 @@
 <p>いよいよマクロ。</p>
 <ul><li>逆クォート<ul><li>,で打ち消し、,@で展開</li><li>マクロ展開時に引数に置き換えてほしいものの前に , や ,@ をつけるイメージ</li></ul></li><li>マクロ展開の確認<ul><li>xyzzy には pprint がないので展開を確認できない</li><li><a href="http://www.shido.info/lisp/macro1.html">テンプレートの使い方と展開形の確認</a> に対応方法が書いてある</li><li>けど、ここからは clisp で確認していくことにする</li></ul></li><li>構造化代入<ul><li>よく分からないのでパス</li></ul></li><li>マクロのモデル<ul><li>defmacro の簡易実装が書いてある</li><li>が、理解できない…。ひとまずパス。</li></ul></li><li>関数からマクロへ<ul><li>単純に変換できない場合の対処法</li></ul></li></ul>
 <p> + のマクロ版が</p>
-<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">sum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
-  <span class="o">`</span><span class="p">(</span><span class="nb">apply</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="p">(</span><span class="nb">list</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)))</span>
-</pre></div>
+<pre class="lisp">(defmacro sum (&amp;rest args)
+  `(apply #'+ (list ,@args)))</pre>
 <p>と定義されていたが、これでもいけた。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">mysum</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
-  <span class="o">`</span><span class="p">(</span><span class="nb">funcall</span> <span class="nf">#&#39;</span><span class="nb">+</span> <span class="o">,@</span><span class="nb">rest</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">(defmacro mysum (&amp;rest args)
+  `(funcall #'+ ,@rest))</pre>
 <h2>いつマクロを使うべきか</h2>
 <ul><li>基本はマクロ</li><li>マクロが必要なときはマクロ<ul><li>いつ必要かを説明していくよ</li></ul></li></ul>
 <h2>マクロにしかできないこと</h2>
 <p>引数の評価を抑制する。</p>
 <p>On Lisp に出てきた while を使ってみる。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">x</span> <span class="mi">10</span><span class="p">)</span> <span class="p">(</span><span class="nv">sum</span> <span class="mi">0</span><span class="p">))</span> 
-  <span class="p">(</span><span class="nv">while</span> <span class="p">(</span><span class="nb">&gt;</span> <span class="nv">x</span> <span class="mi">0</span><span class="p">)</span> 
-    <span class="p">(</span><span class="nb">incf</span> <span class="nv">sum</span> <span class="nv">x</span><span class="p">)</span>
-    <span class="p">(</span><span class="nb">decf</span> <span class="nv">x</span><span class="p">))</span> <span class="nv">sum</span><span class="p">)</span>
-</pre></div>
+<pre class="lisp">(let ((x 10) (sum 0)) 
+  (while (&gt; x 0) 
+    (incf sum x)
+    (decf x)) sum)</pre>
 <p>すごく手続きっぽい書き方になってしまったが、while の中の setq は x の値によって呼ばれる回数が変わってくる。全く評価されないかもしれない。</p>
 <ol><li>変形(setfパターン)<ul><li>setf は引数として与えられた値に書き込む</li><li><pre>(let <span class="footnote"><a href="#f1" title="x '(3 4" name="fn1">*1</a></span>) (setf (car x) 9) x)  ; (9 4)</pre></li><li>第一引数を見て判断するのでマクロでないとできない</li></ul></li><li>束縛<ul><li>let や setq などのレキシカルな束縛を変更する処理はマクロが必須</li></ul></li><li>条件分岐<ul><li>条件が満たされたときのみ評価するにはマクロが必須</li><li><code>(if t (print 3) (print 4))</code> で 4 が表示されては困る。if が関数なら呼び出す時点で評価されてしまう。</li></ul></li><li>複数回の評価<ul><li>while など、ループのたびに評価されるようにするにはマクロが必須。</li></ul></li><li>呼び出し側環境の利用<ul><li>呼ばれた場所のコンテキストに応じた変数を使える</li><li>これは危険。通常は使うな。 (On Lisp の本では継続とATNコンパイラで利用している)</li></ul></li><li>新しい環境を包み込む<ul><li>ちょっと分からん。保留。</li></ul></li><li>関数呼び出しの節約<ul><li>インラインでも同じ</li></ul></li></ol>
 <p>悩むような微妙なケース。</p>
 <p>avg のサンプル</p>
-<div class="highlight"><pre><span class="nb">&gt;</span><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">avg</span> <span class="p">(</span><span class="k">&amp;rest</span> <span class="nv">args</span><span class="p">)</span>
-  <span class="o">`</span><span class="p">(</span><span class="nb">/</span> <span class="p">(</span><span class="nb">+</span> <span class="o">,@</span><span class="nv">args</span><span class="p">)</span> <span class="o">,</span><span class="p">(</span><span class="nb">length</span> <span class="nv">args</span><span class="p">)))</span>
-<span class="nb">&gt;</span> <span class="p">(</span><span class="nb">pprint</span> <span class="p">(</span><span class="nb">macroexpand-1</span> <span class="o">&#39;</span><span class="p">(</span><span class="nv">avg</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span><span class="p">)))</span>
-<span class="c1">; (/ (+ 10 11 12) 3)</span>
-</pre></div>
+<pre class="lisp">&gt;(defmacro avg (&amp;rest args)
+  `(/ (+ ,@args) ,(length args)))
+&gt; (pprint (macroexpand-1 '(avg 10 11 12)))
+; (/ (+ 10 11 12) 3)</pre>
 <p>コンパイル時には長さが固定された状態になっている。</p>
 <p>長所まとめ：</p>
 <ol><li>コンパイル時計算<ul><li>一部をコンパイル時に展開できる。上の avg みたいな。</li><li>詳細は13章</li></ul></li><li>Lisp との連携<ul><li>一部を Lisp に任せられる。DSL などで有利。</li><li>よく分からんが詳細は19章とのこと</li></ul></li><li>関数呼び出しの節約<ul><li>inline でも同じだけど。</li></ul></li></ol>

@@ -66,35 +66,33 @@
 <p>元々のコードは JavaScript で「<a href="http://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%A9%E3%83%88%E3%82%B9%E3%83%86%E3%83%8D%E3%82%B9%E3%81%AE%E7%AF%A9">エラトステネスのふるい</a>」を短く書いたもの。JavaScript のコードがあるんだから、ActionScript でも同じぐらいで書けるはずと信じてやってみた。</p>
 <h1>strict 版</h1>
 <p>まずは、warning が出ないもの。227文字。</p>
-<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span><span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span><span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span><span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)}}}}</span>
-</pre></div>
+<pre class="actionscript">package{import flash.display.*;public class C extends Sprite{public function C(){graphics.beginFill(0);for(var a:Array=[],c:int=1,d:int;c++&lt;1E3;)if(!a[c]){for(d=c;d&lt;1E3;)a[d+=c]=1;graphics.drawRect((c%10)*5,int(c/10)*5,5,5)}}}}</pre>
 <p>出力はこんな感じ。</p>
 <center><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100201/20100201021757.png" border="1"></center>
 <p>10個ごとに素数の数字を黒い点で表している。左上が 0 で、右にいくと 2, 3 が連続して素数として現れて、そのあと、5,7 と続く。2段目からは 11, 13, 17, 19 が現れる。</p>
 <p>少し考えたら当たり前だと分かるのだけど下一桁が 0,4,6,9の列は素数が１つも現れないし、2,5の列は一番上にしか素数が登場しない。10以上の素数の下一桁は 1,3,7,9 のいずれかなのだ。こうやって図にしてみると、改めて気づかされて面白い。</p>
 <p>で、肝心のソースコードのインデントを復元するとこんな感じ。</p>
-<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<pre class="actionscript">package{
+import flash.display.*;
+public class C extends Sprite{
+    public function C(){
+        graphics.beginFill(0);
 
-        <span class="c1">// 1から1E3(=1000)までループを回す</span>
-        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
-            <span class="c1">// 素数かどうか判定</span>
-            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span>
-                <span class="c1">// 素数のとき：</span>
-                <span class="c1">// c*2,c*3,c*4... で a のフラグを立てる</span>
-                <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
-                    <span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span>
+        // 1から1E3(=1000)までループを回す
+        for(var a:Array=[],c:int=1,d:int;c++&lt;1E3;)
+            // 素数かどうか判定
+            if(!a[c]){
+                // 素数のとき：
+                // c*2,c*3,c*4... で a のフラグを立てる
+                for(d=c;d&lt;1E3;)
+                    a[d+=c]=1;
 
-                <span class="c1">// 該当する位置に四角を描画する</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)</span>
-            <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+                // 該当する位置に四角を描画する
+                graphics.drawRect((c%10)*5,int(c/10)*5,5,5)
+            }
+    }
+}
+}</pre>
 <p>短くするための工夫は色々してある。思いつく範囲で列挙するだけでも</p>
 <ul><li>コンストラクタでは戻り値 <code>:void</code> を書かなくても warning は出ない</li><li>graphics.endFill() がなくても動くのでやらない</li><li>Math.floor() は int() で代用</li><li>変数宣言は１箇所にまとめる。しかも for の中でやっちゃうことで、var 文の ; を節約できる</li><li>; を省略できるところは省略しちゃう</li></ul>
 <p>といったあたり。</p>
@@ -103,24 +101,22 @@
 <p>といったあたりか。ただ、TextField 使ったら <code>import flash.text.*;</code> だけでかなりの文字数になるし、BitmapData は初期化と表示に文字数食われるし、Graphicsを使うのが最短な気がしている。</p>
 <h1>strict じゃない版</h1>
 <p>warning が出てもいいならもう少し短くできる。210文字。</p>
-<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span><span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span><span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span><span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">g</span><span class="o">=</span><span class="nx">graphics</span><span class="o">,</span><span class="nx">a</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span><span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span><span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span><span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="nx">g</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)}}}}</span>
-</pre></div>
+<pre class="actionscript">package{import flash.display.*;public class C extends Sprite{public function C(){for(var g=graphics,a=[],c=1,d;c++&lt;1E3;)if(!a[c]){for(d=c;d&lt;1E3;)a[d+=c]=1;g.beginFill(0);g.drawRect((c%10)*5,int(c/10)*5,5,5)}}}}</pre>
 <p>いちおう、整形したソースコードを掲載しておく。</p>
-<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">C</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">C</span><span class="p">(){</span>
-        <span class="k">for</span><span class="p">(</span><span class="k">var</span> <span class="nx">g</span><span class="o">=</span><span class="nx">graphics</span><span class="o">,</span><span class="nx">a</span><span class="o">=</span><span class="p">[]</span><span class="o">,</span><span class="nx">c</span><span class="o">=</span><span class="mi">1</span><span class="o">,</span><span class="nx">d</span><span class="o">;</span><span class="nx">c</span><span class="o">++&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
-            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a</span><span class="p">[</span><span class="nx">c</span><span class="p">]){</span>
-                <span class="k">for</span><span class="p">(</span><span class="nx">d</span><span class="o">=</span><span class="nx">c</span><span class="o">;</span><span class="nx">d</span><span class="o">&lt;</span><span class="mi">1</span><span class="nx">E3</span><span class="o">;</span><span class="p">)</span>
-                    <span class="nx">a</span><span class="p">[</span><span class="nx">d</span><span class="o">+=</span><span class="nx">c</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="o">;</span>
-                <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-                <span class="nx">g</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">((</span><span class="nx">c</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="nb">int</span><span class="p">(</span><span class="nx">c</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="o">,</span><span class="mi">5</span><span class="p">)</span>
-            <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="actionscript">package{
+import flash.display.*;
+public class C extends Sprite{
+    public function C(){
+        for(var g=graphics,a=[],c=1,d;c++&lt;1E3;)
+            if(!a[c]){
+                for(d=c;d&lt;1E3;)
+                    a[d+=c]=1;
+                g.beginFill(0);
+                g.drawRect((c%10)*5,int(c/10)*5,5,5)
+            }
+    }
+}
+}</pre>
 <p>型宣言しなくてもいい分だけ短くなった。</p>
 <p>また、今までは <code>graphics</code> と２回入力していたが、<code>g=graphics,</code> の11文字を追加することで、<code>graphics</code>(8文字) が g の1文字で済むようになった。graphics は2回登場していたので、16文字が13文字に減ったので3文字の節約だ。ただ、そのせいで beginFill() する位置が変化したが、これでも動いてるので問題はないこととする。</p>
 <br />

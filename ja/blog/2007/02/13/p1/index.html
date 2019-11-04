@@ -62,10 +62,9 @@
 <section>
 <p>「<a href="/ja/blog/2007/02/01/tamarin-trial/">Tamarin と遊んでみた</a>」の続きです。</p>
 <p>今回は、avmplus.exe にビルトイン関数を追加してみます。</p>
-<div class="highlight"><pre><span class="c1">// hoge.as</span>
-<span class="kr">import</span> <span class="nx">avmplus</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="nx">System</span><span class="p">.</span><span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;hoge&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// hoge.as
+import avmplus.*;
+System.alert(&quot;hoge&quot;);</pre>
 <p>avmplus.System パッケージには exit などの関数がありますが、alert 関数は実装ありません。そのため、この hoge.as を実行すると</p>
 <pre>$ avmplus.exe hoge.abc
 ReferenceError: Error #1065</pre>
@@ -73,57 +72,54 @@ ReferenceError: Error #1065</pre>
 <p>これを動かすのが今回の目標です。</p>
 <h1>toplevel.as の実装</h1>
 <p>toplevel.as を覗いてみましょう。</p>
-<div class="highlight"><pre><span class="c1">// toplevel.as</span>
-<span class="kn">package</span> <span class="n">avmplus</span> 
-<span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">System</span>
-    <span class="o">{</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">exit</span><span class="o">(</span><span class="nl">status:</span><span class="kt">int</span><span class="o">):</span><span class="kt">void</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">exec</span><span class="o">(</span><span class="nl">command:</span><span class="n">String</span><span class="o">):</span><span class="kt">int</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">getAvmplusVersion</span><span class="o">():</span><span class="n">String</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">trace</span><span class="o">(</span><span class="nl">a:</span><span class="n">Array</span><span class="o">):</span><span class="kt">void</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">write</span><span class="o">(</span><span class="nl">s:</span><span class="n">String</span><span class="o">):</span><span class="kt">void</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">debugger</span><span class="o">():</span><span class="kt">void</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">isDebugger</span><span class="o">():</span><span class="n">Boolean</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">getTimer</span><span class="o">():</span><span class="n">uint</span>
-        <span class="kd">private</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">getArgv</span><span class="o">():</span><span class="n">Array</span>
-        <span class="kd">public</span> <span class="kd">static</span> <span class="kd">const</span> <span class="nl">argv:</span><span class="n">Array</span> <span class="o">=</span> <span class="n">getArgv</span><span class="o">();</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">readLine</span><span class="o">():</span><span class="n">String</span>
-    <span class="o">}</span>
-<span class="c1">// ...</span>
-</pre></div>
+<pre class="java">// toplevel.as
+package avmplus 
+{
+    public class System
+    {
+        public native static function exit(status:int):void
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+        public native static function trace(a:Array):void
+        public native static function write(s:String):void
+        public native static function debugger():void
+        public native static function isDebugger():Boolean
+        public native static function getTimer():uint
+        private native static function getArgv():Array
+        public static const argv:Array = getArgv();
+        public native static function readLine():String
+    }
+// ...</pre>
 <p>avmplus.System パッケージの関数が宣言されていますね。</p>
 <p>native キーワードがついていますが、これらの関数が C++ で関数が実装されていることをあらわします。</p>
 <p>alert 関数も native で実装してみたいところですが、まずは ActionScript で実装してみましょう。</p>
 <br />
 <p>ということで、toplevel.as を書き換えます。System.write 関数をそのまんま使っちゃいます。</p>
-<div class="highlight"><pre><span class="c1">// toplevel.as</span>
-<span class="kn">package</span> <span class="n">avmplus</span> 
-<span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">System</span>
-    <span class="o">{</span>
-        <span class="kd">public</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">alert</span><span class="o">(</span><span class="nl">text:</span><span class="n">String</span><span class="o">):</span><span class="kt">void</span>
-        <span class="o">{</span>
-            <span class="n">System</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">text</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">exec</span><span class="o">(</span><span class="nl">command:</span><span class="n">String</span><span class="o">):</span><span class="kt">int</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">getAvmplusVersion</span><span class="o">():</span><span class="n">String</span>
-<span class="c1">// ...</span>
-</pre></div>
+<pre class="java">// toplevel.as
+package avmplus 
+{
+    public class System
+    {
+        public static function alert(text:String):void
+        {
+            System.write(text);
+        }
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+// ...</pre>
 <h1>toplevel.as のコンパイル</h1>
 <p>さて、avmplus 側は、どう修正すればよいのでしょうか。</p>
 <p>答えは、簡単。shell/toplevel.cpp の中にあります。</p>
-<div class="highlight"><pre><span class="cm">/* shell/toplevel.cpp */</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_length</span> <span class="o">=</span> <span class="mi">4403</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_method_count</span> <span class="o">=</span> <span class="mi">137</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_class_count</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_script_count</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span>
-<span class="k">static</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">toplevel_abc_data</span><span class="p">[</span><span class="mi">4403</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-<span class="mh">0x10</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xe0</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xef</span><span class="p">,</span> <span class="mh">0x41</span><span class="p">,</span>
-<span class="mh">0x86</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span> <span class="mh">0x72</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x64</span><span class="p">,</span> <span class="mh">0x4c</span><span class="p">,</span> <span class="mh">0x69</span><span class="p">,</span> <span class="mh">0x6e</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x0d</span><span class="p">,</span> <span class="mh">0x74</span><span class="p">,</span> <span class="mh">0x6f</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span>
-<span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x73</span><span class="p">,</span> <span class="mh">0x24</span><span class="p">,</span> <span class="mh">0x31</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x6d</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span>
-<span class="c1">// ...</span>
-</pre></div>
+<pre class="cpp">/* shell/toplevel.cpp */
+const int toplevel_abc_length = 4403;
+const int toplevel_abc_method_count = 137;
+const int toplevel_abc_class_count = 15;
+const int toplevel_abc_script_count = 13;
+static unsigned char toplevel_abc_data[4403] = {
+0x10, 0x00, 0x2e, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0xe0, 0xff, 0xff, 0xff, 0xef, 0x41,
+0x86, 0x01, 0x08, 0x72, 0x65, 0x61, 0x64, 0x4c, 0x69, 0x6e, 0x65, 0x0d, 0x74, 0x6f, 0x70, 0x6c,
+0x65, 0x76, 0x65, 0x6c, 0x2e, 0x61, 0x73, 0x24, 0x31, 0x00, 0x07, 0x61, 0x76, 0x6d, 0x70, 0x6c,
+// ...</pre>
 <p>この16進数の羅列が toplevel.as のバイトコードなんです。toplevel.as をバイトコードに変換して、toplevel.cpp を作れば動きそうです。</p>
 <p>ということで、toplevel.as をコンパイルしてみます。-in を指定して、他の AS もまとめてコンパイルするのを忘れずに。</p>
 <pre>java -jar asc_authoring.jar ^
@@ -145,16 +141,15 @@ ReferenceError: Error #1065</pre>
 toplevel.abc, 3850 bytes written</pre>
 <p>toplevel.abc が生成されました。</p>
 <p>さらに、なんと toplevel.cpp と toplevel.h も自動的に更新されました。</p>
-<div class="highlight"><pre><span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_length</span> <span class="o">=</span> <span class="mi">3908</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_method_count</span> <span class="o">=</span> <span class="mi">122</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_class_count</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">int</span> <span class="n">toplevel_abc_script_count</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="k">static</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">toplevel_abc_data</span><span class="p">[</span><span class="mi">3908</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-<span class="mh">0x10</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xe0</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xef</span><span class="p">,</span> <span class="mh">0x41</span><span class="p">,</span>
-<span class="mh">0x79</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span> <span class="mh">0x72</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x64</span><span class="p">,</span> <span class="mh">0x4c</span><span class="p">,</span> <span class="mh">0x69</span><span class="p">,</span> <span class="mh">0x6e</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x0d</span><span class="p">,</span> <span class="mh">0x74</span><span class="p">,</span> <span class="mh">0x6f</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span>
-<span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span> <span class="mh">0x2e</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x73</span><span class="p">,</span> <span class="mh">0x24</span><span class="p">,</span> <span class="mh">0x31</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">,</span> <span class="mh">0x76</span><span class="p">,</span> <span class="mh">0x6d</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">,</span> <span class="mh">0x6c</span><span class="p">,</span> <span class="mh">0x75</span><span class="p">,</span>
-<span class="c1">// ...</span>
-</pre></div>
+<pre class="cpp">const int toplevel_abc_length = 3908;
+const int toplevel_abc_method_count = 122;
+const int toplevel_abc_class_count = 15;
+const int toplevel_abc_script_count = 1;
+static unsigned char toplevel_abc_data[3908] = {
+0x10, 0x00, 0x2e, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0xe0, 0xff, 0xff, 0xff, 0xef, 0x41,
+0x79, 0x08, 0x72, 0x65, 0x61, 0x64, 0x4c, 0x69, 0x6e, 0x65, 0x0d, 0x74, 0x6f, 0x70, 0x6c, 0x65,
+0x76, 0x65, 0x6c, 0x2e, 0x61, 0x73, 0x24, 0x31, 0x00, 0x07, 0x61, 0x76, 0x6d, 0x70, 0x6c, 0x75,
+// ...</pre>
 <p>どうも、ActionScript 内に native 宣言された関数があると、cpp と h が書き出されるようです。</p>
 <p>toplevel_abc_class_count と toplevel_abc_script_count の値が減ってしまっていますが、ひとまずは気にせずに先に進むことにします。</p>
 <h1>いざ、実行</h1>
@@ -167,74 +162,71 @@ hoge</pre>
 <h1>alert 関数を native 実装</h1>
 <p>さて、ActionScript で実装していた alert 関数を C++ での実装に切り替えてみましょう。</p>
 <p>まずは、toplevel.as の編集です。alert 関数を native 宣言にします。</p>
-<div class="highlight"><pre><span class="c1">// toplevel.as</span>
-<span class="kn">package</span> <span class="n">avmplus</span> 
-<span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">System</span>
-    <span class="o">{</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">alert</span><span class="o">(</span><span class="nl">text:</span><span class="n">String</span><span class="o">):</span><span class="kt">void</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">exec</span><span class="o">(</span><span class="nl">command:</span><span class="n">String</span><span class="o">):</span><span class="kt">int</span>
-        <span class="kd">public</span> <span class="kd">native</span> <span class="kd">static</span> <span class="n">function</span> <span class="nf">getAvmplusVersion</span><span class="o">():</span><span class="n">String</span>
-<span class="c1">// ...</span>
-</pre></div>
+<pre class="java">// toplevel.as
+package avmplus 
+{
+    public class System
+    {
+        public native static function alert(text:String):void
+        public native static function exec(command:String):int
+        public native static function getAvmplusVersion():String
+// ...</pre>
 <p>toplevel.as をバイトコードに変換すると、toplevel.cpp と toplevel.h が更新されます。</p>
 <p>native 部分の実装は System.exit 関数を参考に、shell/SystemClass.cpp と shell/SystemClass.h を修正してみます。</p>
-<div class="highlight"><pre><span class="cm">/* shell/SystemClass.h */</span>
-<span class="c1">// ...</span>
-<span class="k">namespace</span> <span class="n">avmshell</span>
-<span class="p">{</span>
-    <span class="k">class</span> <span class="nc">SystemClass</span> <span class="o">:</span> <span class="k">public</span> <span class="n">ClassClosure</span>
-    <span class="p">{</span>
+<pre class="cpp">/* shell/SystemClass.h */
+// ...
+namespace avmshell
+{
+    class SystemClass : public ClassClosure
+    {
         
-        <span class="c1">//#define PERFORMANCE_GETTIMER</span>
-        <span class="cp">#ifdef PERFORMANCE_GETTIMER</span>
-        <span class="n">uint64</span> <span class="n">initialTime</span><span class="p">;</span>
-        <span class="cp">#else</span>
-        <span class="kt">double</span> <span class="n">initialTime</span><span class="p">;</span>
-        <span class="cp">#endif</span>
+        //#define PERFORMANCE_GETTIMER
+        #ifdef PERFORMANCE_GETTIMER
+        uint64 initialTime;
+        #else
+        double initialTime;
+        #endif
 
-    <span class="k">public</span><span class="o">:</span>
-        <span class="n">SystemClass</span><span class="p">(</span><span class="n">VTable</span><span class="o">*</span> <span class="n">cvtable</span><span class="p">);</span>
-        <span class="o">~</span><span class="n">SystemClass</span><span class="p">();</span>
+    public:
+        SystemClass(VTable* cvtable);
+        ~SystemClass();
 
-        <span class="c1">// set by shell</span>
-        <span class="k">static</span> <span class="kt">int</span> <span class="n">user_argc</span><span class="p">;</span>
-        <span class="k">static</span> <span class="kt">char</span> <span class="o">**</span><span class="n">user_argv</span><span class="p">;</span>
+        // set by shell
+        static int user_argc;
+        static char **user_argv;
 
-        <span class="kt">void</span> <span class="nf">alert</span><span class="p">(</span><span class="n">Stringp</span> <span class="n">text</span><span class="p">);</span>
+        void alert(Stringp text);
 
-        <span class="cm">/**</span>
-<span class="cm">         * Implementation of System.exit</span>
-<span class="cm">         * AS usage: System.exit(status);</span>
-<span class="cm">         * Exits the VM with OS exit code specified by  status.</span>
-<span class="cm">         */</span>
-        <span class="kt">void</span> <span class="nf">exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
-<span class="c1">// ...</span>
-</pre></div>
-<div class="highlight"><pre><span class="cm">/* shell/SystemClass.cpp */</span>
-<span class="cp">#include &quot;avmshell.h&quot;</span>
+        /**
+         * Implementation of System.exit
+         * AS usage: System.exit(status);
+         * Exits the VM with OS exit code specified by  status.
+         */
+        void exit(int status);
+// ...</pre>
+<pre class="cpp">/* shell/SystemClass.cpp */
+#include &quot;avmshell.h&quot;
 
-<span class="cp">#include &lt;stdlib.h&gt;</span>
+#include &lt;stdlib.h&gt;
 
-<span class="k">namespace</span> <span class="n">avmshell</span>
-<span class="p">{</span>
-    <span class="n">BEGIN_NATIVE_MAP</span><span class="p">(</span><span class="n">SystemClass</span><span class="p">)</span>
-        <span class="n">sNATIVE_METHOD</span><span class="p">(</span><span class="n">avmplus_System_alert</span><span class="p">,</span> <span class="n">SystemClass</span><span class="o">::</span><span class="n">alert</span><span class="p">)</span>
-        <span class="n">NATIVE_METHOD</span><span class="p">(</span><span class="n">avmplus_System_exit</span><span class="p">,</span> <span class="n">SystemClass</span><span class="o">::</span><span class="n">exit</span><span class="p">)</span>
-        <span class="c1">// ...</span>
-    <span class="n">END_NATIVE_MAP</span><span class="p">()</span>
+namespace avmshell
+{
+    BEGIN_NATIVE_MAP(SystemClass)
+        sNATIVE_METHOD(avmplus_System_alert, SystemClass::alert)
+        NATIVE_METHOD(avmplus_System_exit, SystemClass::exit)
+        // ...
+    END_NATIVE_MAP()
 
-    <span class="kt">void</span> <span class="n">SystemClass</span><span class="o">::</span><span class="n">alert</span><span class="p">(</span><span class="n">Stringp</span> <span class="n">text</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="n">MessageBoxW</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">text</span><span class="o">-&gt;</span><span class="n">c_str</span><span class="p">(),</span> <span class="s">L&quot;avmplus&quot;</span><span class="p">,</span> <span class="n">MB_ICONEXCLAMATION</span><span class="p">);</span>
-    <span class="p">}</span>
+    void SystemClass::alert(Stringp text)
+    {
+        MessageBoxW(NULL, text-&gt;c_str(), L&quot;avmplus&quot;, MB_ICONEXCLAMATION);
+    }
 
-    <span class="kt">void</span> <span class="n">SystemClass</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="c1">// ...</span>
-</pre></div>
+    void SystemClass::exit(int status)
+    {
+        ::exit(status);
+    }
+// ...</pre>
 <p>avmplus_System_alert は、先ほどの toplevel.as のコンパイル時に toplevel.h に生成されています。バイトコード中の native 宣言と C++ の中継ぎをするのが、この BEGIN_NATIVE_MAP であり、avmplus_System_alert であるわけです。</p>
 <p>SystemClass::alert では、C++ らしく MessageBoxW 関数を呼び出しています。Win32 プログラミングではおなじみのメッセージ表示用の関数です。W は Unicode 版をあらわします。</p>
 <h1>いざ、実行 (2)</h1>

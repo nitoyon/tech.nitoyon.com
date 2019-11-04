@@ -65,37 +65,35 @@
 <h1>WSHスクリプト ip-exec.vbs</h1>
 <h2>注意点</h2>
 <ul><li>どのNICのIPアドレスを調べるかを指定するために、 InStr(Nic.Description, &quot;Realtek&quot;) &lt;&gt; 0 としています。複数のNICがないのならば、この部分は省略してもよいかも。</li><li>IPアドレスがXX.YY.ZZから始まる場合のサンプルです。XX.YY.ZZかどうかを調べている部分を書き換えると、いろんな環境に書き換えられるはず。</li><li>各自の環境に合わせて自由に使ってみてください。</li></ul>
-<div class="highlight"><pre><span class="k">Set</span> <span class="n">objWshShell</span> <span class="o">=</span> <span class="n">WScript</span><span class="p">.</span><span class="n">CreateObject</span><span class="p">(</span><span class="s">&quot;WScript.Shell&quot;</span><span class="p">)</span>
+<pre class="vb">Set objWshShell = WScript.CreateObject(&quot;WScript.Shell&quot;)
 
-<span class="c">&#39; 引数がないときは終了</span>
-<span class="k">If</span> <span class="n">WScript</span><span class="p">.</span><span class="n">Arguments</span><span class="p">.</span><span class="n">Count</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">Then</span>
-    <span class="n">WScript</span><span class="p">.</span><span class="n">Quit</span>
-<span class="k">End</span> <span class="k">If</span>
+' 引数がないときは終了
+If WScript.Arguments.Count = 0 Then
+    WScript.Quit
+End If
 
-<span class="c">&#39; NIC を列挙</span>
-<span class="n">strComputer</span> <span class="o">=</span> <span class="s">&quot;.&quot;</span>
-<span class="k">Set</span> <span class="n">objWMIService</span> <span class="o">=</span> <span class="n">GetObject</span><span class="p">(</span><span class="s">&quot;winmgmts:\\&quot;</span> <span class="o">&amp;</span> <span class="n">strComputer</span> <span class="o">&amp;</span> <span class="s">&quot;\root\cimv2&quot;</span><span class="p">)</span>
-<span class="k">Set</span> <span class="n">NicSet</span> <span class="o">=</span> <span class="n">objWMIService</span><span class="p">.</span><span class="n">ExecQuery</span> <span class="n">_</span>
-<span class="p">(</span><span class="s">&quot;Select * From Win32_NetworkAdapterConfiguration&quot;</span><span class="p">)</span>
+' NIC を列挙
+strComputer = &quot;.&quot;
+Set objWMIService = GetObject(&quot;winmgmts:\\&quot; &amp; strComputer &amp; &quot;\root\cimv2&quot;)
+Set NicSet = objWMIService.ExecQuery _
+(&quot;Select * From Win32_NetworkAdapterConfiguration&quot;)
 
-<span class="c">&#39; １つずつ調べていく</span>
-<span class="k">For</span> <span class="k">Each</span> <span class="n">Nic</span> <span class="ow">In</span> <span class="n">NicSet</span>
-    <span class="c">&#39; Realtek の NIC を調べる</span>
-    <span class="k">If</span> <span class="n">Nic</span><span class="p">.</span><span class="n">IPEnabled</span> <span class="o">=</span> <span class="k">True</span> <span class="ow">And</span> <span class="n">InStr</span><span class="p">(</span><span class="n">Nic</span><span class="p">.</span><span class="n">Description</span><span class="p">,</span> <span class="s">&quot;Realtek&quot;</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span> <span class="k">Then</span>
-        <span class="c">&#39; IPアドレスが XX.YY.ZZ から始まっているか？</span>
-        <span class="k">If</span> <span class="n">InStr</span><span class="p">(</span><span class="n">Nic</span><span class="p">.</span><span class="n">IPAddress</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="s">&quot;XX.YY.ZZ&quot;</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">Then</span>
-            <span class="n">objWshShell</span><span class="p">.</span><span class="n">Run</span> <span class="n">WScript</span><span class="p">.</span><span class="n">Arguments</span><span class="p">.</span><span class="n">Item</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="s">&quot;-lab&quot;</span>
-        <span class="k">Else</span>
-            <span class="n">objWshShell</span><span class="p">.</span><span class="n">Run</span> <span class="n">WScript</span><span class="p">.</span><span class="n">Arguments</span><span class="p">.</span><span class="n">Item</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">End</span> <span class="k">If</span>
-        <span class="k">Exit</span> <span class="k">For</span>
-    <span class="k">End</span> <span class="k">If</span>
-<span class="k">Next</span>
-</pre></div>
+' １つずつ調べていく
+For Each Nic In NicSet
+    ' Realtek の NIC を調べる
+    If Nic.IPEnabled = True And InStr(Nic.Description, &quot;Realtek&quot;) &lt;&gt; 0 Then
+        ' IPアドレスが XX.YY.ZZ から始まっているか？
+        If InStr(Nic.IPAddress(0), &quot;XX.YY.ZZ&quot;) = 1 Then
+            objWshShell.Run WScript.Arguments.Item(0) &amp; &quot;-lab&quot;
+        Else
+            objWshShell.Run WScript.Arguments.Item(0)
+        End If
+        Exit For
+    End If
+Next</pre>
 <h2>使い方例</h2>
 <p>IPアドレスが XX.YY.ZZ で始まる文字列の時は、nitoyon-lab を使ってアクセス。そうでないときは、nitoyon を使ってアクセス。</p>
-<div class="highlight"><pre>cscript.exe ip-exec.vbs <span class="s2">&quot;putty.exe -load nitoyon&quot;</span>
-</pre></div>
+<pre class="sh">cscript.exe ip-exec.vbs &quot;putty.exe -load nitoyon&quot;</pre>
 </section>
 
 </div>

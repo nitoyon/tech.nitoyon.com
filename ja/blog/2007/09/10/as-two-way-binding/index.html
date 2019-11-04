@@ -63,93 +63,88 @@
 <p>ActionScript 3.0 で双方向にデータバインディングしたいことがあったりする。</p>
 <p>MXML に {hogehoge} 形式でデータバインディングを作ると問題なく実現できるんだけど、スクリプトから BindingUtils.bindProperty でやろうとするとスタックオーバーフローしてしまうことがある。</p>
 <h1>スタックオーバーフローする例</h1>
-<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
-<span class="nt">&lt;mx:Application</span> <span class="na">xmlns:mx=</span><span class="s">&quot;http://www.adobe.com/2006/mxml&quot;</span> <span class="na">applicationComplete=</span><span class="s">&quot;appComplete();&quot;</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;mx:Script&gt;</span>
-    <span class="cp">&lt;![CDATA[</span>
-<span class="cp">      import mx.binding.utils.*;</span>
+<pre class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot; applicationComplete=&quot;appComplete();&quot;&gt;
+  &lt;mx:Script&gt;
+    &lt;![CDATA[
+      import mx.binding.utils.*;
 
-<span class="cp">      [Bindable]</span>
-<span class="cp">      public var items:Array = [&quot;item1&quot;, &quot;item2&quot;, &quot;item3&quot;];</span>
+      [Bindable]
+      public var items:Array = [&quot;item1&quot;, &quot;item2&quot;, &quot;item3&quot;];
 
-<span class="cp">      [Bindable]</span>
-<span class="cp">      public var selected:Array = [];</span>
+      [Bindable]
+      public var selected:Array = [];
 
-<span class="cp">      private function appComplete():void</span>
-<span class="cp">      {</span>
-<span class="cp">        BindingUtils.bindProperty(list, &quot;selectedItems&quot;, this, &quot;selected&quot;);</span>
-<span class="cp">        BindingUtils.bindProperty(this, &quot;selected&quot;, list, &quot;selectedItems&quot;);</span>
-<span class="cp">      }</span>
-<span class="cp">    ]]&gt;</span>
-  <span class="nt">&lt;/mx:Script&gt;</span>
+      private function appComplete():void
+      {
+        BindingUtils.bindProperty(list, &quot;selectedItems&quot;, this, &quot;selected&quot;);
+        BindingUtils.bindProperty(this, &quot;selected&quot;, list, &quot;selectedItems&quot;);
+      }
+    ]]&gt;
+  &lt;/mx:Script&gt;
 
-  <span class="nt">&lt;mx:List</span> <span class="na">id=</span><span class="s">&quot;list&quot;</span> <span class="na">dataProvider=</span><span class="s">&quot;{items}&quot;</span><span class="nt">/&gt;</span>
+  &lt;mx:List id=&quot;list&quot; dataProvider=&quot;{items}&quot;/&gt;
 
-<span class="nt">&lt;/mx:Application&gt;</span>
-</pre></div>
+&lt;/mx:Application&gt;</pre>
 <p>list.selectedItems が変更されると、this.selected が書き換えられ、今度は this.selected が変更されるので list.selectedItems を書き換えて... と無限に関数呼び出しが発生してしまうから。</p>
 <p>list.selectedItems と this.selected が等しくなればオーバーフローは発生しないはずなのだけど、List クラスは selectedItems を返すときに、新たに Array を生成して返しているので、いつまでたっても等しくならずにオーバーフローしてしまうというわけだ。（mx.controls.listClasses.listBase 参照）</p>
 <h1>問題ない例</h1>
 <p><strong>当初はこの例を問題ある例と紹介していましたが、問題ありませんでした。</strong></p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-  <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-  <span class="kr">import</span> <span class="nx">mx</span><span class="p">.</span><span class="nx">binding</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+  import flash.display.Sprite;
+  import mx.binding.utils.*;
 
-  <span class="kr">public</span> <span class="kr">class</span> <span class="nx">TwoWayBindingNg</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-  <span class="p">{</span>
-    <span class="p">[</span><span class="nx">Bindable</span><span class="p">]</span>
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">obj1</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
+  public class TwoWayBindingNg extends Sprite
+  {
+    [Bindable]
+    public var obj1:Object;
 
-    <span class="p">[</span><span class="nx">Bindable</span><span class="p">]</span>
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">obj2</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
+    [Bindable]
+    public var obj2:Object;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">TwoWayBindingNg</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-      <span class="nx">BindingUtils</span><span class="p">.</span><span class="nx">bindProperty</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;obj1&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="s2">&quot;obj2&quot;</span><span class="p">);</span>
-      <span class="nx">BindingUtils</span><span class="p">.</span><span class="nx">bindProperty</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;obj2&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="s2">&quot;obj1&quot;</span><span class="p">);</span>
+    public function TwoWayBindingNg():void
+    {
+      BindingUtils.bindProperty(this, &quot;obj1&quot;, this, &quot;obj2&quot;);
+      BindingUtils.bindProperty(this, &quot;obj2&quot;, this, &quot;obj1&quot;);
 
-      <span class="nx">obj1</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span> <span class="o">:</span> <span class="mi">1</span><span class="p">};</span> <span class="c1">// stack overflow</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+      obj1 = {a : 1}; // stack overflow
+    }
+  }
+}</pre>
 <p>この例だと、obj1 == obj2 になった時点で無限に呼び出しは発生ししない。</p>
 <h1>そこで汎用化</h1>
 <p>フラグをつけて、２回以上呼び出さないようにする関数としてまとめ上げて、何も考えずに相互データバインディングできるようにする。</p>
-<div class="highlight"><pre>    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">createTwoWayBinding</span><span class="p">(</span><span class="nx">src1</span><span class="o">:</span><span class="nb">Object</span><span class="p">,</span> <span class="nx">prop1</span><span class="o">:</span><span class="nb">String</span><span class="p">,</span> <span class="nx">src2</span><span class="o">:</span><span class="nb">Object</span><span class="p">,</span> <span class="nx">prop2</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">flag</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<pre class="javascript">    public static function createTwoWayBinding(src1:Object, prop1:String, src2:Object, prop2:String):void
+    {
+        var flag:Boolean = false;
 
-        <span class="nx">ChangeWatcher</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="nx">src1</span><span class="p">,</span> <span class="nx">prop1</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">flag</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">flag</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="nx">src2</span><span class="p">[</span><span class="nx">prop2</span><span class="p">]</span> <span class="o">=</span> <span class="nx">src1</span><span class="p">[</span><span class="nx">prop1</span><span class="p">];</span>
-                <span class="nx">flag</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
+        ChangeWatcher.watch(src1, prop1, function(event:Event):void
+        {
+            if(!flag)
+            {
+                flag = true;
+                src2[prop2] = src1[prop1];
+                flag = false;
+            }
+        });
 
-        <span class="nx">ChangeWatcher</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="nx">src2</span><span class="p">,</span> <span class="nx">prop2</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">flag</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">flag</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="nx">src1</span><span class="p">[</span><span class="nx">prop1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">src2</span><span class="p">[</span><span class="nx">prop2</span><span class="p">];</span>
-                <span class="nx">flag</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
-</pre></div>
+        ChangeWatcher.watch(src2, prop2, function(event:Event):void
+        {
+            if(!flag)
+            {
+                flag = true;
+                src1[prop1] = src2[prop2];
+                flag = false;
+            }
+        });
+    }</pre>
 <p>これで OK。</p>
 <p>最初の MXML も</p>
-<div class="highlight"><pre><span class="nx">BindingUtils</span><span class="p">.</span><span class="nx">bindProperty</span><span class="p">(</span><span class="nx">list</span><span class="p">,</span> <span class="s2">&quot;selectedItems&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="s2">&quot;selected&quot;</span><span class="p">);</span>
-<span class="nx">BindingUtils</span><span class="p">.</span><span class="nx">bindProperty</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;selected&quot;</span><span class="p">,</span> <span class="nx">list</span><span class="p">,</span> <span class="s2">&quot;selectedItems&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">BindingUtils.bindProperty(list, &quot;selectedItems&quot;, this, &quot;selected&quot;);
+BindingUtils.bindProperty(this, &quot;selected&quot;, list, &quot;selectedItems&quot;);</pre>
 <p>を次のように書き換えれば動くようになる。</p>
-<div class="highlight"><pre><span class="nx">createTwoWayBinding</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;selected&quot;</span><span class="p">,</span> <span class="nx">list</span><span class="p">,</span> <span class="s2">&quot;selectedItems&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">createTwoWayBinding(this, &quot;selected&quot;, list, &quot;selectedItems&quot;);</pre>
 <h1>便利そうなので TwoWayBinding クラスにした</h1>
 <p><a href="http://www.libspark.org/">Spark Project</a> の <a href="http://snippets.libspark.org/">Snippets</a> に TwoWayBinding クラスとして公開してみた。</p>
 <ul><li><a href="http://snippets.libspark.org/trac/wiki/nitoyon/TwoWayBinding">http://snippets.libspark.org/trac/wiki/nitoyon/TwoWayBinding</a></li></ul>

@@ -62,14 +62,13 @@
 <section>
 <p>rubygems を使ってライブラリをインストールすると、そのまま require &#39;sqlite3&#39; のようにすれば使えるようになる。</p>
 <p>ところが、ライブラリパスである $LOAD_PATH を見てみると、その中に lib/ruby/gems/1.8/gems 以下のフォルダは含まれていなかった。</p>
-<div class="highlight"><pre><span class="n">irb</span><span class="p">(</span><span class="n">main</span><span class="p">):</span><span class="mo">001</span><span class="p">:</span><span class="mi">0</span><span class="o">&gt;</span> <span class="vg">$LOAD_PATH</span>
-<span class="o">=&gt;</span> <span class="o">[</span><span class="s2">&quot;c:/ruby/lib/ruby/site_ruby/1.8&quot;</span><span class="p">,</span> 
-    <span class="s2">&quot;c:/ruby/lib/ruby/site_ruby/1.8/i386-msvcrt&quot;</span><span class="p">,</span> 
-    <span class="s2">&quot;c:/ruby/lib/ruby/site_ruby&quot;</span><span class="p">,</span> 
-    <span class="s2">&quot;c:/ruby/lib/ruby/1.8&quot;</span><span class="p">,</span> 
-    <span class="s2">&quot;c:/ruby/lib/ruby/1.8/i386-mswin32&quot;</span><span class="p">,</span> 
-    <span class="s2">&quot;.&quot;</span><span class="o">]</span>
-</pre></div>
+<pre class="ruby">irb(main):001:0&gt; $LOAD_PATH
+=&gt; [&quot;c:/ruby/lib/ruby/site_ruby/1.8&quot;, 
+    &quot;c:/ruby/lib/ruby/site_ruby/1.8/i386-msvcrt&quot;, 
+    &quot;c:/ruby/lib/ruby/site_ruby&quot;, 
+    &quot;c:/ruby/lib/ruby/1.8&quot;, 
+    &quot;c:/ruby/lib/ruby/1.8/i386-mswin32&quot;, 
+    &quot;.&quot;]</pre>
 <p>不思議だったのでいろいろと情報をあたってみた。</p>
 <h1>犯人は RUBYOPT</h1>
 <p>環境変数を見てみると RUBYOPT に -rubygems が設定されていた。ruby を起動するごとに RUBYOPT が自動的にコマンドライン引数に付加されるらしい。どうやら、One-Click Ruby のセットアップ時に、環境変数 RUBYOPT に -rubygems が設定されていたようだ。</p>
@@ -78,42 +77,36 @@
 <h1>-r オプション</h1>
 <p>ruby --help を実行すると、-r はライブラリを読み込むためのオプションだと分かった。</p>
 <p>例えば、MD5 モジュールを使うとき、-r を使わなければ次のようになる。</p>
-<div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;require &#39;md5&#39;; p MD5::md5(&#39;a&#39;)&quot;</span>
-</pre></div>
+<pre class="ruby">ruby -e &quot;require 'md5'; p MD5::md5('a')&quot;</pre>
 <p>これを、-r を使って書き換えると</p>
-<div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">r</span> <span class="n">md5</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;p MD5::md5(&#39;a&#39;)&quot;</span>
-</pre></div>
+<pre class="ruby">ruby -r md5 -e &quot;p MD5::md5('a')&quot;</pre>
 <p>とできる。</p>
 <p> -r のあとのスペースは省略できるので</p>
-<div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">rmd5</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;p MD5::md5(&#39;a&#39;)&quot;</span>
-</pre></div>
+<pre class="ruby">ruby -rmd5 -e &quot;p MD5::md5('a')&quot;</pre>
 <p>としてもよい。</p>
 <h1>-rubygems の答え</h1>
 <p>そこで、-rubygems。</p>
 <p>なんと、lib/ruby/site_ruby/1.8 に <strong>ubygems.rb</strong> というファイルが用意されていた。ubygems.rb は require &#39;rubygems&#39; してるだけ。</p>
 <p>この ubygems.rb があるおかげで</p>
-<div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">r</span> <span class="n">rubygems</span> <span class="n">foo</span><span class="o">.</span><span class="n">rb</span>
-</pre></div>
+<pre class="ruby">ruby -r rubygems foo.rb</pre>
 <p>の変わりに</p>
-<div class="highlight"><pre><span class="n">ruby</span> <span class="o">-</span><span class="n">rubygems</span> <span class="n">foo</span><span class="o">.</span><span class="n">rb</span>
-</pre></div>
+<pre class="ruby">ruby -rubygems foo.rb</pre>
 <p>と書けるわけだ。-rubygems は -r ubygems と解釈される！</p>
 <p>ubygems.rb が rubygems.rb を require する。</p>
 <p>なるほどねー。</p>
 <h1>rubygems は何をやってるか</h1>
 <p>最後に、rubygems が中で何をやってるかを軽く見てみた。</p>
 <p>rubygems.rb から呼ばれる rubygems/custom_require.rb では Kernel#require の処理を置き換えている。</p>
-<div class="highlight"><pre><span class="k">module</span> <span class="nn">Kernel</span>
-  <span class="k">alias</span> <span class="n">gem_original_require</span> <span class="nb">require</span> <span class="c1"># :nodoc:</span>
+<pre class="ruby">module Kernel
+  alias gem_original_require require # :nodoc:
 
-  <span class="c1"># コメントいっぱい</span>
-  <span class="k">def</span> <span class="nf">require</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="c1"># :nodoc:</span>
-    <span class="n">gem_original_require</span> <span class="n">path</span>
-  <span class="k">rescue</span> <span class="no">LoadError</span> <span class="o">=&gt;</span> <span class="n">load_error</span>
-    <span class="c1"># 例外処理いっぱい</span>
-  <span class="k">end</span>
-<span class="k">end</span>  <span class="c1"># module Kernel</span>
-</pre></div>
+  # コメントいっぱい
+  def require(path) # :nodoc:
+    gem_original_require path
+  rescue LoadError =&gt; load_error
+    # 例外処理いっぱい
+  end
+end  # module Kernel</pre>
 <p>ということで、require &#39;rubygems&#39; するか -rubygems オプションを指定すると、require がラップされるようだ。</p>
 <p>lib/ruby/gems/1.8/gems の下の適切なバージョンのライブラリを読み込んでくれるわけですな。</p>
 </section>

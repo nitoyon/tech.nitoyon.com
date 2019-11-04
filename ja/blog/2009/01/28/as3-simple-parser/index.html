@@ -67,104 +67,103 @@
 <p>再帰下降法と聞いてもピンと来なかったんだけど、移植する過程で理解が深まっていった。本家の説明が大変分かりやすいので、詳しい仕組みについては <a href="http://fxp.hp.infoseek.co.jp/arti/parser.html">10分で書ける、お手軽パーザー</a> のほうをごらんあれ。</p>
 <p>あ、オリジナルでは -3 などのマイナスのつく数字が扱えなかったので、自分で修正してみた。</p>
 <p>以下、AS3 版のソースコード（97行）。</p>
-<div class="highlight"><pre><span class="c1">// Simple Recursive Descent Parsing </span>
-<span class="c1">// see also: http://fxp.hp.infoseek.co.jp/arti/parser.html </span>
-<span class="kr">package</span><span class="p">{</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
+<pre class="javascript">// Simple Recursive Descent Parsing 
+// see also: http://fxp.hp.infoseek.co.jp/arti/parser.html 
+package{ 
+import flash.display.*; 
+import flash.events.Event; 
+import flash.text.*; 
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span> 
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">SimpleRecursiveDescentParsing</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span> 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">SimpleRecursiveDescentParsing</span><span class="p">(){</span> 
-        <span class="kd">var</span> <span class="nx">parser</span><span class="o">:</span><span class="nx">Parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span> 
+[SWF(backgroundColor=&quot;#ffffff&quot;)] 
+public class SimpleRecursiveDescentParsing extends Sprite{ 
+    public function SimpleRecursiveDescentParsing(){ 
+        var parser:Parser = new Parser(); 
 
-        <span class="kd">var</span> <span class="nx">output</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span> 
-        <span class="nx">output</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">output</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span> 
-        <span class="nx">output</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span> 
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">output</span><span class="p">);</span> 
+        var output:TextField = new TextField(); 
+        output.x = 10; output.y = 40; 
+        output.autoSize = &quot;left&quot;; 
+        addChild(output); 
 
-        <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">border</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">input</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span> <span class="nx">input</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;5 * (1 + 2)&quot;</span><span class="p">;</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> 
-            <span class="k">try</span><span class="p">{</span> 
-                <span class="nx">output</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span> 
-                <span class="nx">output</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0x000000</span><span class="p">;</span> 
-            <span class="p">}</span><span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nb">Error</span><span class="p">){</span> 
-                <span class="nx">output</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span> 
-                <span class="nx">output</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xff0000</span><span class="p">;</span> 
-            <span class="p">}</span> 
-        <span class="p">});</span> 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span> 
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span> 
-        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> 
-    <span class="p">}</span> 
-<span class="p">}</span> 
-<span class="p">}</span> 
+        var input:TextField = new TextField(); 
+        input.border = true; 
+        input.x = 10; input.y = 10; 
+        input.width = 200; input.height = 20; 
+        input.type = &quot;input&quot;; 
+        input.text = &quot;5 * (1 + 2)&quot;; 
+        input.addEventListener(&quot;change&quot;, function(event:*):void{ 
+            try{ 
+                output.text = parser.parse(input.text); 
+                output.textColor = 0x000000; 
+            }catch(e:Error){ 
+                output.text = e.toString(); 
+                output.textColor = 0xff0000; 
+            } 
+        }); 
+        input.dispatchEvent(new Event(&quot;change&quot;)); 
+        addChild(input); 
+        scaleX = scaleY = 2; 
+    } 
+} 
+} 
 
-<span class="kr">class</span> <span class="nx">Parser</span><span class="p">{</span> 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">pos</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span> 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">str</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span> 
+class Parser{ 
+    private var pos:int; 
+    private var str:String; 
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">parse</span><span class="p">(</span><span class="nx">s</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="nb">String</span><span class="p">{</span> 
-        <span class="nx">str</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/ /g</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">);</span> 
-        <span class="nx">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
-        <span class="k">return</span> <span class="nx">expr</span><span class="p">().</span><span class="nx">toString</span><span class="p">();</span> 
-    <span class="p">}</span> 
+    public function parse(s:String):String{ 
+        str = s.replace(/ /g, &quot;&quot;); 
+        pos = 0; 
+        return expr().toString(); 
+    } 
 
-    <span class="c1">// Expr = Term { (+|-) Term} </span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">expr</span><span class="p">()</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span> 
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">term</span><span class="p">();</span> 
-        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">){</span> 
-            <span class="k">switch</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)){</span> 
-                <span class="k">case</span> <span class="s2">&quot;+&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">+=</span> <span class="nx">term</span><span class="p">();</span> <span class="k">break</span><span class="p">;</span> 
-                <span class="k">case</span> <span class="s2">&quot;-&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">-=</span> <span class="nx">term</span><span class="p">();</span> <span class="k">break</span><span class="p">;</span> 
-                <span class="k">default</span><span class="o">:</span>  <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span> 
-            <span class="p">}</span> 
-        <span class="p">}</span> 
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// never comes here </span>
-    <span class="p">}</span> 
+    // Expr = Term { (+|-) Term} 
+    private function expr():int{ 
+        var ret:int = term(); 
+        while(true){ 
+            switch(str.charAt(pos)){ 
+                case &quot;+&quot;: pos++; ret += term(); break; 
+                case &quot;-&quot;: pos++; ret -= term(); break; 
+                default:  return ret; 
+            } 
+        } 
+        return 0; // never comes here 
+    } 
 
-    <span class="c1">// Term = Fact { (*|/) Fact} </span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">term</span><span class="p">()</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span> 
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">fact</span><span class="p">();</span> 
-        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">){</span> 
-            <span class="k">switch</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)){</span> 
-                <span class="k">case</span> <span class="s2">&quot;*&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">*=</span> <span class="nx">fact</span><span class="p">();</span> <span class="k">break</span><span class="p">;</span> 
-                <span class="k">case</span> <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">/=</span> <span class="nx">fact</span><span class="p">();</span> <span class="k">break</span><span class="p">;</span> 
-                <span class="k">default</span><span class="o">:</span>  <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span> 
-            <span class="p">}</span> 
-        <span class="p">}</span> 
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// never comes here </span>
-    <span class="p">}</span> 
+    // Term = Fact { (*|/) Fact} 
+    private function term():int{ 
+        var ret:int = fact(); 
+        while(true){ 
+            switch(str.charAt(pos)){ 
+                case &quot;*&quot;: pos++; ret *= fact(); break; 
+                case &quot;/&quot;: pos++; ret /= fact(); break; 
+                default:  return ret; 
+            } 
+        } 
+        return 0; // never comes here 
+    } 
 
-    <span class="c1">// Fact = ( Expr ) | - Fact | number </span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">fact</span><span class="p">()</span><span class="o">:</span><span class="kr">int</span><span class="p">{</span> 
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span> 
-        <span class="kd">var</span> <span class="nx">m</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span> 
-        <span class="k">if</span><span class="p">((</span><span class="nx">m</span> <span class="o">=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">pos</span><span class="p">).</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^(\d+)/</span><span class="p">))){</span> 
-            <span class="nx">pos</span> <span class="o">+=</span> <span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span> 
-            <span class="k">return</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> 
-        <span class="p">}</span> 
-        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">){</span> 
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> 
-            <span class="k">return</span> <span class="o">-</span><span class="nx">fact</span><span class="p">();</span> 
-        <span class="p">}</span> 
-        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;(&quot;</span><span class="p">){</span> 
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> 
-            <span class="nx">ret</span> <span class="o">=</span> <span class="nx">expr</span><span class="p">();</span> 
-            <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;No match for )&quot;</span><span class="p">);</span> 
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> 
-            <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span> 
-        <span class="p">}</span> 
-        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;invalid format&quot;</span><span class="p">);</span> 
-    <span class="p">}</span> 
-<span class="p">}</span> 
-</pre></div>
+    // Fact = ( Expr ) | - Fact | number 
+    private function fact():int{ 
+        var ret:int; 
+        var m:Array; 
+        if((m = str.substr(pos).match(/^(\d+)/))){ 
+            pos += m[1].length; 
+            return parseInt(m[1]); 
+        } 
+        else if(str.charAt(pos) == &quot;-&quot;){ 
+            pos++; 
+            return -fact(); 
+        } 
+        else if(str.charAt(pos) == &quot;(&quot;){ 
+            pos++; 
+            ret = expr(); 
+            if(str.charAt(pos) != &quot;)&quot;) throw new Error(&quot;No match for )&quot;); 
+            pos++; 
+            return ret; 
+        } 
+        throw new Error(&quot;invalid format&quot;); 
+    } 
+} </pre>
 
 </div>
 

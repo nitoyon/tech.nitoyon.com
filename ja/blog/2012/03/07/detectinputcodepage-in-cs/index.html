@@ -77,114 +77,113 @@
 <p>その結果、見事に C# でも文字コードを判定できるようになった。</p>
 <p>以下が完成したコードである。タイプライブラリを登録する必要もなく、素の C# コンソール プロジェクトに食わせて動くはずである。</p>
 <p>コマンドライン引数で受け取ったファイルの文字コードを判定してコンソールに出力している。</p>
-<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
-<span class="k">using</span> <span class="nn">System.IO</span><span class="p">;</span>
-<span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
-<span class="k">using</span> <span class="nn">System.Text</span><span class="p">;</span>
+<pre class="cs">using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 
-<span class="k">namespace</span> <span class="nn">ConsoleApplication3</span>
-<span class="p">{</span>
-    <span class="k">class</span> <span class="nc">Program</span>
-    <span class="p">{</span>
-        <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">new</span> <span class="nf">Program</span><span class="p">().</span><span class="n">Start</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>
-        <span class="p">}</span>
+namespace ConsoleApplication3
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            new Program().Start(args[0]);
+        }
 
-        <span class="k">private</span> <span class="k">void</span> <span class="nf">Start</span><span class="p">(</span><span class="kt">string</span> <span class="n">path</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="n">Encoding</span> <span class="n">encoding</span> <span class="p">=</span> <span class="n">DetectEncoding</span><span class="p">(</span><span class="n">GetFileAsByteArray</span><span class="p">(</span><span class="n">path</span><span class="p">));</span>
-            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Result: {0}&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="p">.</span><span class="n">EncodingName</span><span class="p">);</span>
-        <span class="p">}</span>
+        private void Start(string path)
+        {
+            Encoding encoding = DetectEncoding(GetFileAsByteArray(path));
+            Console.WriteLine(&quot;Result: {0}&quot;, encoding.EncodingName);
+        }
 
-        <span class="k">private</span> <span class="kt">byte</span><span class="p">[]</span> <span class="nf">GetFileAsByteArray</span><span class="p">(</span><span class="kt">string</span> <span class="n">path</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">using</span> <span class="p">(</span><span class="n">FileStream</span> <span class="n">fs</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FileStream</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">FileMode</span><span class="p">.</span><span class="n">Open</span><span class="p">,</span> <span class="n">FileAccess</span><span class="p">.</span><span class="n">Read</span><span class="p">))</span>
-            <span class="p">{</span>
-                <span class="kt">byte</span><span class="p">[]</span> <span class="n">bytes</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="p">[</span><span class="n">fs</span><span class="p">.</span><span class="n">Length</span><span class="p">];</span>
-                <span class="n">fs</span><span class="p">.</span><span class="n">Read</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">bytes</span><span class="p">.</span><span class="n">Length</span><span class="p">);</span>
-                <span class="k">return</span> <span class="n">bytes</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+        private byte[] GetFileAsByteArray(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                return bytes;
+            }
+        }
 
-        <span class="k">private</span> <span class="n">Encoding</span> <span class="nf">DetectEncoding</span><span class="p">(</span><span class="kt">byte</span><span class="p">[]</span> <span class="n">bytes</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="n">IMultiLanguage2</span> <span class="n">lang</span> <span class="p">=</span> <span class="p">(</span><span class="n">IMultiLanguage2</span><span class="p">)</span><span class="k">new</span> <span class="n">MultiLanguage</span><span class="p">();</span>
-            <span class="kt">int</span> <span class="n">len</span> <span class="p">=</span> <span class="n">bytes</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
-            <span class="n">DetectEncodingInfo</span> <span class="n">info</span> <span class="p">=</span> <span class="k">new</span> <span class="n">DetectEncodingInfo</span><span class="p">();</span>
-            <span class="kt">int</span> <span class="n">scores</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+        private Encoding DetectEncoding(byte[] bytes)
+        {
+            IMultiLanguage2 lang = (IMultiLanguage2)new MultiLanguage();
+            int len = bytes.Length;
+            DetectEncodingInfo info = new DetectEncodingInfo();
+            int scores = 1;
 
-            <span class="c1">// bytes to IntPtr</span>
-            <span class="n">GCHandle</span> <span class="n">handle</span> <span class="p">=</span> <span class="n">GCHandle</span><span class="p">.</span><span class="n">Alloc</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="n">GCHandleType</span><span class="p">.</span><span class="n">Pinned</span><span class="p">);</span>
-            <span class="n">IntPtr</span> <span class="n">pbytes</span> <span class="p">=</span> <span class="n">Marshal</span><span class="p">.</span><span class="n">UnsafeAddrOfPinnedArrayElement</span><span class="p">(</span><span class="n">bytes</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
+            // bytes to IntPtr
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            IntPtr pbytes = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
 
-            <span class="k">try</span>
-            <span class="p">{</span>
-                <span class="n">lang</span><span class="p">.</span><span class="n">DetectInputCodepage</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">pbytes</span><span class="p">,</span> <span class="k">ref</span> <span class="n">len</span><span class="p">,</span> <span class="k">out</span> <span class="n">info</span><span class="p">,</span> <span class="k">ref</span> <span class="n">scores</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">finally</span>
-            <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">IsAllocated</span><span class="p">)</span>
-                    <span class="n">handle</span><span class="p">.</span><span class="n">Free</span><span class="p">();</span>
-            <span class="p">}</span>
+            try
+            {
+                lang.DetectInputCodepage(0, 0, pbytes, ref len, out info, ref scores);
+            }
+            finally
+            {
+                if (handle.IsAllocated)
+                    handle.Free();
+            }
 
-            <span class="k">return</span> <span class="n">Encoding</span><span class="p">.</span><span class="n">GetEncoding</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">info</span><span class="p">.</span><span class="n">nCodePage</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+            return Encoding.GetEncoding((int)info.nCodePage);
+        }
+    }
 
-    <span class="k">public</span> <span class="k">struct</span> <span class="nc">DetectEncodingInfo</span>
-    <span class="p">{</span>
-        <span class="k">public</span> <span class="n">UInt32</span> <span class="n">nLangID</span><span class="p">;</span>
-        <span class="k">public</span> <span class="n">UInt32</span> <span class="n">nCodePage</span><span class="p">;</span>
-        <span class="k">public</span> <span class="n">Int32</span> <span class="n">nDocPercent</span><span class="p">;</span>
-        <span class="k">public</span> <span class="n">Int32</span> <span class="n">nConfidence</span><span class="p">;</span>
-    <span class="p">};</span>
+    public struct DetectEncodingInfo
+    {
+        public UInt32 nLangID;
+        public UInt32 nCodePage;
+        public Int32 nDocPercent;
+        public Int32 nConfidence;
+    };
 
-<span class="na">    [ComImport, Guid(&quot;275c23e2-3747-11d0-9fea-00aa003f8646&quot;)]</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">MultiLanguage</span>
-    <span class="p">{</span>
-    <span class="p">}</span>
+    [ComImport, Guid(&quot;275c23e2-3747-11d0-9fea-00aa003f8646&quot;)]
+    public class MultiLanguage
+    {
+    }
 
-<span class="na">    [Guid(&quot;DCCFC164-2B38-11D2-B7EC-00C04F8F5D9A&quot;),</span>
-<span class="na">        InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]</span>
-    <span class="k">public</span> <span class="k">interface</span> <span class="n">IMultiLanguage2</span>
-    <span class="p">{</span>
-        <span class="k">void</span> <span class="nf">GetNumberOfCodePageInfo</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetCodePageInfo</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetFamilyCodePage</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">EnumCodePages</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetCharsetInfo</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">IsConvertible</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertString</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringToUnicode</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringFromUnicode</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringReset</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetRfc1766FromLcid</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetLcidFromRfc1766</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">EnumRfc1766</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetRfc1766Info</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">CreateConvertCharset</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringInIStream</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringToUnicodeEx</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ConvertStringFromUnicodeEx</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">DetectCodepageInIStream</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">DetectInputCodepage</span><span class="p">(</span>
-<span class="na">            [In]</span> <span class="n">UInt32</span> <span class="n">dwFlag</span><span class="p">,</span>
-<span class="na">            [In]</span> <span class="n">UInt32</span> <span class="n">dwPrefWinCodePage</span><span class="p">,</span>
-<span class="na">            [In]</span> <span class="n">IntPtr</span> <span class="n">pSrcStr</span><span class="p">,</span>
-<span class="na">            [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pcSrcSize</span><span class="p">,</span>
-<span class="na">            [Out]</span> <span class="k">out</span> <span class="n">DetectEncodingInfo</span> <span class="n">lpEncoding</span><span class="p">,</span>
-<span class="na">            [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pnScores</span><span class="p">);</span>
-        <span class="k">void</span> <span class="nf">ValidateCodePage</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetCodePageDescription</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">IsCodePageInstallable</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">SetMimeDBSource</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">GetNumberOfScripts</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">EnumScripts</span><span class="p">();</span>
-        <span class="k">void</span> <span class="nf">ValidateCodePageEx</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    [Guid(&quot;DCCFC164-2B38-11D2-B7EC-00C04F8F5D9A&quot;),
+        InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IMultiLanguage2
+    {
+        void GetNumberOfCodePageInfo();
+        void GetCodePageInfo();
+        void GetFamilyCodePage();
+        void EnumCodePages();
+        void GetCharsetInfo();
+        void IsConvertible();
+        void ConvertString();
+        void ConvertStringToUnicode();
+        void ConvertStringFromUnicode();
+        void ConvertStringReset();
+        void GetRfc1766FromLcid();
+        void GetLcidFromRfc1766();
+        void EnumRfc1766();
+        void GetRfc1766Info();
+        void CreateConvertCharset();
+        void ConvertStringInIStream();
+        void ConvertStringToUnicodeEx();
+        void ConvertStringFromUnicodeEx();
+        void DetectCodepageInIStream();
+        void DetectInputCodepage(
+            [In] UInt32 dwFlag,
+            [In] UInt32 dwPrefWinCodePage,
+            [In] IntPtr pSrcStr,
+            [In, Out] ref Int32 pcSrcSize,
+            [Out] out DetectEncodingInfo lpEncoding,
+            [In, Out] ref Int32 pnScores);
+        void ValidateCodePage();
+        void GetCodePageDescription();
+        void IsCodePageInstallable();
+        void SetMimeDBSource();
+        void GetNumberOfScripts();
+        void EnumScripts();
+        void ValidateCodePageEx();
+    }
+}</pre>
 <h1>WinDbg で COM 呼び出しをブレークする</h1>
 <p>最後に、WinDbg で COM 呼び出しをブレークして調べる方法をまとめておく。同じ方法を使えば COM 呼び出しに限らず、Win32 の API でも同じようにブレークできるだろう。Visual Studio でもできるかもしれないが、自分の環境ではシンボル読み込みがうまくいかないことが多かったので、WinDbg を使うようになった。</p>
 <p>Debugging Tools for Windows がインストールされている前提とする。</p>
@@ -192,14 +191,13 @@
 <p>とても簡単ですね！</p>
 <p>最後の引数を調べるところが面倒だが、x86 なら <code>kv</code> で引数をダンプできるし、スタックを眺めればなんとかなる。</p>
 <p>自分の環境は x64 だったので、一部の引数はレジスタに置かれる。<code>IMultiLanguage2::DetectInputCodepage()</code> のプロトタイプ宣言は次の通り。</p>
-<div class="highlight"><pre><span class="k">void</span> <span class="nf">DetectInputCodepage</span><span class="p">(</span>
-<span class="na">    [In]</span> <span class="n">UInt32</span> <span class="n">dwFlag</span><span class="p">,</span>
-<span class="na">    [In]</span> <span class="n">UInt32</span> <span class="n">dwPrefWinCodePage</span><span class="p">,</span>
-<span class="na">    [In]</span> <span class="n">IntPtr</span> <span class="n">pSrcStr</span><span class="p">,</span>
-<span class="na">    [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pcSrcSize</span><span class="p">,</span>
-<span class="na">    [Out]</span> <span class="k">out</span> <span class="n">DetectEncodingInfo</span> <span class="n">lpEncoding</span><span class="p">,</span>
-<span class="na">    [In, Out]</span> <span class="k">ref</span> <span class="n">Int32</span> <span class="n">pnScores</span><span class="p">);</span>
-</pre></div>
+<pre class="cs">void DetectInputCodepage(
+    [In] UInt32 dwFlag,
+    [In] UInt32 dwPrefWinCodePage,
+    [In] IntPtr pSrcStr,
+    [In, Out] ref Int32 pcSrcSize,
+    [Out] out DetectEncodingInfo lpEncoding,
+    [In, Out] ref Int32 pnScores);</pre>
 <p>レジスタを眺めてみると、こうなっていた。</p>
 <pre>0:000&gt; r
 rax=0000000000000018 rbx=0000000000000000 rcx=00000000003ee3a0

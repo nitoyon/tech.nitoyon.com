@@ -69,146 +69,145 @@
 <table border="0" cellpadding="0" cellspacing="0"><tr><td valign="top"><div style="border:1px solid #000000;margin:0px;padding:6px 0px;background-color:#ffffff;width:160px;text-align:center;float:left"><a href="http://hb.afl.rakuten.co.jp/hgc/06acb2e0.1701f697.06acb2e1.36b7e8da/?pc=http%3a%2f%2fitem.rakuten.co.jp%2ftokyo-treasures%2fmi2007-darumaotoshi%2f%3fscid%3daf_ich_link_tbl&amp;m=http%3a%2f%2fm.rakuten.co.jp%2ftokyo-treasures%2fn%2fmi2007-darumaotoshi" target="_blank" style="color:#0000ff;"><img src="http://hbb.afl.rakuten.co.jp/hgb/?pc=http%3a%2f%2fthumbnail.image.rakuten.co.jp%2f%400_mall%2ftokyo-treasures%2fcabinet%2fitem-wazakka%2fki-2007.jpg%3f_ex%3d128x128&amp;m=http%3a%2f%2fthumbnail.image.rakuten.co.jp%2f%400_mall%2ftokyo-treasures%2fcabinet%2fitem-wazakka%2fki-2007.jpg%3f_ex%3d80x80" alt="だるま落とし" border="0" style="margin:0px;padding:0px"></a><p style="font-size:12px;line-height:1.4em;text-align:left;margin:0px;padding:2px 6px"><a href="http://hb.afl.rakuten.co.jp/hgc/06acb2e0.1701f697.06acb2e1.36b7e8da/?pc=http%3a%2f%2fitem.rakuten.co.jp%2ftokyo-treasures%2fmi2007-darumaotoshi%2f%3fscid%3daf_ich_link_tbl&amp;m=http%3a%2f%2fm.rakuten.co.jp%2ftokyo-treasures%2fn%2fmi2007-darumaotoshi" target="_blank" style="color:#0000ff;">だるま落とし</a><br><span style="color:#000000;">価格：892円（税込、送料別）</span><br></p></div></td></tr></table>
 <p>ソースコードは以下に(139行)。</p>
 <p>(追記)1.4.3 では import Engine のところを import Box2d に変更すれば動きます。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Dynamics</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="nx">Shapes</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Common</span><span class="p">.</span><span class="nb">Math</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<pre class="javascript">package {
+    import Engine.Dynamics.*;
+    import Engine.Collision.*;
+    import Engine.Collision.Shapes.*;
+    import Engine.Common.Math.*;
+    import flash.events.Event
+    import flash.display.*;
+    import flash.text.TextField;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;350&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Box2dSimpleSample2</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// loop counter</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">first</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// init flag</span>
+    [SWF(backgroundColor=&quot;#ffffff&quot;, width=&quot;350&quot;, height=&quot;200&quot;)]
+    public class Box2dSimpleSample2 extends Sprite {
+        private var count:int = 0;  // loop counter
+        private var first:Boolean = true; // init flag
 
-        <span class="c1">// Box2d</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_world</span><span class="o">:</span><span class="nx">b2World</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_physScale</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_floor</span><span class="o">:</span><span class="nx">b2Body</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_blocks</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+        // Box2d
+        private var m_world:b2World;
+        private var m_physScale:Number = 10;
+        private var m_floor:b2Body;
+        private var m_blocks:Array;
 
-        <span class="c1">// Sprites</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">spriteFloor</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">spriteBlocks</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;daruma.png&quot;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">daruma</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">colors</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0x333366</span><span class="p">,</span> <span class="mh">0xffffdd</span><span class="p">,</span> <span class="mh">0xcc0000</span><span class="p">,</span> <span class="mh">0xffcc00</span><span class="p">,</span> <span class="mh">0x006600</span><span class="p">];</span>
+        // Sprites
+        private var spriteFloor:Sprite;
+        private var spriteBlocks:Array;
+        [Embed(source=&quot;daruma.png&quot;)]
+        private var daruma:Class;
+        private const colors:Array = [0x333366, 0xffffdd, 0xcc0000, 0xffcc00, 0x006600];
 
-        <span class="c1">// display param</span>
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">LOOP</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">280</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">FADE_OUT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+        // display param
+        private static const LOOP:int = 280;
+        private static const FADE_OUT:int = 20;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Box2dSimpleSample2</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function Box2dSimpleSample2() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;CLICK TO START!!!&quot;</span><span class="p">;</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+            var text:TextField = new TextField();
+            text.text = &quot;CLICK TO START!!!&quot;;
+            text.x = text.y = 100;
+            addChild(text);
 
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">text</span><span class="p">.</span><span class="nx">visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-                <span class="nx">init</span><span class="p">();</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            stage.addEventListener(&quot;click&quot;, function(event:Event):void {
+                text.visible = false;
+                init();
+            });
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        private function init():void {
+            count = 0;
 
-            <span class="c1">// init sprites</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">first</span><span class="p">){</span>
-                <span class="nx">first</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+            // init sprites
+            if(first){
+                first = false;
 
-                <span class="c1">// init floor sprite</span>
-                <span class="nx">spriteFloor</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
-                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">300</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
-                <span class="nx">spriteFloor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">spriteFloor</span><span class="p">);</span>
+                // init floor sprite
+                spriteFloor = new Sprite();
+                spriteFloor.graphics.beginFill(0x808080);
+                spriteFloor.graphics.drawRect(-300 / 2, -20 / 2, 300, 20);
+                spriteFloor.graphics.endFill();
+                addChild(spriteFloor);
 
-                <span class="c1">// init blocks sprite</span>
-                <span class="nx">spriteBlocks</span> <span class="o">=</span> <span class="p">[];</span>
-                <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x999999</span><span class="p">);</span>
-                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="o">-</span><span class="mi">28</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-                    <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
-                    <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-                <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">DisplayObject</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">daruma</span><span class="p">());</span>
-                <span class="nx">bmp</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmp</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-                <span class="nx">bmp</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmp</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
-                <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+                // init blocks sprite
+                spriteBlocks = [];
+                for(i = 0; i &lt; colors.length; i++) {
+                    var s:Sprite = new Sprite();
+                    s.graphics.beginFill(colors[i]);
+                    s.graphics.lineStyle(0, 0x999999);
+                    s.graphics.drawRoundRect(-28, -10, 56, 20, 10, 10);
+                    s.graphics.endFill();
+                    addChild(s);
+                    spriteBlocks.push(s);
+                }
+                s = new Sprite();
+                var bmp:DisplayObject = s.addChild(new daruma());
+                bmp.x = -bmp.width / 2;
+                bmp.y = -bmp.height / 2;
+                addChild(s);
+                spriteBlocks.push(s);
 
-                <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                    <span class="nx">Update</span><span class="p">();</span>
-                <span class="p">});</span>
-            <span class="p">}</span>
+                addEventListener(&quot;enterFrame&quot;, function(event:Event):void {
+                    Update();
+                });
+            }
 
-            <span class="c1">// Construct a world object</span>
-            <span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
-            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
-            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
-            <span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+            // Construct a world object
+            var worldAABB:b2AABB = new b2AABB();
+            worldAABB.minVertex.Set(-100.0, -100.0);
+            worldAABB.maxVertex.Set(100.0, 100.0);
+            var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+            m_world = new b2World(worldAABB, gravity, true);
 
-            <span class="c1">// Create floor</span>
-            <span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">20</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
-            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
-            <span class="nx">m_floor</span> <span class="o">=</span> <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
+            // Create floor
+            var wallSd:b2BoxDef = new b2BoxDef();
+            wallSd.extents.Set(300 / 2 / m_physScale, 20 / 2 / m_physScale);
+            var wallBd:b2BodyDef = new b2BodyDef();
+            wallBd.position.Set(300 / m_physScale / 2, 250 / m_physScale);
+            wallBd.rotation = Math.random() * Math.PI / 8;
+            wallBd.AddShape(wallSd);
+            m_floor = m_world.CreateBody(wallBd);
 
-            <span class="c1">// Add bodies</span>
-            <span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-            <span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-            <span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-            <span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
-            <span class="nx">m_blocks</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">spriteBlocks</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="nx">i</span> <span class="o">==</span> <span class="mi">5</span> <span class="o">?</span> <span class="mi">30</span> <span class="o">:</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-                <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">120</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">-</span> <span class="p">(</span><span class="nx">i</span> <span class="o">==</span> <span class="mi">5</span> <span class="o">?</span> <span class="mi">18</span> <span class="o">:</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-                <span class="nx">m_blocks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">));</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // Add bodies
+            var sd:b2BoxDef = new b2BoxDef();
+            sd.density = 1;
+            sd.friction = 0.2;
+            var bd:b2BodyDef = new b2BodyDef();
+            bd.AddShape(sd);
+            m_blocks = [];
+            for (var i:int = 0; i &lt; spriteBlocks.length; i++) {
+                sd.extents.Set(30 / m_physScale, (i == 5 ? 30 : 10) / m_physScale);
+                bd.position.Set(100 / m_physScale, (120 - i * 20 - (i == 5 ? 18 : 0)) / m_physScale);
+                m_blocks.push(m_world.CreateBody(bd));
+            }
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Update</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">init</span><span class="p">();</span>
-            <span class="p">}</span>
+        public function Update():void {
+            count++;
+            if(count &gt; 300) {
+                init();
+            }
 
-            <span class="c1">// Update physics</span>
-            <span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            // Update physics
+            m_world.Step(1 / 30, 10);
 
-            <span class="c1">// Render</span>
-            <span class="kd">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="nx">LOOP</span> <span class="o">-</span> <span class="nx">FADE_OUT</span> <span class="o">?</span> <span class="p">(</span><span class="nx">LOOP</span> <span class="o">-</span> <span class="nx">count</span><span class="p">)</span> <span class="o">/</span> <span class="nx">FADE_OUT</span> <span class="o">:</span> 
-                                <span class="nx">count</span> <span class="o">&lt;</span> <span class="nx">FADE_OUT</span>        <span class="o">?</span> <span class="nx">count</span> <span class="o">/</span> <span class="nx">FADE_OUT</span> <span class="o">:</span> <span class="mi">1</span><span class="p">);</span>
-            <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">spriteFloor</span><span class="p">,</span> <span class="nx">m_floor</span><span class="p">,</span> <span class="nx">alpha</span><span class="p">);</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">m_blocks</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">spriteBlocks</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">m_blocks</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">alpha</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // Render
+            var alpha:Number = (count &gt; LOOP - FADE_OUT ? (LOOP - count) / FADE_OUT : 
+                                count &lt; FADE_OUT        ? count / FADE_OUT : 1);
+            applyBodyToSprite(spriteFloor, m_floor, alpha);
+            for(var i:int = 0; i &lt; m_blocks.length; i++) {
+                applyBodyToSprite(spriteBlocks[i], m_blocks[i], alpha);
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">applyBodyToSprite</span><span class="p">(</span><span class="nx">sprite</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">,</span> <span class="nx">body</span><span class="o">:</span><span class="nx">b2Body</span><span class="p">,</span> <span class="nx">alpha</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_position</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">;</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_position</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">;</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">m_rotation</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">;</span>
-            <span class="nx">sprite</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">=</span> <span class="nx">alpha</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private function applyBodyToSprite(sprite:Sprite, body:b2Body, alpha:Number):void{
+            sprite.x = body.m_position.x * m_physScale;
+            sprite.y = body.m_position.y * m_physScale;
+            sprite.rotation = body.m_rotation * 180 / Math.PI;
+            sprite.alpha = alpha;
+        }
+    }
+}</pre>
 
 </div>
 

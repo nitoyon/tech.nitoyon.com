@@ -91,17 +91,14 @@
 <h1>コメント フォーマットの CDATA にやられる</h1>
 <p>XML の作成については、基本的に <a href="http://help.disqus.com/customer/portal/articles/472150-custom-xml-import-format">DISQUS - Custom XML Import Format</a> に従えばいい。</p>
 <p>たとえばコメント本文は</p>
-<div class="highlight"><pre>  <span class="c">&lt;!-- comment body; use cdata; html allowed (though will be formatted to DISQUS specs) --&gt;</span>
-  <span class="nt">&lt;wp:comment_content&gt;</span><span class="cp">&lt;![CDATA[Hello world]]&gt;</span><span class="nt">&lt;/wp:comment_content&gt;</span>
-</pre></div>
+<pre class="xml">  &lt;!-- comment body; use cdata; html allowed (though will be formatted to DISQUS specs) --&gt;
+  &lt;wp:comment_content&gt;&lt;![CDATA[Hello world]]&gt;&lt;/wp:comment_content&gt;</pre>
 <p>のような形式で書くことになっている。</p>
 <p>仕様を読んだつもりであったのだが「CDATA を使え」を見逃していた。</p>
 <p>つまり、本当は CDATA を使って</p>
-<div class="highlight"><pre>  <span class="nt">&lt;wp:comment_content&gt;</span><span class="cp">&lt;![CDATA[I&#39;m nitoyon]]&gt;</span><span class="nt">&lt;/wp:comment_content&gt;</span>
-</pre></div>
+<pre class="xml">  &lt;wp:comment_content&gt;&lt;![CDATA[I'm nitoyon]]&gt;&lt;/wp:comment_content&gt;</pre>
 <p>と書くべきところを、</p>
-<div class="highlight"><pre>  <span class="nt">&lt;wp:comment_content&gt;</span>I<span class="ni">&amp;apos;</span>m nitoyon<span class="nt">&lt;/wp:comment_content&gt;</span>
-</pre></div>
+<pre class="xml">  &lt;wp:comment_content&gt;I&amp;apos;m nitoyon&lt;/wp:comment_content&gt;</pre>
 <p>としていた。</p>
 <p>まっとうな XML パーサーを使っていれば、<code>&amp;apos;</code> はシングルクオートになるはずなのだが、インポート結果を見てみると、<code>I&amp;aposm nitoyon</code> となっていた・・・。</p>
 <p>インポート後にコメントを編集はできるのだが、コメントの末尾に「(Edited by a moderator)」と表示されてしまう。これでは印象が悪いので、結局最初からやり直すことにした。</p>

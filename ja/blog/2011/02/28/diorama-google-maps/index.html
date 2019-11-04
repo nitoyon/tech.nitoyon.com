@@ -82,190 +82,189 @@
 <h1>ソースコード</h1>
 <p>チルトシフトのエフェクトは「彩度をあげる」「周りをぼかす」「周りを暗くする」ことで実現している。</p>
 <p>ソースコードは以下に（map_1_20.swc、minimalcomps、Tweener を利用）。</p>
-<div class="highlight"><pre><span class="c1">// Diorama Google Maps</span>
-<span class="c1">//-------------------------------------------------------------------</span>
-<span class="c1">// This flash changes google maps to tilt-shift photography.</span>
-<span class="c1">// inspired by http://reinit.info/blog/archive/2011/02/23/tiltshift_2/</span>
-<span class="kd">package</span> <span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="nx">controls</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="nx">services</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">bit101</span><span class="p">.</span><span class="nx">components</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">caurina</span><span class="p">.</span><span class="nx">transitions</span><span class="p">.</span><span class="nx">Tweener</span><span class="o">;</span>
+<pre class="actionscript">// Diorama Google Maps
+//-------------------------------------------------------------------
+// This flash changes google maps to tilt-shift photography.
+// inspired by http://reinit.info/blog/archive/2011/02/23/tiltshift_2/
+package {
+import flash.events.*;
+import flash.display.*;
+import flash.geom.*;
+import flash.filters.*;
+import com.google.maps.*;
+import com.google.maps.geom.*;
+import com.google.maps.controls.*;
+import com.google.maps.services.*;
+import com.bit101.components.*;
+import caurina.transitions.Tweener;
 
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">DioramaGoogleMaps</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">475</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">475</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">BLUR_PARAM</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">160</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">CONTROL_ALPHA</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.3</span><span class="o">;</span>
+public class DioramaGoogleMaps extends Sprite {
+    private static var WIDTH:Number = 475;
+    private static var HEIGHT:Number = 475;
+    private static var BLUR_PARAM:Number = 160;
+    private static var CONTROL_ALPHA:Number = 0.3;
 
-    <span class="kd">private</span> <span class="k">var</span> <span class="nx">maps</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kd">private</span> <span class="k">var</span> <span class="nx">controls</span><span class="o">:</span><span class="nb">Sprite</span><span class="o">;</span>
+    private var maps:Array = [];
+    private var controls:Sprite;
 
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">DioramaGoogleMaps</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="o">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">stageFocusRect</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    public function DioramaGoogleMaps():void {
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
+        stage.stageFocusRect = false;
 
-        <span class="c1">// blurred map</span>
-        <span class="k">var</span> <span class="nx">map1</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="nx">createMap</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
-        <span class="nx">map1</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">BlurFilter</span><span class="p">(</span><span class="mi">6</span><span class="o">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">,</span> <span class="nx">getSaturationFilter</span><span class="p">(</span><span class="mf">2.8</span><span class="p">)];</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">map1</span><span class="p">);</span>
+        // blurred map
+        var map1:Map3D = createMap(true);
+        map1.filters = [new BlurFilter(6, 6), getSaturationFilter(2.8)];
+        addChild(map1);
 
-        <span class="c1">// normal map</span>
-        <span class="k">var</span> <span class="nx">map2</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="nx">createMap</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
-        <span class="nx">map2</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="nx">getSaturationFilter</span><span class="p">(</span><span class="mf">1.8</span><span class="p">)];</span>
-        <span class="nx">map2</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">map2</span><span class="p">);</span>
+        // normal map
+        var map2:Map3D = createMap(false);
+        map2.filters = [getSaturationFilter(1.8)];
+        map2.cacheAsBitmap = true;
+        addChild(map2);
 
-        <span class="k">var</span> <span class="nx">msk</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawEllipse</span><span class="p">(</span><span class="o">-</span><span class="nx">WIDTH</span> <span class="o">*</span> <span class="mf">0.5</span><span class="o">,</span> <span class="o">-</span><span class="nx">HEIGHT</span> <span class="o">*</span> <span class="mf">0.3</span><span class="o">,</span> <span class="nx">WIDTH</span> <span class="o">*</span> <span class="mf">1.0</span><span class="o">,</span> <span class="nx">HEIGHT</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">);</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">*</span> <span class="mf">0.5</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">*</span> <span class="mf">0.5</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">BlurFilter</span><span class="p">(</span><span class="nx">BLUR_PARAM</span><span class="o">,</span> <span class="nx">BLUR_PARAM</span><span class="p">)];</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">msk</span><span class="p">);</span>
-        <span class="nx">map2</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">msk</span><span class="o">;</span>
+        var msk:Sprite = new Sprite();
+        msk.graphics.beginFill(0);
+        msk.graphics.drawEllipse(-WIDTH * 0.5, -HEIGHT * 0.3, WIDTH * 1.0, HEIGHT * 0.6);
+        msk.graphics.endFill();
+        msk.x = WIDTH * 0.5
+        msk.y = HEIGHT * 0.5
+        msk.filters = [new BlurFilter(BLUR_PARAM, BLUR_PARAM)];
+        msk.cacheAsBitmap = true;
+        addChild(msk);
+        map2.mask = msk;
 
-        <span class="nx">maps</span> <span class="o">=</span> <span class="p">[</span><span class="nx">map1</span><span class="o">,</span> <span class="nx">map2</span><span class="p">];</span>
+        maps = [map1, map2];
 
-        <span class="c1">// limb darkening</span>
-        <span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">GlowFilter</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mf">0.3</span><span class="o">,</span> <span class="nx">BLUR_PARAM</span><span class="o">,</span> <span class="nx">BLUR_PARAM</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="kc">true</span><span class="p">)];</span>
+        // limb darkening
+        filters = [new GlowFilter(0, 0.3, BLUR_PARAM, BLUR_PARAM, 1, 1, true)];
 
-        <span class="c1">// add control</span>
-        <span class="nx">initControl</span><span class="p">();</span>
-    <span class="p">}</span>
+        // add control
+        initControl();
+    }
 
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">initControl</span><span class="p">()</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-        <span class="nx">controls</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
-        <span class="k">var</span> <span class="nx">search</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
-        <span class="nx">search</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">240</span><span class="o">;</span> <span class="nx">search</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
-        <span class="nx">search</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">search</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mf">1.5</span><span class="o">;</span>
+    private function initControl():void{
+        controls = new Sprite();
+        var search:Sprite = new Sprite();
+        search.x = 240; search.y = 10;
+        search.scaleX = search.scaleY = 1.5;
 
-        <span class="c1">// text</span>
-        <span class="k">var</span> <span class="nx">txt</span><span class="o">:</span><span class="nx">InputText</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">InputText</span><span class="p">(</span><span class="nx">controls</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="nx">txt</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
-        <span class="nx">txt</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;keyDown&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">KeyboardEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">==</span> <span class="mi">13</span><span class="p">)</span> <span class="p">{</span> <span class="nx">btn</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nb">Event</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">));</span> <span class="p">}</span>
-        <span class="p">});</span>
-        <span class="nx">search</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">txt</span><span class="p">);</span>
+        // text
+        var txt:InputText = new InputText(controls, 0, 0);
+        txt.width = 100;
+        txt.addEventListener(&quot;keyDown&quot;, function(event:KeyboardEvent):void{
+            if (event.keyCode == 13) { btn.dispatchEvent(new Event(&quot;click&quot;)); }
+        });
+        search.addChild(txt);
 
-        <span class="c1">// button</span>
-        <span class="k">var</span> <span class="nx">btn</span><span class="o">:</span><span class="nx">PushButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PushButton</span><span class="p">(</span><span class="nx">search</span><span class="o">,</span> <span class="mi">100</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s2">&quot;Search&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-            <span class="k">var</span> <span class="nx">geo</span><span class="o">:</span><span class="nx">ClientGeocoder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ClientGeocoder</span><span class="p">();</span>
-            <span class="nx">geo</span><span class="p">.</span><span class="nx">geocode</span><span class="p">(</span><span class="nx">txt</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
-            <span class="nx">geo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;geocodingsuccess&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">GeocodingEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-                <span class="k">var</span> <span class="nx">marks</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">response</span><span class="p">.</span><span class="nx">placemarks</span><span class="o">;</span>
-                <span class="k">var</span> <span class="nx">map</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="nx">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="nx">as</span> <span class="nx">Map3D</span><span class="o">;</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">marks</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-                    <span class="nx">map</span><span class="p">.</span><span class="nx">flyTo</span><span class="p">(</span><span class="nx">marks</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">point</span><span class="o">,</span> <span class="mi">15</span><span class="o">,</span> <span class="k">new</span> <span class="nx">Attitude</span><span class="p">(</span><span class="mi">20</span><span class="o">,</span> <span class="mi">30</span><span class="o">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">,</span> <span class="mi">1</span><span class="p">);</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-            <span class="nx">geo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;geocodingfailure&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">GeocodingEvent</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-                <span class="nx">txt</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;NOT FOUND&quot;</span><span class="o">;</span>
-            <span class="p">});</span>
-        <span class="p">});</span>
-        <span class="nx">btn</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">50</span><span class="o">;</span> <span class="nx">btn</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">txt</span><span class="p">.</span><span class="nx">height</span><span class="o">;</span>
-        <span class="nx">controls</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">search</span><span class="p">);</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">controls</span><span class="p">);</span>
+        // button
+        var btn:PushButton = new PushButton(search, 100, 0, &quot;Search&quot;, function(event:Event):void{
+            var geo:ClientGeocoder = new ClientGeocoder();
+            geo.geocode(txt.text);
+            geo.addEventListener(&quot;geocodingsuccess&quot;, function(event:GeocodingEvent):void{
+                var marks:Array = event.response.placemarks;
+                var map:Map3D = maps[0] as Map3D;
+                if (marks.length &gt; 0){
+                    map.flyTo(marks[0].point, 15, new Attitude(20, 30, 0), 1);
+                }
+            });
+            geo.addEventListener(&quot;geocodingfailure&quot;, function(event:GeocodingEvent):void{
+                txt.text = &quot;NOT FOUND&quot;;
+            });
+        });
+        btn.width = 50; btn.height = txt.height;
+        controls.addChild(search);
+        addChild(controls);
 
-        <span class="nx">controls</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">=</span> <span class="nx">CONTROL_ALPHA</span><span class="o">;</span>
-        <span class="nx">controls</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseOver&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span> <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">controls</span><span class="o">,</span> <span class="p">{</span><span class="nx">alpha</span><span class="o">:</span> <span class="mf">0.9</span><span class="o">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mf">0.5</span> <span class="p">});</span> <span class="p">});</span>
-        <span class="nx">controls</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseOut&quot;</span><span class="o">,</span>  <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span> <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">controls</span><span class="o">,</span> <span class="p">{</span><span class="nx">alpha</span><span class="o">:</span> <span class="nx">CONTROL_ALPHA</span><span class="o">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mf">0.5</span> <span class="p">});</span> <span class="p">})</span>
-    <span class="p">}</span>
+        controls.alpha = CONTROL_ALPHA;
+        controls.addEventListener(&quot;mouseOver&quot;, function(event:Event):void { Tweener.addTween(controls, {alpha: 0.9, time: 0.5 }); });
+        controls.addEventListener(&quot;mouseOut&quot;,  function(event:Event):void { Tweener.addTween(controls, {alpha: CONTROL_ALPHA, time: 0.5 }); })
+    }
 
-    <span class="c1">// create a map</span>
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">createMap</span><span class="p">(</span><span class="nx">isBlur</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nx">Map3D</span><span class="p">{</span>
-        <span class="k">var</span> <span class="nx">map</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Map3D</span><span class="p">();</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="s2">&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class="o">;</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">sensor</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span><span class="o">;</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="k">new</span> <span class="nb">Point</span><span class="p">(</span><span class="nx">WIDTH</span><span class="o">,</span> <span class="nx">HEIGHT</span><span class="p">));</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">MapEvent</span><span class="p">.</span><span class="nx">MAP_PREINITIALIZE</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-            <span class="nx">map</span><span class="p">.</span><span class="nx">setInitOptions</span><span class="p">(</span><span class="k">new</span> <span class="nx">MapOptions</span><span class="p">({</span>
-                <span class="nx">zoom</span><span class="o">:</span> <span class="mf">16.6</span><span class="o">,</span>
-                <span class="nx">center</span><span class="o">:</span> <span class="k">new</span> <span class="nx">LatLng</span><span class="p">(</span><span class="mf">48.873847</span><span class="o">,</span> <span class="mf">2.29502</span><span class="p">)</span><span class="o">,</span>
-                <span class="nx">mapType</span><span class="o">:</span> <span class="nx">MapType</span><span class="p">.</span><span class="nx">SATELLITE_MAP_TYPE</span><span class="o">,</span>
-                <span class="nx">viewMode</span><span class="o">:</span> <span class="nx">View</span><span class="p">.</span><span class="nx">VIEWMODE_ORTHOGONAL</span><span class="o">,</span>
-                <span class="nx">attitude</span><span class="o">:</span> <span class="k">new</span> <span class="nx">Attitude</span><span class="p">(</span><span class="mi">20</span><span class="o">,</span> <span class="mi">30</span><span class="o">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">,</span>
-                <span class="nx">doubleClickMode</span><span class="o">:</span> <span class="nx">MapAction</span><span class="p">.</span><span class="nx">ACTION_PAN_ZOOM_IN</span><span class="o">,</span>
-                <span class="nx">mouseClickRange</span><span class="o">:</span> <span class="mi">2</span>
-            <span class="p">}));</span>
-        <span class="p">});</span>
+    // create a map
+    private function createMap(isBlur:Boolean):Map3D{
+        var map:Map3D = new Map3D();
+        map.key = &quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;;
+        map.sensor = &quot;false&quot;;
+        map.setSize(new Point(WIDTH, HEIGHT));
+        map.addEventListener(MapEvent.MAP_PREINITIALIZE, function(event:Event):void{
+            map.setInitOptions(new MapOptions({
+                zoom: 16.6,
+                center: new LatLng(48.873847, 2.29502),
+                mapType: MapType.SATELLITE_MAP_TYPE,
+                viewMode: View.VIEWMODE_ORTHOGONAL,
+                attitude: new Attitude(20, 30, 0),
+                doubleClickMode: MapAction.ACTION_PAN_ZOOM_IN,
+                mouseClickRange: 2
+            }));
+        });
 
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">MapEvent</span><span class="p">.</span><span class="nx">MAP_READY</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isBlur</span><span class="p">){</span>
-                <span class="k">var</span> <span class="nx">control</span><span class="o">:</span><span class="nx">NavigationControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NavigationControl</span><span class="p">(</span><span class="k">new</span> <span class="nx">NavigationControlOptions</span><span class="p">({</span>
-                    <span class="nx">position</span><span class="o">:</span> <span class="k">new</span> <span class="nx">ControlPosition</span><span class="p">(</span><span class="nx">ControlPosition</span><span class="p">.</span><span class="nx">ANCHOR_TOP_LEFT</span><span class="o">,</span> <span class="mi">5</span><span class="p">)</span>
-                <span class="p">}));</span>
-                <span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">control</span><span class="p">);</span>
+        map.addEventListener(MapEvent.MAP_READY, function(event:Event):void{
+            if (!isBlur){
+                var control:NavigationControl = new NavigationControl(new NavigationControlOptions({
+                    position: new ControlPosition(ControlPosition.ANCHOR_TOP_LEFT, 5)
+                }));
+                map.addControl(control);
 
-                <span class="c1">// move to control sprite</span>
-                <span class="k">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nb">DisplayObject</span> <span class="o">=</span> <span class="nx">control</span><span class="p">.</span><span class="nx">getDisplayObject</span><span class="p">();</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">parent</span><span class="p">){</span>
-                    <span class="nx">obj</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
-                    <span class="nx">controls</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
+                // move to control sprite
+                var obj:DisplayObject = control.getDisplayObject();
+                if (obj.parent){
+                    obj.parent.removeChild(obj);
+                    controls.addChild(obj);
+                }
+            }
+        });
 
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mapevent_movestep&quot;</span><span class="o">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mapevent_moveend&quot;</span><span class="o">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mapevent_zoomend&quot;</span><span class="o">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mapevent_attitudechangeend&quot;</span><span class="o">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mapevent_attitudechangestep&quot;</span><span class="o">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
+        map.addEventListener(&quot;mapevent_movestep&quot;, changeHandler);
+        map.addEventListener(&quot;mapevent_moveend&quot;, changeHandler);
+        map.addEventListener(&quot;mapevent_zoomend&quot;, changeHandler);
+        map.addEventListener(&quot;mapevent_attitudechangeend&quot;, changeHandler);
+        map.addEventListener(&quot;mapevent_attitudechangestep&quot;, changeHandler);
 
-        <span class="k">return</span> <span class="nx">map</span><span class="o">;</span>
-    <span class="p">}</span>
+        return map;
+    }
 
-    <span class="c1">// sync two map</span>
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span><span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">maps</span><span class="p">.</span><span class="nx">length</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span> <span class="k">return</span><span class="o">;</span>
+    // sync two map
+    private function changeHandler(event:Event):void{
+        if(maps.length != 2) return;
 
-        <span class="k">var</span> <span class="nx">me</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span> <span class="nx">as</span> <span class="nx">Map3D</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">other</span><span class="o">:</span><span class="nx">Map3D</span> <span class="o">=</span> <span class="p">(</span><span class="nx">me</span> <span class="o">==</span> <span class="nx">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">?</span> <span class="nx">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">:</span> <span class="nx">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="nx">as</span> <span class="nx">Map3D</span><span class="o">;</span>
+        var me:Map3D = event.target as Map3D;
+        var other:Map3D = (me == maps[0] ? maps[1] : maps[0]) as Map3D;
 
-        <span class="k">var</span> <span class="nx">c1</span><span class="o">:</span><span class="nx">LatLng</span> <span class="o">=</span> <span class="nx">me</span><span class="p">.</span><span class="nx">getCenter</span><span class="p">();</span>
-        <span class="k">var</span> <span class="nx">z1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">me</span><span class="p">.</span><span class="nx">getZoom</span><span class="p">();</span>
-        <span class="k">var</span> <span class="nx">a1</span><span class="o">:</span><span class="nx">Attitude</span> <span class="o">=</span> <span class="nx">me</span><span class="p">.</span><span class="nx">getAttitude</span><span class="p">();</span>
+        var c1:LatLng = me.getCenter();
+        var z1:Number = me.getZoom();
+        var a1:Attitude = me.getAttitude();
 
-        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">c1</span><span class="p">.</span><span class="nx">equals</span><span class="p">(</span><span class="nx">other</span><span class="p">.</span><span class="nx">getCenter</span><span class="p">())){</span>
-            <span class="nx">other</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">(</span><span class="nx">c1</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">z1</span> <span class="o">!=</span> <span class="nx">other</span><span class="p">.</span><span class="nx">getZoom</span><span class="p">()){</span>
-            <span class="nx">other</span><span class="p">.</span><span class="nx">setZoom</span><span class="p">(</span><span class="nx">z1</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">a1</span><span class="p">.</span><span class="nx">equals</span><span class="p">(</span><span class="nx">other</span><span class="p">.</span><span class="nx">getAttitude</span><span class="p">())){</span>
-            <span class="nx">other</span><span class="p">.</span><span class="nx">setAttitude</span><span class="p">(</span><span class="nx">a1</span><span class="p">)</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        if(!c1.equals(other.getCenter())){
+            other.setCenter(c1);
+        }
+        if(z1 != other.getZoom()){
+            other.setZoom(z1);
+        }
+        if(!a1.equals(other.getAttitude())){
+            other.setAttitude(a1)
+        }
+    }
 
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">LUMINANCE_R</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.212671</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">LUMINANCE_G</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.715160</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nx">LUMINANCE_B</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.072169</span><span class="o">;</span>
+    private static var LUMINANCE_R:Number = 0.212671;
+    private static var LUMINANCE_G:Number = 0.715160;
+    private static var LUMINANCE_B:Number = 0.072169;
 
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getSaturationFilter</span><span class="p">(</span><span class="nx">saturation</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">BitmapFilter</span><span class="p">{</span>
-        <span class="k">var</span> <span class="nx">sf</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">saturation</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">nf</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="nx">sf</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">nr</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">LUMINANCE_R</span> <span class="o">*</span> <span class="nx">nf</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">ng</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">LUMINANCE_G</span> <span class="o">*</span> <span class="nx">nf</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">nb</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">LUMINANCE_B</span> <span class="o">*</span> <span class="nx">nf</span><span class="o">;</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nb">ColorMatrixFilter</span><span class="p">([</span>
-            <span class="nx">nr</span><span class="o">+</span><span class="nx">sf</span><span class="o">,</span>  <span class="nx">ng</span><span class="o">,</span>     <span class="nx">nb</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span>  <span class="mi">0</span><span class="o">,</span>
-            <span class="nx">nr</span><span class="o">,</span>     <span class="nx">ng</span><span class="o">+</span><span class="nx">sf</span><span class="o">,</span>  <span class="nx">nb</span><span class="o">,</span>     <span class="mi">0</span><span class="o">,</span>  <span class="mi">0</span><span class="o">,</span>
-            <span class="nx">nr</span><span class="o">,</span>     <span class="nx">ng</span><span class="o">,</span>     <span class="nx">nb</span><span class="o">+</span><span class="nx">sf</span><span class="o">,</span>  <span class="mi">0</span><span class="o">,</span>  <span class="mi">0</span><span class="o">,</span>
-            <span class="mi">0</span><span class="o">,</span>      <span class="mi">0</span><span class="o">,</span>      <span class="mi">0</span><span class="o">,</span>      <span class="mi">1</span><span class="o">,</span>  <span class="mi">0</span>
-        <span class="p">]);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function getSaturationFilter(saturation:Number):BitmapFilter{
+        var sf:Number = saturation;
+        var nf:Number = 1-sf;
+        var nr:Number = LUMINANCE_R * nf;
+        var ng:Number = LUMINANCE_G * nf;
+        var nb:Number = LUMINANCE_B * nf;
+        return new ColorMatrixFilter([
+            nr+sf,  ng,     nb,     0,  0,
+            nr,     ng+sf,  nb,     0,  0,
+            nr,     ng,     nb+sf,  0,  0,
+            0,      0,      0,      1,  0
+        ]);
+    }
+}
+}</pre>
 </section>
 
 </div>

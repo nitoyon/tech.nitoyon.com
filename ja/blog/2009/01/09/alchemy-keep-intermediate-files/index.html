@@ -61,42 +61,37 @@
 <div class="entry-body">
 <section>
 <p>alc-on して置き換わる gcc(achacks/gcc) は Perl でできてるんだけど、その最後に次のようなコードがある。</p>
-<div class="highlight"><pre><span class="c1"># remove junk TODO failure leaves stuff around!</span>
-<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$ENV</span><span class="p">{</span><span class="n">ACHACKS_TMPS</span><span class="p">})</span>
-  <span class="p">{</span> <span class="n">sys</span><span class="p">(</span><span class="s">&quot;rm&quot;</span><span class="p">,</span> <span class="s">&quot;-f&quot;</span><span class="p">,</span> <span class="sr">&lt;$$.achacks.*&gt;</span><span class="p">)</span> <span class="p">}</span>
-</pre></div>
+<pre class="perl"># remove junk TODO failure leaves stuff around!
+if(!$ENV{ACHACKS_TMPS})
+  { sys(&quot;rm&quot;, &quot;-f&quot;, &lt;$$.achacks.*&gt;) }</pre>
 <p>これが中間ファイルを全部消す処理ですな。</p>
 <p>ということで、どういう AS が吐かれるのかを見たいときには ACHACKS_TMPS を 1 にしよう。cygwin ではこうする。</p>
-<div class="highlight"><pre><span class="nv">$ </span><span class="nb">export </span><span class="nv">ACHACKS_TMPS</span><span class="o">=</span>1
-</pre></div>
+<pre class="sh">$ export ACHACKS_TMPS=1</pre>
 <p>こんな感じで中間ファイルが消えないよ。</p>
-<div class="highlight"><pre><span class="nv">$ </span>ls
+<pre class="sh">$ ls
 3080.achacks.abc
 3080.achacks.as
 3080.achacks.exe
 3080.achacks.exe.bc
 3080.achacks.o
-<span class="c"># ...</span>
-</pre></div>
+# ...</pre>
 <p>.o が llvm の中間ファイル。llvm-dis を実行すればディスアセンブルできる。</p>
-<div class="highlight"><pre><span class="nv">$ </span>llvm-dis 3080.achacks.o  
-<span class="c"># → 3080.achacks.o.ll が生成される</span>
-</pre></div>
+<pre class="sh">$ llvm-dis 3080.achacks.o  
+# → 3080.achacks.o.ll が生成される</pre>
 <p>.o から .as が生成されるらしいので、比較すると面白いはず。</p>
 <h1>その他の環境変数</h1>
 <p>alc-util を使えばその他の有用そうな環境変数を確認できる。</p>
-<div class="highlight"><pre><span class="nv">ALCHEMY_HOME</span><span class="o">=</span>/home/nitoyon/doc/alchemy
-<span class="nv">ALCHEMY_VER</span><span class="o">=</span>0.4a
-<span class="nv">PATH</span><span class="o">=</span>/home/nitoyon/doc/alchemy/achacks:...
-<span class="nv">ADL</span><span class="o">=</span>
-<span class="nv">ASC</span><span class="o">=</span>C:/Alchemy/bin/asc.jar
-<span class="nv">ACHACKS_TMPS</span><span class="o">=</span>1
-<span class="nv">LOG</span><span class="o">=</span>
-<span class="nv">LOGLEVEL</span><span class="o">=</span>
-<span class="nv">NOMEMUSER</span><span class="o">=</span>
-<span class="nv">NOASVECTOR</span><span class="o">=</span>
-<span class="nv">VISIBLEAIR</span><span class="o">=</span>
-</pre></div>
+<pre class="sh">ALCHEMY_HOME=/home/nitoyon/doc/alchemy
+ALCHEMY_VER=0.4a
+PATH=/home/nitoyon/doc/alchemy/achacks:...
+ADL=
+ASC=C:/Alchemy/bin/asc.jar
+ACHACKS_TMPS=1
+LOG=
+LOGLEVEL=
+NOMEMUSER=
+NOASVECTOR=
+VISIBLEAIR=</pre>
 <p>NOASVECTOR を有効にすれば、Flash Player 9 でも動くライブラリを作れるのかなぁ？</p>
 </section>
 

@@ -70,31 +70,27 @@
 <h1>Object.freeze()</h1>
 <p>話を元に戻して、Object.freeze() の正体を見ていく。Object.freeze() は、ES3.1 から新たに導入されたメソッド。</p>
 <p>どういう機能なのかを見るために、ES3 のプロパティ定義を思い出してみよう。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">myObj</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">val</span> <span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="nx">func</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">var myObj = {
+  val : 3,
+  func : function(){alert('foo');}
+}</pre>
 <p>上の例だと、val や func の両方がプロパティである。<span class="footnote"><a href="#f1" title="言語によっては getter, setter を使ったものをプロパティということもあるけど、ES3 的には違うので注意" name="fn1">*1</a></span></p>
 <p>せっかく MyObj を定義したんだけど、ES3 ではプロパティを勝手にいじられる危険性があった。</p>
-<div class="highlight"><pre><span class="k">delete</span> <span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">;</span>
-<span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">();</span>      <span class="c1">// エラー: MyObj.func is not a function</span>
-</pre></div>
+<pre class="javascript">delete myObj.func;
+myObj.func();      // エラー: MyObj.func is not a function</pre>
 <p>そこで、ES3.1 ではオブジェクトを書き換えられないように、プロパティを凍結する機能が追加された。これが Object.freeze() だ。</p>
-<div class="highlight"><pre><span class="nb">Object</span><span class="p">.</span><span class="nx">freeze</span><span class="p">(</span><span class="nx">myObj</span><span class="p">);</span>
-<span class="k">delete</span> <span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">;</span>      <span class="c1">// func が削除できない</span>
-<span class="nx">myObj</span><span class="p">.</span><span class="nx">val</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>         <span class="c1">// 代入に失敗する</span>
+<pre class="javascript">Object.freeze(myObj);
+delete myObj.func;      // func が削除できない
+myObj.val = 10;         // 代入に失敗する
 
-<span class="nx">myObj</span><span class="p">.</span><span class="nx">func</span><span class="p">();</span>           <span class="c1">// alert(&#39;foo&#39;) が実行される</span>
-<span class="nx">myObj</span><span class="p">.</span><span class="nx">val</span><span class="p">;</span>              <span class="c1">// 3</span>
-</pre></div>
+myObj.func();           // alert('foo') が実行される
+myObj.val;              // 3</pre>
 <h1>ES3 と属性</h1>
 <p>Object.freeze() が何をしているかというと、全てのプロパティの Writable 属性と Flexible 属性を false にして、オブジェクトの Extensible 属性も false にしている。</p>
 <p>属性の概念は ES3 時代にもあった。例えば、Object.prototype は DontDelete 属性、DontEnum 属性、ReadOnly 属性がついていた。</p>
 <p>つまり、</p>
-<div class="highlight"><pre><span class="k">delete</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
-<span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span><span class="nx">foo</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){}};</span>
-</pre></div>
+<pre class="javascript">delete Object.prototype;
+Object.prototype = {foo: function(){}};</pre>
 <p>が成功しないのは、これらの属性が書き換えを禁止してたから。ただし、ES3 では属性というのはあくまで内部的なもので、外部から属性を変更することも、知るこもできなかった。</p>
 <p>ES3.1 になって、属性を取得・設定するためのメソッドがいくつも追加されている予定になっている。Object.freeze() もそうだし、Object.defineProperty() を使って属性つきでプロパティを定義したり、Object.getOwnPropertyDescriptor() を使ってプロパティの情報を取得したりできる。</p>
 <p>Writable 属性、Flexible 属性、Extensible 属性について一応補足しておく。詳しくは ES3.1 のドラフトを参照あれ。</p>
@@ -109,25 +105,23 @@
 <blockquote><p>クラス定義は無名関数と Object.freeze() 系のメソッドへの Syntax-sugar として実装すればよい</p></blockquote>
 <p>と言い切ってるように思える。</p>
 <p>具体的なコードで考えると、</p>
-<div class="highlight"><pre><span class="kr">class</span> <span class="nx">Foo</span><span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<pre class="javascript">class Foo{
+    var val = 3;
 
-    <span class="kd">function</span> <span class="nx">func</span><span class="p">(){</span>
-        <span class="c1">// ...</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    function func(){
+        // ...
+    }
+}
 
-<span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Foo</span><span class="p">();</span>
-</pre></div>
+var foo = new Foo();</pre>
 <p>というクラスは、内部的に</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">val</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="nx">func</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
-        <span class="c1">// ...</span>
-    <span class="p">}</span>
-<span class="p">};</span>
-<span class="nb">Object</span><span class="p">.</span><span class="nx">freeze</span><span class="p">(</span><span class="nx">foo</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var foo = {
+    val: 3,
+    func: function(){
+        // ...
+    }
+};
+Object.freeze(foo);</pre>
 <p>のように置き換えられる、ということだろう。</p>
 <p>一度 freeze してしまえば、属性を変更できないし、メソッドの書き換えもできない。これはまさしくクラスから生成したインスタンスだ。実行時にメソッドが定義されるので、事前バインディングでもなくなったが、その代わりに、ES3.1 の機能を使って、クラスを書き下したことになる。</p>
 <p>ES4 の仕様はだいぶシンプルになりそうな香りがする。</p>

@@ -64,56 +64,55 @@
 <center><a href="http://wonderfl.net/code/bb7b5c2bfec888803f118cd47e3f727b00772b62"><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20100113/20100113012511.png"></a></center>
 <p>オリジナルの記事のように丸くするところはまだ。<a href="http://wonderfl.net/code/bb7b5c2bfec888803f118cd47e3f727b00772b62">wonderfl にも投稿済み</a>。</p>
 <p>ソースはこんな感じ(59行)。HSV を使うところは <a href="http://www.libspark.org/wiki/nutsu/Frocessing">frocessing</a> の ColorHSV クラスを利用してる。</p>
-<div class="highlight"><pre><span class="c1">//------------------------------------------------------</span>
-<span class="c1">// Perfect Shuffle Visualization</span>
-<span class="c1">//------------------------------------------------------</span>
-<span class="kd">package</span> <span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nb">Sprite</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nb">BlurFilter</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">frocessing</span><span class="p">.</span><span class="nx">color</span><span class="p">.</span><span class="nx">ColorHSV</span><span class="o">;</span>
+<pre class="actionscript">//------------------------------------------------------
+// Perfect Shuffle Visualization
+//------------------------------------------------------
+package {
+import flash.display.Sprite;
+import flash.filters.BlurFilter;
+import frocessing.color.ColorHSV;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="o">,</span><span class="nx">height</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="o">,</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">PerfectShuffle</span> <span class="kd">extends</span> <span class="nb">Sprite</span> <span class="p">{</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">W</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="o">;</span>
-    <span class="kd">private</span> <span class="kd">const</span> <span class="nx">H</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+[SWF(width=&quot;475&quot;,height=&quot;475&quot;,backgroundColor=&quot;0x000000&quot;)]
+public class PerfectShuffle extends Sprite {
+    private const SIZE:int = 30;
+    private const W:int = 80;
+    private const H:int = 10;
     
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">PerfectShuffle</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="o">;</span>
+    public function PerfectShuffle() {
+        stage.scaleMode = &quot;noScale&quot;;
 
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">475</span><span class="o">,</span> <span class="mi">475</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        graphics.beginFill(0x000000);
+        graphics.drawRect(0, 0, 475, 475);
+        graphics.endFill();
         
-        <span class="k">var</span> <span class="nx">num</span><span class="o">:</span><span class="nb">int</span><span class="o">;</span>
-        <span class="k">var</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Sprite</span><span class="p">();</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">40</span><span class="o">;</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
-        <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">i</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">SIZE</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">num</span> <span class="o">=</span> <span class="nx">i</span><span class="o">;</span>
+        var num:int;
+        var s:Sprite = new Sprite();
+        s.x = 40;
+        s.y = 100;
+        addChild(s);
+        for (var i:int = 0; i &lt; SIZE; i++) {
+            num = i;
 
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">4</span><span class="o">,</span> <span class="k">new</span> <span class="nx">ColorHSV</span><span class="p">(</span><span class="nx">i</span> <span class="o">*</span> <span class="mi">270</span> <span class="o">/</span> <span class="nx">SIZE</span><span class="o">,</span> <span class="p">.</span><span class="mi">7</span><span class="p">).</span><span class="nx">value</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">0</span><span class="o">,</span> <span class="nx">num</span> <span class="o">*</span> <span class="nx">H</span><span class="p">);</span>
-            <span class="k">for</span> <span class="p">(</span><span class="k">var</span> <span class="nx">j</span><span class="o">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="o">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">num</span> <span class="o">=</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
-                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">j</span> <span class="o">*</span> <span class="nx">W</span> <span class="o">+</span> <span class="nx">W</span><span class="o">,</span> <span class="nx">num</span> <span class="o">*</span> <span class="nx">H</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            s.graphics.lineStyle(4, new ColorHSV(i * 270 / SIZE, .7).value
+            s.graphics.moveTo(0, num * H);
+            for (var j:int = 0; j &lt; 5; j++) {
+                num = getNext(num);
+                s.graphics.lineTo(j * W + W, num * H);
+            }
+        }
 
-        <span class="nx">s</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nb">BlurFilter</span><span class="p">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">2</span><span class="p">)];</span>
-    <span class="p">}</span>
+        s.filters = [new BlurFilter(2, 2)];
+    }
 
-    <span class="kd">private</span> <span class="kd">function</span> <span class="nx">getNext</span><span class="p">(</span><span class="nx">num</span><span class="o">:</span><span class="nb">int</span><span class="p">)</span><span class="o">:</span><span class="nb">int</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">num</span> <span class="o">&lt;</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">num</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">;</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="p">(</span><span class="nx">num</span> <span class="o">-</span> <span class="nx">SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="o">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function getNext(num:int):int {
+        if (num &lt; SIZE / 2) {
+            return num * 2 + 1;
+        } else {
+            return (num - SIZE / 2) * 2;
+        }
+    }
+}
+}</pre>
 
 </div>
 

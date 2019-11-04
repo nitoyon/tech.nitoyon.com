@@ -95,40 +95,39 @@
 <p>動作には Python が必要です。</p>
 <blockquote><ol><li>Python 2.X の実行環境を用意します。</li><li><a href="http://numpy.scipy.org/">Numpy</a> をダウンロードして、インストールします。</li><li><a href="http://sourceforge.net/projects/fonttools/files/">fonttools-2.3.tar.gz</a> をダウンロードして、展開します。</li></ol><cite><a href="http://d.hatena.ne.jp/nitoyon/20120419/tiny_jp_webfont">文字を制限した軽量な日本語 Web フォントを作成する方法 - てっく煮ブログ</a></cite></blockquote>
 <p>作成したスクリプトはこれです(33行)。</p>
-<div class="highlight"><pre><span class="c">#!/usr/bin/python</span>
-<span class="c"># -*- coding: utf-8 -*-</span>
+<pre class="python">#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-<span class="kn">import</span> <span class="nn">fontTools.ttLib.tables</span>
-<span class="kn">import</span> <span class="nn">fontTools.ttLib</span>
+import fontTools.ttLib.tables
+import fontTools.ttLib
 
-<span class="n">s1</span> <span class="o">=</span> <span class="s">u&quot;コピペできない文章です！！　嘘じゃないよ&quot;</span>
-<span class="n">s2</span> <span class="o">=</span> <span class="s">u&quot;ほら。無理でしょ？絶対に不可能なんです！&quot;</span>
+s1 = u&quot;コピペできない文章です！！　嘘じゃないよ&quot;
+s2 = u&quot;ほら。無理でしょ？絶対に不可能なんです！&quot;
 
-<span class="n">tt</span> <span class="o">=</span> <span class="n">fontTools</span><span class="o">.</span><span class="n">ttLib</span><span class="o">.</span><span class="n">TTFont</span><span class="p">(</span><span class="s">&quot;mplus-2p-regular.ttf&quot;</span><span class="p">)</span>
+tt = fontTools.ttLib.TTFont(&quot;mplus-2p-regular.ttf&quot;)
 
-<span class="n">chars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<span class="n">glyphMap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="n">hmtxMap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)):</span>
-    <span class="n">c1</span> <span class="o">=</span> <span class="s">&quot;uni</span><span class="si">%04X</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">ord</span><span class="p">(</span><span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-    <span class="n">c2</span> <span class="o">=</span> <span class="s">&quot;uni</span><span class="si">%04X</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">ord</span><span class="p">(</span><span class="n">s2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-    <span class="n">chars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c2</span><span class="p">);</span>
-    <span class="k">print</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> -&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
-    <span class="n">glyphMap</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">=</span> <span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span>
-    <span class="n">hmtxMap</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">=</span> <span class="n">tt</span><span class="p">[</span><span class="s">&#39;hmtx&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span>
-<span class="n">glyphMap</span><span class="p">[</span><span class="s">&#39;.notdef&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">[</span><span class="s">&#39;.notdef&#39;</span><span class="p">]</span>
+chars = set()
+glyphMap = dict()
+hmtxMap = dict()
+for i in range(len(s1)):
+    c1 = &quot;uni%04X&quot; % ord(s1[i])
+    c2 = &quot;uni%04X&quot; % ord(s2[i])
+    chars.add(c2);
+    print &quot;%s -&gt; %s&quot; % (c1, c2)
+    glyphMap[c2] = tt['glyf'].glyphs[c1]
+    hmtxMap[c2] = tt['hmtx'].metrics[c1]
+glyphMap['.notdef'] = tt['glyf'].glyphs['.notdef']
 
-<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">chars</span><span class="p">:</span>
-        <span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">glyphMap</span><span class="p">[</span><span class="n">g</span><span class="p">]</span>
-        <span class="n">tt</span><span class="p">[</span><span class="s">&#39;hmtx&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">hmtxMap</span><span class="p">[</span><span class="n">g</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">tt</span><span class="p">[</span><span class="s">&#39;glyf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glyphs</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">fontTools</span><span class="o">.</span><span class="n">ttLib</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">_g_l_y_f</span><span class="o">.</span><span class="n">Glyph</span><span class="p">()</span>
+for g in dict(tt['glyf'].glyphs):
+    if g in chars:
+        tt['glyf'].glyphs[g] = glyphMap[g]
+        tt['hmtx'].metrics[g] = hmtxMap[g]
+    else:
+        tt['glyf'].glyphs[g] = fontTools.ttLib.tables._g_l_y_f.Glyph()
 
-<span class="n">output_path</span> <span class="o">=</span> <span class="s">&quot;output.ttf&quot;</span>
-<span class="n">tt</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;wrote </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">output_path</span>
-</pre></div>
+output_path = &quot;output.ttf&quot;
+tt.save(output_path)
+print &quot;wrote %s&quot; % output_path</pre>
 <p>このスクリプトを実行することで、M+ フォントのグリフが入れ替わり、利用しないグリフは空っぽになります。</p>
 <p>この時点で 1.2MB あったフォントは 180KB になりました。ただ、Web に載せるにはまだまだ無駄にサイズが大きいです。</p>
 <p>そこで、<a href="http://www.fontsquirrel.com/fontface/generator">Font Squirrel | Create Your Own @font-face Kits</a> という Web サービスを利用しました。同じような Web フォントへの変換サービスはいくつかあるのですが、このサイトは「EXPERT...」機能の充実っぷりがすごいです。今回はフォントのサブセット化のオプションで、利用するフォントだけの情報を含むようにしました。</p>

@@ -13,7 +13,7 @@
 	<meta property="og:title" content="大旦那のお気に入りの裏側"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/javascript/application/alphavorite/uragawa.html"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="大旦那のお気に入りの技術的な側面に関して解説してみました。大旦那のお気に入りデータの取得まずは大旦那のお気に入りを調べるところから始めました。はてな ID からお気に入りを取得する部分は Perl の HTML::TreeBuilder::XPath を使って書いてみました。sub getFavorites{ my $id = shift; my $res = URI::Fetch-&gt;fetch(sprintf &#39;http://b.hatena.ne.jp/%s/favorite&#39;, $id) or die URI::Fetch-&gt;errstr; my $tr..."/>
+	<meta property="og:description" content="大旦那のお気に入りの技術的な側面に関して解説してみました。大旦那のお気に入りデータの取得まずは大旦那のお気に入りを調べるところから始めました。はてな ID からお気に入りを取得する部分は Perl の HTML::TreeBuilder::XPath を使って書いてみました。sub getFavorites{ my $id = shift; my $res = URI::Fetch-&gt;fetch(sprintf &#39;http://b.hatena.ne.jp/%s/favorite&#39;, $id) or die URI::Fetch-&gt;errstr; my $tree = HTM..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -67,15 +67,15 @@
 <p>まずは大旦那のお気に入りを調べるところから始めました。はてな ID からお気に入りを取得する部分は Perl の <code>HTML::TreeBuilder::XPath</code> を使って書いてみました。</p>
 <div class="highlight"><pre><code class="language-perl" data-lang="perl"><span class="k">sub </span><span class="nf">getFavorites</span><span class="p">{</span>
     <span class="k">my</span> <span class="nv">$id</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
-    <span class="k">my</span> <span class="nv">$res</span> <span class="o">=</span> <span class="nn">URI::</span><span class="n">Fetch</span><span class="o">-&gt;</span><span class="n">fetch</span><span class="p">(</span><span class="nb">sprintf</span> <span class="s">&#39;http://b.hatena.ne.jp/%s/favorite&#39;</span><span class="p">,</span> <span class="nv">$id</span><span class="p">)</span>
-     <span class="ow">or</span> <span class="nb">die</span> <span class="nn">URI::</span><span class="n">Fetch</span><span class="o">-&gt;</span><span class="n">errstr</span><span class="p">;</span>
+    <span class="k">my</span> <span class="nv">$res</span> <span class="o">=</span> <span class="nn">URI::</span><span class="nv">Fetch</span><span class="o">-&gt;</span><span class="nv">fetch</span><span class="p">(</span><span class="nb">sprintf</span> <span class="p">'</span><span class="s1">http://b.hatena.ne.jp/%s/favorite</span><span class="p">',</span> <span class="nv">$id</span><span class="p">)</span>
+     <span class="ow">or</span> <span class="nb">die</span> <span class="nn">URI::</span><span class="nv">Fetch</span><span class="o">-&gt;</span><span class="nv">errstr</span><span class="p">;</span>
 
-    <span class="k">my</span> <span class="nv">$tree</span> <span class="o">=</span> <span class="nn">HTML::TreeBuilder::</span><span class="n">XPath</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">;</span>
-    <span class="nv">$tree</span><span class="o">-&gt;</span><span class="n">parse</span><span class="p">(</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="n">content</span><span class="p">);</span>
+    <span class="k">my</span> <span class="nv">$tree</span> <span class="o">=</span> <span class="nn">HTML::TreeBuilder::</span><span class="nv">XPath</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">;</span>
+    <span class="nv">$tree</span><span class="o">-&gt;</span><span class="nv">parse</span><span class="p">(</span><span class="nv">$res</span><span class="o">-&gt;</span><span class="nv">content</span><span class="p">);</span>
     <span class="nv">$tree</span><span class="o">-&gt;</span><span class="nb">eof</span><span class="p">;</span>
 
     <span class="c1"># /user1//user2//user3/</span>
-    <span class="k">my</span> <span class="nv">$favorites</span> <span class="o">=</span> <span class="nv">$tree</span><span class="o">-&gt;</span><span class="n">findvalue</span><span class="p">(</span><span class="s">&#39;/html//div[@class=&quot;favoritelist&quot;]//li/a[position()=1]/@href&#39;</span><span class="p">);</span>
+    <span class="k">my</span> <span class="nv">$favorites</span> <span class="o">=</span> <span class="nv">$tree</span><span class="o">-&gt;</span><span class="nv">findvalue</span><span class="p">('</span><span class="s1">/html//div[@class="favoritelist"]//li/a[position()=1]/@href</span><span class="p">');</span>
     <span class="nv">$favorites</span><span class="o">=~</span><span class="sr">m!/([^/]+)/!g</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -83,7 +83,7 @@
 
 <p>このデータを JavaScript で食えるように JSON 化してやったのが <code>data.js</code> です。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">fav</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">jkondo</span> <span class="o">:</span> <span class="p">{</span><span class="nx">count</span> <span class="o">:</span> <span class="mi">690</span><span class="p">,</span> <span class="nx">favorite</span> <span class="o">:</span> <span class="p">[</span><span class="s2">&quot;naoya&quot;</span><span class="p">,</span><span class="s2">&quot;umedamochio&quot;</span><span class="p">,</span><span class="s2">&quot;mkusunok&quot;</span><span class="p">,</span><span class="s2">&quot;miyagawa&quot;</span><span class="p">]},</span>
+    <span class="na">jkondo</span> <span class="p">:</span> <span class="p">{</span><span class="na">count</span> <span class="p">:</span> <span class="mi">690</span><span class="p">,</span> <span class="na">favorite</span> <span class="p">:</span> <span class="p">[</span><span class="dl">"</span><span class="s2">naoya</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">umedamochio</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">mkusunok</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">miyagawa</span><span class="dl">"</span><span class="p">]},</span>
     <span class="c1">// ...</span>
 <span class="p">};</span>
 </code></pre></div>
@@ -99,22 +99,22 @@
 
 <p><a href="alphavorite20061112.lzh">ソース一式</a>をダウンロードして、alphavorite.js をエディタで開いてみてください。先頭で analyzers というハッシュがあるのですが、ここで集計方法を定義しています。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">analyzers</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">count</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;各1pt&quot;</span><span class="p">,</span>
-        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span><span class="k">return</span> <span class="mi">1</span><span class="p">;},</span>
-        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mi">16</span>
+    <span class="na">count</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="na">name</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">各1pt</span><span class="dl">"</span><span class="p">,</span>
+        <span class="na">point</span> <span class="p">:</span> <span class="kd">function</span><span class="p">(){</span><span class="k">return</span> <span class="mi">1</span><span class="p">;},</span>
+        <span class="na">pixelPerRatio</span> <span class="p">:</span> <span class="mi">16</span>
     <span class="p">},</span>
 
-    <span class="nx">fav</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;被Fav数&quot;</span><span class="p">,</span>
-        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">hifav</span><span class="p">},</span>
-        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mf">0.16</span>
+    <span class="na">fav</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="na">name</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">被Fav数</span><span class="dl">"</span><span class="p">,</span>
+        <span class="na">point</span> <span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">hifav</span><span class="p">},</span>
+        <span class="na">pixelPerRatio</span> <span class="p">:</span> <span class="mf">0.16</span>
     <span class="p">},</span>
 
-    <span class="nx">fav_ratio</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;被Fav数 / Fav数&quot;</span><span class="p">,</span>
-        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">fav</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">?</span> <span class="nx">hifav</span> <span class="o">/</span> <span class="nx">fav</span> <span class="o">:</span> <span class="mi">0</span><span class="p">},</span>
-        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mf">1.6</span>
+    <span class="na">fav_ratio</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="na">name</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">被Fav数 / Fav数</span><span class="dl">"</span><span class="p">,</span>
+        <span class="na">point</span> <span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span><span class="k">return</span> <span class="nx">fav</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">?</span> <span class="nx">hifav</span> <span class="o">/</span> <span class="nx">fav</span> <span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+        <span class="na">pixelPerRatio</span> <span class="p">:</span> <span class="mf">1.6</span>
     <span class="p">}</span>
 <span class="p">};</span>
 </code></pre></div>
@@ -122,12 +122,12 @@
 
 <p>例えば、id が３文字の人でランキングをとるには次のようにします。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">    <span class="p">},</span>
-    <span class="nx">num</span> <span class="o">:</span> <span class="p">{</span>
-        <span class="nx">name</span> <span class="o">:</span> <span class="s2">&quot;3文字IDのみ&quot;</span><span class="p">,</span>
-        <span class="nx">point</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span>
-            <span class="k">return</span> <span class="nx">toid</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">3</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nx">num</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nl">name</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">3文字IDのみ</span><span class="dl">"</span><span class="p">,</span>
+        <span class="nx">point</span> <span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hifav</span><span class="p">,</span> <span class="nx">fav</span><span class="p">,</span> <span class="nx">fromid</span><span class="p">,</span> <span class="nx">toid</span><span class="p">){</span>
+            <span class="k">return</span> <span class="nx">toid</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">3</span> <span class="p">?</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">0</span><span class="p">;</span>
         <span class="p">},</span>
-        <span class="nx">pixelPerRatio</span> <span class="o">:</span> <span class="mi">16</span>
+        <span class="nx">pixelPerRatio</span> <span class="p">:</span> <span class="mi">16</span>
     <span class="p">}</span>
 <span class="p">};</span>
 </code></pre></div>

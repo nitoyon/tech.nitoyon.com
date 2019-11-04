@@ -63,35 +63,34 @@
 <p><a href="/ja/blog/2007/02/20/p1/">第1回</a>の続き。</p>
 <p><a href="http://subtech.g.hatena.ne.jp/cho45/20070223/1172228876">subtech - 冬通りに消え行く制服ガールは、夢物語にリアルを求めない。 - AS3 名前空間</a> さんによると、getter/setter のアクセス指定子が異なる場合は、名前空間を明示して呼び出してやれば動くようになるそうです。</p>
 <p>前回のソースを修正すると、こうすれば動くようになるわけです。（<a href="http://d.hatena.ne.jp/cho45/" class="hatena-id-icon"><img src="http://www.st-hatena.com/users/ch/cho45/profile_s.gif" width="16" height="16" alt="id:cho45" class="hatena-id-icon">id:cho45</a> さん、ありがとうございます）</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<pre class="javascript">package
+{
+	import flash.display.Sprite;
 
-	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-	<span class="p">{</span>
-		<span class="kr">private</span> <span class="kd">var</span> <span class="nx">_sample</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span>
+	public class Test extends Sprite
+	{
+		private var _sample:String;
 
-		<span class="c1">// getter は public</span>
-		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">sample</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span>
-		<span class="p">{</span>
-			<span class="k">return</span> <span class="nx">_sample</span><span class="p">;</span>
-		<span class="p">}</span>
+		// getter は public
+		public function get sample():String
+		{
+			return _sample;
+		}
 
-		<span class="c1">// setter は internal</span>
-		<span class="nx">internal</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">sample</span><span class="p">(</span><span class="nx">v</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-		<span class="p">{</span>
-			<span class="nx">_sample</span> <span class="o">=</span> <span class="nx">v</span><span class="p">;</span>
-		<span class="p">}</span>
+		// setter は internal
+		internal function set sample(v:String):void
+		{
+			_sample = v;
+		}
 
-		<span class="c1">// コンストラクタ</span>
-		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
-		<span class="p">{</span>
-			<span class="nx">internal</span><span class="o">::</span><span class="nx">sample</span> <span class="o">=</span> <span class="s2">&quot;hoge&quot;</span><span class="p">;</span>
-			<span class="nx">trace</span><span class="p">(</span><span class="kr">public</span><span class="o">::</span><span class="nx">sample</span><span class="p">);</span>
-		<span class="p">}</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+		// コンストラクタ
+		public function Test()
+		{
+			internal::sample = &quot;hoge&quot;;
+			trace(public::sample);
+		}
+	}
+}</pre>
 <p>上のコードで動くようになった理由を簡単に解説します。</p>
 <p>AS3 では private や public も特殊な名前空間として定義されている。クラスのフィールドやメソッドごとにこれらの名前空間を指定して、どの名前空間に所属させるかを決定できるわけ。</p>
 <p>独自に名前空間を定義することもできるが、この辺の説明は割愛。詳しくは prog_actionscript30.pdf の名前空間を参照。独自名前空間としては AS3 や mx_internal が有名どころでしょうか。</p>
@@ -103,29 +102,27 @@
 <p>そこで、気になった。</p>
 <p>名前空間が異なるなら、同じ名前の関数を作れるはず？</p>
 <p>これはもちろんOK。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<pre class="javascript">package
+{
+	import flash.display.Sprite;
 
-	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-	<span class="p">{</span>
-		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
-		<span class="nx">AS3</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+	public class Test extends Sprite
+	{
+		public function a():void{}
+		AS3 function a():void{}
+	}
+}</pre>
 <p>じゃあ、これは？？？？</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-	<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<pre class="javascript">package
+{
+	import flash.display.Sprite;
 
-	<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-	<span class="p">{</span>
-		<span class="kr">public</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
-		<span class="kr">private</span> <span class="kd">function</span> <span class="nx">a</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{}</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+	public class Test extends Sprite
+	{
+		public function a():void{}
+		private function a():void{}
+	}
+}</pre>
 <p>やっぱりダメだった。</p>
 <pre>Test.as(8): col: 20 エラー: オーバーライドに対応していません。
                 private function a():void{}

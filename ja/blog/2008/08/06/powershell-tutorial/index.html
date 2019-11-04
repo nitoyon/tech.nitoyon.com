@@ -79,10 +79,10 @@
 </div>
 <h1>UNIX な人にも使いやすい親切設計</h1>
 <p>コマンドプロンプトでファイル列挙と言えば dir だけど、Powershell では ls も使える。</p>
-<div class="highlight"><pre>PS&gt; ls
+<pre class="sh">PS&gt; ls
 
-    Directory: Microsoft.PowerShell.Core<span class="se">\F</span>ileSystem::C:<span class="se">\</span>
-    Documents and Settings<span class="se">\n</span>itoyon
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
+    Documents and Settings\nitoyon
 
 Mode             LastWriteTime   Length Name
 ----             -------------   ------ ----
@@ -90,29 +90,26 @@ d---s     2006/02/19     22:35          Cookies
 d-r--     2006/02/17     23:39          Favorites
 d-r--     2006/02/19     18:56          My Documents
 d-r--     2004/08/19      9:56          スタート メニュー
-d----     2006/02/19     23:06          デスクトップ
-</pre></div>
+d----     2006/02/19     23:06          デスクトップ</pre>
 <p>alias の仕組みがあって、dir と ls はいずれも Get-ChildItem というコマンドの alias になってる。</p>
-<div class="highlight"><pre>PS&gt; get-alias <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.Definition -eq <span class="s2">&quot;Get-Childitem&quot;</span><span class="o">}</span>
+<pre class="sh">PS&gt; get-alias | where {$_.Definition -eq &quot;Get-Childitem&quot;}
 
 CommandType     Name                     Definition
 -----------     ----                     ----------
 Alias           gci                      Get-ChildItem
 Alias           ls                       Get-ChildItem
-Alias           dir                      Get-ChildItem
-</pre></div>
+Alias           dir                      Get-ChildItem</pre>
 <p>同じ感じで、pwd、cp、mv、ps、pushd、popd、rm などの alias がデフォルトで登録されているし、追加で登録することもできる。ちなみに、このワンライナーの意味はこの記事を読み終わった頃には理解できるはず。</p>
 <br />
 <h1>変数にオブジェクトを格納</h1>
 <p>Powershell は強力なスクリプト環境をそなえている。</p>
 <p>まずは ls の結果を $files 変数に代入してみる。</p>
-<div class="highlight"><pre>PS&gt; <span class="nv">$files</span> <span class="o">=</span> ls
-</pre></div>
+<pre class="sh">PS&gt; $files = ls</pre>
 <p>$files と入力して Enter を押すと、$files 変数の中身が評価される。</p>
-<div class="highlight"><pre>PS&gt; <span class="nv">$files</span>
+<pre class="sh">PS&gt; $files
 
-    Directory: Microsoft.PowerShell.Core<span class="se">\F</span>ileSystem::C:<span class="se">\</span>
-    Documents and Settings<span class="se">\n</span>itoyon
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
+    Documents and Settings\nitoyon
 
 Mode             LastWriteTime   Length Name
 ----             -------------   ------ ----
@@ -120,21 +117,18 @@ d---s     2006/02/19     22:35          Cookies
 d-r--     2006/02/17     23:39          Favorites
 d-r--     2006/02/19     18:56          My Documents
 d-r--     2004/08/19      9:56          スタート メニュー
-d----     2006/02/19     23:06          デスクトップ
-</pre></div>
+d----     2006/02/19     23:06          デスクトップ</pre>
 <p>で、ここで面白いのが、$files に入ってるのが実は文字列じゃないところ。なんと、$files には<strong>ファイルオブジェクトの配列</strong>が格納されている。</p>
 <p>ということで、length プロパティで数が分かる。</p>
-<div class="highlight"><pre>PS&gt; <span class="nv">$files</span>.length
-5
-</pre></div>
+<pre class="sh">PS&gt; $files.length
+5</pre>
 <p>[0] で最初のオブジェクトにアクセスできる。</p>
-<div class="highlight"><pre>PS&gt; <span class="nv">$files</span><span class="o">[</span>0<span class="o">]</span>
+<pre class="sh">PS&gt; $files[0]
 Mode                LastWriteTime     Length Name
 ----                -------------     ------ ----
-d---s        2006/02/19     22:35            Cookies
-</pre></div>
+d---s        2006/02/19     22:35            Cookies</pre>
 <p>[0 .. 2] で連番にしたり、[-1] で最後のオブジェクトを取得したりもできる。</p>
-<div class="highlight"><pre>PS&gt; <span class="nv">$files</span><span class="o">[</span><span class="m">0</span> .. 2<span class="o">]</span>
+<pre class="sh">PS&gt; $files[0 .. 2]
 
 Mode                LastWriteTime     Length Name
 ----                -------------     ------ ----
@@ -143,164 +137,148 @@ d-r--        2006/02/17     23:39            Favorites
 d-r--        2006/02/19     18:56            My Documents
 
 
-PS&gt; <span class="nv">$files</span><span class="o">[</span>-1<span class="o">]</span>
+PS&gt; $files[-1]
 
 Mode                LastWriteTime     Length Name
 ----                -------------     ------ ----
-d----        2006/02/19     23:06            デスクトップ
-</pre></div>
+d----        2006/02/19     23:06            デスクトップ</pre>
 <p>ファイルオブジェクトのプロパティを参照してもよい。</p>
-<div class="highlight"><pre>&gt; <span class="nv">$files</span><span class="o">[</span>0<span class="o">]</span>.FullName
-C:<span class="se">\D</span>ocuments and Settings<span class="se">\n</span>itoyon<span class="se">\C</span>ookies
-</pre></div>
+<pre class="sh">&gt; $files[0].FullName
+C:\Documents and Settings\nitoyon\Cookies</pre>
 <h1>メソッド・プロパティの列挙</h1>
 <p>オブジェクトのメソッドやプロパティを知りたくなったら、get-member コマンドを実行するとよい。</p>
-<div class="highlight"><pre>PS&gt; ls <span class="p">|</span> get-member
+<pre class="sh">PS&gt; ls | get-member
 
    TypeName: System.IO.DirectoryInfo
 
 Name                   MemberType    Definition
 ----                   ----------    ----------
-Create                 Method        System.Void Create<span class="o">()</span>, System.Void C...
+Create                 Method        System.Void Create(), System.Void C...
 CreateObjRef           Method        System.Runtime.Remoting.ObjRef Crea...
 CreateSubdirectory     Method        System.IO.DirectoryInfo CreateSubdi...
-Delete                 Method        System.Void Delete<span class="o">()</span>, System.Void D...
-Equals                 Method        System.Boolean Equals<span class="o">(</span>Object obj<span class="o">)</span>
+Delete                 Method        System.Void Delete(), System.Void D...
+Equals                 Method        System.Boolean Equals(Object obj)
   :                      :                   :
-FullName               Property      System.String FullName <span class="o">{</span>get<span class="p">;</span><span class="o">}</span>
-LastAccessTime         Property      System.DateTime LastAccessTime <span class="o">{</span>get...
-LastAccessTimeUtc      Property      System.DateTime LastAccessTimeUtc <span class="o">{</span>...
-  :                      :                   :
-</pre></div>
+FullName               Property      System.String FullName {get;}
+LastAccessTime         Property      System.DateTime LastAccessTime {get...
+LastAccessTimeUtc      Property      System.DateTime LastAccessTimeUtc {...
+  :                      :                   :</pre>
 <p>何気にパイプを使ってるけど、実は、Powershell では<strong>パイプで渡されるのもオブジェクト</strong>。すごいですね。</p>
 <p>おまけに、System.String などと書いてあるところからピンとくる人もいるかもしれないけど、オブジェクトは .NET Framework 的なオブジェクトになってる。.NET に親しい人ならすごく使いやすいはず。</p>
 <h1>ループも条件分岐も</h1>
 <p>それじゃあ、ループを使ってみよう。</p>
 <p>次のプログラムは、C:\windows 以下の 1MB 以上のファイルを列挙したところ。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; foreach<span class="o">(</span><span class="nv">$file</span> in ls<span class="o">){</span>
-&gt;&gt;   <span class="k">if</span><span class="o">(</span><span class="nv">$file</span>.length -gt 1MB<span class="o">){</span>
-&gt;&gt;     write <span class="nv">$file</span>.name
-&gt;&gt;   <span class="o">}</span>
-&gt;&gt; <span class="o">}</span>
+<pre class="sh">PS C:\WINDOWS&gt; foreach($file in ls){
+&gt;&gt;   if($file.length -gt 1MB){
+&gt;&gt;     write $file.name
+&gt;&gt;   }
+&gt;&gt; }
 &gt;&gt;
 CTDVAUDY.CDF
 GEXPlugin.ax
 iis6.log
 setupapi.del
-WindowsUpdate.log
-</pre></div>
+WindowsUpdate.log</pre>
 <p>1MB より大きいものだけを if で調べて出力してる。コマンドラインなので、&gt; の変わりに、-gt という演算子が用意されている。</p>
 <p>ちなみに、1MB というのはあらかじめ定義されている定数。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; 1MB
-1048576
-</pre></div>
+<pre class="sh">PS C:\WINDOWS&gt; 1MB
+1048576</pre>
 <h1>よりオブジェクト指向らしく</h1>
 <p>パイプを使って、よりオブジェクト指向らしいプログラミングを実践してみよう。</p>
 <h2>where でフィルタリング</h2>
 <p>さっきの foreach のサンプルは手続き型っぽかったけど、これをかっこよく書き直してみた。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
+<pre class="sh">PS C:\WINDOWS&gt; ls | where {$_.length -gt 1mb}
 
-    Directory: Microsoft.PowerShell.Core<span class="se">\F</span>ileSystem::C:<span class="se">\</span>
+    Directory: Microsoft.PowerShell.Core\FileSystem::C:\
     WINDOWS
 
 Mode             LastWriteTime    Length Name
 ----             -------------    ------ ----
--a---     2003/02/27     15:29   <span class="m">4481358</span> CTDVAUDY.CDF
--a---     2006/09/07      1:23   <span class="m">1406464</span> GEXPlugin.ax
--a---     2008/07/10      3:01   <span class="m">1124405</span> iis6.log
--a---     2004/08/19     10:40   <span class="m">1080959</span> setupapi.del
--a---     2008/08/04      1:26   <span class="m">1907044</span> WindowsUpdate.log
-</pre></div>
+-a---     2003/02/27     15:29   4481358 CTDVAUDY.CDF
+-a---     2006/09/07      1:23   1406464 GEXPlugin.ax
+-a---     2008/07/10      3:01   1124405 iis6.log
+-a---     2004/08/19     10:40   1080959 setupapi.del
+-a---     2008/08/04      1:26   1907044 WindowsUpdate.log</pre>
 <p>where コマンドは、配列の中から条件にマッチするものだけを返す。絞り込みができるわけ。Perl の grep、Ruby の find_all(や select)、JavaScript 1.6 の filter みたいな感じ。</p>
 <h2>foreach で全ての要素に対して実行</h2>
 <p>今度は、パイプの受け口として foreach を使ってみる。</p>
 <p>いままで、ファイルのサンプルばかりだったので、次はプロセス情報を使ってみよう。起動中のメモ帳をばっさり閉じる例。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad <span class="p">|</span> foreach <span class="o">{</span><span class="nv">$_</span>.kill<span class="o">()}</span>
-</pre></div>
+<pre class="sh">PS C:\WINDOWS&gt; ps -name notepad | foreach {$_.kill()}</pre>
 <p>notepad.exe のプロセスを列挙して、それぞれについてプロセスオブジェクトの kill() メソッドを実行して殺している。</p>
 <p>とはいえ、kill コマンドもあって、プロセスの配列を処理できる。</p>
 <p>同じ処理は次のように書ける。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps -name notepad <span class="p">|</span> <span class="nb">kill</span>
-</pre></div>
+<pre class="sh">PS C:\WINDOWS&gt; ps -name notepad | kill</pre>
 <p>さらに、kill コマンドには -name フラグもあるので本当は１発で書けたりもする。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; <span class="nb">kill</span> -name notepad
-</pre></div>
+<pre class="sh">PS C:\WINDOWS&gt; kill -name notepad</pre>
 <p>でも、複雑な処理をするときには、foreach が便利ですよね、ということで。</p>
 <h2>プロパティ名で sort</h2>
 <p>ソートも簡単。</p>
 <p>メモリ使用量が多いプロセス top 5 を調べてみる。</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ps <span class="p">|</span> sort WS -Descending <span class="p">|</span> <span class="k">select</span> -first 5
+<pre class="sh">PS C:\WINDOWS&gt; ps | sort WS -Descending | select -first 5
 
-Handles   NPM<span class="o">(</span>K<span class="o">)</span>   PM<span class="o">(</span>K<span class="o">)</span>   WS<span class="o">(</span>K<span class="o">)</span> VM<span class="o">(</span>M<span class="o">)</span>   CPU<span class="o">(</span>s<span class="o">)</span>     Id ProcessName
+Handles   NPM(K)   PM(K)   WS(K) VM(M)   CPU(s)     Id ProcessName
 -------   ------   -----   ----- -----   ------     -- -----------
-    <span class="m">804</span>       <span class="m">21</span>   <span class="m">30664</span>   <span class="m">45712</span>   <span class="m">189</span>   109.97   <span class="m">1384</span> explorer
-    <span class="m">271</span>       <span class="m">11</span>   <span class="m">32776</span>   <span class="m">42440</span>   <span class="m">161</span>     5.33   <span class="m">2392</span> firefox
-    <span class="m">404</span>        <span class="m">9</span>   <span class="m">42468</span>   <span class="m">40712</span>   <span class="m">175</span>    26.67   <span class="m">3744</span> powershell
-    <span class="m">827</span>       <span class="m">31</span>   <span class="m">27956</span>   <span class="m">32696</span>   <span class="m">226</span>    33.14   <span class="m">2224</span> msnmsgr
-   <span class="m">1761</span>       <span class="m">66</span>   <span class="m">21764</span>   <span class="m">32348</span>   <span class="m">169</span>   107.77   <span class="m">1748</span> svchost
-</pre></div>
+    804       21   30664   45712   189   109.97   1384 explorer
+    271       11   32776   42440   161     5.33   2392 firefox
+    404        9   42468   40712   175    26.67   3744 powershell
+    827       31   27956   32696   226    33.14   2224 msnmsgr
+   1761       66   21764   32348   169   107.77   1748 svchost</pre>
 <p>sort の後にプロパティ名を指定してるだけ。UNIX 系だとソートも文字ベースなんだけど、プロパティ名で色々実現できるのが愉快！</p>
 <p>ちなみに、select コマンドは配列を置き換える map のような機能があったり、UNIX コマンドの uniq、head、tail に相当する機能があったり、色んな用途に使える。詳しくは、man select -detailed でヘルプが見れる。</p>
 <h1>関数を定義する</h1>
 <p>関数も作れるよ。</p>
 <p>メモリ使用量が多いプロセス top N を求める関数を作ってみた。</p>
-<div class="highlight"><pre>PS C:&gt; <span class="k">function</span> psmemory<span class="o">([</span>int<span class="o">]</span><span class="nv">$n</span> <span class="o">=</span> 5<span class="o">){</span>ps <span class="p">|</span> sort WS -Descending <span class="p">|</span> <span class="k">select</span> -first <span class="nv">$n</span><span class="o">}</span>
-</pre></div>
+<pre class="sh">PS C:&gt; function psmemory([int]$n = 5){ps | sort WS -Descending | select -first $n}</pre>
 <p>呼び出したところ。</p>
-<div class="highlight"><pre>PS C:&gt; psmemory 1
+<pre class="sh">PS C:&gt; psmemory 1
 
-Handles  NPM<span class="o">(</span>K<span class="o">)</span>    PM<span class="o">(</span>K<span class="o">)</span>      WS<span class="o">(</span>K<span class="o">)</span> VM<span class="o">(</span>M<span class="o">)</span>   CPU<span class="o">(</span>s<span class="o">)</span>     Id ProcessName
+Handles  NPM(K)    PM(K)      WS(K) VM(M)   CPU(s)     Id ProcessName
 -------  ------    -----      ----- -----   ------     -- -----------
-   <span class="m">1121</span>      <span class="m">22</span>    <span class="m">31092</span>      <span class="m">48496</span>   <span class="m">181</span>   227.88   <span class="m">1384</span> explorer
-</pre></div>
+   1121      22    31092      48496   181   227.88   1384 explorer</pre>
 <p>引数に 1 を渡しているので、１つだけ表示される。psmemory(1) のように、括弧つきで呼び出すこともできる。パラメータを省略すると5個列挙されるように作ってる。</p>
 <p>ところで、勘のいい人なら既に気付いてるかもしれないけど、上で示したサンプル</p>
-<div class="highlight"><pre>PS C:<span class="se">\W</span>INDOWS&gt; ls <span class="p">|</span> where <span class="o">{</span><span class="nv">$_</span>.length -gt 1mb<span class="o">}</span>
-</pre></div>
+<pre class="sh">PS C:\WINDOWS&gt; ls | where {$_.length -gt 1mb}</pre>
 <p>の <strong>{$_.length -gt 1mb} の部分は関数</strong>なんです。Powershell では「スクリプトブロック」という名前がついてるんだけど、無名関数と言ったほうが分かりやすいかもしれない。Ruby に詳しい人は、ブロックと言い換えるとすっきりするはず。</p>
 <p>というわけで、このサンプルは、ls した結果を where で回して、無名関数でフィルタリングしてる。うわー、オブジェクト指向っぽい！</p>
 <h1>ドライブ名</h1>
 <p>Powershell ではドライブ名が名前空間のように振舞ってる。</p>
 <p>デフォルトで定義されているドライブ名一覧を見てみよう。</p>
-<div class="highlight"><pre>PS&gt; Get-PSDrive
+<pre class="sh">PS&gt; Get-PSDrive
 
 Name       Provider      Root
 ----       --------      ----
-A          FileSystem    A:<span class="se">\</span>
+A          FileSystem    A:\
 Alias      Alias
-C          FileSystem    C:<span class="se">\ </span>
-cert       Certificate   <span class="se">\</span>
-D          FileSystem    D:<span class="se">\</span>
+C          FileSystem    C:\ 
+cert       Certificate   \
+D          FileSystem    D:\
 Env        Environment
 Function   Function
 HKCU       Registry      HKEY_CURRENT_USER
 HKLM       Registry      HKEY_LOCAL_MACHINE
-Variable   Variable
-</pre></div>
+Variable   Variable</pre>
 <p>A: や C: はお馴染みなんだけど、それ以外にも色々定義されている。</p>
 <p>例えば、Function: や Variable: には関数、変数の一覧が格納されてる。</p>
-<div class="highlight"><pre>PS&gt; ls Variable:
+<pre class="sh">PS&gt; ls Variable:
 
 Name          Value
 ----          -----
  :             :
 PID           5324
-files         <span class="o">{</span>.ssh, Contacts, Cookies, Favorites...<span class="o">}</span>
- :             :
-</pre></div>
+files         {.ssh, Contacts, Cookies, Favorites...}
+ :             :</pre>
 <p>あらかじめ定義されている PID などに加えて、自分で定義した $files も列挙されているのが分かる。</p>
 <p>他にも、cert: は証明書ストア、HKCU: や HKLM: はレジストリ情報を表す。これらの情報をファイルシステムのように抽象化されていて、ls や cd で参照したり、検索したりできるようになってる。</p>
 <p>この仕組みの肝が Privider。列挙したり参照したりする機能を提供している。Provider は C# で自前実装することもできて、例えば、<a href="http://d.hatena.ne.jp/coma2n/">id:coma2n</a> さんによる <a href="http://d.hatena.ne.jp/coma2n/20080222/1203633878">PowerShellで2chビューワ</a> なんかが面白い。2ch ドライブで 2ch の掲示板情報を参照できるようだ。</p>
 <p>Provider から新たなドライブを作成することも可能。例えば、FileSystem プロバイダを使って、ホームディレクトリを home: ドライブとして割り当るには次のようにする。</p>
-<div class="highlight"><pre>PS&gt; New-PSDrive -Name home -PSProvider FileSystem -Root <span class="nv">$home</span>
+<pre class="sh">PS&gt; New-PSDrive -Name home -PSProvider FileSystem -Root $home
 
 Name       Provider      Root
 ----       --------      ----
-home       FileSystem    C:<span class="se">\D</span>ocuments and Settings<span class="se">\n</span>itoyon
+home       FileSystem    C:\Documents and Settings\nitoyon
 
 PS&gt; ls home:
-<span class="c"># ホームディレクトリのファイル一覧</span>
-</pre></div>
+# ホームディレクトリのファイル一覧</pre>
 <p>まぁ、あくまで Powershell 内での擬似的なドライブなんだけど楽しい。</p>
 <h1>インストール方法</h1>
 <p>最後にインストール方法を紹介しておく。当初は Vista に搭載される予定だったけど間に合わなかったので、いまのところ必ずインストールする必要がある。</p>

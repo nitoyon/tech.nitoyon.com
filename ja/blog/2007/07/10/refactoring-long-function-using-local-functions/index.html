@@ -62,123 +62,118 @@
 <section>
 <p>200行ぐらいある関数を、分かりやすく書きなおそう、というお話。</p>
 <p>お題はこんなJavaScript。あとで、軽く ActionScript 3.0 も出てくるよ。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// 初期化処理</span>
-    <span class="kd">var</span> <span class="nx">init</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="c1">// 50行ぐらい初期化処理</span>
-    <span class="c1">// うまくいったら init が true になる</span>
+<pre class="javascript">function fly()
+{
+    // 初期化処理
+    var init = false;
+    // 50行ぐらい初期化処理
+    // うまくいったら init が true になる
 
-    <span class="c1">// 実行</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">init</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">succeeded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="c1">// 100行ぐらい実行</span>
-    <span class="p">}</span>
+    // 実行
+    if(init)
+    {
+        var succeeded = false;
+        // 100行ぐらい実行
+    }
 
-    <span class="c1">// 終了処理</span>
-    <span class="c1">// 30行ぐらい終了処理</span>
-<span class="p">}</span>
-</pre></div>
+    // 終了処理
+    // 30行ぐらい終了処理
+}</pre>
 <p>構造化プログラミングについて知ってる人なら、きっとこうする。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
-    <span class="p">{</span>
-        <span class="nx">doFly</span><span class="p">();</span>
-    <span class="p">}</span>
+<pre class="javascript">function fly()
+{
+    if(startFly())
+    {
+        doFly();
+    }
 
-    <span class="nx">endFly</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
+    endFly();
+}</pre>
 <p>構造がたいそうすっきりした。</p>
 <p>問題は、startFly()・doFly()・endFly() をどこに記述するか。</p>
 <h1>fly() の横に記述</h1>
 <p>一番ありがちな手法。fly() 関数の横に並べる。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">startFly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
+<pre class="javascript">function startFly()
+{
+    // ...
+}
 
-<span class="kd">function</span> <span class="nx">doFly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
+function doFly()
+{
+    // ...
+}
 
-<span class="kd">function</span> <span class="nx">endFly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
+function endFly()
+{
+    // ...
+}
 
-<span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
-    <span class="p">{</span>
-        <span class="nx">doFly</span><span class="p">();</span>
-    <span class="p">}</span>
+function fly()
+{
+    if(startFly())
+    {
+        doFly();
+    }
 
-    <span class="nx">endFly</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
+    endFly();
+}</pre>
 <p>局所的にはきれいになったけど、１個だったはずの関数が３個になってしまった。</p>
 <p>一般に、関数の数が多いほどソースコードは理解しにくくなる。だから、関数の数が増えるのはできる限り避けたい。</p>
 <p>そもそも、startFly() 関数や endFly() 関数は、fly() の中からしか呼ばないはずなのに、他の関数からも参照できるところに置くのは理にかなっていない。</p>
 <p>ならば、fly() の横ではなく、fly() の中にしまってみるのはどうだろう。</p>
 <h1>fly() の中に収納</h1>
 <p>さっきのは C言語っぽかったけど、こうやったら JavaScript っぽい。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">startFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">//</span>
-    <span class="p">}</span>
+<pre class="javascript">function fly()
+{
+    var startFly = function()
+    {
+        //
+    }
 
-    <span class="kd">var</span> <span class="nx">doFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">//</span>
-    <span class="p">}</span>
+    var doFly = function()
+    {
+        //
+    }
 
-    <span class="kd">var</span> <span class="nx">endFly</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">//</span>
-    <span class="p">}</span>
+    var endFly = function()
+    {
+        //
+    }
 
-    <span class="c1">// 実際の処理開始</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
-    <span class="p">{</span>
-        <span class="nx">doFly</span><span class="p">();</span>
-    <span class="p">}</span>
+    // 実際の処理開始
+    if(startFly())
+    {
+        doFly();
+    }
 
-    <span class="nx">endFly</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
+    endFly();
+}</pre>
 <p>fly() 関数の行数は変わらないけど、処理の流れはすっきりする。ソースコードから流れを追いやすいし、startFly() 関数や endFly() 関数が fly() 関数の中からしか呼ばないことが一目瞭然。</p>
 <p>構造が仕様を語る。分かりやすいソースコードの基本。</p>
 <h1>一般化してみた</h1>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">A</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// 関数内の変数</span>
-    <span class="kd">var</span> <span class="nx">param1</span> <span class="o">=</span> <span class="p">{};</span>
-    <span class="kd">var</span> <span class="nx">param2</span> <span class="o">=</span> <span class="p">{};</span>
+<pre class="javascript">function A()
+{
+    // 関数内の変数
+    var param1 = {};
+    var param2 = {};
 
-    <span class="c1">// 関数内の関数</span>
-    <span class="kd">var</span> <span class="nx">func1</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-    <span class="p">}</span>
+    // 関数内の関数
+    var func1 = function()
+    {
+    }
 
-    <span class="kd">var</span> <span class="nx">func2</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-    <span class="p">}</span>
+    var func2 = function()
+    {
+    }
 
-    <span class="c1">// function A() の実体</span>
-    <span class="kd">var</span> <span class="nx">AImpl</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">//</span>
-    <span class="p">}</span>
+    // function A() の実体
+    var AImpl = function()
+    {
+        //
+    }
 
-    <span class="nx">AImpl</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
+    AImpl();
+}</pre>
 <p>変数を冒頭に、次に関数、最後に AImpl() を書く。</p>
 <p>関数 A() の中からは、AImpl() のみを呼ぶだけ。</p>
 <p>AImpl() の中では、なるべく if 文と関数呼び出しだけで書くようにするときれいなソースになりそう。</p>
@@ -186,63 +181,61 @@
 <p>もう１つ面白いところ。関数内の関数を他の場所で使いたくなったら、関数の外に出して、宣言部分をちょろっと変えるだけでよい。お手軽。</p>
 <p>逆に、１箇所からしか参照してないグローバルな関数を発見したら、呼び出し元の関数に収納しちゃってもよいかもしれない。</p>
 <h1>ActionScript 3.0 でも</h1>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">Bird</span>
-<span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
-        <span class="p">{</span>
-            <span class="nx">doFly</span><span class="p">();</span>
-        <span class="p">}</span>
+<pre class="javascript">public class Bird
+{
+    public function fly():void
+    {
+        if(startFly())
+        {
+            doFly();
+        }
 
-        <span class="nx">endFly</span><span class="p">();</span>
-    <span class="p">}</span>
+        endFly();
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">startFly</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span>
-    <span class="p">{</span>
-        <span class="c1">// ...</span>
-    <span class="p">}</span>
+    private function startFly():Boolean
+    {
+        // ...
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">doFly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="c1">// ...</span>
-    <span class="p">}</span>
+    private function doFly():void
+    {
+        // ...
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">endFly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="c1">// ...</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function endFly():void
+    {
+        // ...
+    }
+}</pre>
 <p>と fly() の横にメソッドとして書くよりも</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">Bird</span>
-<span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">fly</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">startFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span>
-        <span class="p">{</span>
-            <span class="c1">// ...</span>
-        <span class="p">}</span>
+<pre class="javascript">public class Bird
+{
+    public function fly():void
+    {
+        var startFly:Function = function():Boolean
+        {
+            // ...
+        }
 
-        <span class="kd">var</span> <span class="nx">doFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="c1">// ...</span>
-        <span class="p">}</span>
+        var doFly:Function = function():void
+        {
+            // ...
+        }
 
-        <span class="kd">var</span> <span class="nx">endFly</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="c1">// ...</span>
-        <span class="p">}</span>
+        var endFly:Function = function():void
+        {
+            // ...
+        }
 
-        <span class="k">if</span><span class="p">(</span><span class="nx">startFly</span><span class="p">())</span>
-        <span class="p">{</span>
-            <span class="nx">doFly</span><span class="p">();</span>
-        <span class="p">}</span>
+        if(startFly())
+        {
+            doFly();
+        }
 
-        <span class="nx">endFly</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        endFly();
+    }
+}</pre>
 <p>と書いたほうが分かりやすいかもしれない。</p>
 <p>private なメソッドだから、最初のやつで別にいいような気がしないでもない。でも、private なメソッドは、クラス内部からみるとグローバルにアクセスできる関数。前者の方法で書いていくと、いつの間にか private なメソッドが30個…、意味分からん…、となってしまうことを考えると、後者の方が読みやすいソースになるかもしれない。</p>
 <p>別のクラスに分けちゃえよ、という気もしないでもないが、クラスが増えるのは、それはそれで管理対象が増えてしまうので避けておきたい。</p>

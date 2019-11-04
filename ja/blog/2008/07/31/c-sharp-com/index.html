@@ -74,29 +74,28 @@
 <h1>3. 実装する</h1>
 <p>インターフェースと実装を C# で定義していく。</p>
 <p>以下は簡単な Hello world サンプル。</p>
-<div class="highlight"><pre><span class="nx">using</span> <span class="nx">System</span><span class="p">;</span>
-<span class="nx">using</span> <span class="nx">System</span><span class="p">.</span><span class="nx">Runtime</span><span class="p">.</span><span class="nx">InteropServices</span><span class="p">;</span>
+<pre class="javascript">using System;
+using System.Runtime.InteropServices;
 
-<span class="nx">namespace</span> <span class="nx">Test</span>
-<span class="p">{</span>
-    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;E5C9BABC-CF32-46de-ADF7-B1FF56126966&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">interface</span> <span class="nx">IFoo</span>
-    <span class="p">{</span>
-        <span class="nb">String</span> <span class="nx">foo</span><span class="p">();</span>
-    <span class="p">}</span>
+namespace Test
+{
+    [Guid(&quot;E5C9BABC-CF32-46de-ADF7-B1FF56126966&quot;)]
+    public interface IFoo
+    {
+        String foo();
+    }
 
-    <span class="p">[</span><span class="nx">ClassInterface</span><span class="p">(</span><span class="nx">ClassInterfaceType</span><span class="p">.</span><span class="nx">None</span><span class="p">)]</span>
-    <span class="p">[</span><span class="nx">ProgId</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">)]</span>
-    <span class="p">[</span><span class="nx">Guid</span><span class="p">(</span><span class="s2">&quot;B13E1F81-991F-4498-AB1F-FF83FB97914D&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Foo</span> <span class="o">:</span> <span class="nx">IFoo</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="nb">String</span> <span class="nx">foo</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="s2">&quot;Hello world!&quot;</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    [ClassInterface(ClassInterfaceType.None)]
+    [ProgId(&quot;Test.Foo&quot;)]
+    [Guid(&quot;B13E1F81-991F-4498-AB1F-FF83FB97914D&quot;)]
+    public class Foo : IFoo
+    {
+        public String foo()
+        {
+            return &quot;Hello world!&quot;;
+        }
+    }
+}</pre>
 <p>Guid は [Create GUID] ツールから適宜生成していく。</p>
 <p>ProgId 属性でスクリプトから参照するときの ProgId を指定しておく。この値が重要。</p>
 <h1>4. COM コンポーネントとして登録する</h1>
@@ -111,17 +110,15 @@
 <pre>regasm /u Test.dll</pre>
 <h1>5. 完成！！</h1>
 <p>JScript から呼び出してみる。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ActiveXObject</span><span class="p">(</span><span class="s2">&quot;Test.Foo&quot;</span><span class="p">);</span>
-<span class="nx">WScript</span><span class="p">.</span><span class="nx">echo</span><span class="p">(</span><span class="nx">test</span><span class="p">.</span><span class="nx">foo</span><span class="p">());</span>
-</pre></div>
+<pre class="javascript">var test = new ActiveXObject(&quot;Test.Foo&quot;);
+WScript.echo(test.foo());</pre>
 <p>実行！</p>
 <pre>&gt;cscript /nologo test.js
 Hello world!</pre>
 <p>VBScript から呼び出してみる。</p>
-<div class="highlight"><pre><span class="k">Dim</span> <span class="n">test</span>
-<span class="k">Set</span> <span class="n">test</span> <span class="o">=</span> <span class="n">CreateObject</span><span class="p">(</span><span class="s">&quot;Test.Foo&quot;</span><span class="p">)</span>
-<span class="n">WScript</span><span class="p">.</span><span class="n">echo</span><span class="p">(</span><span class="n">test</span><span class="p">.</span><span class="n">foo</span><span class="p">())</span>
-</pre></div>
+<pre class="vb">Dim test
+Set test = CreateObject(&quot;Test.Foo&quot;)
+WScript.echo(test.foo())</pre>
 <p>実行！</p>
 <pre>&gt;cscript /nologo test.vbs
 Hello world!</pre>

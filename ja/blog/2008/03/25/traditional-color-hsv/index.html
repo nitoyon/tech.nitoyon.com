@@ -66,59 +66,58 @@
 <p>こうやって分布させるだけでも、新たな気づきがあっておもしろい。</p>
 <p>内側に密集していて、外側にいくほど（彩度が高くなるほど）色が少なくなる。特に、左下の緑なんてすっからかん。伝統色には、自然を表現する色が多いのに、緑が少ないとは意外。自然界には、彩度が高い色は少ない、ということか。</p>
 <p>一応ソースものっけておく。これぐらいなら、JS ででもできそうなんだけど、日ごろの慣れで AS。</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">sketchbook</span><span class="p">.</span><span class="nx">colors</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">nitoyon</span><span class="p">.</span><span class="nx">as3query</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package{
+    import flash.display.*;
+    import flash.text.TextField;
+    import sketchbook.colors.*;
+    import com.nitoyon.as3query.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">TraditionalColor</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">box</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;#000000&quot;)]
+    public class TraditionalColor extends Sprite{
+        private var box:Sprite;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">TraditionalColor</span><span class="p">(){</span>
-            <span class="nx">$</span><span class="p">(</span><span class="nx">stage</span><span class="p">)</span>
-                <span class="p">.</span><span class="nx">attr</span><span class="p">({</span>
-                    <span class="nx">align</span><span class="o">:</span> <span class="s2">&quot;TL&quot;</span><span class="p">,</span>
-                    <span class="nx">scaleMode</span><span class="o">:</span> <span class="s2">&quot;noScale&quot;</span>
-                <span class="p">});</span>
+        public function TraditionalColor(){
+            $(stage)
+                .attr({
+                    align: &quot;TL&quot;,
+                    scaleMode: &quot;noScale&quot;
+                });
 
-            <span class="nx">box</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="nx">Sprite</span><span class="p">)</span>
-                <span class="p">.</span><span class="nx">attr</span><span class="p">({</span><span class="nx">x</span> <span class="o">:</span> <span class="mi">200</span><span class="p">,</span> <span class="nx">y</span> <span class="o">:</span> <span class="mi">200</span><span class="p">})</span>
-                <span class="p">.</span><span class="nx">appendTo</span><span class="p">(</span><span class="k">this</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+            box = $(Sprite)
+                .attr({x : 200, y : 200})
+                .appendTo(this)[0];
 
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">col</span><span class="o">:</span><span class="nb">Object</span> <span class="k">in</span> <span class="nx">colors</span><span class="p">){</span>
-                <span class="nx">putColor</span><span class="p">(</span><span class="nx">col</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            for each(var col:Object in colors){
+                putColor(col);
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">putColor</span><span class="p">(</span><span class="nx">col</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">hsb</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">ColorUtil</span><span class="p">.</span><span class="nx">getHSB</span><span class="p">(</span><span class="nx">col</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+        private function putColor(col:Object):void{
+            var hsb:Object = ColorUtil.getHSB(col.value);
 
-            <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="nx">hsb</span><span class="p">.</span><span class="nx">h</span><span class="p">)</span> <span class="o">/</span> <span class="mi">360</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">hsb</span><span class="p">.</span><span class="nx">s</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
+            var rad:Number = (2 * Math.PI * hsb.h) / 360;
+            var r:Number = hsb.s * 2;
 
-            <span class="nx">$</span><span class="p">(</span><span class="nx">TextField</span><span class="p">)</span>
-                <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="nx">col</span><span class="p">.</span><span class="nx">color</span><span class="p">)</span>
-                <span class="p">.</span><span class="nx">attr</span><span class="p">({</span>
-                    <span class="nx">textColor</span> <span class="o">:</span> <span class="nx">col</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span>
-                    <span class="nx">autoSize</span><span class="o">:</span> <span class="s2">&quot;left&quot;</span><span class="p">,</span>
-                    <span class="nx">selectable</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
-                    <span class="nx">x</span> <span class="o">:</span> <span class="nx">r</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span><span class="p">),</span>
-                    <span class="nx">y</span> <span class="o">:</span> <span class="nx">r</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span>
-                <span class="p">})</span>
-                <span class="p">.</span><span class="nx">appendTo</span><span class="p">(</span><span class="nx">box</span><span class="p">);</span>
+            $(TextField)
+                .text(col.color)
+                .attr({
+                    textColor : col.value,
+                    autoSize: &quot;left&quot;,
+                    selectable: false,
+                    x : r * Math.cos(rad),
+                    y : r * Math.sin(rad)
+                })
+                .appendTo(box);
             
-        <span class="p">}</span>
+        }
 
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">colors</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="mh">0xfef4f4</span><span class="p">,</span> <span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;桜色 &quot;</span><span class="p">,</span> <span class="nx">yomi</span><span class="o">:</span> <span class="s2">&quot;さくらいろ&quot;</span><span class="p">},</span>
-            <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="mh">0xfdeff2</span><span class="p">,</span> <span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;薄桜 &quot;</span><span class="p">,</span> <span class="nx">yomi</span><span class="o">:</span> <span class="s2">&quot;うすざくら&quot;</span><span class="p">},</span>
-            <span class="c1">// 以下略</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private var colors:Array = [
+            {value: 0xfef4f4, color: &quot;桜色 &quot;, yomi: &quot;さくらいろ&quot;},
+            {value: 0xfdeff2, color: &quot;薄桜 &quot;, yomi: &quot;うすざくら&quot;},
+            // 以下略
+        }
+    }
+}</pre>
 <p>無駄に as3Query を使ってる。あと、HSV 変換は sketchbook の <a href="http://sketchbook.libspark.org/trac/browser/as3/trunk/src/sketchbook/colors/ColorUtil.as">ColorUtil</a> を使ってる。</p>
 
 </div>

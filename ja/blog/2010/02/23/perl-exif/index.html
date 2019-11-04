@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Image::ExifTool で写真の EXIF 時刻をまとめてずらす"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2010/02/23/perl-exif/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="カメラの時刻を間違えて設定してしまったり、海外旅行に行ったのに時差を変更し忘れたり、アリバイを作りたくなったり、などなど、現代人にとって写真の時刻をまとめて変更したくなることはよくあるものだ。便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。EXIF の時間を書き換えるperl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。perl -MImage::ExifTool -e &quot;for $f(glob(&#39;*.jp..."/>
+	<meta property="og:description" content="カメラの時刻を間違えて設定してしまったり、海外旅行に行ったのに時差を変更し忘れたり、アリバイを作りたくなったり、などなど、現代人にとって写真の時刻をまとめて変更したくなることはよくあるものだ。便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。EXIF の時間を書き換えるperl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。perl -MImage::ExifTool -e &quot;for $f(glob(&#39;*.jpg&#39;))..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -64,50 +64,45 @@
 <p>便利なフリーソフトもあるんだろけど、スクリプトでまとめて処理したくなるのがプログラマ魂。今回は perl を使ってやってみた。</p>
 <h1>EXIF の時間を書き換える</h1>
 <p>perl で EXIF を扱うには Image::ExifTool が定番なようだ。CPAN から拾ってきて、簡単なワンライナーを書いてみた。</p>
-<div class="highlight"><pre><span class="n">perl</span> <span class="o">-</span><span class="nn">MImage::</span><span class="n">ExifTool</span> <span class="o">-</span><span class="n">e</span> <span class="s">&quot;for $f(glob(&#39;*.jpg&#39;)){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); $e-&gt;SetNewValue($_=&gt;240, Shift=&gt;1) for(&#39;ModifyDate&#39;,&#39;DateTimeOriginal&#39;,&#39;CreateDate&#39;); $e-&gt;WriteInfo($f,&#39;out/&#39;.$f)}&quot;</span>
-</pre></div>
+<pre class="perl">perl -MImage::ExifTool -e &quot;for $f(glob('*.jpg')){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); $e-&gt;SetNewValue($_=&gt;240, Shift=&gt;1) for('ModifyDate','DateTimeOriginal','CreateDate'); $e-&gt;WriteInfo($f,'out/'.$f)}&quot;</pre>
 <p>MS-DOS 用。UNIX shell のときは、&quot; と &#39; を入れ替えるべきだろう。１行を展開してみるとこうなる。</p>
-<div class="highlight"><pre><span class="c1"># カレントフォルダの *.jpg を列挙</span>
-<span class="k">for</span> <span class="nv">$f</span><span class="p">(</span><span class="nb">glob</span><span class="p">(</span><span class="s">&#39;*.jpg&#39;</span><span class="p">)){</span>
-    <span class="c1"># ファイルの Exif 情報を読み取る</span>
-    <span class="nv">$e</span> <span class="o">=</span> <span class="k">new</span> <span class="nn">Image::</span><span class="n">ExifTool</span><span class="p">;</span>
-    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">ImageInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">);</span>
+<pre class="perl"># カレントフォルダの *.jpg を列挙
+for $f(glob('*.jpg')){
+    # ファイルの Exif 情報を読み取る
+    $e = new Image::ExifTool;
+    $e-&gt;ImageInfo($f);
 
-    <span class="c1"># 時刻をずらす</span>
-    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">SetNewValue</span><span class="p">(</span><span class="nv">$_</span><span class="o">=&gt;</span><span class="mi">9</span><span class="p">,</span> <span class="n">Shift</span><span class="o">=&gt;-</span><span class="mi">1</span><span class="p">)</span>
-      <span class="k">for</span><span class="p">(</span><span class="s">&#39;ModifyDate&#39;</span><span class="p">,</span><span class="s">&#39;DateTimeOriginal&#39;</span><span class="p">,</span><span class="s">&#39;CreateDate&#39;</span><span class="p">);</span>
+    # 時刻をずらす
+    $e-&gt;SetNewValue($_=&gt;9, Shift=&gt;-1)
+      for('ModifyDate','DateTimeOriginal','CreateDate');
 
-    <span class="c1"># out フォルダに出力する</span>
-    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">WriteInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">,</span><span class="s">&#39;out/&#39;</span><span class="o">.</span><span class="nv">$f</span><span class="p">)</span>
-<span class="p">}</span>
-</pre></div>
+    # out フォルダに出力する
+    $e-&gt;WriteInfo($f,'out/'.$f)
+}</pre>
 <p>ただ、こんな凝ったことしなくても Image::ExifTool と一緒に導入される exiftool を使えば、もっと手軽にできたようだ。</p>
-<div class="highlight"><pre>exiftool <span class="s2">&quot;-AllDates-=0:0:0 9:0:0&quot;</span> ./
-</pre></div>
+<pre class="bash">exiftool &quot;-AllDates-=0:0:0 9:0:0&quot; ./</pre>
 <p>バックアップファイルまで作ってくれるので安心。</p>
 <h1>タイムスタンプを修正する</h1>
 <p>この方法で EXIF を書き換えることには成功したのだけど、ファイルのタイムスタンプが現在時刻になってしまう。</p>
 <p>そこで、タイムスタンプを EXIF のものに置き換えるスクリプトを書いた。</p>
-<div class="highlight"><pre><span class="n">perl</span> <span class="o">-</span><span class="nn">MImage::</span><span class="n">ExifTool</span> <span class="o">-</span><span class="nn">MTime::</span><span class="n">Local</span> <span class="o">-</span><span class="n">e</span> <span class="s">&quot;for $f(glob(&#39;*.jpg&#39;)){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); @t=reverse split(/[: ]/,$e-&gt;GetValue(&#39;ModifyDate&#39;)); $t[4]--; $t=timelocal @t; utime $t,$t,$f }&quot;</span>
-</pre></div>
+<pre class="perl">perl -MImage::ExifTool -MTime::Local -e &quot;for $f(glob('*.jpg')){$e = new Image::ExifTool; $e-&gt;ImageInfo($f); @t=reverse split(/[: ]/,$e-&gt;GetValue('ModifyDate')); $t[4]--; $t=timelocal @t; utime $t,$t,$f }&quot;</pre>
 <p>インデントしてみた。</p>
-<div class="highlight"><pre><span class="c1"># カレントフォルダの *.jpg を列挙</span>
-<span class="k">for</span> <span class="nv">$f</span><span class="p">(</span><span class="nb">glob</span><span class="p">(</span><span class="s">&#39;*.jpg&#39;</span><span class="p">)){</span>
-    <span class="c1"># ファイルの Exif 情報を読み取る</span>
-    <span class="nv">$e</span> <span class="o">=</span> <span class="k">new</span> <span class="nn">Image::</span><span class="n">ExifTool</span><span class="p">;</span>
-    <span class="nv">$e</span><span class="o">-&gt;</span><span class="n">ImageInfo</span><span class="p">(</span><span class="nv">$f</span><span class="p">);</span>
+<pre class="perl"># カレントフォルダの *.jpg を列挙
+for $f(glob('*.jpg')){
+    # ファイルの Exif 情報を読み取る
+    $e = new Image::ExifTool;
+    $e-&gt;ImageInfo($f);
 
-    <span class="c1"># 時間を取得する</span>
-    <span class="nv">@t</span><span class="o">=</span><span class="nb">reverse</span> <span class="nb">split</span><span class="p">(</span><span class="sr">/[: ]/</span><span class="p">,</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="n">GetValue</span><span class="p">(</span><span class="s">&#39;ModifyDate&#39;</span><span class="p">));</span>
-    <span class="nv">$t</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">--</span><span class="p">;</span> <span class="c1"># month を1減らす</span>
+    # 時間を取得する
+    @t=reverse split(/[: ]/,$e-&gt;GetValue('ModifyDate'));
+    $t[4]--; # month を1減らす
 
-    <span class="c1"># epoch に変換する</span>
-    <span class="nv">$t</span><span class="o">=</span><span class="n">timelocal</span> <span class="nv">@t</span><span class="p">;</span>
+    # epoch に変換する
+    $t=timelocal @t;
 
-    <span class="c1"># ファイルのタイムスタンプを変更する</span>
-    <span class="nb">utime</span> <span class="nv">$t</span><span class="p">,</span><span class="nv">$t</span><span class="p">,</span><span class="nv">$f</span>
-<span class="p">}</span>
-</pre></div>
+    # ファイルのタイムスタンプを変更する
+    utime $t,$t,$f
+}</pre>
 <p>Image::ExifTool で時刻を DateTime で取得するような方法を探してみたんだけど見つからず。諦めて、このようなかっこ悪い方法で変換している（1月には動かない!!）。</p>
 <h1>参考URL</h1>
 <ul><li><a href="http://hippos-lab.com/blog/node/251">exiftoolはとっても楽ちん | hippos-lab::blog</a></li><li><a href="http://www.perlmonks.org/?node_id=767176">Change Image File Timestamp to Match EXIF Data</a></li></ul>

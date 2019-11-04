@@ -64,13 +64,11 @@
 <p>バージョンは 1.2.1。</p>
 <h1>そもそもの目的</h1>
 <p>DOM 標準の removeEventListener は、element と type(click, submit, blur など) と listener の３つを指定する必要がある。</p>
-<div class="highlight"><pre><span class="nx">element</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="nx">click</span><span class="p">,</span> <span class="nx">listener</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">element.removeEventListener(click, listener, false);</pre>
 <p>jQuery ではイベント解除に unbind という便利な関数が用意されている。</p>
 <ol><li>element, type, listener を指定して解除する（通常の removeEventListener と同じ）</li><li>element, type を指定して全てのイベントハンドラを解除する</li><li>element から全てのイベントを解除する</li></ol>
 <p>例えば、</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#foo&quot;</span><span class="p">).</span><span class="nx">unbind</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">$(&quot;#foo&quot;).unbind();</pre>
 <p>とすると、#foo なエレメントに（jQuery 経由で）bind したイベントを全て解除できる。</p>
 <p>1. は通常の removeEventListener そのままなんだけど、2. や 3. をどうするかが腕の見せ所。</p>
 <h1>実現方法</h1>
@@ -78,8 +76,7 @@
 <p>このハッシュを、仮に hash としておく。（実際には、element[(new Date()).getTime()] に作成される）</p>
 <h2>bind の裏側</h2>
 <p>bind は次のようにして使う。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">).</span><span class="nx">bind</span><span class="p">(</span> <span class="nx">type</span><span class="p">,</span> <span class="nx">fn</span> <span class="p">);</span>
-</pre></div>
+<pre class="javascript">$(&quot;foo&quot;).bind( type, fn );</pre>
 <p>このとき、裏側では次のように動いている。</p>
 <ol><li>fn に guid を設定する。guid はイベントハンドラに一意につけられた id。</li><li>type と guid をキーにして、イベントハンドラを保持する（hash.events[type][guid] = fn）。<ul><li>element から登録された type 一覧を知ることができる</li><li>element と type から登録された fn の一覧を知ることができる</li></ul></li><li>element に type のイベントが登録されていない場合は、element.addEventListener(type, &lt;特製ハンドラ&gt;, false) する。<ul><li>複数回 bind しても、登録されるイベントハンドラはこの特製ハンドラ１つだけ</li><li>このハンドラが呼ばれると、hash.events[type] に保存されている fn（実際に bind で登録されたイベントハンドラ）を順番に呼び出す。</li></ul></li></ol>
 <p>element と type が同じなら、１回しか addEventListener が呼び出されず、同じイベントハンドラを使いまわしている。</p>

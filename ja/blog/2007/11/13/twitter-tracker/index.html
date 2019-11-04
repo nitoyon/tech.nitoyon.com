@@ -64,68 +64,67 @@
 <p>（追記）2008/3/9 18:00 crossdomain.xml が修正されて、抜き出せなくなったようです…。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FTwitterTracker.swf&amp;bgcolor=%23ffffff" width="320" height="80" class="flash"></iframe></center></p>
 <p>ソースはこんなの！（61行）</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">net</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.Sprite;
+    import flash.events.Event;
+    import flash.text.*;
+    import flash.net.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;400&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;100&quot;</span><span class="p">,</span> <span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">TwitterTracker</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">textField</span><span class="o">:</span><span class="nx">TextField</span><span class="p">;</span>
+    [SWF(width=&quot;400&quot;, height=&quot;100&quot;, backgroundColor=&quot;#ffffff&quot;)]
+    public class TwitterTracker extends Sprite {
+        private var textField:TextField;
         
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">TwitterTracker</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function TwitterTracker() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextFormat</span><span class="p">();</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">size</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+            var tf:TextFormat = new TextFormat();
+            tf.size = 15;
 
-            <span class="nx">textField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">wordWrap</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">multiline</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">defaultTextFormat</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">;</span>
+            textField = new TextField();
+            textField.wordWrap = true;
+            textField.multiline = true;
+            textField.defaultTextFormat = tf;
 
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;loading...&quot;</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
+            textField.text = &quot;loading...&quot;;
+            textField.width = 400;
+            addChild(textField);
 
-            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">Event</span><span class="p">.</span><span class="nx">COMPLETE</span><span class="p">,</span> <span class="nx">completeHandler</span><span class="p">);</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;ioError&quot;</span><span class="p">,</span> <span class="nx">errorHandler</span><span class="p">);</span>
-            <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://twitter.com/account/settings&quot;</span><span class="p">));</span>
-        <span class="p">}</span>
+            var loader:URLLoader = new URLLoader();
+            loader.addEventListener(Event.COMPLETE, completeHandler);
+            loader.addEventListener(&quot;ioError&quot;, errorHandler);
+            loader.load(new URLRequest(&quot;http://twitter.com/account/settings&quot;));
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">completeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="nx">URLLoader</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">html</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">data</span><span class="p">;</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">html</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;value=&quot;Sign In&quot;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// logged out</span>
-                <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;ついったーにはログインしてないみたい。\nYou are not logged in to Twitter!!&quot;</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="k">else</span> <span class="p">{</span>
-                <span class="c1">// login</span>
-                <span class="kd">var</span> <span class="nx">idMatch</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="nx">html</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/&lt;input\s+id=&quot;user_screen_name&quot;[^&gt;+]+value=&quot;([^&quot;]+)&quot;/</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">emailMatch</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="nx">html</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/&lt;input\s+id=&quot;user_email&quot;[^&gt;]+value=&quot;([^&quot;]+)&quot;/</span><span class="p">);</span>
+        private function completeHandler(event:Event):void {
+            var loader:URLLoader = URLLoader(event.target);
+            var html:String = loader.data;
+            if(html.indexOf('value=&quot;Sign In&quot;') != -1) {
+                // logged out
+                textField.text = &quot;ついったーにはログインしてないみたい。\nYou are not logged in to Twitter!!&quot;;
+            }
+            else {
+                // login
+                var idMatch:Array = html.match(/&lt;input\s+id=&quot;user_screen_name&quot;[^&gt;+]+value=&quot;([^&quot;]+)&quot;/);
+                var emailMatch:Array = html.match(/&lt;input\s+id=&quot;user_email&quot;[^&gt;]+value=&quot;([^&quot;]+)&quot;/);
 
-                <span class="k">if</span><span class="p">(</span><span class="nx">idMatch</span> <span class="o">&amp;&amp;</span> <span class="nx">emailMatch</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">id</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="nx">idMatch</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-                    <span class="kd">var</span> <span class="nx">email</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="nx">emailMatch</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-                    <span class="nx">textField</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="s2">&quot;ついったーID は &lt;font color=&#39;#ff0000&#39;&gt;&lt;b&gt;&quot;</span> <span class="o">+</span> <span class="nx">id</span> <span class="o">+</span> <span class="s2">&quot;&lt;/b&gt;&lt;/font&gt; だね。&lt;br&gt;&quot;</span>
-                      <span class="o">+</span> <span class="s2">&quot;E-mail は &lt;font color=&#39;#008000&#39;&gt;&lt;b&gt;&quot;</span> <span class="o">+</span> <span class="nx">email</span> <span class="o">+</span> <span class="s2">&quot;&lt;/b&gt;&lt;/font&gt; だよね。&quot;</span><span class="p">;</span>
-                <span class="p">}</span>
-                <span class="k">else</span> <span class="p">{</span>
-                    <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;no match:&quot;</span> <span class="o">+</span> <span class="nx">idMatch</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">emailMatch</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+                if(idMatch &amp;&amp; emailMatch) {
+                    var id:String = idMatch[1];
+                    var email:String = emailMatch[1];
+                    textField.htmlText = &quot;ついったーID は &lt;font color='#ff0000'&gt;&lt;b&gt;&quot; + id + &quot;&lt;/b&gt;&lt;/font&gt; だね。&lt;br&gt;&quot;
+                      + &quot;E-mail は &lt;font color='#008000'&gt;&lt;b&gt;&quot; + email + &quot;&lt;/b&gt;&lt;/font&gt; だよね。&quot;;
+                }
+                else {
+                    textField.text = &quot;no match:&quot; + idMatch + &quot;:&quot; + emailMatch;
+                }
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">errorHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Error!!!: &quot;</span> <span class="o">+</span> <span class="nx">event</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private function errorHandler(event:Event):void {
+            textField.text = &quot;Error!!!: &quot; + event.toString();
+        }
+    }
+}</pre>
 <p>いちおう補足しておくと、Cookie を抜いたわけではなくて、Cookie つきで twitter.com に GET した結果の HTML をパースしてるだけだよ。crossdomain.xml はすごいね！</p>
 <p>関連： <a href="/ja/blog/2007/11/12/crossdomain-img/">AS で別ドメインの画像を読み込むときの注意点</a></p>
 

@@ -70,80 +70,79 @@
 <p>苦労したのはグラデーションのマスクを適用させるところ。マスクとマスクされる <code>DisplayObject</code> の両方の  <code>cacheAsBitmap</code> プロパティを <code>true</code> に設定しておく必要がある。</p>
 <p>当初、それに気付かずに、<code>copyPixel()</code> を使って<a href="http://wonderfl.net/code/7689123caaff96fc89a3855b76dec5022443c740">泥臭く実装していた</a>んだけど、cacheAsBitmap すればアルファの Sprite で透明度を利用したマスクを作れることを<a href="http://wonderfl.net/code/fb15467c08b713fd630ace5fa691a13f6c6f810d">教えてもらった</a>。<code>cacheAsBitmap</code> を使って <a href="http://wonderfl.net/code/6478e7a910e69f15bdc14d0faf6b492c7001ca55">書き直した</a>ら、10行短くなって、ソースコードも素直になって万歳。</p>
 <p>ソースコードは以下に（73行）。</p>
-<div class="highlight"><pre><span class="c1">// Glowing Hellow World revised. (lines: 83 -&gt; 73) </span>
-<span class="c1">//------------------------------------------------------- </span>
-<span class="c1">// An experiment on creating a dynamic glow text effect. </span>
-<span class="c1">// You can edit the text!!! </span>
+<pre class="javascript">// Glowing Hellow World revised. (lines: 83 -&gt; 73) 
+//------------------------------------------------------- 
+// An experiment on creating a dynamic glow text effect. 
+// You can edit the text!!! 
 
-<span class="kr">package</span><span class="p">{</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span> 
+package{ 
+import flash.display.*; 
+import flash.events.Event; 
+import flash.filters.GlowFilter; 
+import flash.geom.*; 
+import flash.text.*; 
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;450&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;80&quot;</span><span class="p">)]</span> 
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">GlowingHelloWorld</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span> 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">GlowingHelloWorld</span><span class="p">(){</span> 
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span> 
-        <span class="kd">var</span> <span class="nx">ptZero</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span> 
+[SWF(backgroundColor=&quot;#000000&quot;, width=&quot;450&quot;, height=&quot;80&quot;)] 
+public class GlowingHelloWorld extends Sprite{ 
+    public function GlowingHelloWorld(){ 
+        stage.scaleMode = &quot;noScale&quot;; 
+        var ptZero:Point = new Point(); 
 
-        <span class="c1">// initialize canvas. </span>
-        <span class="kd">var</span> <span class="nx">bmpGlow</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">())</span> <span class="nx">as</span> <span class="nx">Bitmap</span><span class="p">;</span> 
+        // initialize canvas. 
+        var bmpGlow:Bitmap = addChild(new Bitmap()) as Bitmap; 
 
-        <span class="c1">// Show original text (input) </span>
-        <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span> 
-        <span class="nx">text</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span> 
-        <span class="nx">text</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span> 
-        <span class="nx">text</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;50&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="o">&gt;</span><span class="nx">HELLO</span> <span class="nx">WORLD</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString(); </span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span> 
-        <span class="nx">text</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> <span class="nx">updateGlow</span><span class="p">()</span> <span class="p">});</span> 
+        // Show original text (input) 
+        var text:TextField = new TextField(); 
+        text.autoSize = &quot;left&quot;; 
+        text.type = &quot;input&quot;; 
+        text.htmlText = &lt;font size=&quot;50&quot; color=&quot;#ffffff&quot;&gt;HELLO WORLD&lt;/font&gt;.toXMLString(); 
+        addChild(text); 
+        text.addEventListener(&quot;change&quot;, function(event:Event):void{ updateGlow() }); 
 
-        <span class="c1">// Create a glow BitmapData. </span>
-        <span class="kd">var</span> <span class="nx">bmdGlow</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">bmdCanvas</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span> 
-        <span class="kd">var</span> <span class="nx">updateGlow</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> 
-            <span class="c1">// dispose existing BitmapData. </span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">bmdGlow</span><span class="p">)</span> <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span> 
+        // Create a glow BitmapData. 
+        var bmdGlow:BitmapData, bmdCanvas:BitmapData; 
+        var updateGlow:Function = function():void{ 
+            // dispose existing BitmapData. 
+            if (bmdGlow) bmdGlow.dispose(); 
 
-            <span class="c1">// Glow it. </span>
-            <span class="nx">bmdGlow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">textWidth</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">text</span><span class="p">.</span><span class="nx">textHeight</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="mi">0</span><span class="p">);;</span> 
-            <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span> 
-            <span class="kd">var</span> <span class="nx">glow</span><span class="o">:</span><span class="nx">GlowFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
-            <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmdGlow</span><span class="p">,</span> <span class="nx">bmdGlow</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">ptZero</span><span class="p">,</span> <span class="nx">glow</span><span class="p">);</span> 
+            // Glow it. 
+            bmdGlow = new BitmapData(text.textWidth + 10, text.textHeight + 10, true, 0);; 
+            bmdGlow.draw(text); 
+            var glow:GlowFilter = new GlowFilter(0xffffff, .9, 8, 8, 4); 
+            bmdGlow.applyFilter(bmdGlow, bmdGlow.rect, ptZero, glow); 
 
-            <span class="c1">// Update canvas BitmapData. </span>
-            <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">bitmapData</span> <span class="o">=</span> <span class="nx">bmdGlow</span><span class="p">;</span> 
-        <span class="p">}</span> 
-        <span class="nx">updateGlow</span><span class="p">();</span> 
+            // Update canvas BitmapData. 
+            bmpGlow.bitmapData = bmdGlow; 
+        } 
+        updateGlow(); 
 
-        <span class="c1">// Create a mask sprite. </span>
-        <span class="kd">var</span> <span class="nx">msk</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span> 
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;radial&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">255</span><span class="p">]);</span> 
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span> 
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span> 
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">msk</span><span class="p">);</span>
+        // Create a mask sprite. 
+        var msk:Sprite = new Sprite(); 
+        msk.graphics.beginGradientFill(&quot;radial&quot;, [0xffffff, 0xffffff], [1, 0], [64, 255]); 
+        msk.graphics.drawCircle(0, 0, 100); 
+        msk.graphics.endFill(); 
+        addChild(msk);
 
-        <span class="c1">// Set mask.</span>
-        <span class="nx">msk</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">-</span> <span class="nx">text</span><span class="p">.</span><span class="nx">textHeight</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-        <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="nx">msk</span><span class="p">.</span><span class="nx">cacheAsBitmap</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">bmpGlow</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">msk</span><span class="p">;</span>
+        // Set mask.
+        msk.y = 50 - text.textHeight / 2;
+        bmpGlow.cacheAsBitmap = msk.cacheAsBitmap = true;
+        bmpGlow.mask = msk;
 
-        <span class="c1">// Start animation loop. </span>
-        <span class="kd">var</span> <span class="nx">counter</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span> 
-            <span class="c1">// move the mask</span>
-            <span class="nx">msk</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">counter</span><span class="p">;</span>
+        // Start animation loop. 
+        var counter:int = 0; 
+        addEventListener(&quot;enterFrame&quot;, function(event:Event):void{ 
+            // move the mask
+            msk.x = counter;
 
-            <span class="c1">// update counter... </span>
-            <span class="nx">counter</span> <span class="o">+=</span> <span class="mi">14</span><span class="p">;</span> 
-            <span class="k">if</span> <span class="p">(</span><span class="nx">counter</span> <span class="o">&gt;</span> <span class="mi">800</span><span class="p">){</span> 
-                <span class="nx">counter</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span><span class="p">;</span> 
-            <span class="p">}</span> 
-        <span class="p">});</span> 
-    <span class="p">}</span> 
-<span class="p">}</span> 
-<span class="p">}</span> 
-</pre></div>
+            // update counter... 
+            counter += 14; 
+            if (counter &gt; 800){ 
+                counter = -10; 
+            } 
+        }); 
+    } 
+} 
+} </pre>
 </section>
 
 </div>

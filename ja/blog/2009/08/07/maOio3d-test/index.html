@@ -67,273 +67,272 @@
 <p>ネタとしては未完成な感じだが、PV3D でのカメラ＋Tweener の扱いが少し分かったので実りはあった。</p>
 <p>PV3D のバージョンは 2.0.883</p>
 <p>ソースはこれ。<a href="http://wonderfl.net/code/09fbabde39fb6abdb1543ce5ec6a3b224aa8c409">wonderfl にも post してる</a>。</p>
-<div class="highlight"><pre><span class="c1">// PV3D で某ゲームを3D化してみた</span>
-<span class="c1">// </span>
-<span class="c1">// [遊び方]</span>
-<span class="c1">// ・クリックでジャンプする</span>
-<span class="c1">// ・それだけ</span>
-<span class="kr">package</span> <span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">view</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">caurina</span><span class="p">.</span><span class="nx">transitions</span><span class="p">.</span><span class="nx">Tweener</span><span class="p">;</span>
+<pre class="javascript">// PV3D で某ゲームを3D化してみた
+// 
+// [遊び方]
+// ・クリックでジャンプする
+// ・それだけ
+package {
+import flash.events.Event;
+import flash.text.TextField;
+import org.papervision3d.view.*;
+import caurina.transitions.Tweener;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#000000&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;475&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">MaOio3dTest</span> <span class="kr">extends</span> <span class="nx">BasicView</span> <span class="p">{</span>
-    <span class="c1">// character</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">character</span><span class="o">:</span><span class="nx">Character</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#000000&quot;, width=&quot;475&quot;, height=&quot;475&quot;)]
+public class MaOio3dTest extends BasicView {
+    // character
+    private var character:Character;
 
-    <span class="c1">// ジャンプ中の状態</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">jump</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">prevJump</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">;</span>
+    // ジャンプ中の状態
+    private var jump:Boolean;
+    private var prevJump:Boolean;
 
-    <span class="c1">// アニメーションの設定</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">animateIndex</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">animateParams</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mi">700</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">120</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span> <span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="nx">focus</span><span class="o">:</span> <span class="mi">50</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mi">6</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">220</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="nx">focus</span><span class="o">:</span> <span class="mi">8</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mi">4</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="mi">300</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">40</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span> <span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="nx">focus</span><span class="o">:</span> <span class="mi">50</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">transition</span><span class="o">:</span> <span class="s1">&#39;easeInOutSine&#39;</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span> <span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="nx">focus</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span> <span class="nx">transition</span><span class="o">:</span> <span class="s1">&#39;easeInOutSine&#39;</span> <span class="p">}</span>
-    <span class="p">];</span>
+    // アニメーションの設定
+    private var animateIndex:int;
+    private var animateParams:Array = [
+        { x: -700, y: 120, z: -300, focus: 50, time: 6 },
+        { x: -70, y: 220, z: -100, focus: 8, time: 4 },
+        { x: 300, y: 40, z: -80, focus: 50, time: 5, transition: 'easeInOutSine' },
+        { x: 0, y: 0, z: -300, focus: 10, time: 4, transition: 'easeInOutSine' }
+    ];
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">MaOio3dTest</span><span class="p">(){</span>
-        <span class="kr">super</span><span class="p">(</span><span class="mi">475</span><span class="p">,</span> <span class="mi">475</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+    public function MaOio3dTest(){
+        super(475, 475, false);
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
 
-        <span class="c1">// 画像を変換する</span>
-        <span class="nx">Map</span><span class="p">.</span><span class="nx">base64ToBitmapData</span><span class="p">(</span><span class="nx">init</span><span class="p">);</span>
-    <span class="p">}</span>
+        // 画像を変換する
+        Map.base64ToBitmapData(init);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="c1">// マップとキャラクタを準備する</span>
-        <span class="nx">Map</span><span class="p">.</span><span class="nx">createMap</span><span class="p">(</span><span class="nx">scene</span><span class="p">);</span>
-        <span class="nx">scene</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">character</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Character</span><span class="p">());</span>
+    private function init():void{
+        // マップとキャラクタを準備する
+        Map.createMap(scene);
+        scene.addChild(character = new Character());
 
-        <span class="c1">// カメラの初期位置を設定</span>
-        <span class="nx">camera</span><span class="p">.</span><span class="nx">focus</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
-        <span class="nx">camera</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20000</span><span class="p">;</span>
+        // カメラの初期位置を設定
+        camera.focus = 1000;
+        camera.z = -20000;
 
-        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;CLICK TO START&quot;</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+        var tf:TextField = new TextField();
+        tf.textColor = 0xffffff;
+        tf.text = &quot;CLICK TO START&quot;;
+        tf.x = tf.y = 50;
+        addChild(tf);
 
-        <span class="c1">// アニメーション</span>
-        <span class="kd">var</span> <span class="nx">initialized</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;keyDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">jump</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;});</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">initialized</span><span class="p">){</span>
-                <span class="c1">// 初期化</span>
-                <span class="nx">removeChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
-                <span class="nx">startRendering</span><span class="p">();</span>
-                <span class="nx">animate</span><span class="p">();</span>
-                <span class="nx">initialized</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="p">}</span>
+        // アニメーション
+        var initialized:Boolean = false;
+        stage.addEventListener(&quot;keyDown&quot;, function(event:Event):void{jump = true;});
+        stage.addEventListener(&quot;click&quot;, function(event:Event):void{
+            if (!initialized){
+                // 初期化
+                removeChild(tf);
+                startRendering();
+                animate();
+                initialized = true;
+            }
 
-            <span class="nx">jump</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
+            jump = true;
+        });
+    }
 
-    <span class="c1">// Tweener を利用したアニメーションを行う</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">animate</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">param</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">animateParams</span><span class="p">[</span><span class="nx">animateIndex</span><span class="p">];</span>
-        <span class="nx">param</span><span class="p">.</span><span class="nx">onComplete</span> <span class="o">=</span> <span class="nx">animate</span><span class="p">;</span>
-        <span class="nx">param</span><span class="p">.</span><span class="nx">delay</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// 必ず2秒停止する</span>
-        <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">camera</span><span class="p">,</span> <span class="nx">param</span><span class="p">);</span>
-        <span class="nx">animateIndex</span> <span class="o">=</span> <span class="p">(</span><span class="nx">animateIndex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nx">animateParams</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-    <span class="p">}</span>
+    // Tweener を利用したアニメーションを行う
+    private function animate():void{
+        var param:Object = animateParams[animateIndex];
+        param.onComplete = animate;
+        param.delay = 2; // 必ず2秒停止する
+        Tweener.addTween(camera, param);
+        animateIndex = (animateIndex + 1) % animateParams.length;
+    }
 
-    <span class="c1">// BasicView の描画処理</span>
-    <span class="kr">protected</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">onRenderTick</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">Event</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kr">super</span><span class="p">.</span><span class="nx">onRenderTick</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+    // BasicView の描画処理
+    protected override function onRenderTick(e:Event = null):void{
+        super.onRenderTick(e);
 
-        <span class="c1">// キャラクターの状態を更新する</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">prevJump</span> <span class="o">&amp;&amp;</span> <span class="nx">jump</span><span class="p">){</span>
-            <span class="nx">jump</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">prevJump</span> <span class="o">=</span> <span class="nx">jump</span><span class="p">;</span>
-        <span class="nx">character</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">jump</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
+        // キャラクターの状態を更新する
+        if (prevJump &amp;&amp; jump){
+            jump = false;
+        }
+        prevJump = jump;
+        character.update(jump);
+    }
+}
+}
 
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">ByteArray</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">objects</span><span class="p">.</span><span class="nx">primitives</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">materials</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">core</span><span class="p">.</span><span class="nx">proto</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">objects</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">objects</span><span class="p">.</span><span class="nx">primitives</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">org</span><span class="p">.</span><span class="nx">papervision3d</span><span class="p">.</span><span class="nx">materials</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">MaterialsList</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">mx</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Base64Decoder</span><span class="p">;</span>
+import flash.display.*;
+import flash.events.Event;
+import flash.geom.*;
+import flash.utils.ByteArray;
+import org.papervision3d.objects.primitives.*;
+import org.papervision3d.materials.*;
+import org.papervision3d.core.proto.*;
+import org.papervision3d.objects.*;
+import org.papervision3d.objects.primitives.*;
+import org.papervision3d.materials.utils.MaterialsList;
+import mx.utils.Base64Decoder;
 
-<span class="c1">// キャラクタ クラス</span>
-<span class="kr">class</span> <span class="nx">Character</span> <span class="kr">extends</span> <span class="nx">Plane</span><span class="p">{</span>
-    <span class="c1">// 画像一覧</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">characterImages</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
+// キャラクタ クラス
+class Character extends Plane{
+    // 画像一覧
+    private var characterImages:Array;
 
-    <span class="c1">// キャラクタ用の Sprite</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">character</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+    // キャラクタ用の Sprite
+    private var character:Sprite;
 
-    <span class="c1">// 表示情報</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">jumping</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">vy</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    // 表示情報
+    private var jumping:Boolean;
+    private var vy:int;
 
-    <span class="c1">// 主人公の実装</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Character</span><span class="p">(){</span>
-        <span class="kr">super</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+    // 主人公の実装
+    public function Character(){
+        super(null, 17, 16);
 
-        <span class="c1">// 画像を準備</span>
-        <span class="kd">var</span> <span class="nx">bmd1</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-        <span class="nx">bmd1</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">Map</span><span class="p">.</span><span class="nx">bmdIcons</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">());</span>
-        <span class="nx">bmd2</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">Map</span><span class="p">.</span><span class="nx">bmdIcons</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">());</span>
-        <span class="nx">bmd1</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd1</span><span class="p">,</span> <span class="nx">bmd1</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">);</span> <span class="c1">// 背景透過</span>
-        <span class="nx">bmd2</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">);</span>
-        <span class="nx">characterImages</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd1</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">)];</span>
+        // 画像を準備
+        var bmd1:BitmapData = new BitmapData(16, 16, true);
+        var bmd2:BitmapData = new BitmapData(17, 16, true);
+        bmd1.copyPixels(Map.bmdIcons, new Rectangle(240, 0, 16, 16), new Point());
+        bmd2.copyPixels(Map.bmdIcons, new Rectangle(256, 0, 17, 16), new Point());
+        bmd1.threshold(bmd1, bmd1.rect, new Point(), &quot;==&quot;, 0xffffffff, 0, 0xffffffff); // 背景透過
+        bmd2.threshold(bmd2, bmd2.rect, new Point(), &quot;==&quot;, 0xffffffff, 0, 0xffffffff);
+        characterImages = [new Bitmap(bmd1), new Bitmap(bmd2)];
 
-        <span class="c1">// character に追加</span>
-        <span class="nx">character</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="k">for</span> <span class="nx">each</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">img</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="k">in</span> <span class="nx">characterImages</span><span class="p">){</span>
-            <span class="nx">character</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">img</span><span class="p">);</span>
-            <span class="nx">img</span><span class="p">.</span><span class="nx">visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">setImage</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        // character に追加
+        character = new Sprite();
+        for each (var img:Bitmap in characterImages){
+            character.addChild(img);
+            img.visible = false;
+        }
+        setImage(0);
 
-        <span class="c1">// Plane の設定</span>
-        <span class="nx">material</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MovieMaterial</span><span class="p">(</span><span class="nx">character</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-        <span class="nx">x</span> <span class="o">=</span> <span class="o">-</span><span class="mi">64</span><span class="p">;</span>
-        <span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">40</span><span class="p">;</span>
-        <span class="nx">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">8</span><span class="p">;</span>
-    <span class="p">}</span>
+        // Plane の設定
+        material = new MovieMaterial(character, true, true);
+        x = -64;
+        y = -40;
+        z = -8;
+    }
 
-    <span class="c1">// 状態を更新</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">update</span><span class="p">(</span><span class="nx">jump</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">jump</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">jumping</span><span class="p">){</span>
-            <span class="nx">vy</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
-            <span class="nx">jumping</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">}</span>
+    // 状態を更新
+    public function update(jump:Boolean):void{
+        if (jump &amp;&amp; !jumping){
+            vy = 9;
+            jumping = true;
+        }
 
-        <span class="k">if</span> <span class="p">(</span><span class="nx">jumping</span><span class="p">){</span>
-            <span class="nx">y</span> <span class="o">+=</span> <span class="nx">vy</span><span class="p">;</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">vy</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">8</span><span class="p">){</span>
-                <span class="nx">vy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-                <span class="nx">jumping</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="nx">vy</span><span class="o">--</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">setImage</span><span class="p">(</span><span class="nx">jumping</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="p">}</span>
+        if (jumping){
+            y += vy;
+            if (vy &lt; -8){
+                vy = 0;
+                jumping = false;
+            }
+            vy--;
+        }
+        setImage(jumping ? 1 : 0);
+    }
 
-    <span class="c1">// 表示する画像（静止・ジャンプ中）を更新する</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">setImage</span><span class="p">(</span><span class="nx">num</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">characterImages</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="nx">characterImages</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">visible</span> <span class="o">=</span> <span class="p">(</span><span class="nx">num</span> <span class="o">==</span> <span class="nx">i</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    // 表示する画像（静止・ジャンプ中）を更新する
+    private function setImage(num:int):void{
+        for (var i:int = 0; i &lt; characterImages.length; i++){
+            characterImages[i].visible = (num == i);
+        }
+    }
+}
 
-<span class="c1">// マップデータ</span>
-<span class="kr">class</span> <span class="nx">Map</span><span class="p">{</span>
-    <span class="c1">// マップの種類を定義</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">mapTypeIndex</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">SKY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>   <span class="c1">// Sky</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">GRD</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// Ground</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">BLQ</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>   <span class="c1">// Block question</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MT0</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>   <span class="c1">// Mountain left</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MT1</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>   <span class="c1">// Mountain top</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MT2</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>   <span class="c1">// Mountain right</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MT3</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>   <span class="c1">// Mountain with tree</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MT4</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>   <span class="c1">// Mountain background</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">BU0</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>   <span class="c1">// Bush left</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">BU1</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>   <span class="c1">// Bush mid</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">BU2</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>  <span class="c1">// Bush right</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">CL0</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>  <span class="c1">// Cloud left top</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">CL1</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>  <span class="c1">// Cloud mid top</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">CL2</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span>  <span class="c1">// Cloud right top</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">CL3</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>  <span class="c1">// Cloud left bottom</span>
+// マップデータ
+class Map{
+    // マップの種類を定義
+    private static var mapTypeIndex:int = 0;
+    private static const SKY:int = 0;   // Sky
+    private static const GRD:int = 1;   // Ground
+    private static const BLQ:int = 2;   // Block question
+    private static const MT0:int = 3;   // Mountain left
+    private static const MT1:int = 4;   // Mountain top
+    private static const MT2:int = 5;   // Mountain right
+    private static const MT3:int = 6;   // Mountain with tree
+    private static const MT4:int = 7;   // Mountain background
+    private static const BU0:int = 8;   // Bush left
+    private static const BU1:int = 9;   // Bush mid
+    private static const BU2:int = 10;  // Bush right
+    private static const CL0:int = 11;  // Cloud left top
+    private static const CL1:int = 12;  // Cloud mid top
+    private static const CL2:int = 13;  // Cloud right top
+    private static const CL3:int = 14;  // Cloud left bottom
 
-    <span class="c1">// 画像を BASE64 化したもの</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">Icons</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="s2">&quot;R0lGODlhEQEQALMLAP/////Mmf+ZM/9mAP8zAMz/AJlmAGaZ/zPM/wCZAAAAAP///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAARARAAAAT/8MhJ6xkh66ywHtcgjuRonZOCoupaJXAsx8ps325+KHyr/0BXD0AsGo+Alm+1aDoJ0KhzSqUKroLgIVAaKbjeAXZMvi6FCW3ivLrNeu64tqIo2AvsuZ6F7CNVCkk5VFGFUlWGBAtjWmBdXyQdAgplY5R5FjVpQTCYL3GdPKA4ejx3d557e4F+rUWsqQdUBrQGV7ZVTYmFV41dIpBhYyVksTsxap06o2uizDKlp6eAqtUUrthG1ChTtAK2t1hVteC25L6/Xx3AYlfAPCKWOZowycoucaJwz8hzddKo8FhTxSObwSSCTnQzB+6bOCfeGpajhe7RgB7rsABzdxFLKnr1/zjJSJVPE0h+0aQlkGZsIJ2DMBNaWNjwW61ZDLFIrFjiywZJHCkJ2GhmxclNQGx4KsmPVJB/BWDcWYnKpRZWMbNhqlJJwDhvOskt4BnJ0cV2Zih58cjC6Y8bmJg2nXF1KsBpVq9mxeYJpwECN3M16WqgCVkvZoEOu8iDbSY39t6cmDv3R4+7mAXuKNVDL4AD2BDwdUHzLy3AtCCSM326sOEgZstGQquxozw6ckTCtUC5qQ6ome8C0gwEq0zLREADEH2E+WhuTVYXEru6Fuq/Cyg+XSd7dqXGt1OAiqz0U29m84Kr/9dyh3Ei7SWwOoCgfpH69u/72Tr4FgEBUABYk/hN5BiSnQGNBAAPYj3RxlEZSxxFl25uLHHeMzmop6Ed2xi132bIGYEffsuN2AoT/V2RSCVR/PVfgKj5wkEPsZ1VBlGOHTMKebtJcCF6LAC3YWZ1fNRKIO0NcZ9zJTKpTV8p7vKfV7e4KKV2QDiiQTDeCeWRl5fIhyEFGPFgHigt/LjjCUIOuZ4QSDgZ3w5/7AdfLIRIUUhpUsYI2yOxwdMVhDoCuc9IZh7Ajwpqjsemm256glV+y2njD1aAGGdmooOollp0gRWYCBVaMIYRBmV2kOqqGDXlDJoSVthobo9C+iYfRDh5xJwpcOqer0B4+umBN6VmYC4RAAA7&quot;</span><span class="p">;</span>
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">bmdIcons</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+    // 画像を BASE64 化したもの
+    private static const Icons:String = &quot;R0lGODlhEQEQALMLAP/////Mmf+ZM/9mAP8zAMz/AJlmAGaZ/zPM/wCZAAAAAP///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAARARAAAAT/8MhJ6xkh66ywHtcgjuRonZOCoupaJXAsx8ps325+KHyr/0BXD0AsGo+Alm+1aDoJ0KhzSqUKroLgIVAaKbjeAXZMvi6FCW3ivLrNeu64tqIo2AvsuZ6F7CNVCkk5VFGFUlWGBAtjWmBdXyQdAgplY5R5FjVpQTCYL3GdPKA4ejx3d557e4F+rUWsqQdUBrQGV7ZVTYmFV41dIpBhYyVksTsxap06o2uizDKlp6eAqtUUrthG1ChTtAK2t1hVteC25L6/Xx3AYlfAPCKWOZowycoucaJwz8hzddKo8FhTxSObwSSCTnQzB+6bOCfeGpajhe7RgB7rsABzdxFLKnr1/zjJSJVPE0h+0aQlkGZsIJ2DMBNaWNjwW61ZDLFIrFjiywZJHCkJ2GhmxclNQGx4KsmPVJB/BWDcWYnKpRZWMbNhqlJJwDhvOskt4BnJ0cV2Zih58cjC6Y8bmJg2nXF1KsBpVq9mxeYJpwECN3M16WqgCVkvZoEOu8iDbSY39t6cmDv3R4+7mAXuKNVDL4AD2BDwdUHzLy3AtCCSM326sOEgZstGQquxozw6ckTCtUC5qQ6ome8C0gwEq0zLREADEH2E+WhuTVYXEru6Fuq/Cyg+XSd7dqXGt1OAiqz0U29m84Kr/9dyh3Ei7SWwOoCgfpH69u/72Tr4FgEBUABYk/hN5BiSnQGNBAAPYj3RxlEZSxxFl25uLHHeMzmop6Ed2xi132bIGYEffsuN2AoT/V2RSCVR/PVfgKj5wkEPsZ1VBlGOHTMKebtJcCF6LAC3YWZ1fNRKIO0NcZ9zJTKpTV8p7vKfV7e4KKV2QDiiQTDeCeWRl5fIhyEFGPFgHigt/LjjCUIOuZ4QSDgZ3w5/7AdfLIRIUUhpUsYI2yOxwdMVhDoCuc9IZh7Ajwpqjsemm256glV+y2njD1aAGGdmooOollp0gRWYCBVaMIYRBmV2kOqqGDXlDJoSVthobo9C+iYfRDh5xJwpcOqer0B4+umBN6VmYC4RAAA7&quot;;
+    public static var bmdIcons:BitmapData;
 
-    <span class="c1">// マップ配置</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">map</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT0</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT0</span><span class="p">,</span> <span class="nx">MT3</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT1</span><span class="p">,</span> <span class="nx">MT3</span><span class="p">,</span> <span class="nx">MT4</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT2</span><span class="p">,</span> <span class="nx">MT3</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT2</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">CL1</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">CL0</span><span class="p">,</span> <span class="nx">CL2</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">CL3</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">BU0</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">BU1</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">BU1</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">BU2</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">BLQ</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT0</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT1</span><span class="p">,</span> <span class="nx">MT3</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">],</span>
-        <span class="p">[</span><span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">SKY</span><span class="p">,</span> <span class="nx">MT2</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">,</span> <span class="nx">GRD</span><span class="p">]</span>
-    <span class="p">];</span>
+    // マップ配置
+    private static const map:Array = [
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT0, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT0, MT3, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT1, MT3, MT4, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT2, MT3, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT2, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, SKY, CL1, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, CL0, CL2, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, SKY, CL3, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, BU0, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, BU1, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, BU1, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, BU2, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, BLQ, SKY, SKY, MT0, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT1, MT3, GRD, GRD],
+        [SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, SKY, MT2, GRD, GRD]
+    ];
 
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">materialCache</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="p">{};</span>
+    private static var materialCache:Object = {};
 
-    <span class="c1">// 指定したタイプのマテリアルを取得する。</span>
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">getMaterial</span><span class="p">(</span><span class="nx">mapType</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">MaterialObject3D</span><span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">materialCache</span><span class="p">[</span><span class="nx">mapType</span><span class="p">])</span> <span class="k">return</span> <span class="nx">materialCache</span><span class="p">[</span><span class="nx">mapType</span><span class="p">];</span>
+    // 指定したタイプのマテリアルを取得する。
+    public static function getMaterial(mapType:int):MaterialObject3D{
+        if (materialCache[mapType]) return materialCache[mapType];
 
-        <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-        <span class="nx">bmd</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">bmdIcons</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">mapType</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">());</span>
-        <span class="nx">materialCache</span><span class="p">[</span><span class="nx">mapType</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapMaterial</span><span class="p">(</span><span class="nx">bmd</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nx">materialCache</span><span class="p">[</span><span class="nx">mapType</span><span class="p">];</span>
-    <span class="p">}</span>
+        var bmd:BitmapData = new BitmapData(16, 16);
+        bmd.copyPixels(bmdIcons, new Rectangle(mapType * 16, 0, 16, 16), new Point());
+        materialCache[mapType] = new BitmapMaterial(bmd);
+        return materialCache[mapType];
+    }
 
-    <span class="c1">// scene にマップを追加する</span>
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">createMap</span><span class="p">(</span><span class="nx">scene</span><span class="o">:</span><span class="nx">DisplayObjectContainer3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">xx</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">xx</span> <span class="o">&lt;</span> <span class="nx">map</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">xx</span><span class="o">++</span><span class="p">){</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">yy</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">yy</span> <span class="o">&lt;</span> <span class="nx">map</span><span class="p">[</span><span class="nx">yy</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span> <span class="nx">yy</span><span class="o">++</span><span class="p">){</span>
-                <span class="kd">var</span> <span class="nx">material</span><span class="o">:</span><span class="nx">MaterialObject3D</span> <span class="o">=</span> <span class="nx">getMaterial</span><span class="p">(</span><span class="nx">map</span><span class="p">[</span><span class="nx">xx</span><span class="p">][</span><span class="nx">yy</span><span class="p">]);</span>
+    // scene にマップを追加する
+    public static function createMap(scene:DisplayObjectContainer3D):void{
+        for (var xx:int = 0; xx &lt; map.length; xx++){
+            for (var yy:int = 0; yy &lt; map[yy].length; yy++){
+                var material:MaterialObject3D = getMaterial(map[xx][yy]);
 
-                <span class="kd">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nx">DisplayObject3D</span><span class="p">;</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">map</span><span class="p">[</span><span class="nx">xx</span><span class="p">][</span><span class="nx">yy</span><span class="p">]</span> <span class="o">==</span> <span class="nx">GRD</span> <span class="o">||</span> <span class="nx">map</span><span class="p">[</span><span class="nx">xx</span><span class="p">][</span><span class="nx">yy</span><span class="p">]</span> <span class="o">==</span> <span class="nx">BLQ</span><span class="p">){</span>
-                    <span class="nx">obj</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="k">new</span> <span class="nx">MaterialsList</span><span class="p">({</span><span class="nx">all</span><span class="o">:</span> <span class="nx">material</span><span class="p">}),</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-                    <span class="nx">obj</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">8</span><span class="p">;</span>
-                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                    <span class="nx">obj</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Plane</span><span class="p">(</span><span class="nx">material</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-                    <span class="nx">obj</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-                <span class="p">}</span>
-                <span class="nx">obj</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">xx</span> <span class="o">*</span> <span class="mi">16</span> <span class="o">-</span> <span class="mi">8</span> <span class="o">-</span> <span class="mi">128</span><span class="p">;</span>
-                <span class="nx">obj</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="o">-</span><span class="nx">yy</span> <span class="o">*</span> <span class="mi">16</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">128</span><span class="p">;</span>
-                <span class="nx">scene</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+                var obj:DisplayObject3D;
+                if (map[xx][yy] == GRD || map[xx][yy] == BLQ){
+                    obj = new Cube(new MaterialsList({all: material}), 16, 16, 16);
+                    obj.z = -8;
+                } else {
+                    obj = new Plane(material, 16, 16);
+                    obj.z = 0;
+                }
+                obj.x = xx * 16 - 8 - 128;
+                obj.y = -yy * 16 + 8 + 128;
+                scene.addChild(obj);
+            }
+        }
+    }
 
-    <span class="c1">// BASE64 化解除</span>
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">base64ToBitmapData</span><span class="p">(</span><span class="nx">callback</span><span class="o">:</span><span class="nb">Function</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">decoder</span><span class="o">:</span><span class="nx">Base64Decoder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Base64Decoder</span><span class="p">();</span>
-        <span class="nx">decoder</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">Icons</span><span class="p">);</span>
+    // BASE64 化解除
+    public static function base64ToBitmapData(callback:Function):void{
+        var decoder:Base64Decoder = new Base64Decoder();
+        decoder.decode(Icons);
 
-        <span class="kd">var</span> <span class="nx">bytes</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">toByteArray</span><span class="p">();</span>
-        <span class="nx">bytes</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">loadBytes</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">bmdIcons</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
-            <span class="nx">bmdIcons</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-            <span class="nx">callback</span><span class="p">();</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        var bytes:ByteArray = decoder.toByteArray();
+        bytes.position = 0;
+        var loader:Loader = new Loader();
+        loader.loadBytes(bytes);
+        loader.contentLoaderInfo.addEventListener(&quot;complete&quot;, function(event:Event):void{
+            bmdIcons = new BitmapData(loader.width, loader.height);
+            bmdIcons.draw(loader);
+            callback();
+        });
+    }
+}</pre>
 
 </div>
 

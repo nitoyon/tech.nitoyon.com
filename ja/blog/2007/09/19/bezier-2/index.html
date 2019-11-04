@@ -108,70 +108,69 @@
 <ol><li><a href="/ja/blog/2007/09/18/bezier-1/">ベジエ曲線の仕組み (1) - 昔話</a></li><li><a href="/ja/blog/2007/09/19/bezier-2/">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a></li><li><a href="/ja/blog/2007/09/20/bezier-3/">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a></li><li><a href="/ja/blog/2007/09/21/bezier-4/">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a></li></ol>
 <h1>おまけ</h1>
 <p>上の Flash のソースコードです。初めて Tweener を使ってみました。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">caurina</span><span class="p">.</span><span class="nx">transitions</span><span class="p">.</span><span class="nx">Tweener</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.Sprite;
+    import flash.geom.Point;
+    import caurina.transitions.Tweener;
     
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">BezierTest2</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">flag</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dot</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+    public class BezierTest2 extends Sprite
+    {
+        private var SIZE:int = 300;
+        private var t:Number = 0.0;
+        private var p:Point = new Point();
+        private var flag:Boolean = true;
+        private var dot:Sprite;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BezierTest2</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">dot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">);</span>
-            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
-            <span class="nx">dot</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">dot</span><span class="p">);</span>
+        public function BezierTest2()
+        {
+            dot = new Sprite();
+            dot.graphics.beginFill(0x000000);
+            dot.graphics.drawCircle(0, 0, 3);
+            dot.graphics.endFill();
+            addChild(dot);
 
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">drawLines</span><span class="p">()});</span>
-        <span class="p">}</span>
+            addEventListener(&quot;enterFrame&quot;, function(event:*):void{drawLines()});
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">drawLines</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        public function drawLines():void
+        {
+            graphics.clear();
 
-            <span class="kd">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">pt3</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">getInnerPoint</span><span class="p">(</span><span class="nx">pt1</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+            var pt1:Point = new Point(0, t * SIZE);
+            var pt2:Point = new Point(t * SIZE, SIZE);
+            var pt3:Point = getInnerPoint(pt1, pt2, t);
 
-            <span class="nx">dot</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span> <span class="nx">dot</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+            dot.x = pt3.x; dot.y = pt3.y;
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xcccccc</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">pt1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            graphics.lineStyle(1, 0xcccccc);
+            graphics.moveTo(pt1.x, pt1.y);
+            graphics.lineTo(pt2.x, pt2.y);
 
-            <span class="kd">var</span> <span class="nx">line</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x0099ff</span><span class="p">);</span>
-            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt3</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">addChildAt</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            var line:Sprite = new Sprite();
+            line.graphics.lineStyle(1, 0x0099ff);
+            line.graphics.moveTo(p.x, p.y);
+            line.graphics.lineTo(pt3.x, pt3.y);
+            addChildAt(line, 0);
 
-            <span class="nx">Tweener</span><span class="p">.</span><span class="nx">addTween</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span>
-            <span class="p">{</span>
-                <span class="nx">alpha</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> 
-                <span class="nx">time</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> 
-                <span class="nx">onComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">line</span><span class="p">);}</span>
-            <span class="p">});</span>
+            Tweener.addTween(line,
+            {
+                alpha: 0, 
+                time: 3, 
+                onComplete: function():void{removeChild(line);}
+            });
 
-            <span class="nx">p</span> <span class="o">=</span> <span class="nx">pt3</span><span class="p">;</span>
-            <span class="nx">t</span> <span class="o">=</span> <span class="p">(</span><span class="nx">flag</span> <span class="o">?</span> <span class="nx">t</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">:</span> <span class="nx">t</span> <span class="o">-</span> <span class="mf">0.02</span><span class="p">);</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">t</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">||</span> <span class="nx">t</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="nx">flag</span> <span class="o">=</span> <span class="o">!</span><span class="nx">flag</span><span class="p">;</span>
-        <span class="p">}</span>
+            p = pt3;
+            t = (flag ? t + 0.02 : t - 0.02);
+            if(t &gt;= 1.0 || t &lt;= 0) flag = !flag;
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getInnerPoint</span><span class="p">(</span><span class="nx">p0</span><span class="o">:*</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:*</span><span class="p">,</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">+</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">t</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">+</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">t</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private function getInnerPoint(p0:*, p1:*, t:Number):Point
+        {
+            return new Point(p0.x * (1 - t) + p1.x * t, p0.y * (1 - t) + p1.y * t);
+        }
+    }
+}</pre>
 </section>
 
 </div>

@@ -68,39 +68,37 @@
 <h1>やってること</h1>
 <ol><li>TextField を表示</li><li>TextField に <code>GlowFilter</code> で縁取りを作成し、<code>GlowFilter</code> をもう１度適用して２重に縁取りする</li></ol>
 <p><code>filters</code> プロパティには複数のフィルタを配列の形で指定できる。今回は次のように <code>GlowFilter</code> を２回適用している。</p>
-<div class="highlight"><pre><span class="nx">text</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                <span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0x0000ff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">)];</span>
-</pre></div>
+<pre class="javascript">text.filters = [new GlowFilter(0xffffff, 1, 8, 8, 16, 1),
+                new GlowFilter(0x0000ff, 1, 8, 8, 16, 1)];</pre>
 <p>１つ目のフィルタ（白）を適用した結果に、２つ目（青）を適用している。</p>
 <p>詳しくは <a href="/ja/blog/2009/09/08/easy-open-face/">GlowFilter で簡単袋文字</a> 参照あれ。</p>
 <h1>まとめ</h1>
 <p><code>filters</code> を繰り返し利用することで、さらに凝った効果を簡単に試せる。</p>
 <p>以下、ソースコード（24行）。</p>
-<div class="highlight"><pre><span class="c1">// GlowFilter で２重簡単袋文字</span>
-<span class="kr">package</span><span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<pre class="javascript">// GlowFilter で２重簡単袋文字
+package{
+import flash.display.Sprite;
+import flash.filters.GlowFilter;
+import flash.text.TextField;
 
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">EasyOpenFaceWithGlowFilter3</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">EasyOpenFaceWithGlowFilter3</span><span class="p">(){</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+public class EasyOpenFaceWithGlowFilter3 extends Sprite{
+    public function EasyOpenFaceWithGlowFilter3(){
+        stage.align = &quot;TL&quot;;
+        stage.scaleMode = &quot;noScale&quot;;
 
-        <span class="c1">// Show original text (input)</span>
-        <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;50&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#ff0000&quot;</span><span class="o">&gt;</span><span class="nx">HELLO</span> <span class="nx">WORLD</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+        // Show original text (input)
+        var text:TextField = new TextField();
+        text.autoSize = &quot;left&quot;;
+        text.type = &quot;input&quot;;
+        text.htmlText = &lt;font size=&quot;50&quot; color=&quot;#ff0000&quot;&gt;HELLO WORLD&lt;/font&gt;.toXMLString();
+        addChild(text);
 
-        <span class="c1">// Glow it</span>
-        <span class="nx">text</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                        <span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0x0000ff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">)];</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // Glow it
+        text.filters = [new GlowFilter(0xffffff, 1, 8, 8, 16, 1),
+                        new GlowFilter(0x0000ff, 1, 8, 8, 16, 1)];
+    }
+}
+}</pre>
 </section>
 
 </div>

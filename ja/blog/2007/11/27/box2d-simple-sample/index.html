@@ -70,51 +70,43 @@
 <h1>1. 世界の作成</h1>
 <p>シミュレーションを行うための世界を作成する。</p>
 <p>worldAABB というのは衝突判定のパラメータの模様。<a href="http://www.box2d.org/manual.html">Box2D User Manual</a> によるとあまり重要ではないパラメータらしい。お約束というところか。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
-<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
-<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var worldAABB:b2AABB = new b2AABB();
+worldAABB.minVertex.Set(-100.0, -100.0);
+worldAABB.maxVertex.Set(100.0, 100.0);</pre>
 <p>次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);</pre>
 <p>で、生成。第3パラメータは doSleep。詳細未調査。</p>
-<div class="highlight"><pre><span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">m_world = new b2World(worldAABB, gravity, true);</pre>
 <h1>2. 床の作成</h1>
 <p>まずは、床をあらわす Shape の定義を作る。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-<span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-<span class="nx">wallSd</span><span class="p">.</span><span class="nx">localRotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
-</pre></div>
+<pre class="javascript">var wallSd:b2BoxDef = new b2BoxDef();
+wallSd.extents.Set(300 / m_physScale / 2, 10 / m_physScale);
+wallSd.localRotation = Math.random() * Math.PI / 8;</pre>
 <p>300×10 の四角形で、傾きはランダムに定める。</p>
 <p>この Shape を Body に入れる。Body は複数の Shape を格納できるグループのようなもの。たとえ１つの Shape であっても、Body に追加しなければ、Box2d の world には配置できない。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-<span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-<span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var wallBd:b2BodyDef = new b2BodyDef();
+wallBd.position.Set(300 / m_physScale / 2, 250 / m_physScale);
+wallBd.AddShape(wallSd);</pre>
 <p>これで、Body の定義ができた。定義を作っただけでは何も配置されない。CreateBody を使って実体を生成する。</p>
-<div class="highlight"><pre><span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">m_world.CreateBody(wallBd);</pre>
 <p>定義はクラスのようなものと考えると分かりやすいかもしれない。CreateBody でインスタンスを作成するわけだ。</p>
 <h1>3. 積み木の作成</h1>
 <p>同じようにして積み木を作成していく。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-<span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
+<pre class="javascript">var sd:b2BoxDef = new b2BoxDef();
+sd.density = 1;
+sd.friction = 0.2;
 
-<span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-<span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-    <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">160</span> <span class="o">-</span> <span class="mi">40</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-    <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+var bd:b2BodyDef = new b2BodyDef();
+bd.AddShape(sd);
+for (var i:int = 0; i &lt; 10; i++) {
+    sd.extents.Set(30 / m_physScale, 10 / m_physScale);
+    bd.position.Set(100 / m_physScale, (160 - 40 - i * 20) / m_physScale);
+    m_world.CreateBody(bd);
+}</pre>
 <dl><dt>density</dt><dd>0 以外に設定すると、固定されない（自由落下する）ようになる。</dd><dt>friction</dt><dd>摩擦ぐあいを表すパラメータ。0だとよく滑る。</dd><dt>restitution</dt><dd>はね返り具合。</dd></dl>
 <h1>4. シミュレーションの開始</h1>
 <p>enterFrame の中で次の関数を実行する。</p>
-<div class="highlight"><pre><span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">m_world.Step(1 / 30, 10);</pre>
 <ul><li>第一引数（timeStep）は１回のステップで進める秒数。</li><li>第二引数（iterations）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）</li></ul>
 <h1>5. 描画</h1>
 <p>Box2dFlashAS3 は、もともとが C++ のコードなだけに、描画処理が含まれていない。</p>
@@ -124,113 +116,112 @@
 <h1>ソース</h1>
 <p>106行ありますよ。ダウンロードは<a href="http://tech.nitoyon.com/misc/swf/Box2dSimpleSample.as">こちらから</a>。</p>
 <p>(追記)1.4.3 では、import Engine を import Box2d に変更すれば動きます。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Dynamics</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="nx">Shapes</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">Engine</span><span class="p">.</span><span class="nx">Common</span><span class="p">.</span><span class="nb">Math</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<pre class="javascript">package {
+    import Engine.Dynamics.*;
+    import Engine.Collision.*;
+    import Engine.Collision.Shapes.*;
+    import Engine.Common.Math.*;
+    import flash.events.Event
+    import flash.display.*;
+    import flash.text.TextField;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;350&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Box2dSimpleSample</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_world</span><span class="o">:</span><span class="nx">b2World</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">m_physScale</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// loop counter</span>
+    [SWF(backgroundColor=&quot;#ffffff&quot;, width=&quot;350&quot;, height=&quot;200&quot;)]
+    public class Box2dSimpleSample extends Sprite {
+        private var m_world:b2World;
+        private var m_physScale:Number = 10;
+        private var count:int = 0;  // loop counter
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Box2dSimpleSample</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function Box2dSimpleSample() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;CLICK TO START!!!&quot;</span><span class="p">;</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+            var text:TextField = new TextField();
+            text.text = &quot;CLICK TO START!!!&quot;;
+            text.x = text.y = 100;
+            addChild(text);
 
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">text</span><span class="p">.</span><span class="nx">visible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-                <span class="nx">init</span><span class="p">();</span>
-            <span class="p">});</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">Update</span><span class="p">();</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            stage.addEventListener(&quot;click&quot;, function(event:Event):void {
+                text.visible = false;
+                init();
+            });
+            addEventListener(&quot;enterFrame&quot;, function(event:Event):void {
+                Update();
+            });
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        private function init():void {
+            count = 0;
 
-            <span class="c1">// Construct a world object</span>
-            <span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
-            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">minVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
-            <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">maxVertex</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
-            <span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+            // Construct a world object
+            var worldAABB:b2AABB = new b2AABB();
+            worldAABB.minVertex.Set(-100.0, -100.0);
+            worldAABB.maxVertex.Set(100.0, 100.0);
+            var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
+            m_world = new b2World(worldAABB, gravity, true);
 
-            <span class="c1">// Create floor</span>
-            <span class="kd">var</span> <span class="nx">wallSd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-            <span class="nx">wallSd</span><span class="p">.</span><span class="nx">localRotation</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">300</span> <span class="o">/</span> <span class="nx">m_physScale</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">250</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-            <span class="nx">wallBd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">wallSd</span><span class="p">);</span>
-            <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBd</span><span class="p">);</span>
+            // Create floor
+            var wallSd:b2BoxDef = new b2BoxDef();
+            wallSd.extents.Set(300 / m_physScale / 2, 10 / m_physScale);
+            wallSd.localRotation = Math.random() * Math.PI / 8;
+            var wallBd:b2BodyDef = new b2BodyDef();
+            wallBd.position.Set(300 / m_physScale / 2, 250 / m_physScale);
+            wallBd.AddShape(wallSd);
+            m_world.CreateBody(wallBd);
 
-            <span class="c1">// Add bodies</span>
-            <span class="kd">var</span> <span class="nx">sd</span><span class="o">:</span><span class="nx">b2BoxDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BoxDef</span><span class="p">();</span>
-            <span class="nx">sd</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-            <span class="nx">sd</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">bd</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-            <span class="nx">bd</span><span class="p">.</span><span class="nx">AddShape</span><span class="p">(</span><span class="nx">sd</span><span class="p">);</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">sd</span><span class="p">.</span><span class="nx">extents</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-                <span class="nx">bd</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="p">(</span><span class="mi">160</span> <span class="o">-</span> <span class="mi">40</span> <span class="o">-</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span> <span class="o">/</span> <span class="nx">m_physScale</span><span class="p">);</span>
-                <span class="nx">m_world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">bd</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // Add bodies
+            var sd:b2BoxDef = new b2BoxDef();
+            sd.density = 1;
+            sd.friction = 0.2;
+            var bd:b2BodyDef = new b2BodyDef();
+            bd.AddShape(sd);
+            for (var i:int = 0; i &lt; 10; i++) {
+                sd.extents.Set(30 / m_physScale, 10 / m_physScale);
+                bd.position.Set(100 / m_physScale, (160 - 40 - i * 20) / m_physScale);
+                m_world.CreateBody(bd);
+            }
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Update</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">m_world</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">return</span><span class="p">;</span>
-            <span class="p">}</span>
+        public function Update():void {
+            if(!m_world) {
+                return;
+            }
 
-            <span class="c1">// Update physics</span>
-            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">init</span><span class="p">();</span>
-            <span class="p">}</span>
-            <span class="nx">m_world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            // Update physics
+            count++;
+            if(count &gt; 300) {
+                init();
+            }
+            m_world.Step(1 / 30, 10);
 
-            <span class="c1">// Render</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">bb</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">m_world</span><span class="p">.</span><span class="nx">m_bodyList</span><span class="p">;</span> <span class="nx">bb</span><span class="p">;</span> <span class="nx">bb</span> <span class="o">=</span> <span class="nx">bb</span><span class="p">.</span><span class="nx">m_next</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">b2Shape</span> <span class="o">=</span> <span class="nx">bb</span><span class="p">.</span><span class="nx">GetShapeList</span><span class="p">();</span> <span class="nx">s</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">;</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">GetNext</span><span class="p">())</span> <span class="p">{</span>
-                    <span class="nx">DrawShape</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // Render
+            graphics.clear();
+            for (var bb:b2Body = m_world.m_bodyList; bb; bb = bb.m_next) {
+                for (var s:b2Shape = bb.GetShapeList(); s != null; s = s.GetNext()) {
+                    DrawShape(s);
+                }
+            }
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">DrawShape</span><span class="p">(</span><span class="nx">shape</span><span class="o">:</span><span class="nx">b2Shape</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">shape</span><span class="p">.</span><span class="nx">m_type</span> <span class="o">==</span> <span class="nx">b2Shape</span><span class="p">.</span><span class="nx">e_polyShape</span><span class="p">)</span> <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">poly</span><span class="o">:</span><span class="nx">b2PolyShape</span> <span class="o">=</span> <span class="nx">shape</span> <span class="nx">as</span> <span class="nx">b2PolyShape</span><span class="p">;</span>
-                <span class="kd">var</span> <span class="nx">tV</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">AddVV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_position</span><span class="p">,</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">b2MulMV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_R</span><span class="p">,</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
+        public function DrawShape(shape:b2Shape):void {
+            if(shape.m_type == b2Shape.e_polyShape) {
+                var poly:b2PolyShape = shape as b2PolyShape;
+                var tV:b2Vec2 = b2Math.AddVV(poly.m_position, b2Math.b2MulMV(poly.m_R, poly.m_vertices[i]));
 
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x999999</span><span class="p">,</span> <span class="nx">count</span> <span class="o">&gt;</span> <span class="mi">290</span> <span class="o">?</span> <span class="p">(</span><span class="mi">300</span> <span class="o">-</span> <span class="nx">count</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10.0</span> <span class="o">:</span> <span class="mi">1</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mh">0xffffff</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">tV</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">tV</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                graphics.beginFill(0x999999, count &gt; 290 ? (300 - count) / 10.0 : 1);
+                graphics.lineStyle(1,0xffffff,1);
+                graphics.moveTo(tV.x * m_physScale, tV.y * m_physScale);
 
-                <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertexCount</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">v</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">AddVV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_position</span><span class="p">,</span> <span class="nx">b2Math</span><span class="p">.</span><span class="nx">b2MulMV</span><span class="p">(</span><span class="nx">poly</span><span class="p">.</span><span class="nx">m_R</span><span class="p">,</span> <span class="nx">poly</span><span class="p">.</span><span class="nx">m_vertices</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
-                    <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">tV</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">,</span> <span class="nx">tV</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">m_physScale</span><span class="p">);</span>
+                for (var i:int = 0; i &lt; poly.m_vertexCount; ++i) {
+                    var v:b2Vec2 = b2Math.AddVV(poly.m_position, b2Math.b2MulMV(poly.m_R, poly.m_vertices[i]));
+                    graphics.lineTo(v.x * m_physScale, v.y * m_physScale);
+                }
+                graphics.lineTo(tV.x * m_physScale, tV.y * m_physScale);
 
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+                graphics.endFill();
+            }
+        }
+    }
+}</pre>
 </section>
 
 </div>

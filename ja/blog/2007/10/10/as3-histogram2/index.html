@@ -68,104 +68,103 @@
 <p>例えば、mouseDown イベントのときは、マウスから一番近いつまみをドラッグするために、各つまみからの距離を計算しています。また、ドラッグ可能範囲を両端もしくは左右のつまみの間に制限しています。完全に重なってしまわないように、少し間を空けるようにもしています。ドラッグ可能範囲は、Sprite.startDrag メソッドの第２引数 bounds:Rectangle で指定しています。mouseMove イベントでは、両端のつまみ位置に応じて真ん中のつまみを調整しています。</p>
 <p>説明するだけでややこしいので、興味がある人はソースを見てください。</p>
 <p>ソースは以下に(97行)。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.Sprite;
+    import flash.geom.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;280&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;20&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Histogram2</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2pos</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h1</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h3</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+    [SWF(width=&quot;280&quot;, height=&quot;20&quot;)]
+    public class Histogram2 extends Sprite {
+        private var dragging:Sprite;
+        private var h2pos:Number = 0.5;
+        private var h1:Sprite;
+        private var h2:Sprite;
+        private var h3:Sprite;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Histogram2</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">createSlider</span><span class="p">()).</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-        <span class="p">}</span>
+        public function Histogram2() {
+            addChild(createSlider()).x = 10;
+        }
 
-        <span class="c1">// スライダーを作成する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createSlider</span><span class="p">()</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
-            <span class="c1">// スライド可能範囲描画</span>
-            <span class="kd">var</span> <span class="nx">slider</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">useHandCursor</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        // スライダーを作成する
+        private function createSlider():Sprite {
+            // スライド可能範囲描画
+            var slider:Sprite = new Sprite();
+            slider.graphics.beginFill(0xffffff);
+            slider.graphics.drawRect(0, 0, 256, 10);
+            slider.graphics.endFill();
+            slider.graphics.lineStyle(1, 0);
+            slider.graphics.lineTo(255, 0);
+            slider.buttonMode = true;
+            slider.useHandCursor = true;
 
-            <span class="c1">// つまみ作成</span>
-            <span class="nx">h1</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">)));</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">h2</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x999999</span><span class="p">)));</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">128</span><span class="p">;</span>
-            <span class="nx">h3</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">)));</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+            // つまみ作成
+            h1 = Sprite(slider.addChild(createButton(0xffffff))); h1.x = 0;
+            h2 = Sprite(slider.addChild(createButton(0x999999))); h2.x = 128;
+            h3 = Sprite(slider.addChild(createButton(0x000000))); h3.x = 255;
 
-            <span class="c1">// mouseDown</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">localX</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">slider</span><span class="p">.</span><span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">)).</span><span class="nx">x</span><span class="p">;</span>
+            // mouseDown
+            slider.addEventListener(&quot;mouseDown&quot;, function(e:*):void {
+                var localX:Number = slider.globalToLocal(new Point(mouseX, mouseY)).x;
 
-                <span class="c1">// ドラッグするつまみを決定する</span>
-                <span class="kd">var</span> <span class="nx">d1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">d2</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">d3</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">d1</span><span class="p">,</span> <span class="nx">d2</span><span class="p">,</span> <span class="nx">d3</span><span class="p">);</span>
-                <span class="nx">dragging</span> <span class="o">=</span> <span class="p">(</span><span class="nx">max</span> <span class="o">==</span> <span class="nx">d1</span> <span class="o">?</span> <span class="nx">h1</span> <span class="o">:</span> <span class="nx">max</span> <span class="o">==</span> <span class="nx">d2</span> <span class="o">?</span> <span class="nx">h2</span> <span class="o">:</span> <span class="nx">h3</span><span class="p">);</span>
+                // ドラッグするつまみを決定する
+                var d1:Number = Math.abs(localX - h1.x);
+                var d2:Number = Math.abs(localX - h2.x);
+                var d3:Number = Math.abs(localX - h3.x);
+                var max:Number = Math.min(d1, d2, d3);
+                dragging = (max == d1 ? h1 : max == d2 ? h2 : h3);
 
-                <span class="c1">// 場所補正</span>
-                <span class="kd">var</span> <span class="nx">bounds</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">dragging</span><span class="p">);</span>
-                <span class="nx">dragging</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">right</span><span class="p">),</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="nx">updateH2</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+                // 場所補正
+                var bounds:Rectangle = getDraggableBounds(dragging);
+                dragging.x = Math.max(Math.min(localX, bounds.right), bounds.x);
+                updateH2(null);
 
-                <span class="nx">dragging</span><span class="p">.</span><span class="nx">startDrag</span><span class="p">(</span><span class="kc">false</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">);</span>
-            <span class="p">});</span>
+                dragging.startDrag(false, bounds);
+            });
 
-            <span class="c1">// mouseMove</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">updateH2</span><span class="p">);</span>
+            // mouseMove
+            stage.addEventListener(&quot;mouseMove&quot;, updateH2);
 
-            <span class="c1">// mouseUp</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">dragging</span><span class="p">.</span><span class="nx">stopDrag</span><span class="p">();</span>
-                    <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
+            // mouseUp
+            stage.addEventListener(&quot;mouseUp&quot;, function(e:*):void {
+                if(dragging) {
+                    dragging.stopDrag();
+                    dragging = null;
+                }
+            });
 
-            <span class="k">return</span> <span class="nx">slider</span><span class="p">;</span>
-        <span class="p">}</span>
+            return slider;
+        }
 
-        <span class="c1">// つまみを描画する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createButton</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="k">return</span> <span class="nx">s</span><span class="p">;</span>
-        <span class="p">}</span>
+        // つまみを描画する
+        private function createButton(color:int):Sprite {
+            var s:Sprite = new Sprite();
+            s.graphics.lineStyle(1, 0);
+            s.graphics.beginFill(color);
+            s.graphics.lineTo(5, 8.6);
+            s.graphics.lineTo(-5, 8.6);
+            s.graphics.endFill();
+            return s;
+        }
 
-        <span class="c1">// つまみの移動可能範囲を計算する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h1</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h3</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
-        <span class="p">}</span>
+        // つまみの移動可能範囲を計算する
+        private function getDraggableBounds(s:Sprite):Rectangle {
+            if(s == h1) return new Rectangle(0, 0, h3.x - 4, 0);
+            if(s == h2) return new Rectangle(h1.x + 2, 0, h3.x - h1.x - 4, 0);
+            if(s == h3) return new Rectangle(h1.x + 4, 0, 255 - h1.x - 4, 0);
+            return null;
+        }
 
-        <span class="c1">// 真ん中のつまみの位置を計算する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateH2</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">&amp;&amp;</span> <span class="nx">dragging</span> <span class="o">!=</span> <span class="nx">h2</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">*</span> <span class="nx">h2pos</span> <span class="o">+</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">){</span>
-                <span class="nx">h2pos</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // 真ん中のつまみの位置を計算する
+        private function updateH2(e:*):void {
+            if(dragging &amp;&amp; dragging != h2) {
+                h2.x = (h3.x - h1.x) * h2pos + h1.x;
+                h2.x = Math.max(Math.min(h2.x, h3.x - 2), h1.x + 2);
+            }
+            else if(dragging == h2){
+                h2pos = (h2.x - h1.x) / (h3.x - h1.x);
+            }
+        }
+    }
+}</pre>
 
 </div>
 

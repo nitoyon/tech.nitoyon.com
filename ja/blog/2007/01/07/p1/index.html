@@ -62,54 +62,51 @@
 <section>
 <p>Sprite を継承したクラスのコンストラクタから、stage プロパティを参照するときの注意点。</p>
 <p>次のような Test.as を単体でコンパイルして SWF を生成すると問題なく動きます。</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<pre class="javascript">package{
+    import flash.display.Sprite;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">stageWidth</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    public class Test extends Sprite
+    {
+        public function Test()
+        {
+            trace(stage.stageWidth);
+        }
+    }
+}</pre>
 <p>ところが、Test.as を別のクラスから作成すると実行時エラーとなってしまいます。</p>
-<div class="highlight"><pre>    <span class="kd">function</span> <span class="nx">foo</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="c1">// !!! Error !!!: stage is null</span>
-        <span class="kd">var</span> <span class="nx">test</span><span class="o">:</span><span class="nx">Test</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Test</span><span class="p">();</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="javascript">    function foo():void
+    {
+        // !!! Error !!!: stage is null
+        var test:Test = new Test();
+    }</pre>
 <p>理由は単純。別のクラスから test インスタンスが作成された段階では、test インスタンスはステージ上に存在しないため、stage プロパティは null が返されるのです。</p>
 <p>stage プロパティが null でなくなるのは、test インスタンスが addChild されてステージ上に現れた後になります。</p>
 <p>そこで、次のように addChild されたときに通知を受けられるよう、Test.as を書き換えれば、無事問題は解決します。</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
+<pre class="javascript">package{
+    import flash.display.Sprite;
+    import flash.events.Event;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">stage</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">trace</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">stageWidth</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">else</span>
-            <span class="p">{</span>
-                <span class="nx">addEventListener</span><span class="p">(</span><span class="nx">Event</span><span class="p">.</span><span class="nx">ADDED</span><span class="p">,</span> <span class="nx">addedHandler</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+    public class Test extends Sprite
+    {
+        public function Test()
+        {
+            if(stage)
+            {
+                trace(stage.stageWidth);
+            }
+            else
+            {
+                addEventListener(Event.ADDED, addedHandler);
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">addedHandler</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="nx">Event</span><span class="p">.</span><span class="nx">ADDED</span><span class="p">,</span> <span class="nx">addedHandler</span><span class="p">);</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">stageWidth</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private function addedHandler(e:Event):void
+        {
+            removeEventListener(Event.ADDED, addedHandler);
+            trace(stage.stageWidth);
+        }
+    }
+}</pre>
 <p>root や parent を取得する場合も、このテクニックが使えますね。</p>
 <p>頻繁に追加・削除される表示オブジェクトの場合には、この Event.ADDED および Event.REMOVED のお世話になりそうです。</p>
 <p>Flex の場合は、UIComponent の mx.events.FlexEvent.ADD イベントをハンドルしたほうがいいのかもしれません。 このへんはよく分かってないので、コメントいただければ幸い...</p>

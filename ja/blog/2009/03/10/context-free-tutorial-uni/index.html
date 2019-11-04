@@ -67,89 +67,82 @@
 <p>まずは基本となる図形を描画する。こんなやつ。</p>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195149.png"></p>
 <p>ソースコードは次のようなもの。</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">LINE</span>   <span class="c1">// LINE というルールを描画しろ</span>
+<pre class="cpp">startshape LINE   // LINE というルールを描画しろ
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>       <span class="c1">// ルール LINE の定義</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+rule LINE {       // ルール LINE の定義
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+}</pre>
 <p>１行目の <code>startshepe LINE</code> では、「<code>LINE</code> というルールを描画しろ」と指定してる。</p>
 <p>じゃあ、<code>LINE</code> ルールはどうなってるかというと３行目で定義している。</p>
 <p><code>LINE</code> ルールでは <code>CIRCLE</code> を１つ描画する。<code>CIRCLE</code> は Context Free で定義されている円を描画するルールだ。ルールにいくつか追加のパラメータを渡している。詳しく説明するとこうなる。</p>
-<div class="highlight"><pre><span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span>    <span class="c1">// 以下の条件で円を描く</span>
-        <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>   <span class="c1">// 倍率を横を6倍、縦を1倍に設定</span>
-        <span class="n">x</span> <span class="mi">3</span>     <span class="c1">// 表示する X 座標を 3 増やす</span>
-        <span class="n">sat</span> <span class="mi">1</span>   <span class="c1">// HSB の S（彩度）を 100% にする</span>
-        <span class="n">b</span> <span class="mf">.3</span>    <span class="c1">// HSB の B（明度）を 3 割増やす</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="cpp">rule LINE {
+    CIRCLE {    // 以下の条件で円を描く
+        s 6 1   // 倍率を横を6倍、縦を1倍に設定
+        x 3     // 表示する X 座標を 3 増やす
+        sat 1   // HSB の S（彩度）を 100% にする
+        b .3    // HSB の B（明度）を 3 割増やす
+    }
+}</pre>
 <h1>2. 白抜きにする</h1>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195150.png"></p>
 <p>白い円を小さめに描画して白抜きにした。</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">LINE</span>
+<pre class="cpp">startshape LINE
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">5</span> <span class="mf">.2</span> <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">0</span> <span class="n">b</span> <span class="mi">1</span> <span class="p">}</span> <span class="c1">// ← ここを追加</span>
-<span class="p">}</span>
-</pre></div>
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 } // ← ここを追加
+}</pre>
 <h1>3. 再帰呼び出しで列挙</h1>
 <p>ここからが面白い。１行追加するだけで劇的に見た目が変わる。触角みたい…。</p>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195151.png"></p>
 <p>正体は再帰呼び出し。LINE の中で LINE を定義してる。</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">LINE</span>
+<pre class="cpp">startshape LINE
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">5</span> <span class="mf">.2</span> <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">0</span> <span class="n">b</span> <span class="mi">1</span> <span class="p">}</span>
-    <span class="n">LINE</span>   <span class="p">{</span> <span class="n">s</span> <span class="mf">.9</span>   <span class="n">x</span> <span class="mi">3</span> <span class="n">r</span> <span class="mi">10</span> <span class="n">a</span> <span class="o">-</span><span class="mf">.1</span><span class="p">}</span>  <span class="c1">// ←ここを追加</span>
-<span class="p">}</span>
-</pre></div>
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}  // ←ここを追加
+}</pre>
 <p>もうちょっと詳しく説明するとこうなる。右側に少し小さい LINE を回転させながら配置していってる。</p>
-<div class="highlight"><pre>    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">5</span> <span class="mf">.2</span> <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">0</span> <span class="n">b</span> <span class="mi">1</span> <span class="p">}</span>
-    <span class="n">LINE</span> <span class="p">{</span>     <span class="c1">// LINE を以下の条件で表示する</span>
-        <span class="n">s</span> <span class="mf">.9</span>   <span class="c1">// 表示倍率を90%にする</span>
-        <span class="n">x</span> <span class="mi">3</span>    <span class="c1">// 右に 3 移動する</span>
-        <span class="n">r</span> <span class="mi">10</span>   <span class="c1">// 10°回転する</span>
-        <span class="n">a</span> <span class="o">-</span><span class="mf">.1</span>  <span class="c1">// 透明度を 10% 減らす</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="cpp">    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE {     // LINE を以下の条件で表示する
+        s .9   // 表示倍率を90%にする
+        x 3    // 右に 3 移動する
+        r 10   // 10°回転する
+        a -.1  // 透明度を 10% 減らす
+    }</pre>
 <p>無限再帰呼び出しになってるんだけど、描画する図形がどんどん小さくなるので、サイズが見えないぐらいに小さくなった時点で描画が止まってくれるようだ。</p>
 <h1>4. うねうねさせる</h1>
 <p>LINE に新たなルールを追加してみる。</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">LINE</span>
+<pre class="cpp">startshape LINE
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">5</span> <span class="mf">.2</span> <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">0</span> <span class="n">b</span> <span class="mi">1</span> <span class="p">}</span>
-    <span class="n">LINE</span>   <span class="p">{</span> <span class="n">s</span> <span class="mf">.9</span>   <span class="n">x</span> <span class="mi">3</span> <span class="n">r</span> <span class="mi">10</span> <span class="n">a</span> <span class="o">-</span><span class="mf">.1</span><span class="p">}</span>
-<span class="p">}</span>
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}
+}
 
-<span class="c1">// ↓ここを追加</span>
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">flip</span> <span class="mi">180</span> <span class="p">}</span>  <span class="c1">// flip 180 した上で LINE を表示</span>
-<span class="p">}</span>
-</pre></div>
+// ↓ここを追加
+rule LINE {
+    LINE { flip 180 }  // flip 180 した上で LINE を表示
+}</pre>
 <p>LINE のルールを２つ書いた。同じ名前が２つあると、どちらかのルールが等確率で選ばれる。</p>
 <p>flip というのは180度反転するということ。つまり、1/2 の確率で曲がる方向が反転する。</p>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195152.png"></p>
 <h1>5. 枝を作る</h1>
 <p>時々、枝分かれするようにしてみる。次のルールを追加する。</p>
-<div class="highlight"><pre><span class="c1">// 0.3 の割合で選択される</span>
-<span class="n">rule</span> <span class="n">LINE</span> <span class="mf">.3</span><span class="p">{</span>
-    <span class="c1">// そのまま続ける</span>
-    <span class="n">LINE</span> <span class="p">{}</span>
+<pre class="cpp">// 0.3 の割合で選択される
+rule LINE .3{
+    // そのまま続ける
+    LINE {}
 
-    <span class="c1">//  30°回転させて 5割の大きさで LINE を描く</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">r</span>  <span class="mi">30</span>  <span class="n">s</span> <span class="mf">.5</span> <span class="p">}</span>
+    //  30°回転させて 5割の大きさで LINE を描く
+    LINE { r  30  s .5 }
 
-    <span class="c1">// -30°回転させて 5割の大きさで LINE を描く</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">r</span> <span class="o">-</span><span class="mi">30</span>  <span class="n">s</span> <span class="mf">.5</span> <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    // -30°回転させて 5割の大きさで LINE を描く
+    LINE { r -30  s .5 }
+}</pre>
 <p>0.3 の割合でこの枝分かれルールが選択される。こんな感じになる。</p>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195153.png"></p>
 <p>枝がでてきた！　木を描くときも同じようなソースになる。</p>
@@ -160,50 +153,47 @@
 <p>今までは１本だけ描いてたけど、これを大量生産する。</p>
 <p><img src="http://img.f.hatena.ne.jp/images/fotolife/n/nitoyon/20090308/20090308195155.png"></p>
 <p>START というルールを新たに定義して、<code>startshape</code> も START に変更する。</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">START</span>
+<pre class="cpp">startshape START
 
-<span class="n">rule</span> <span class="n">START</span><span class="p">{</span>
-    <span class="mi">60</span> <span class="o">*</span> <span class="p">{</span> <span class="n">r</span> <span class="mi">6</span> <span class="n">hue</span> <span class="mi">6</span><span class="p">}</span> <span class="n">LINE</span> <span class="p">{}</span>
-<span class="p">}</span>
-</pre></div>
+rule START{
+    60 * { r 6 hue 6} LINE {}
+}</pre>
 <p><code>START</code> ルールでは <code>60 * {} LINE {}</code> という文法で 60 個の LINE を生産している。</p>
 <p>１つ目の {} の中がポイント。<code>r 6 hue 6</code> は 6°ずつ回転、hue（色相）を 6°増やす、という意味。つまり、少しずつ回転させて、色を変えながら LINE を60回描画している。</p>
 <h1>7. 長さをばらつかせる</h1>
 <p>ちょっと長さにばらつきを持たせたかったので、まれに枝が元気なくなるようにさせた。</p>
-<div class="highlight"><pre><span class="n">rule</span> <span class="n">LINE</span> <span class="mf">.1</span><span class="p">{</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">s</span> <span class="mf">.7</span> <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="cpp">rule LINE .1{
+    LINE { s .7 }
+}</pre>
 <h1>おわり</h1>
 <p>これで終わり。最終的なソースコードはわずか25行！</p>
 <p>一通りの文法は解説したが、詳しくは <a href="http://www.contextfreeart.org/mediawiki/index.php/Reference_Card">Reference Card - Context Free Art</a> に書いてある。</p>
 <p>最後に、ウニの最終的なソースコードを掲載しておく。Enjoy Context Free Art！</p>
-<div class="highlight"><pre><span class="n">startshape</span> <span class="n">START</span>
+<pre class="cpp">startshape START
 
-<span class="n">rule</span> <span class="n">START</span> <span class="p">{</span>
-    <span class="mi">60</span> <span class="o">*</span> <span class="p">{</span> <span class="n">r</span> <span class="mi">6</span> <span class="n">hue</span> <span class="mi">6</span><span class="p">}</span> <span class="n">LINE</span> <span class="p">{}</span>
-<span class="p">}</span>
+rule START {
+    60 * { r 6 hue 6} LINE {}
+}
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">6</span> <span class="mi">1</span>  <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">1</span> <span class="n">b</span> <span class="mf">.3</span> <span class="n">hue</span> <span class="mi">30</span><span class="p">}</span>
-    <span class="n">CIRCLE</span> <span class="p">{</span> <span class="n">s</span> <span class="mi">5</span> <span class="mf">.2</span> <span class="n">x</span> <span class="mi">3</span> <span class="n">sat</span> <span class="mi">0</span> <span class="n">b</span> <span class="mi">1</span> <span class="p">}</span>
-    <span class="n">LINE</span>   <span class="p">{</span> <span class="n">s</span> <span class="mf">.9</span>   <span class="n">x</span> <span class="mi">3</span> <span class="n">r</span> <span class="mi">10</span> <span class="n">a</span> <span class="o">-</span><span class="mf">.1</span><span class="p">}</span>
-<span class="p">}</span>
+rule LINE {
+    CIRCLE { s 6 1  x 3 sat 1 b .3 hue 30}
+    CIRCLE { s 5 .2 x 3 sat 0 b 1 }
+    LINE   { s .9   x 3 r 10 a -.1}
+}
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="p">{</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">flip</span> <span class="mi">180</span> <span class="p">}</span>
-<span class="p">}</span>
+rule LINE {
+    LINE { flip 180 }
+}
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="mf">.3</span> <span class="p">{</span>
-    <span class="n">LINE</span> <span class="p">{}</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">r</span>  <span class="mi">30</span>  <span class="n">s</span> <span class="mf">.5</span> <span class="p">}</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">r</span> <span class="o">-</span><span class="mi">30</span>  <span class="n">s</span> <span class="mf">.5</span> <span class="p">}</span>
-<span class="p">}</span>
+rule LINE .3 {
+    LINE {}
+    LINE { r  30  s .5 }
+    LINE { r -30  s .5 }
+}
 
-<span class="n">rule</span> <span class="n">LINE</span> <span class="mf">.1</span> <span class="p">{</span>
-    <span class="n">LINE</span> <span class="p">{</span> <span class="n">s</span> <span class="mf">.7</span> <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+rule LINE .1 {
+    LINE { s .7 }
+}</pre>
 </section>
 
 </div>

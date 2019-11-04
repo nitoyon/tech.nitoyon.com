@@ -65,192 +65,191 @@
 <p>傾かせるところは、例によって DisplacementMapFilter を使っている。</p>
 <p>にしても、DisplacementMapFilter は使いづらい。もう少し賢く振舞ってくれるラッパーがほしくなる。写像を定義する関数を渡すと、自動で BitmapData を作ってくれるようなやつ。誰か作ってないかな。</p>
 <p>ソースコードはいつもより少し長めの186行なんだけど、コントロールのソースコードを除いたらちょうど100行ぐらい。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">DisplacementMapFilter</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">com</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">maps</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.geom.*;
+    import flash.events.*;
+    import flash.filters.DisplacementMapFilter;
+    import com.google.maps.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">GoogleEarthControl</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">VIEWDISTANCE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">map</span><span class="o">:</span><span class="nx">Map</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">mapContainer</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;0x000000&quot;)]
+    public class GoogleEarthControl extends Sprite {
+        private const WIDTH:int = 400;
+        private const HEIGHT:int = 400;
+        private const VIEWDISTANCE:Number = 500;
+        private var map:Map;
+        private var mapContainer:Sprite;
+        private var bmd:BitmapData;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">GoogleEarthControl</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function GoogleEarthControl() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="nx">mapContainer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">mapContainer</span><span class="p">);</span>
+            mapContainer = new Sprite();
+            addChild(mapContainer);
 
-            <span class="nx">map</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Map</span><span class="p">();</span>
-            <span class="nx">map</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="s2">&quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;</span><span class="p">;</span>
-            <span class="nx">map</span><span class="p">.</span><span class="nx">setSize</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">));</span>
-            <span class="nx">map</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">MapEvent</span><span class="p">.</span><span class="nx">MAP_READY</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="nx">map</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">(</span><span class="k">new</span> <span class="nx">LatLng</span><span class="p">(</span><span class="mf">35.003759</span><span class="p">,</span> <span class="mf">135.769322</span><span class="p">),</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">MapType</span><span class="p">.</span><span class="nx">SATELLITE_MAP_TYPE</span><span class="p">);</span>
+            map = new Map();
+            map.key = &quot;ABQIAAAA6de2NwhEAYfH7t7oAYcX3xRWPxFShKMZYAUclLzloAj2mNQgoRQZnk8BRyG0g_m2di3bWaT-Ji54Lg&quot;;
+            map.setSize(new Point(WIDTH, HEIGHT));
+            map.addEventListener(MapEvent.MAP_READY, function(event:*):void{
+                map.setCenter(new LatLng(35.003759, 135.769322), 10, MapType.SATELLITE_MAP_TYPE);
 
-                <span class="kd">var</span> <span class="nx">mapMask</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
-                <span class="nx">mapMask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-                <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">mask</span> <span class="o">=</span> <span class="nx">mapMask</span><span class="p">;</span>
+                var mapMask:Sprite = new Sprite();
+                mapMask.graphics.beginFill(0);
+                mapMask.graphics.drawRect(0, 0, WIDTH, HEIGHT);
+                mapMask.graphics.endFill();
+                mapContainer.mask = mapMask;
 
-                <span class="nx">bmd</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
+                bmd = new BitmapData(WIDTH, HEIGHT);
 
-                <span class="kd">var</span> <span class="nx">s1</span><span class="o">:</span><span class="nx">ScrollBar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s1</span><span class="p">);</span>
-                <span class="nx">s1</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="o">-</span><span class="mi">90</span>
-                <span class="nx">s1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">s1</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
-                <span class="nx">s1</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                    <span class="nx">updateValue</span><span class="p">(</span><span class="nx">s1</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-                <span class="p">});</span>
-                <span class="nx">s1</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+                var s1:ScrollBar = new ScrollBar(50);
+                addChild(s1);
+                s1.rotation = -90
+                s1.x = WIDTH - 100; s1.y = 30;
+                s1.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    updateValue(s1.value);
+                });
+                s1.dispatchEvent(new Event(&quot;change&quot;));
 
-                <span class="kd">var</span> <span class="nx">s2</span><span class="o">:</span><span class="nx">ScrollBar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="mi">80</span><span class="p">);</span>
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">s2</span><span class="p">);</span>
-                <span class="nx">s2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">s2</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-                <span class="nx">s2</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                    <span class="nx">map</span><span class="p">.</span><span class="nx">setZoom</span><span class="p">((</span><span class="mi">100</span> <span class="o">-</span> <span class="nx">s2</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">*</span> <span class="nx">map</span><span class="p">.</span><span class="nx">getMaxZoomLevel</span><span class="p">());</span>
-                <span class="p">});</span>
-                <span class="nx">s2</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
+                var s2:ScrollBar = new ScrollBar(80);
+                addChild(s2);
+                s2.x = WIDTH - 10; s2.y = 50;
+                s2.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    map.setZoom((100 - s2.value) / 100 * map.getMaxZoomLevel());
+                });
+                s2.dispatchEvent(new Event(&quot;change&quot;));
 
-                <span class="kd">var</span> <span class="nx">r</span><span class="o">:</span><span class="nx">RotationControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">RotationControl</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">);</span>
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">r</span><span class="p">);</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">-</span> <span class="mi">60</span><span class="p">;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">90</span><span class="p">;</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="o">-</span><span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotate</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">value</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">);</span>
-                    <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-                    <span class="nx">map</span><span class="p">.</span><span class="nx">transform</span><span class="p">.</span><span class="nx">matrix</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">;</span>
-                <span class="p">});</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-            <span class="p">});</span>
-            <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
-        <span class="p">}</span>
+                var r:RotationControl = new RotationControl(-10);
+                addChild(r);
+                r.x = WIDTH - 60; r.y = 90;
+                r.addEventListener(&quot;change&quot;, function(event:Event):void{
+                    var matrix:Matrix = new Matrix();
+                    matrix.translate(-WIDTH / 2, -HEIGHT / 2);
+                    matrix.rotate(r.value * Math.PI / 180);
+                    matrix.translate(WIDTH / 2, HEIGHT / 2);
+                    map.transform.matrix = matrix;
+                });
+                r.dispatchEvent(new Event(&quot;change&quot;));
+            });
+            mapContainer.addChild(map);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateValue</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">value</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">rad</span><span class="p">)</span> <span class="o">/</span> <span class="nx">VIEWDISTANCE</span><span class="p">;</span>
+        private function updateValue(value:int):void{
+            var rad:Number = value / 100 * 60 * Math.PI / 180;
+            var p:Number = -Math.sin(rad) / VIEWDISTANCE;
 
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">HW</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">WIDTH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">HH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">HH</span><span class="p">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">HH</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">){</span>
-                <span class="kd">var</span> <span class="nx">pj</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="nx">p</span><span class="p">;</span>
-                <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">HW</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">HW</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-                    <span class="kd">var</span> <span class="nx">_x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">pj</span> <span class="o">*</span> <span class="nx">i</span><span class="p">;</span>
-                    <span class="kd">var</span> <span class="nx">_y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">pj</span> <span class="o">*</span> <span class="nx">j</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">rad</span><span class="p">);</span>
-                    <span class="nx">bmd</span><span class="p">.</span><span class="nx">setPixel</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">HW</span><span class="p">,</span> <span class="nx">j</span> <span class="o">+</span> <span class="nx">HH</span><span class="p">,</span> <span class="nx">getColor</span><span class="p">((</span><span class="nx">_x</span> <span class="o">-</span> <span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">+</span> <span class="mh">0x80</span><span class="p">,</span> <span class="p">(</span><span class="nx">_y</span> <span class="o">-</span> <span class="nx">j</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">+</span> <span class="mh">0x80</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
+            bmd.lock();
+            var HW:int = WIDTH / 2;
+            var HH:int = HEIGHT / 2;
+            for(var j:int = -HH; j &lt; HH; j++){
+                var pj:Number = 1 + j * p;
+                for(var i:int = -HW; i &lt; HW; i++){
+                    var _x:int = pj * i;
+                    var _y:int = pj * j / Math.cos(rad);
+                    bmd.setPixel(i + HW, j + HH, getColor((_x - i) * 1 + 0x80, (_y - j) * 1 + 0x80, 0));
+                }
+            }
+            bmd.unlock();
 
-            <span class="nx">mapContainer</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">DisplacementMapFilter</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">)];</span>
-        <span class="p">}</span>
+            mapContainer.filters = [new DisplacementMapFilter(bmd, new Point(0, 0), 1, 2, 256, 256, &quot;color&quot;)];
+        }
 
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">bounds</span><span class="p">(</span><span class="nx">val</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">min</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">.</span><span class="nx">POSITIVE_INFINITY</span><span class="p">,</span> <span class="nx">max</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">.</span><span class="nx">NEGATIVE_INFINITY</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="nx">max</span><span class="p">),</span> <span class="nx">min</span><span class="p">);</span>
-        <span class="p">}</span>
+        private static function bounds(val:Number, min:Number = Number.POSITIVE_INFINITY, max:Number = Number.NEGATIVE_INFINITY):Number {
+            return Math.max(Math.min(val, max), min);
+        }
 
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">getColor</span><span class="p">(</span><span class="nx">r</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">g</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">uint</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">*</span> <span class="mh">0x10000</span>
-                 <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">*</span> <span class="mh">0x100</span>
-                 <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">bounds</span><span class="p">(</span><span class="nx">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">));</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+        private static function getColor(r:int, g:int, b:int):uint {
+            return Math.floor(bounds(r, 0, 255)) * 0x10000
+                 + Math.floor(bounds(g, 0, 255)) * 0x100
+                 + Math.floor(bounds(b, 0, 255));
+        }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+import flash.display.Sprite;
+import flash.events.*;
+import flash.geom.Point;
 
-<span class="kr">class</span> <span class="nx">ScrollBar</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">value</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+class ScrollBar extends Sprite {
+    public var value:int;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ScrollBar</span><span class="p">(</span><span class="nx">_value</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">value</span> <span class="o">=</span> <span class="nx">_value</span><span class="p">;</span>
+    public function ScrollBar(_value:int):void {
+        value = _value;
 
-        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">112</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawRect(0, -2, 8, 112);
+        graphics.endFill();
 
-        <span class="kd">var</span> <span class="nx">tab</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">_value</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tab</span><span class="p">);</span>
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-8, 0, 24, 8);
+        tab.graphics.endFill();
+        tab.y = _value;
+        addChild(tab);
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-            <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
-        <span class="p">});</span>
+        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+            mouseMoveHandler(event);
+        });
 
-        <span class="kd">var</span> <span class="nx">mouseMoveHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">));</span>
-            <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">),</span> <span class="mi">100</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="kd">var</span> <span class="nx">mouseUpHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+        var mouseMoveHandler:Function = function(event:MouseEvent):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.y = Math.min(Math.max(0, p.y), 100);
+        }
+        var mouseUpHandler:Function = function(event:MouseEvent):void {
+            value = tab.y;
+            dispatchEvent(new Event(&quot;change&quot;));
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}
 
-<span class="kr">class</span> <span class="nx">RotationControl</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">value</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+class RotationControl extends Sprite {
+    public var value:int = 0;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">RotationControl</span><span class="p">(</span><span class="nx">_value</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">value</span> <span class="o">=</span> <span class="nx">_value</span><span class="p">;</span>
+    public function RotationControl(_value:int):void {
+        value = _value;
 
-        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawCircle(0, 0, 40);
+        graphics.drawCircle(0, 0, 32);
+        graphics.endFill();
 
-        <span class="kd">var</span> <span class="nx">tab</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">44</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">_value</span> <span class="o">+</span> <span class="mi">90</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tab</span><span class="p">);</span>
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-44, -8, 16, 16);
+        tab.graphics.endFill();
+        tab.rotation = _value + 90;
+        addChild(tab);
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-            <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
-        <span class="p">});</span>
+        addEventListener(&quot;mouseDown&quot;, function(event:MouseEvent):void {
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+            mouseMoveHandler(event);
+        });
 
-        <span class="kd">var</span> <span class="nx">mouseMoveHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">));</span>
-            <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">90</span> <span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">+</span> <span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">180</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">-</span> <span class="mi">90</span><span class="p">;</span>
-            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-        <span class="p">}</span>
-        <span class="kd">var</span> <span class="nx">mouseUpHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">-</span> <span class="mi">90</span><span class="p">;</span>
-            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        var mouseMoveHandler:Function = function(event:MouseEvent):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.rotation = p.x == 0 ? 90 : Math.atan(p.y / p.x) / Math.PI * 180 + (p.x &gt; 0 ? 180 : 0);
+            value = tab.rotation - 90;
+            dispatchEvent(new Event(&quot;change&quot;));
+        }
+        var mouseUpHandler:Function = function(event:MouseEvent):void {
+            value = tab.rotation - 90;
+            dispatchEvent(new Event(&quot;change&quot;));
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}</pre>
 
 </div>
 

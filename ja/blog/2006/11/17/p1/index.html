@@ -62,32 +62,28 @@
 
 <p>C++ で JSON を扱う必要があったので、jsoncpp というライブラリを試した。VC++ 2003/2005 で警告なしでビルドできた。すばらしい。</p>
 <p>パース簡単。</p>
-<div class="highlight"><pre><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span> <span class="o">=</span> <span class="s">&quot;{</span><span class="se">\&quot;</span><span class="s">key1</span><span class="se">\&quot;</span><span class="s">:</span><span class="se">\&quot;</span><span class="s">value</span><span class="se">\&quot;</span><span class="s">, </span><span class="se">\&quot;</span><span class="s">key2</span><span class="se">\&quot;</span><span class="s">:true}&quot;</span><span class="p">;</span>
+<pre class="cpp">std::string str = &quot;{\&quot;key1\&quot;:\&quot;value\&quot;, \&quot;key2\&quot;:true}&quot;;
 
-<span class="n">Json</span><span class="o">::</span><span class="n">Reader</span> <span class="n">reader</span><span class="p">;</span>
-<span class="n">Json</span><span class="o">::</span><span class="n">Value</span> <span class="n">root</span><span class="p">;</span>
-<span class="kt">bool</span> <span class="n">b</span> <span class="o">=</span> <span class="n">reader</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">str</span><span class="p">,</span> <span class="n">root</span><span class="p">);</span>
-</pre></div>
+Json::Reader reader;
+Json::Value root;
+bool b = reader.parse(str, root);</pre>
 <p>オブジェクトの参照も簡単。厳密にやったらこうなる。</p>
-<div class="highlight"><pre><span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">Json</span><span class="o">::</span><span class="n">objectValue</span><span class="p">){</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="n">isMember</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">)){</span>
-        <span class="n">Json</span><span class="o">::</span><span class="n">Value</span> <span class="n">key1</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="s">&quot;key1&quot;</span><span class="p">];</span>
-        <span class="k">if</span><span class="p">(</span><span class="n">key1</span><span class="p">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">Json</span><span class="o">::</span><span class="n">stringValue</span><span class="p">){</span>
-            <span class="n">printf</span><span class="p">(</span><span class="n">key1</span><span class="p">.</span><span class="n">asCString</span><span class="p">());</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="cpp">if(root.type() == Json::objectValue){
+    if(root.isMember(&quot;key1&quot;)){
+        Json::Value key1 = root[&quot;key1&quot;];
+        if(key1.type() == Json::stringValue){
+            printf(key1.asCString());
+        }
+    }
+}</pre>
 <p>いい加減にも書ける。</p>
-<div class="highlight"><pre><span class="n">printf</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;key1&quot;</span><span class="p">].</span><span class="n">asCString</span><span class="p">());</span>
-</pre></div>
+<pre class="cpp">printf(root[&quot;key1&quot;].asCString());</pre>
 <p>json_value.cpp にて変換に失敗したときには assert 関数が実行されるよう定義されているが、ここで例外を投げるように修正すれば、上のいい加減なコードは</p>
-<div class="highlight"><pre><span class="n">try</span><span class="p">{</span>
-   <span class="n">printf</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;key1&quot;</span><span class="p">].</span><span class="n">asCString</span><span class="p">());</span>
-<span class="p">}</span>
-<span class="k">catch</span><span class="p">(...){</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="cpp">try{
+   printf(root[&quot;key1&quot;].asCString());
+}
+catch(...){
+}</pre>
 <p>と書けて幸せなんだけど、どうも警告がいっぱいでてしまう。そのへんは微妙にうれしくない感じ。</p>
 <p>他にも、配列は size() が使えたり、getMemberNames() でハッシュの全部のキーを取得できたり、なかなか便利。もちろん、オブジェクトの書き出しもサポート。C++ で IO 扱うには実はかなり便利なライブラリかもしれない。</p>
 <p>ライブラリの詳細は <a href="http://jsoncpp.sourceforge.net/index.html">JsonCpp Documentation</a> にて。</p>

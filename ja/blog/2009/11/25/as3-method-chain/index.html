@@ -62,48 +62,45 @@
 
 <p>いろんな AS3 のサンプルが掲載されていて楽しい <a href="http://actionsnippet.com/">ActionSnippet | paste it in your timeline - or in your constructor</a> で <a href="http://actionsnippet.com/?p=2430">Functions Returning Functions</a> が紹介されていた。</p>
 <p>シンプルで美しいのだけど、ソースに１箇所無駄があったので省いてみたものを紹介する。</p>
-<div class="highlight"><pre><span class="c1">// Functions Returning Functions (Revised)</span>
-<span class="c1">// original: http://actionsnippet.com/?p=2430</span>
-<span class="c1">//  - Removed line variable by using arguments.callee.</span>
-<span class="kr">package</span> <span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
+<pre class="javascript">// Functions Returning Functions (Revised)
+// original: http://actionsnippet.com/?p=2430
+//  - Removed line variable by using arguments.callee.
+package {
+import flash.display.Sprite;
 
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">FlashTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FlashTest</span><span class="p">()</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">connect</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">xp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">yp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">col</span><span class="o">:</span><span class="nx">uint</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nx">col</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">xp</span><span class="p">,</span> <span class="nx">yp</span><span class="p">);</span>
-            <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">xp</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">yp</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">Function</span><span class="p">{</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">xp</span><span class="p">,</span> <span class="nx">yp</span><span class="p">);</span>
-                <span class="k">return</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">;</span>
-            <span class="p">};</span>
-        <span class="p">}</span>
+public class FlashTest extends Sprite {
+    public function FlashTest() {
+        var connect:Function = function(xp:Number, yp:Number, col:uint=0):Function{
+            graphics.lineStyle(0,col);
+            graphics.moveTo(xp, yp);
+            return function(xp:Number, yp:Number):Function{
+                graphics.lineTo(xp, yp);
+                return arguments.callee;
+            };
+        }
          
-        <span class="c1">// draw a triangle</span>
-        <span class="nx">connect</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">100</span><span class="p">)(</span><span class="mi">300</span><span class="p">,</span><span class="mi">300</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span><span class="mi">300</span><span class="p">)(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+        // draw a triangle
+        connect(200,100)(300,300)(100,300)(200, 100);
 
-        <span class="c1">// draw a box</span>
-        <span class="nx">connect</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span> <span class="mh">0xFF0000</span><span class="p">)(</span><span class="mi">150</span><span class="p">,</span><span class="mi">100</span><span class="p">)(</span><span class="mi">150</span><span class="p">,</span><span class="mi">150</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">150</span><span class="p">)(</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // draw a box
+        connect(100,100, 0xFF0000)(150,100)(150,150)(100, 150)(100,100);
+    }
+}
+}</pre>
 <p>このサンプルがやってることは非常にシンプルで、<code>connect()</code> 関数を呼び出すと、<code>lineTo</code> するだけの関数が返ってくる。この関数を呼ぶと、さらに自分自身が返ってくるので、<code>connect(200,100)(300,300)(100,300)(200, 100);</code> のように順番に呼び出していくと三角形が描けてしまうわけだ。</p>
 <p>このサンプルはやり過ぎにしても、ActionScript の標準ライブラリではメソッドチェーンやりたいと思うことが度々ある。昔はあまり思わなかったんだけど、jQuery や Ruby などに慣れてくると、他の場所でもメソッドチェーンしたくなる病にかかる。</p>
 <p>たとえば <code>lineTo</code> は</p>
-<div class="highlight"><pre><span class="c1">// (注) 実際にはこのように書くとエラーになります</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span><span class="mi">300</span><span class="p">).</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">300</span><span class="p">).</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">// (注) 実際にはこのように書くとエラーになります
+graphics.beginFill(0xff0000)
+    .moveTo(200,100)
+    .lineTo(300,300).lineTo(100,300).lineTo(200, 100)
+    .endFill();</pre>
 <p>のように書けたら嬉しいし、あの憎き <code>Matrix</code> も</p>
-<div class="highlight"><pre><span class="c1">// (注) 実際にはこのように書くとエラーになります</span>
-<span class="kd">var</span> <span class="nx">mtx</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="nx">Matrix</span>
-    <span class="p">.</span><span class="nx">identity</span><span class="p">()</span>
-    <span class="p">.</span><span class="nx">rotate</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// (注) 実際にはこのように書くとエラーになります
+var mtx:Matrix = Matrix
+    .identity()
+    .rotate(Math.PI)
+    .scale(2, 2);</pre>
 <p>とできると immutable になってかなり嬉しい。</p>
 <p>かといって、このあたりを丸々ラップしなおすのは面倒なので、結局文句いいながら使い続けてる。他力本願。</p>
 

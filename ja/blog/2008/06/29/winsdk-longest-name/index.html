@@ -103,24 +103,23 @@ OPEN_NEW_LISTENER_CHANNEL_INSTANCE
 <h1>まとめ</h1>
 <p>Windows SDK は Cocoa よりきもい。</p>
 <p>使った Perl スクリプトを一応掲載しておきます。</p>
-<div class="highlight"><pre><span class="nv">@list</span><span class="o">=</span><span class="nb">glob</span><span class="p">(</span><span class="s">&#39;*.h&#39;</span><span class="p">);</span>
-<span class="nv">%w</span><span class="p">;</span>
-<span class="k">for</span> <span class="k">my</span> <span class="nv">$fn</span><span class="p">(</span><span class="nv">@list</span><span class="p">){</span>
-  <span class="nb">open</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="s">&quot;&lt;$fn&quot;</span><span class="p">);</span>
-  <span class="nv">$s</span><span class="o">=</span><span class="nb">join</span><span class="p">(</span><span class="s">&quot;\n&quot;</span><span class="p">,</span><span class="sr">&lt;F&gt;</span><span class="p">);</span>
-  <span class="k">my</span> <span class="nv">@match</span><span class="o">=</span><span class="p">(</span><span class="nv">$s</span><span class="o">=~</span><span class="sr">/[A-Z0-9_]{25,}/ig</span><span class="p">);</span>
-  <span class="nb">close</span> <span class="n">F</span><span class="p">;</span>
+<pre class="perl">@list=glob('*.h');
+%w;
+for my $fn(@list){
+  open(F,&quot;&lt;$fn&quot;);
+  $s=join(&quot;\n&quot;,&lt;F&gt;);
+  my @match=($s=~/[A-Z0-9_]{25,}/ig);
+  close F;
 
-  <span class="k">for</span><span class="p">(</span><span class="nv">@match</span><span class="p">){</span>
-    <span class="nv">$w</span><span class="p">{</span><span class="nv">$_</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$fn</span> <span class="k">if</span> <span class="nb">defined</span> <span class="nv">$_</span>
-  <span class="p">}</span>
-<span class="p">}</span>
+  for(@match){
+    $w{$_} = $fn if defined $_
+  }
+}
 
-<span class="nv">@result</span> <span class="o">=</span> <span class="nb">sort</span> <span class="p">{</span><span class="nb">length</span> <span class="nv">$b</span> <span class="ow">cmp</span> <span class="nb">length</span> <span class="nv">$a</span><span class="p">}</span> <span class="nb">keys</span> <span class="nv">%w</span><span class="p">;</span>
-<span class="k">for</span><span class="p">(</span><span class="nv">@result</span><span class="p">){</span>
-  <span class="k">print</span> <span class="nv">$_</span> <span class="o">.</span> <span class="s">&quot;(&quot;</span> <span class="o">.</span> <span class="nv">$w</span><span class="p">{</span><span class="nv">$_</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;)\n&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+@result = sort {length $b cmp length $a} keys %w;
+for(@result){
+  print $_ . &quot;(&quot; . $w{$_} . &quot;)\n&quot;;
+}</pre>
 </section>
 
 </div>

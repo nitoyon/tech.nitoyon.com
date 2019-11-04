@@ -90,96 +90,95 @@
   <div class="hatena-asin-detail-foot"></div>
 </div>
 <p>今回のソースコードは以下に(89行)。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.geom.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;400&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;400&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Histogram4</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">SIZE</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+    [SWF(width=&quot;400&quot;, height=&quot;400&quot;)]
+    public class Histogram4 extends Sprite {
+        private var canvas:Sprite;
+        private static var SIZE:uint = 200;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Histogram4</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+        public function Histogram4() {
+            stage.align = &quot;TL&quot;;
+            stage.scaleMode = &quot;noScale&quot;;
             
-            <span class="c1">// 描画用キャンバス準備</span>
-            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
-            <span class="nx">initCanvas</span><span class="p">();</span>
+            // 描画用キャンバス準備
+            canvas = new Sprite();
+            addChild(canvas);
+            initCanvas();
 
-            <span class="c1">// ドラッグで描画</span>
-            <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// 間引き用のカウンタ</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">);</span>
-                <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">);</span>
-                <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="p">});</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">count</span> <span class="o">=</span> <span class="nx">count</span> <span class="o">&lt;</span> <span class="mi">12</span> <span class="o">?</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-                    <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">);</span>
+            // ドラッグで描画
+            var dragging:Boolean = false;
+            var count:int = 0; // 間引き用のカウンタ
+            canvas.addEventListener(&quot;mouseDown&quot;, function(e:*):void {
+                canvas.graphics.moveTo(mouseX, mouseY);
+                canvas.graphics.lineTo(mouseX, mouseY);
+                dragging = true;
+            });
+            canvas.addEventListener(&quot;mouseMove&quot;, function(e:*):void {
+                if(dragging) {
+                    count = count &lt; 12 ? count + 1 : 0;
+                    canvas.graphics.lineTo(mouseX, mouseY);
 
-                    <span class="c1">// 12回に1回、ヒストグラムを更新する</span>
-                    <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">updateHistogram</span><span class="p">();</span>
-                    <span class="p">}</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">});</span>
+                    // 12回に1回、ヒストグラムを更新する
+                    if(count == 0) {
+                        updateHistogram();
+                    }
+                }
+            });
+            canvas.addEventListener(&quot;mouseUp&quot;, function(e:*):void {
+                dragging = false;
+            });
 
-            <span class="c1">// キャンバスの外でクリックしたらクリア</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span> <span class="o">==</span> <span class="nx">stage</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">initCanvas</span><span class="p">();</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            // キャンバスの外でクリックしたらクリア
+            stage.addEventListener(&quot;click&quot;, function(event:Event):void {
+                if(event.target == stage) {
+                    initCanvas();
+                }
+            });
+        }
 
-        <span class="c1">// キャンバスを初期化する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">initCanvas</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x808080</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">updateHistogram</span><span class="p">();</span>
-        <span class="p">}</span>
+        // キャンバスを初期化する
+        private function initCanvas():void {
+            canvas.graphics.clear();
+            canvas.graphics.lineStyle(1, 0x808080);
+            canvas.graphics.beginFill(0xffffff);
+            canvas.graphics.drawRect(0, 0, SIZE, SIZE);
+            canvas.graphics.endFill();
+            canvas.graphics.lineStyle(2, 0);
+            updateHistogram();
+        }
 
-        <span class="c1">// ヒストグラムを描画する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateHistogram</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        // ヒストグラムを描画する
+        private function updateHistogram():void {
+            graphics.clear();
 
-            <span class="c1">// BitmapData に描画</span>
-            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+            // BitmapData に描画
+            var bmd:BitmapData = new BitmapData(SIZE, SIZE);
+            bmd.draw(canvas);
 
-            <span class="kd">var</span> <span class="nx">num</span><span class="o">:</span><span class="nx">uint</span><span class="p">;</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            var num:uint;
+            graphics.lineStyle(1, 0);
 
-            <span class="c1">// ヒストグラム分析＆描画</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">SIZE</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// X 成分のヒストグラム</span>
-                <span class="nx">num</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xff000000</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">SIZE</span><span class="p">,</span> <span class="nx">i</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">SIZE</span> <span class="o">+</span> <span class="nx">num</span><span class="p">,</span> <span class="nx">i</span><span class="p">);</span>
+            // ヒストグラム分析＆描画
+            for(var i:int = 0; i &lt; SIZE; i++) {
+                // X 成分のヒストグラム
+                num = bmd.threshold(bmd, new Rectangle(0, i, bmd.width, 1), new Point(), &quot;==&quot;, 0xff000000);
+                graphics.moveTo(SIZE, i);
+                graphics.lineTo(SIZE + num, i);
 
-                <span class="c1">// Y 成分のヒストグラム</span>
-                <span class="nx">num</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xff000000</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">+</span> <span class="nx">num</span><span class="p">);</span>
-            <span class="p">}</span>
+                // Y 成分のヒストグラム
+                num = bmd.threshold(bmd, new Rectangle(i, 0, 1, bmd.height), new Point(), &quot;==&quot;, 0xff000000);
+                graphics.moveTo(i, SIZE);
+                graphics.lineTo(i, SIZE + num);
+            }
 
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
-        <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            bmd.dispose();
+        }
+   }
+}</pre>
 </section>
 
 </div>

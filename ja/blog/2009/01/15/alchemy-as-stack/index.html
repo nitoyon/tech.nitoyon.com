@@ -62,263 +62,250 @@
 <section>
 <p>C のソースがどんな AS3 のコードに変換されているかを細かく見ていこう。</p>
 <p>お題は<a href="/ja/blog/2009/01/14/alchemy-pointer/">前回</a>紹介した malloc する関数。</p>
-<div class="highlight"><pre><span class="c1">// malloc sample (C)</span>
-<span class="k">static</span> <span class="n">AS3_Val</span> <span class="nf">myAlloc</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">self</span><span class="p">,</span> <span class="n">AS3_Val</span> <span class="n">args</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 確保した値の初期値を受け取る</span>
-    <span class="kt">int</span> <span class="n">v</span><span class="p">;</span>
-    <span class="n">AS3_ArrayValue</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&quot;IntType&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v</span><span class="p">);</span>
+<pre class="c">// malloc sample (C)
+static AS3_Val myAlloc(void* self, AS3_Val args)
+{
+    // 確保した値の初期値を受け取る
+    int v;
+    AS3_ArrayValue(args, &quot;IntType&quot;, &amp;v);
 
-    <span class="c1">// malloc でメモリ確保</span>
-    <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+    // malloc でメモリ確保
+    int* p = (int*)malloc(sizeof(int));
 
-    <span class="c1">// 確保したメモリに初期値を代入する</span>
-    <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+    // 確保したメモリに初期値を代入する
+    *p = v;
 
-    <span class="c1">// ポインタを返す</span>
-    <span class="k">return</span> <span class="n">AS3_Ptr</span><span class="p">((</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">p</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+    // ポインタを返す
+    return AS3_Ptr((void*)p);
+}</pre>
 <p>この関数を SWC に変換する過程の AS3 を見てみる。（参考：<a href="/ja/blog/2009/01/09/alchemy-keep-intermediate-files/">Alchemy で中間ファイルを消さない設定</a>）</p>
 <p>少し長いけど全文掲載しておく。</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kr">final</span> <span class="kr">class</span> <span class="nx">FSM_myAlloc</span> <span class="kr">extends</span> <span class="nx">Machine</span> <span class="p">{</span>
+<pre class="javascript">public final class FSM_myAlloc extends Machine {
 
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">start</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">result</span><span class="o">:</span><span class="nx">FSM_myAlloc</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FSM_myAlloc</span>
-        <span class="nx">gstate</span><span class="p">.</span><span class="nx">gworker</span> <span class="o">=</span> <span class="nx">result</span>
-    <span class="p">}</span>
+    public static function start():void {
+            var result:FSM_myAlloc = new FSM_myAlloc
+        gstate.gworker = result
+    }
 
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">i0</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">i1</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">i2</span><span class="o">:</span><span class="kr">int</span>
+    public var i0:int, i1:int, i2:int
 
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">intRegCount</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">3</span>
+    public static const intRegCount:int = 3
 
-    <span class="kr">public</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">NumberRegCount</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="kr">public</span> <span class="kr">final</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">work</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">Alchemy</span><span class="o">::</span><span class="nx">SetjmpAbuse</span> <span class="p">{</span> <span class="nx">freezeCache</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">label</span><span class="p">,</span> <span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_entry&quot;</span><span class="p">))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">state</span><span class="p">),</span> <span class="nx">switchjump</span><span class="p">(</span>
-            <span class="s2">&quot;_myAlloc_errState&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;_myAlloc_state0&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;_myAlloc_state1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;_myAlloc_state2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;_myAlloc_state3&quot;</span><span class="p">))</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state0&quot;</span><span class="p">))</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc__XprivateX__BB75_0_F&quot;</span><span class="p">))</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-        <span class="nx">i0</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">__2E_str99</span><span class="p">)</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">12</span>
-        <span class="nx">i1</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+</span><span class="mi">12</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">))))</span>
-        <span class="nx">i2</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+-</span><span class="mi">4</span><span class="p">))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i2</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">8</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">state</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">funcs</span><span class="p">[</span><span class="nx">_AS3_ArrayValue</span><span class="p">])()</span>
-        <span class="k">return</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state1&quot;</span><span class="p">))</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">12</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">8</span> 
-        <span class="nx">i0</span> <span class="o">=</span>  <span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-        <span class="nx">i1</span> <span class="o">=</span>  <span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">state</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;</span><span class="nx">FSM_pubrealloc</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
-        <span class="k">return</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state2&quot;</span><span class="p">))</span>
-        <span class="nx">i0</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">eax</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">8</span>
-        <span class="nx">i1</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+-</span><span class="mi">4</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">))))</span>
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>                                        
-        <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-        <span class="nx">state</span> <span class="o">=</span> <span class="mi">3</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">funcs</span><span class="p">[</span><span class="nx">_AS3_Ptr</span><span class="p">])()</span>
-        <span class="k">return</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state3&quot;</span><span class="p">))</span>
-        <span class="nx">i0</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">eax</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">4</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">eax</span> <span class="o">=</span> <span class="nx">i0</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span> <span class="o">=</span> <span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">));</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">4</span>
-        <span class="c1">//RETL</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">4</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">gworker</span> <span class="o">=</span> <span class="nx">caller</span>
-        <span class="k">return</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_errState&quot;</span><span class="p">))</span>
-        <span class="k">throw</span><span class="p">(</span><span class="s2">&quot;Invalid state in _myAlloc&quot;</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    public static const NumberRegCount:int = 0
+    public final override function work():void {
+        Alchemy::SetjmpAbuse { freezeCache = 0; }
+        __asm(label, lbl(&quot;_myAlloc_entry&quot;))
+        __asm(push(state), switchjump(
+            &quot;_myAlloc_errState&quot;,
+            &quot;_myAlloc_state0&quot;,
+            &quot;_myAlloc_state1&quot;,
+            &quot;_myAlloc_state2&quot;,
+            &quot;_myAlloc_state3&quot;))
+    __asm(lbl(&quot;_myAlloc_state0&quot;))
+    __asm(lbl(&quot;_myAlloc__XprivateX__BB75_0_F&quot;))
+        mstate.esp -= 4; __asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
+        mstate.ebp = mstate.esp
+        mstate.esp -= 4
+        i0 =  (__2E_str99)
+        mstate.esp -= 12
+        i1 =  ((__xasm&lt;int&gt;(push((mstate.ebp+12)), op(0x37))))
+        i2 =  ((mstate.ebp+-4))
+        __asm(push(i1), push(mstate.esp), op(0x3c))
+        __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+        __asm(push(i2), push((mstate.esp+8)), op(0x3c))
+        state = 1
+        mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()
+        return
+    __asm(lbl(&quot;_myAlloc_state1&quot;))
+        mstate.esp += 12
+        mstate.esp -= 8 
+        i0 =  (4)
+        i1 =  (0)
+        __asm(push(i1), push(mstate.esp), op(0x3c))
+        __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+        state = 2
+        mstate.esp -= 4;FSM_pubrealloc.start()
+        return
+    __asm(lbl(&quot;_myAlloc_state2&quot;))
+        i0 = mstate.eax
+        mstate.esp += 8
+        i1 =  ((__xasm&lt;int&gt;(push((mstate.ebp+-4)), op(0x37))))
+        __asm(push(i1), push(i0), op(0x3c))
+        mstate.esp -= 4                                        
+        __asm(push(i0), push(mstate.esp), op(0x3c))
+        state = 3
+        mstate.esp -= 4;(mstate.funcs[_AS3_Ptr])()
+        return
+    __asm(lbl(&quot;_myAlloc_state3&quot;))
+        i0 = mstate.eax
+        mstate.esp += 4
+        mstate.eax = i0
+        mstate.esp = mstate.ebp
+        mstate.ebp = __xasm&lt;int&gt;(push(mstate.esp), op(0x37)); mstate.esp += 4
+        //RETL
+        mstate.esp += 4
+        mstate.gworker = caller
+        return
+    __asm(lbl(&quot;_myAlloc_errState&quot;))
+        throw(&quot;Invalid state in _myAlloc&quot;)
+    }
+}</pre>
 <p>全体の構成として気になるのは、myAlloc 関数がクラスとして実現されていること。</p>
 <p>次に目に付くのは、eax や esp などのプロパティ。どうやら、AS3 上でレジスタやスタックをエミュレートしているような雰囲気だ。</p>
 <p>では細かく見ていく。まずは全体の構成。</p>
 <h1>state で実現するタイムスライス</h1>
 <p>work 関数が関数処理の実体だ。work 関数の外側を見てみるとこうなっている。</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kr">final</span> <span class="nx">override</span> <span class="kd">function</span> <span class="nx">work</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-    <span class="c1">//...</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">state</span><span class="p">),</span> <span class="nx">switchjump</span><span class="p">(</span>
-        <span class="s2">&quot;_myAlloc_errState&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_myAlloc_state0&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_myAlloc_state1&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_myAlloc_state2&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_myAlloc_state3&quot;</span><span class="p">))</span>
+<pre class="javascript">public final override function work():void {
+    //...
+    __asm(push(state), switchjump(
+        &quot;_myAlloc_errState&quot;,
+        &quot;_myAlloc_state0&quot;,
+        &quot;_myAlloc_state1&quot;,
+        &quot;_myAlloc_state2&quot;,
+        &quot;_myAlloc_state3&quot;))
 
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state0&quot;</span><span class="p">))</span>
-    <span class="c1">//...</span>
-    <span class="nx">state</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="c1">// AS3_ArrayValue 関数呼びだし</span>
-    <span class="k">return</span>
+__asm(lbl(&quot;_myAlloc_state0&quot;))
+    //...
+    state = 1
+    // AS3_ArrayValue 関数呼びだし
+    return
 
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state1&quot;</span><span class="p">))</span>
-    <span class="c1">//...</span>
-    <span class="nx">state</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="c1">// malloc 関数呼びだし</span>
-    <span class="k">return</span>
+__asm(lbl(&quot;_myAlloc_state1&quot;))
+    //...
+    state = 2
+    // malloc 関数呼びだし
+    return
 
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state2&quot;</span><span class="p">))</span>
-    <span class="c1">//...</span>
-    <span class="nx">state</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="c1">// AS3_Ptr 関数呼びだし</span>
-    <span class="k">return</span>
+__asm(lbl(&quot;_myAlloc_state2&quot;))
+    //...
+    state = 3
+    // AS3_Ptr 関数呼びだし
+    return
 
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state3&quot;</span><span class="p">))</span>
-    <span class="c1">// myAlloc 関数終了準備</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">gworker</span> <span class="o">=</span> <span class="nx">caller</span>
-    <span class="k">return</span>
+__asm(lbl(&quot;_myAlloc_state3&quot;))
+    // myAlloc 関数終了準備
+    mstate.gworker = caller
+    return
 
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_errState&quot;</span><span class="p">))</span>
-    <span class="k">throw</span><span class="p">(</span><span class="s2">&quot;Invalid state in _myAlloc&quot;</span><span class="p">)</span>
-<span class="p">}</span>
-</pre></div>
+__asm(lbl(&quot;_myAlloc_errState&quot;))
+    throw(&quot;Invalid state in _myAlloc&quot;)
+}</pre>
 <p>このように、work 関数では、もともとの myAlloc() 関数の処理がぶつ切りにされている。FSM_myAlloc というところからも分かるとおり、関数の動作が FSM(有限オートマトン)として実現されている。work 関数が呼ばれるたびにステートが変化していくイメージだ。</p>
 <p>この work 関数を呼び出しているのが、CRunner クラスだ。CRunner クラスのメインループをざっと見てみよう。</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kr">class</span> <span class="nx">CRunner</span> <span class="kr">implements</span> <span class="nx">Debuggee</span>
-<span class="p">{</span>
-  <span class="c1">// ...</span>
+<pre class="javascript">public class CRunner implements Debuggee
+{
+  // ...
 
-  <span class="kr">public</span> <span class="kd">function</span> <span class="nx">startInit</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-  <span class="p">{</span>
-    <span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Static init...&quot;</span><span class="p">);</span>
-    <span class="c1">//...</span>
+  public function startInit():void
+  {
+    log(2, &quot;Static init...&quot;);
+    //...
 
-    <span class="nx">timer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Timer</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="nx">timer</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">TimerEvent</span><span class="p">.</span><span class="nx">TIMER</span><span class="p">,</span> 
-      <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">TimerEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span> <span class="nx">work</span><span class="p">()</span> <span class="p">});</span>
-    <span class="p">}</span>
-    <span class="c1">//...</span>
-  <span class="p">}</span>
-</pre></div>
+    timer = new Timer(1);
+    timer.addEventListener(flash.events.TimerEvent.TIMER, 
+      function(event:TimerEvent):void { work() });
+    }
+    //...
+  }</pre>
 <p>こんな感じて定期的に work 関数を呼びだすようにしている。</p>
 <p>work 関数は次のように定義されている。</p>
-<div class="highlight"><pre>  <span class="kr">public</span> <span class="kd">function</span> <span class="nx">work</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-  <span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isRunning</span><span class="p">)</span>
-      <span class="k">return</span><span class="p">;</span>
+<pre class="javascript">  public function work():void
+  {
+    if(!isRunning)
+      return;
 
-    <span class="k">try</span>
-    <span class="p">{</span>
-      <span class="kd">var</span> <span class="nx">startTime</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">).</span><span class="nx">time</span><span class="p">;</span>
+    try
+    {
+      var startTime:Number = (new Date).time;
 
-      <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
-      <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">checkInterval</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+      while(true)
+      {
+        var checkInterval:int = 1000;
 
-        <span class="k">while</span><span class="p">(</span><span class="nx">checkInterval</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="p">{</span>
-          <span class="k">try</span>
-          <span class="p">{</span>
-            <span class="k">while</span><span class="p">(</span><span class="nx">checkInterval</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-              <span class="nx">gstate</span><span class="p">.</span><span class="nx">gworker</span><span class="p">.</span><span class="nx">work</span><span class="p">();</span>
-          <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">AlchemyDispatch</span><span class="p">)</span> <span class="p">{}</span>
-        <span class="p">}</span>
-        <span class="k">if</span><span class="p">(((</span><span class="k">new</span> <span class="nb">Date</span><span class="p">).</span><span class="nx">time</span> <span class="o">-</span> <span class="nx">startTime</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
-          <span class="k">throw</span><span class="p">(</span><span class="k">new</span> <span class="nx">AlchemyYield</span><span class="p">);</span>
-      <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="c1">//...</span>
-  <span class="p">}</span>
-</pre></div>
+        while(checkInterval &gt; 0)
+        {
+          try
+          {
+            while(checkInterval-- &gt; 0)
+              gstate.gworker.work();
+          } catch(e:AlchemyDispatch) {}
+        }
+        if(((new Date).time - startTime) &gt;= 1000 * 10)
+          throw(new AlchemyYield);
+      }
+    }
+    //...
+  }</pre>
 <p>gstate.gworker というのが現在処理中の関数を指すようになってる。どうやら、1000ステップごとに時間経過をチェックしていて、10秒以上実行していた場合には AlchemyYield 例外を発生させている。</p>
 <p>AlchemyYield 例外が発生すると work() メソッドからは一旦抜けて、画面描画が行われる。</p>
 <p>なお、C のソース上で再描画を強制するには、flyield() メソッドを呼ぶとよい。flyield() は <code>throw new AlchemyYield())</code> という AS3 に変換される。</p>
 <p>このように、Alchemy が変換する AS3 は細かくタイムスライスされていて、細かい処理の単位でいつでも中断できるようになっている。将来的にはマルチスレッドをエミュレートできるようになるかもしれない。</p>
 <h1>疑似レジスタ</h1>
 <p>では、関数の最初から見ていこう。</p>
-<div class="highlight"><pre><span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state0&quot;</span><span class="p">))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc__XprivateX__BB75_0_F&quot;</span><span class="p">))</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-    <span class="nx">i0</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">__2E_str99</span><span class="p">)</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">12</span>
-    <span class="nx">i1</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+</span><span class="mi">12</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">))))</span>
-    <span class="nx">i2</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+-</span><span class="mi">4</span><span class="p">))</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-    <span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i2</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">8</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-    <span class="nx">state</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">funcs</span><span class="p">[</span><span class="nx">_AS3_ArrayValue</span><span class="p">])()</span>
-    <span class="k">return</span>
-</pre></div>
+<pre class="javascript">__asm(lbl(&quot;_myAlloc_state0&quot;))
+__asm(lbl(&quot;_myAlloc__XprivateX__BB75_0_F&quot;))
+    mstate.esp -= 4; __asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
+    mstate.ebp = mstate.esp
+    mstate.esp -= 4
+    i0 =  (__2E_str99)
+    mstate.esp -= 12
+    i1 =  ((__xasm&lt;int&gt;(push((mstate.ebp+12)), op(0x37))))
+    i2 =  ((mstate.ebp+-4))
+    __asm(push(i1), push(mstate.esp), op(0x3c))
+    __asm(push(i0), push((mstate.esp+4)), op(0x3c))
+    __asm(push(i2), push((mstate.esp+8)), op(0x3c))
+    state = 1
+    mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()
+    return</pre>
 <p>この AS3 のコードは</p>
-<div class="highlight"><pre>    <span class="c1">// 確保した値の初期値を受け取る</span>
-    <span class="kt">int</span> <span class="n">v</span><span class="p">;</span>
-    <span class="n">AS3_ArrayValue</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&quot;IntType&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v</span><span class="p">);</span>
-</pre></div>
+<pre class="c">    // 確保した値の初期値を受け取る
+    int v;
+    AS3_ArrayValue(args, &quot;IntType&quot;, &amp;v);</pre>
 <p>が変換されたものだ。</p>
 <p>なんと長くなるんだ！と思うんだけど、１個ずつ見ていけば納得の処理である。まずは最初の２行。</p>
-<div class="highlight"><pre><span class="c1">// push ebp</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
+<pre class="javascript">// push ebp
+mstate.esp -= 4;
+__asm(push(mstate.ebp), push(mstate.esp), op(0x3c))
 
-<span class="c1">// mov ebp, esp</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span> <span class="o">=</span> <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span>
-</pre></div>
+// mov ebp, esp
+mstate.ebp = mstate.esp</pre>
 <p>__asm というのが初めて見るが、<code>__asm(push(a), push(b), op(0x3c))</code> は「a の値を int として b のアドレスに代入する」という意味だと推測される。op(0x3c) は load a 32 bit integer from global memory を表す op code のようだ（参考：<a href="http://llvm.org/devmtg/2008-08/Petersen_FlashCCompiler.pdf">FlaCC の p17</a>）。</p>
 <p>つまり、1行目は push ebp であり、2行目は mov ebp,esp となる。これは、C で関数呼びだしの際に最初に行うお決まりのあの処理にあたる。呼びだし元の ebp を保存して、現在の ebp を esp（現在のスタックの場所）に初期化するというあれ。</p>
 <p>このように、mstate プロパティにはレジスタの状態が擬似的に再現されているわけだ。mstate は全ての関数で共有されているグローバルな MState オブジェクトである。</p>
 <p>次の１行はだいぶ分かりやすい。</p>
-<div class="highlight"><pre>    <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-</pre></div>
+<pre class="javascript">    mstate.esp -= 4</pre>
 <p>スタックに４バイト積んでる。アセンブリで言うところの <code>sub esp, 4h</code> で、<code>int v;</code> に相当する。ローカル変数はスタック上に確保されるということだ。</p>
 <p>どんどん進む。</p>
-<div class="highlight"><pre><span class="nx">i0</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">__2E_str99</span><span class="p">)</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">12</span>
-<span class="nx">i1</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+</span><span class="mi">12</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">))))</span>
-<span class="nx">i2</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+-</span><span class="mi">4</span><span class="p">))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i2</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="o">+</span><span class="mi">8</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-</pre></div>
+<pre class="javascript">i0 =  (__2E_str99)
+mstate.esp -= 12
+i1 =  ((__xasm&lt;int&gt;(push((mstate.ebp+12)), op(0x37))))
+i2 =  ((mstate.ebp+-4))
+__asm(push(i1), push(mstate.esp), op(0x3c))
+__asm(push(i0), push((mstate.esp+4)), op(0x3c))
+__asm(push(i2), push((mstate.esp+8)), op(0x3c))</pre>
 <p>関数呼びだしをするための準備として、引数をスタックに積んでいる処理だ。esp が一気に12も減っているのは、3回分の push を一気に再現するための最適化が実施されているようだ。最適化前を想像すると、こんな感じかな。</p>
-<div class="highlight"><pre><span class="c1">// push [&amp;v]</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-<span class="nx">i2</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+-</span><span class="mi">4</span><span class="p">))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i2</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
+<pre class="javascript">// push [&amp;v]
+mstate.esp -= 4
+i2 =  ((mstate.ebp+-4))
+__asm(push(i2), push((mstate.esp)), op(0x3c))
 
-<span class="c1">// push &quot;StrPtr&quot;</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-<span class="nx">i0</span> <span class="o">=</span>  <span class="p">(</span><span class="nx">__2E_str99</span><span class="p">)</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i0</span><span class="p">),</span> <span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
+// push &quot;StrPtr&quot;
+mstate.esp -= 4
+i0 =  (__2E_str99)
+__asm(push(i0), push((mstate.esp)), op(0x3c))
 
-<span class="c1">// push args</span>
-<span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span>
-<span class="nx">i1</span> <span class="o">=</span>  <span class="p">((</span><span class="nx">__xasm</span><span class="o">&lt;</span><span class="kr">int</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">push</span><span class="p">((</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">ebp</span><span class="o">+</span><span class="mi">12</span><span class="p">)),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x37</span><span class="p">))))</span>
-<span class="nx">__asm</span><span class="p">(</span><span class="nx">push</span><span class="p">(</span><span class="nx">i1</span><span class="p">),</span> <span class="nx">push</span><span class="p">(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span><span class="p">),</span> <span class="nx">op</span><span class="p">(</span><span class="mh">0x3c</span><span class="p">))</span>
-</pre></div>
+// push args
+mstate.esp -= 4
+i1 =  ((__xasm&lt;int&gt;(push((mstate.ebp+12)), op(0x37))))
+__asm(push(i1), push(mstate.esp), op(0x3c))</pre>
 <p>で、この部分の最後。</p>
-<div class="highlight"><pre><span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">4</span><span class="p">;(</span><span class="nx">mstate</span><span class="p">.</span><span class="nx">funcs</span><span class="p">[</span><span class="nx">_AS3_ArrayValue</span><span class="p">])()</span>
-</pre></div>
+<pre class="javascript">mstate.esp -= 4;(mstate.funcs[_AS3_ArrayValue])()</pre>
 <p>call ですな。最初の esp を -4 するところは、リターンアドレスをスタックに積むところを再現しているんだけど、AS3 では関数がクラスで再現されているのでアドレスがそもそも存在しない。なので、形式上、スタックに積んだことにしているようだ。実際には、呼びだし元は caller プロパティとして保持している。</p>
 <h1>次のステートは...</h1>
 <p>長くなってきたけど、次のステートの最初も軽く見ておく。</p>
-<div class="highlight"><pre>    <span class="nx">__asm</span><span class="p">(</span><span class="nx">lbl</span><span class="p">(</span><span class="s2">&quot;_myAlloc_state1&quot;</span><span class="p">))</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">+=</span> <span class="mi">12</span>
-        <span class="nx">mstate</span><span class="p">.</span><span class="nx">esp</span> <span class="o">-=</span> <span class="mi">8</span> 
-</pre></div>
+<pre class="javascript">    __asm(lbl(&quot;_myAlloc_state1&quot;))
+        mstate.esp += 12
+        mstate.esp -= 8 </pre>
 <p>最初の esp を 12 増やしてるのは、AS3_ArrayValue 呼び出しのために積んだ引数を取り除いている。1つ前の後処理だ。</p>
 <p>２行目の、esp を 8 減らしているのは、次に呼び出す malloc() で２つの引数をスタックに積むためのもの。</p>
 <h1>まとめ</h1>

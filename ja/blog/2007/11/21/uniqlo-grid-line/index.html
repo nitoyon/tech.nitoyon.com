@@ -67,100 +67,99 @@
 <p>それはそうと、どうやってアルゴリズムを想像したかを記録しておきます。</p>
 <ol><li>右クリックから拡大して、UNIQLO_GRID の線がベクターであることを確認</li><li>少ししか動かしていないときは直線として描画されていることを発見</li><li>曲線になる条件は、移動距離や移動時間ではなく、mouseMove イベントの発生回数ではないかと仮定（実際は違うかも）</li><li>曲線になった瞬間、途中に通った場所がベジェ曲線の中間点として採用されることを発見</li><li>試験実装→そこそこそれっぽく動く</li><li>マウスを早く動かすと、汚いことを発見→マウスの移動距離が既定値を超えると、その点をベジェ曲線の中間点、コントロールポイントとして採用するようにした</li><li>完成！</li></ol>
 <p>ソースコードは以下に（93行）：</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.events.*;
+    import flash.geom.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">UneuneLine</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">start</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>            <span class="c1">// 描画開始地点</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">controls</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>         <span class="c1">// コントロールのリスト</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">anchors</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>          <span class="c1">// アンカーポイントのリスト</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cur</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>              <span class="c1">// 現在のマウス地点</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">prev</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>             <span class="c1">// 直前のコントロールもしくはアンカーポイント</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>              <span class="c1">// マウスの移動数</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WAIT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>        <span class="c1">// マウスの移動数の閾値</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">DISTANCE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>    <span class="c1">// マウスの移動距離の閾値</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">RANDOM</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>    <span class="c1">// 揺れ具合</span>
+    [SWF(backgroundColor=&quot;#ffffff&quot;)]
+    public class UneuneLine extends Sprite {
+        private var start:Point;            // 描画開始地点
+        private var controls:Array;         // コントロールのリスト
+        private var anchors:Array;          // アンカーポイントのリスト
+        private var cur:Point;              // 現在のマウス地点
+        private var prev:Point;             // 直前のコントロールもしくはアンカーポイント
+        private var count:int;              // マウスの移動数
+        private const WAIT:int = 20;        // マウスの移動数の閾値
+        private const DISTANCE:int = 20;    // マウスの移動距離の閾値
+        private const RANDOM:Number = 3;    // 揺れ具合
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">UneuneLine</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="nx">mouseDownHandler</span><span class="p">);</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">enterFrameHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+        public function UneuneLine() {
+            stage.addEventListener(&quot;mouseDown&quot;, mouseDownHandler);
+            addEventListener(&quot;enterFrame&quot;, enterFrameHandler);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseDownHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="c1">// イベント登録</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+        private function mouseDownHandler(event:MouseEvent):void {
+            // イベント登録
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
 
-            <span class="c1">// パラメータ初期化</span>
-            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">start</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">stageX</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageY</span><span class="p">);</span>
-            <span class="nx">cur</span> <span class="o">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-            <span class="nx">prev</span> <span class="o">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">clone</span><span class="p">();;</span>
-            <span class="nx">controls</span> <span class="o">=</span> <span class="p">[</span><span class="kc">null</span><span class="p">];</span>
-            <span class="nx">anchors</span> <span class="o">=</span> <span class="p">[</span><span class="nx">start</span><span class="p">];</span>
-        <span class="p">}</span>
+            // パラメータ初期化
+            count = 0;
+            start = new Point(event.stageX, event.stageY);
+            cur = start.clone();
+            prev = start.clone();;
+            controls = [null];
+            anchors = [start];
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">cur</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageX</span><span class="p">;</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">stageY</span><span class="p">;</span>
-            <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+        private function mouseMoveHandler(event:MouseEvent):void {
+            cur.x = event.stageX; cur.y = event.stageY;
+            count++;
 
-            <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="nx">WAIT</span> <span class="o">||</span> <span class="nx">count</span> <span class="o">&lt;</span> <span class="nx">WAIT</span> <span class="o">&amp;&amp;</span> <span class="nx">Point</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nx">DISTANCE</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// コントロールポイント追加</span>
-                <span class="nx">prev</span> <span class="o">=</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-                <span class="nx">controls</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">());</span>
-                <span class="nx">count</span> <span class="o">=</span> <span class="nx">WAIT</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="nx">WAIT</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">||</span> <span class="nx">Point</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nx">DISTANCE</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// アンカーポイント追加</span>
-                <span class="nx">prev</span> <span class="o">=</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-                <span class="nx">anchors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">clone</span><span class="p">());</span>
+            if(count == WAIT || count &lt; WAIT &amp;&amp; Point.distance(prev, cur) &gt; DISTANCE) {
+                // コントロールポイント追加
+                prev = cur.clone();
+                controls.push(cur.clone());
+                count = WAIT;
+            }
+            else if(count == WAIT * 2 || Point.distance(prev, cur) &gt; DISTANCE) {
+                // アンカーポイント追加
+                prev = cur.clone();
+                anchors.push(cur.clone());
 
-                <span class="c1">// コントロールポイントの位置を修正</span>
-                <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">anchors</span><span class="p">[</span><span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]);</span>
-                <span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">controls</span><span class="p">[</span><span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]);</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+                // コントロールポイントの位置を修正
+                var p1:Point = Point(anchors[anchors.length - 2]);
+                var c:Point = Point(controls[anchors.length - 1]);
+                c.x = c.x * 2 - (p1.x + cur.x) / 2;
+                c.y = c.y * 2 - (p1.y + cur.y) / 2;
 
-                <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+                count = 0;
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseUpHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
+        private function mouseUpHandler(event:MouseEvent):void {
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
 
-            <span class="nx">start</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-            <span class="nx">cur</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-        <span class="p">}</span>
+            start = null;
+            cur = null;
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">enterFrameHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        private function enterFrameHandler(event:Event):void {
+            graphics.clear();
 
-            <span class="k">if</span><span class="p">(</span><span class="nx">start</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// 始点へ移動</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">x</span><span class="p">,</span> <span class="nx">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">y</span><span class="p">);</span>
+            if(start) {
+                // 始点へ移動
+                graphics.lineStyle();
+                graphics.moveTo(anchors[0].x, anchors[0].y);
 
-                <span class="c1">// ベジェ曲線を描画</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-                <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">anchors</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span>
-                        <span class="nx">controls</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
-                        <span class="nx">controls</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
-                        <span class="nx">anchors</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span>  <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> 
-                        <span class="nx">anchors</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span>  <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">RANDOM</span> <span class="o">-</span> <span class="nx">RANDOM</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-                <span class="p">}</span>
+                // ベジェ曲線を描画
+                graphics.lineStyle(1, 0);
+                for(var i:int = 1; i &lt; anchors.length; i++) {
+                    graphics.curveTo(
+                        controls[i].x + Math.random() * RANDOM - RANDOM / 2, 
+                        controls[i].y + Math.random() * RANDOM - RANDOM / 2, 
+                        anchors[i].x  + Math.random() * RANDOM - RANDOM / 2, 
+                        anchors[i].y  + Math.random() * RANDOM - RANDOM / 2);
+                }
 
-                <span class="c1">// 終点へ移動</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">cur</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">cur</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+                // 終点へ移動
+                graphics.lineTo(cur.x, cur.y);
+            }
+        }
+    }
+}</pre>
 
 </div>
 

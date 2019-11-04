@@ -67,93 +67,91 @@
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FTextMask.swf&amp;bgcolor=%23ffffff" width="400" height="150" class="flash"></iframe></center></p>
 <p>中段のグラデーションに対して、上段の文字列をマスクとして利用しています。上段の文字列は編集できることからも分かるとおり、TextField です。</p>
 <p>ソースコードは長いけど、肝はここ。</p>
-<div class="highlight"><pre>    <span class="nx">bmpDataText</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
-    <span class="nx">bmpData</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">grad</span><span class="p">);</span>
-    <span class="nx">bmpData</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">bmpDataText</span><span class="p">,</span> 
-        <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">),</span> 
-        <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> 
-        <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">,</span> 
-        <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">ALPHA</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">    bmpDataText.draw(textField);
+    bmpData.draw(grad);
+    bmpData.copyChannel(bmpDataText, 
+        new Rectangle(0, 0, WIDTH, HEIGHT), 
+        new Point(0, 0), 
+        BitmapDataChannel.RED, 
+        BitmapDataChannel.ALPHA);</pre>
 <ol><li>bmpDataText に TextField を描画</li><li>bmpData にグラデーションを描画</li><li>bmpData に bmpDataText の Red チャンネルを Alpha チャンネルとしてコピー（テキストの濃淡データを透明度として設定している）。</li></ol>
 <p>別に Red チャンネルでなくて、Green でも Blue でもいいんですが、グレースケールなので全部同じ値なので気にしない。</p>
 <p><s>あと、この Flash が秒速10KBずつぐらいのペースでメモリを食いつぶしていくんだけど、なんでだろう。</s> → (2007.9.12 追記) コメント欄で教えていただきました。グラデーションを描画する前に、graphics.clear() すれば問題なくなった。AS で上塗りする場合は、下に隠れている塗りの情報も保存され続けるようだ。これは知らなかったら絶対にはまる…。</p>
 <p>長いけどソースコードは以下に（73行）。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">system</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.events.*;
+    import flash.geom.*;
+    import flash.text.*;
+    import flash.system.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">TextMask</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    public class TextMask extends Sprite
+    {
+        private const WIDTH:int = 400;
+        private const HEIGHT:int = 50;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">TextMask</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">frameRate</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+        public function TextMask()
+        {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
+            stage.frameRate = 12;
 
-            <span class="c1">// text</span>
-            <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextFormat</span><span class="p">();</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">size</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">;</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">color</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">textField</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">defaultTextFormat</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Hello, AS3.0!&quot;</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">WIDTH</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">HEIGHT</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">background</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">backgroundColor</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
+            // text
+            var tf:TextFormat = new TextFormat();
+            tf.size = HEIGHT * 2 / 3;
+            tf.color = 0xffffff;
+            var textField:TextField = new TextField();
+            textField.defaultTextFormat = tf;
+            textField.text = &quot;Hello, AS3.0!&quot;;
+            textField.type = &quot;input&quot;;
+            textField.width = WIDTH;
+            textField.height = HEIGHT;
+            textField.background = true;
+            textField.backgroundColor = 0;
+            addChild(textField);
 
-            <span class="c1">// gradation</span>
-            <span class="kd">var</span> <span class="nx">grad</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">grad</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">HEIGHT</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">grad</span><span class="p">);</span>
+            // gradation
+            var grad:Shape = new Shape();
+            grad.y = HEIGHT;
+            addChild(grad);
 
-            <span class="c1">// output</span>
-            <span class="kd">var</span> <span class="nx">bmpData</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmpData</span><span class="p">);</span>
-            <span class="nx">bmp</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">HEIGHT</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+            // output
+            var bmpData:BitmapData = new BitmapData(WIDTH, HEIGHT);
+            var bmp:Bitmap = new Bitmap(bmpData);
+            bmp.y = HEIGHT * 2;
+            addChild(bmp);
 
-            <span class="c1">// buffer</span>
-            <span class="kd">var</span> <span class="nx">bmpDataText</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+            // buffer
+            var bmpDataText:BitmapData = new BitmapData(WIDTH, HEIGHT, false);
 
-            <span class="c1">// animation</span>
-            <span class="kd">var</span> <span class="nx">angle</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-            <span class="p">{</span>
-                <span class="nx">angle</span> <span class="o">+=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">16</span><span class="p">;</span>
-                <span class="nx">angle</span> <span class="o">=</span> <span class="p">(</span><span class="nx">angle</span> <span class="o">&gt;=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">angle</span><span class="p">);</span>
+            // animation
+            var angle:Number = 0;
+            addEventListener(&quot;enterFrame&quot;, function(event:Event):void
+            {
+                angle += Math.PI / 16;
+                angle = (angle &gt;= Math.PI * 2 ? 0 : angle);
 
-                <span class="c1">// update gradation</span>
-                <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-                <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">,</span> <span class="nx">angle</span><span class="p">);</span>
-                <span class="nx">grad</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-                <span class="nx">grad</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="nx">GradientType</span><span class="p">.</span><span class="nx">LINEAR</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xff9900</span><span class="p">,</span> <span class="mh">0x0000ff</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-                <span class="nx">grad</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">);</span>
-                <span class="nx">grad</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+                // update gradation
+                var matrix:Matrix = new Matrix();
+                matrix.createGradientBox(WIDTH, HEIGHT, angle);
+                grad.graphics.clear();
+                grad.graphics.beginGradientFill(GradientType.LINEAR, [0xff9900, 0x0000ff], [100, 100], [0, 0xff], matrix);
+                grad.graphics.drawRect(0, 0, WIDTH, HEIGHT);
+                grad.graphics.endFill();
 
-                <span class="c1">// cache textField as BitmapData</span>
-                <span class="nx">bmpDataText</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
+                // cache textField as BitmapData
+                bmpDataText.draw(textField);
 
-                <span class="c1">// mask it!</span>
-                <span class="nx">bmpData</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
-                <span class="nx">bmpData</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">grad</span><span class="p">);</span>
-                <span class="nx">bmpData</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">bmpDataText</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">ALPHA</span><span class="p">);</span>
-                <span class="nx">bmpData</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+                // mask it!
+                bmpData.lock();
+                bmpData.draw(grad);
+                bmpData.copyChannel(bmpDataText, new Rectangle(0, 0, WIDTH, HEIGHT), new Point(0, 0), BitmapDataChannel.RED, BitmapDataChannel.ALPHA);
+                bmpData.unlock();
+            });
+        }
+    }
+}</pre>
 
 </div>
 

@@ -91,14 +91,12 @@ Successfully installed mongrel-1.0.1-mswin32</pre>
 <h2>ファイルの監視用パッチ</h2>
 <p>Rascut 0.1.1＋Windows XP + Ruby 1.8.6-25 ではファイルの監視がうまくいかなかったので <a href="http://d.hatena.ne.jp/ameema/20070902/1188735855">http://d.hatena.ne.jp/ameema/20070902/1188735855</a> を参考に、C:\ruby\lib\ruby\gems\1.8\gems\rascut-0.1.1\lib\rascut\file_observer.rb を修正した。</p>
 <p>修正前</p>
-<div class="highlight"><pre>          <span class="n">dir</span> <span class="o">=</span> <span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-          <span class="vi">@dirs</span><span class="o">[</span><span class="n">dir</span><span class="o">]</span> <span class="o">||=</span> <span class="n">dir</span><span class="o">.</span><span class="n">mtime</span>
-</pre></div>
+<pre class="ruby">          dir = Pathname.new(file)
+          @dirs[dir] ||= dir.mtime</pre>
 <p>修正後</p>
-<div class="highlight"><pre>          <span class="n">dir</span> <span class="o">=</span> <span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-          <span class="c1">#@dirs[dir] ||= dir.mtime</span>
-          <span class="vi">@dirs</span><span class="o">[</span><span class="n">dir</span><span class="o">]</span> <span class="o">||=</span> <span class="no">Time</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
+<pre class="ruby">          dir = Pathname.new(file)
+          #@dirs[dir] ||= dir.mtime
+          @dirs[dir] ||= Time.at(0)</pre>
 <h1>簡単な使い方</h1>
 <h2>コンパイル</h2>
 <p>rascut のあとにファイル名を指定する。</p>
@@ -132,11 +130,9 @@ Successfully installed mongrel-1.0.1-mswin32</pre>
 <p>１つ問題が。Windows＋コマンドプロンプトでは日本語が化ける。ちょっと悲しいので人生初 Ruby で場当たり対処してみた。</p>
 <p>「Ruby 文字コード」でぐぐったら <a href="http://jp.rubyist.net/magazine/?0017-CGIProgrammingForRubyBeginners-1#l13">kconv</a> というのを使うとよさそうだったので、C:\ruby\lib\ruby\gems\1.8\gems\rascut-0.1.1\lib\rascut\command.rb を書き換えた。</p>
 <p>修正前：</p>
-<div class="highlight"><pre>              <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;FLASHLOG</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">text</span><span class="p">)</span> <span class="k">unless</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="o">.</span><span class="n">empty?</span>
-</pre></div>
+<pre class="ruby">              logger.info(&quot;FLASHLOG\n&quot; + text) unless text.strip.empty?</pre>
 <p>修正後：</p>
-<div class="highlight"><pre>              <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;FLASHLOG</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="no">Kconv</span><span class="o">.</span><span class="n">tosjis</span><span class="p">(</span><span class="n">text</span><span class="p">))</span> <span class="k">unless</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="o">.</span><span class="n">empty?</span>
-</pre></div>
+<pre class="ruby">              logger.info(&quot;FLASHLOG\n&quot; + Kconv.tosjis(text)) unless text.strip.empty?</pre>
 <p>冒頭に require &#39;kconv&#39; を入れるのも忘れずに。</p>
 <p>これで日本語OKアルヨ。</p>
 <p>将来的には rascut 本体に出力文字コードを指定できるオプションがつけばうれしい！</p>

@@ -65,77 +65,71 @@
 <h1>クラス定義</h1>
 <p>さっそく関数定義…したいんだけど、Smalltalk には関数はなくて全てメソッド。</p>
 <p>なので、まずはヒープを表現するクラスを定義する。OrderedCollection を継承して Heap クラスを作った。</p>
-<div class="highlight"><pre><span class="no">OrderedCollection</span> <span class="ss">subclass</span><span class="p">:</span> <span class="c1">#Heap</span>
-    <span class="ss">instanceVariableNames</span><span class="p">:</span> <span class="s1">&#39;heapSize&#39;</span>
-    <span class="ss">classVariableNames</span><span class="p">:</span> <span class="s1">&#39;&#39;</span>
-    <span class="ss">poolDictionaries</span><span class="p">:</span> <span class="s1">&#39;&#39;</span>
-    <span class="ss">category</span><span class="p">:</span> <span class="kp">nil</span><span class="o">.</span>
-</pre></div>
+<pre class="ruby">OrderedCollection subclass: #Heap
+    instanceVariableNames: 'heapSize'
+    classVariableNames: ''
+    poolDictionaries: ''
+    category: nil.</pre>
 <p>次にインスタンス作成時の処理を行う initialize メソッドを定義する。Smalltalk でのメソッド定義は基本的に GUI ベースで行うので、ちょっと無理やりなメソッド定義となっている。Ruby で class_eval してるような感じ。</p>
-<div class="highlight"><pre><span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;initialize: anArray</span>
-<span class="s1">    super addAll: anArray asOrderedCollection.</span>
-<span class="s1">    heapSize := self size.&#39;</span><span class="o">.</span>
-</pre></div>
+<pre class="ruby">Heap compile: 'initialize: anArray
+    super addAll: anArray asOrderedCollection.
+    heapSize := self size.'.</pre>
 <p>Smalltalk のコレクションはインデックスが 1 から始まるので、特に工夫する必要はない。</p>
 <h1>メソッド定義していく</h1>
 <p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4764903342/nitoyoncom-22/ref=nosim">アルゴリズムイントロダクション 第1巻</a> に載ってる parent や left を定義した。</p>
-<div class="highlight"><pre><span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;parent: anInteger</span>
-<span class="s1">    ^ (anInteger / 2) truncated&#39;</span><span class="o">.</span>
+<pre class="ruby">Heap compile: 'parent: anInteger
+    ^ (anInteger / 2) truncated'.
 
-<span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;left: anInteger</span>
-<span class="s1">    ^ 2 * anInteger&#39;</span><span class="o">.</span>
+Heap compile: 'left: anInteger
+    ^ 2 * anInteger'.
 
-<span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;right: anInteger</span>
-<span class="s1">    ^ 2 * anInteger + 1&#39;</span><span class="o">.</span>
+Heap compile: 'right: anInteger
+    ^ 2 * anInteger + 1'.
 
-<span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;swap: i and: j</span>
-<span class="s1">    | tmp |</span>
-<span class="s1">    tmp := self at: i.</span>
-<span class="s1">    self at: i put: (self at: j).</span>
-<span class="s1">    self at: j put: tmp.&#39;</span><span class="o">.</span>
-</pre></div>
+Heap compile: 'swap: i and: j
+    | tmp |
+    tmp := self at: i.
+    self at: i put: (self at: j).
+    self at: j put: tmp.'.</pre>
 <p>ついでに配列の要素を入れ替える swap も定義しておいた。</p>
 <h1>if に苦しむ</h1>
 <p>同じように、教科書の MAX-HEAPIFY を定義。</p>
-<div class="highlight"><pre><span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;maxHeapify: i</span>
-<span class="s1">    | l r largest |</span>
-<span class="s1">    l := self left: i.</span>
-<span class="s1">    r := self right: i.</span>
-<span class="s1">    (l &lt;= heapSize and: [(self at: l) &gt; (self at: i)])</span>
-<span class="s1">        ifTrue:    [largest := l]</span>
-<span class="s1">        ifFalse:  [largest := i].</span>
-<span class="s1">    (r &lt;= heapSize and: [(self at: r) &gt; (self at: largest)])</span>
-<span class="s1">        ifTrue:    [largest := r].</span>
-<span class="s1">    (largest = i) not </span>
-<span class="s1">        ifTrue: [ self swap: largest and: i.</span>
-<span class="s1">            self maxHeapify: largest.</span>
-<span class="s1">        ].&#39;</span><span class="o">.</span>
-</pre></div>
+<pre class="ruby">Heap compile: 'maxHeapify: i
+    | l r largest |
+    l := self left: i.
+    r := self right: i.
+    (l &lt;= heapSize and: [(self at: l) &gt; (self at: i)])
+        ifTrue:    [largest := l]
+        ifFalse:  [largest := i].
+    (r &lt;= heapSize and: [(self at: r) &gt; (self at: largest)])
+        ifTrue:    [largest := r].
+    (largest = i) not 
+        ifTrue: [ self swap: largest and: i.
+            self maxHeapify: largest.
+        ].'.</pre>
 <p>Smalltalk には if 文がないので、true や false の ifTrue～ifFalse メソッドを利用している。</p>
 <p>教科書のサンプルでは、A &amp;&amp; B がショートサーキットなところ（A が false なら、B は評価されないところ）を利用していたんだけど、Smalltalk の A &amp; B は A も B も評価されてしまう。というのも、&amp; は true や false のメソッドとして実装されている。遅延評価もない以上、必ず B が評価されてしまうようだ。</p>
 <p>仕方がないので、２つ目の条件をブロックで受け取る A and: Bblock を使ってみた。こうすれば、前が true のときのみ、B を評価してくれる。</p>
 <h1>慣れてきた</h1>
 <p>あとは同じようにえいや。</p>
-<div class="highlight"><pre><span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;buildMaxHeap</span>
-<span class="s1">    (heapSize / 2) truncated to: 1 by: -1 </span>
-<span class="s1">        do: [:i | self maxHeapify: i.]&#39;</span><span class="o">.</span>
+<pre class="ruby">Heap compile: 'buildMaxHeap
+    (heapSize / 2) truncated to: 1 by: -1 
+        do: [:i | self maxHeapify: i.]'.
 
-<span class="no">Heap</span> <span class="ss">compile</span><span class="p">:</span> <span class="s1">&#39;heapSort</span>
-<span class="s1">    self buildMaxHeap.</span>
-<span class="s1">    (self size) to: 2 by: -1 do: [:i |</span>
-<span class="s1">        self swap: 1 and: i.</span>
-<span class="s1">        heapSize := heapSize - 1.</span>
-<span class="s1">        self maxHeapify: 1.</span>
-<span class="s1">    ]&#39;</span><span class="o">.</span>
-</pre></div>
+Heap compile: 'heapSort
+    self buildMaxHeap.
+    (self size) to: 2 by: -1 do: [:i |
+        self swap: 1 and: i.
+        heapSize := heapSize - 1.
+        self maxHeapify: 1.
+    ]'.</pre>
 <p>数字 to: 数字 で範囲になって、ブロックで処理をするあたりが Ruby とそっくり。downto がなくて Ruby に負けた感じだけど、Ruby に負けず劣らず、教科書の疑似コードに近くなった気はしている。</p>
 <p>最後に実行。</p>
-<div class="highlight"><pre><span class="o">|</span> <span class="n">aHeap</span> <span class="o">|</span>
+<pre class="ruby">| aHeap |
 
-<span class="n">aHeap</span> <span class="p">:</span><span class="o">=</span> <span class="no">Heap</span> <span class="kp">new</span> <span class="kp">initialize</span><span class="p">:</span> <span class="c1">#(16 4 10 14 7 9 3 2 8 1).</span>
-<span class="n">aHeap</span> <span class="n">heapSort</span><span class="o">.</span>
-<span class="no">Transcript</span> <span class="ss">show</span><span class="p">:</span> <span class="n">aHeap</span> <span class="n">printString</span><span class="o">.</span>
-</pre></div>
+aHeap := Heap new initialize: #(16 4 10 14 7 9 3 2 8 1).
+aHeap heapSort.
+Transcript show: aHeap printString.</pre>
 <p>Ruby だと new した瞬間に initialize が呼ばれるんだけど、Smalltalk では new のあとに initialize をつけて明示的に呼ぶのがお約束になっているようだ。</p>
 <h1>感想</h1>
 <p>Ruby は Smalltalk の影響を強く受けてるみたいで、いろんなところで共通点が多い。</p>

@@ -62,54 +62,51 @@
 <section>
 <p>Graphics クラスの beginFill と endFill あたりの挙動がよく分からなかったので調べてみた。</p>
 <h1>Case 1</h1>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">erase</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">erase</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+    public class erase extends Sprite
+    {
+        public function erase()
+        {
+            graphics.beginFill(0xff0000);
+            graphics.drawCircle(0, 100, 100);
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+            graphics.drawCircle(100, 100, 100);
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
+            graphics.drawRect(-30, 100, 300, 50);
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            graphics.endFill();
+        }
+    }
+}</pre>
 <p>奇数回重なっている部分が塗りつぶされているのが分かる。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023602.gif" width="200" height="125"></center>
 <p>XOR な領域が塗られる、と言い換えてもいいかもしれない。</p>
 <h1>Case 2</h1>
 <p>１つ目の円描画あとに endFill を持ってきてみる。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+<pre class="javascript">graphics.beginFill(0xff0000);
+graphics.drawCircle(0, 100, 100);
+graphics.endFill();
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+graphics.drawCircle(100, 100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-</pre></div>
+graphics.drawRect(-30, 100, 300, 50);
+graphics.endFill();</pre>
 <p>１つ目の円しか描画されない。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023601.gif" width="150" height="121"></center>
 <p>endFill を呼んだ段階で、塗りの情報は初期化されて、それ以降は endFill されても何も塗られないんだと推測できる。</p>
 <h1>Case 3</h1>
 <p>毎回、beginFill してみる。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+<pre class="javascript">graphics.beginFill(0xff0000);
+graphics.drawCircle(0, 100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+graphics.beginFill(0xff0000);
+graphics.drawCircle(100, 100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xff0000</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-</pre></div>
+graphics.beginFill(0xff0000);
+graphics.drawRect(-30, 100, 300, 50);</pre>
 <p>全部塗られる。Case 1 のように XOR になることもない。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070810/20070810023600.gif" width="200" height="124"></center>
 <p>これは、たぶん、beginFill を実行した段階で、自動的に前の塗りの endFill が呼ばれてるんだろう。</p>

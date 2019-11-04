@@ -65,52 +65,51 @@
 <p>元の写真の赤いところ（岩）が、赤チャンネルでは白っぽくなってます。空はやはり青チャンネルが白っぽくなってますね。元写真は透過PNGにしてあるので、アルファチャンネルもそれなりに表示されてます。</p>
 <p>実装方法はシンプル。赤チャンネルなら元画像の赤チャンネルを RGB それぞれのチャンネルにコピーしています。</p>
 <p>ソースはこちら。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
+    import flash.text.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">PngTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;channel.png&#39;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SamplePicture</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    public class PngTest extends Sprite
+    {
+        [Embed(source='channel.png')]
+        private var SamplePicture:Class;
         
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">PngTest</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function PngTest()
+        {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="kd">var</span> <span class="nx">icon</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SamplePicture</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">icon</span><span class="p">);</span>
+            var icon:Bitmap = new SamplePicture();
+            addChild(icon);
 
-            <span class="kd">var</span> <span class="nx">zeroPoint</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+            var zeroPoint:Point = new Point(0, 0);
+            var rect:Rectangle = new Rectangle(0, 0, icon.width, icon.height);
 
-            <span class="kd">var</span> <span class="nx">channels</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span><span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">GREEN</span><span class="p">,</span> 
-                <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">BLUE</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">ALPHA</span><span class="p">];</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">channels</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">channel</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">channels</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-                <span class="kd">var</span> <span class="nx">bmpdata</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">icon</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+            var channels:Array = [BitmapDataChannel.RED, BitmapDataChannel.GREEN, 
+                BitmapDataChannel.BLUE, BitmapDataChannel.ALPHA];
+            for(var i:int = 0; i &lt; channels.length; i++)
+            {
+                var channel:uint = channels[i];
+                var bmpdata:BitmapData = new BitmapData(icon.width, icon.height);
 
-                <span class="nx">bmpdata</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">icon</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">,</span> <span class="nx">rect</span><span class="p">,</span> <span class="nx">zeroPoint</span><span class="p">,</span> <span class="nx">channel</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">);</span>
-                <span class="nx">bmpdata</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">icon</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">,</span> <span class="nx">rect</span><span class="p">,</span> <span class="nx">zeroPoint</span><span class="p">,</span> <span class="nx">channel</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">GREEN</span><span class="p">);</span>
-                <span class="nx">bmpdata</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">icon</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">,</span> <span class="nx">rect</span><span class="p">,</span> <span class="nx">zeroPoint</span><span class="p">,</span> <span class="nx">channel</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">BLUE</span><span class="p">);</span>
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.RED);
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.GREEN);
+                bmpdata.copyChannel(icon.bitmapData, rect, zeroPoint, channel, BitmapDataChannel.BLUE);
 
-                <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmpdata</span><span class="p">);</span>
-                <span class="nx">bmp</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="nx">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
-                <span class="nx">bmp</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+                var bmp:Bitmap = new Bitmap(bmpdata);
+                bmp.x = (2 + i % 2) * icon.width;
+                bmp.y = Math.floor(i / 2) * icon.height;
 
-                <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
-            <span class="p">}</span>
+                addChild(bmp);
+            }
 
-            <span class="nx">icon</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">icon</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            icon.scaleX = icon.scaleY = 2;
+        }
+    }
+}</pre>
 
 </div>
 

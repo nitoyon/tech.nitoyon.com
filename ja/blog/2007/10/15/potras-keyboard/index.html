@@ -70,45 +70,39 @@
 <p>特にアルゴリズムには手を入れず、オブジェクトの生成回数や参照回数を減らしただけです。どれも語りつくされてきた手法ですが、実際に速度が速くなるところを目の当たりにするとうれしいものがあります。</p>
 <h2>例１：for の中で new するのをやめる</h2>
 <p>前</p>
-<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">for(var i:int = 0; i &lt; 100; i++) {
+    var p:Point = new Point();
+    // ...
+}</pre>
 <p>後</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">var p:Point = new Point();
+for(var i:int = 0; i &lt; 100; i++) {
+    p.x = 0; p.y = 0;
+    // ...
+}</pre>
 <h2>例２：関数の戻り値をオブジェクトで返さないようにする</h2>
 <p>前</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">doHogehoge</span><span class="p">()</span><span class="o">:</span><span class="nx">Point</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
-    <span class="c1">// ...</span>
-    <span class="nx">ret</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
-    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function doHogehoge():Point {
+    var ret:Point = new Point();
+    // ...
+    ret.x = x; ret.y = y;
+    return ret;
+}</pre>
 <p>後</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">doHogehoge</span><span class="p">(</span><span class="nx">p</span><span class="o">:</span><span class="nx">Point</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-    <span class="c1">// ...</span>
-    <span class="nx">p</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function doHogehoge(p:Point):void {
+    // ...
+    p.x = x; p.y = y;
+}</pre>
 <h2>例３：配列の長さを覚えておく</h2>
 <p>前</p>
-<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">for(var i:int = 0; i &lt; array.length; i++) {
+    // ...
+}</pre>
 <p>後</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">len</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">var len:int = array.length;
+for(var i:int = 0; i &lt; len; i++) {
+    // ...
+}</pre>
 <p>これだけで、処理速度がたいたい 2/3 ぐらいになりました。他にも、ループが入り組んでるところで Math.abs をインライン展開したりしたけど、目に見えるほどの効果を感じたのは上の３つぐらいです。</p>
 <p>トレース処理は６つの部分から成り立っているのですが、細かな速度変化は次のようになってます。（サンプル画像を10回トレースしたときの所要時間）</p>
 <ol><li>path: 1917ms -&gt; 373ms</li><li>sums: 265ms -&gt; 269ms</li><li>lon: 3115ms -&gt; 2072ms</li><li>best: 1102ms -&gt; 798ms</li><li>adjust: 3438ms -&gt; 2215ms</li><li>smooth: 144ms -&gt; 128ms</li></ol>

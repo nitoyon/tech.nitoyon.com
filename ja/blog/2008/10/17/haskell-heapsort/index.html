@@ -64,66 +64,59 @@
 <p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4764903342/nitoyoncom-22/ref=nosim">アルゴリズムイントロダクション 第1巻</a>の疑似コードが手続き型なので、それをどのように関数型に変換していくかが難しかった。アルゴリズムイントロダクションが手元にない人は、<a href="http://introductiontoalgorithms.g.hatena.ne.jp/keyword/0801006%e3%83%92%e3%83%bc%e3%83%97%e3%82%bd%e3%83%bc%e3%83%88%e3%82%b5%e3%83%b3%e3%83%97%e3%83%ab%e3%82%b3%e3%83%bc%e3%83%89">Ruby 版</a> を見ると分かりやすいだろう。</p>
 <h1>下準備</h1>
 <p>まずは、配列のインデックスを 1 ベースにする。ライブラリの Array 型は好きな値からインデックスを始められるようだが、Haskell の基本的な使い方を覚えたいのでパス。あえてリストで書いてみる。リストの要素にアクセスする関数は !! なので、これをラップした !!! を作ってみる。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="ow">::</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="n">a</span>
-<span class="p">(</span><span class="o">!!!</span><span class="p">)</span> <span class="n">xs</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">xs</span> <span class="o">!!</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-</pre></div>
+<pre class="haskell">(!!!) :: [a] -&gt; Int -&gt; a
+(!!!) xs i = xs !! (i - 1)</pre>
 <p>次は、教科書の PARENT, LEFT, RIGHT。</p>
-<div class="highlight"><pre><span class="nf">parent</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
-<span class="nf">parent</span> <span class="ow">=</span> <span class="p">(`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">)</span>
+<pre class="haskell">parent :: Int -&gt; Int
+parent = (`div` 2)
 
-<span class="nf">left</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
-<span class="nf">left</span> <span class="ow">=</span> <span class="p">(</span><span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+left :: Int -&gt; Int
+left = (* 2)
 
-<span class="nf">right</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span>
-<span class="nf">right</span> <span class="ow">=</span> <span class="p">(</span><span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
-</pre></div>
+right :: Int -&gt; Int
+right = (+ 1) . (* 2)</pre>
 <p>単純な関数なので、部分適用や関数合成を使って書いてみた。</p>
 <p>次、swap。これも頑張って書き下してみる。もっとシンプルな書き方がありそうなんだが、ひとまずは泥臭く。</p>
-<div class="highlight"><pre><span class="nf">swap</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
-<span class="nf">swap</span> <span class="n">m</span> <span class="n">n</span> <span class="n">list</span> <span class="ow">=</span> <span class="n">take</span> <span class="p">(</span><span class="n">i1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="n">list</span>
-             <span class="o">++</span> <span class="p">[</span><span class="n">list</span> <span class="o">!!!</span> <span class="n">i2</span><span class="p">]</span>
-             <span class="o">++</span> <span class="p">(</span><span class="n">drop</span> <span class="n">i1</span> <span class="o">$</span> <span class="n">take</span> <span class="p">(</span><span class="n">i2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="n">list</span><span class="p">)</span>
-             <span class="o">++</span> <span class="p">[</span><span class="n">list</span> <span class="o">!!!</span> <span class="n">i1</span><span class="p">]</span>
-             <span class="o">++</span> <span class="n">drop</span> <span class="n">i2</span> <span class="n">list</span>
-    <span class="kr">where</span> <span class="n">i1</span> <span class="ow">=</span> <span class="n">min</span> <span class="n">m</span> <span class="n">n</span>
-          <span class="n">i2</span> <span class="ow">=</span> <span class="n">max</span> <span class="n">m</span> <span class="n">n</span>
-</pre></div>
+<pre class="haskell">swap :: Int -&gt; Int -&gt; [a] -&gt; [a]
+swap m n list = take (i1 - 1) list
+             ++ [list !!! i2]
+             ++ (drop i1 $ take (i2 - 1) list)
+             ++ [list !!! i1]
+             ++ drop i2 list
+    where i1 = min m n
+          i2 = max m n</pre>
 <h1>手続き型脳から脱却できぬ</h1>
 <p>いよいよ大物へ。MAX-HEAPIFY。if 文が並んでいた THE 手続き型な関数だったので、とても苦労した。</p>
-<div class="highlight"><pre><span class="nf">maxHeapify</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
-<span class="nf">maxHeapify</span> <span class="n">i</span> <span class="n">arr</span> <span class="ow">=</span> <span class="kr">if</span> <span class="n">largest</span> <span class="n">i</span> <span class="o">/=</span> <span class="n">i</span>
-    <span class="kr">then</span> <span class="n">maxHeapify</span> <span class="p">(</span><span class="n">largest</span> <span class="n">i</span><span class="p">)</span> <span class="o">$</span> <span class="n">swap</span> <span class="p">(</span><span class="n">largest</span> <span class="n">i</span><span class="p">)</span> <span class="n">i</span> <span class="n">arr</span>
-    <span class="kr">else</span> <span class="n">arr</span>
-    <span class="kr">where</span>
-        <span class="n">largeLeft</span> <span class="n">i</span> <span class="n">j</span> <span class="ow">=</span> 
-            <span class="kr">if</span> <span class="n">left</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">length</span> <span class="n">arr</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">left</span> <span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">j</span><span class="p">)</span>
-                <span class="kr">then</span> <span class="n">left</span> <span class="n">i</span>
-                <span class="kr">else</span> <span class="n">j</span>
-        <span class="n">largeRight</span> <span class="n">i</span> <span class="n">j</span> <span class="ow">=</span> 
-            <span class="kr">if</span> <span class="n">right</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">length</span> <span class="n">arr</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">right</span> <span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">!!!</span> <span class="n">j</span><span class="p">)</span>
-                <span class="kr">then</span> <span class="n">right</span> <span class="n">i</span>
-                <span class="kr">else</span> <span class="n">j</span>
-        <span class="n">largest</span> <span class="n">i</span> <span class="ow">=</span> <span class="n">largeRight</span> <span class="n">i</span> <span class="o">$</span> <span class="n">largeLeft</span> <span class="n">i</span> <span class="n">i</span>
-</pre></div>
+<pre class="haskell">maxHeapify :: Int -&gt; [Int] -&gt; [Int]
+maxHeapify i arr = if largest i /= i
+    then maxHeapify (largest i) $ swap (largest i) i arr
+    else arr
+    where
+        largeLeft i j = 
+            if left i &lt;= length arr &amp;&amp; (arr !!! left i) &gt; (arr !!! j)
+                then left i
+                else j
+        largeRight i j = 
+            if right i &lt;= length arr &amp;&amp; (arr !!! right i) &gt; (arr !!! j)
+                then right i
+                else j
+        largest i = largeRight i $ largeLeft i i</pre>
 <p>ひとまずは教科書をそのまま書き下してみた。もっとシンプルに関数型っぽく書き直してみたいんだけど、方針が思いつかない。</p>
 <h1>ループの書き直し</h1>
 <p>BUILD-MAX-HEAP には for 文が登場。Haskell に for 文はないので、再帰か畳み込みで書き直す必要がある。ここでは畳み込み(foldr)を使ってみた。</p>
-<div class="highlight"><pre><span class="nf">buildMaxHeap</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
-<span class="nf">buildMaxHeap</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">foldr</span> <span class="n">maxHeapify</span> <span class="n">arr</span> <span class="o">$</span> <span class="p">[</span><span class="mi">1</span> <span class="o">..</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="p">`</span><span class="n">div</span><span class="p">`</span> <span class="mi">2</span><span class="p">]</span>
-</pre></div>
+<pre class="haskell">buildMaxHeap :: [Int] -&gt; [Int]
+buildMaxHeap arr = foldr maxHeapify arr $ [1 .. (length arr) `div` 2]</pre>
 <p>畳み込みにも苦手意識があったけど、<a href="http://d.hatena.ne.jp/blanketsky/20071129/1196329379" title="畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-logへ">畳み込み関数の比較 (fold / accumulate / inject / reduce) - blanket-log</a> がすごく分かりやすかった。ありがたい。</p>
 <p>最後は HEAP-SORT。ここでも for 文が登場するので、今度は再帰を使ってみた。</p>
-<div class="highlight"><pre><span class="nf">heapSort</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
-<span class="nf">heapSort</span> <span class="kt">[]</span> <span class="ow">=</span> <span class="kt">[]</span>
-<span class="nf">heapSort</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">heapSort</span> <span class="p">(</span><span class="n">take</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">$</span> <span class="n">swapped</span> <span class="n">arr</span><span class="p">)</span>
-            <span class="o">++</span> <span class="p">[</span><span class="n">head</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span><span class="p">]</span>
-    <span class="kr">where</span> <span class="n">swapped</span> <span class="n">arr</span> <span class="ow">=</span> <span class="n">swap</span> <span class="mi">1</span> <span class="p">(</span><span class="n">length</span> <span class="n">arr</span><span class="p">)</span> <span class="o">$</span> <span class="n">buildMaxHeap</span> <span class="n">arr</span>
-</pre></div>
+<pre class="haskell">heapSort :: [Int] -&gt; [Int]
+heapSort [] = []
+heapSort arr = heapSort (take (length arr - 1) $ swapped arr)
+            ++ [head $ buildMaxHeap arr]
+    where swapped arr = swap 1 (length arr) $ buildMaxHeap arr</pre>
 <h1>動け！</h1>
 <p>最後に main。</p>
-<div class="highlight"><pre><span class="nf">main</span> <span class="ow">=</span> <span class="n">print</span> <span class="o">$</span> <span class="n">heapSort</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span>
-<span class="c1">-- [1,2,3,4,7,8,9,10,14,16]</span>
-</pre></div>
+<pre class="haskell">main = print $ heapSort [4,1,3,2,16,9,10,14,8,7]
+-- [1,2,3,4,7,8,9,10,14,16]</pre>
 <p>動いた！</p>
 <h1>感想</h1>
 <p>なんとか動いたが、Haskell っぽいソースに見えない。誰かに添削してほしい。ujihisa とか。</p>

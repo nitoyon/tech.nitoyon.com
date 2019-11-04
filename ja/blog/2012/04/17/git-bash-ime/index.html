@@ -63,10 +63,9 @@
 <p>先日の <a href="/ja/blog/2012/04/12/msysgit-utf8-2/">UTF-8 対応の msysGit 1.7.10 リリース！ いよいよ Windows で git できるよ!!!</a> という記事で、msysGit 1.7.10 の Git Bash で IME からの日本語入力できない件を伝えていたが、この件についてもう少し深入りしてみた。</p>
 <h1>.inputrc を設定してもうまくいかない</h1>
 <p>記事へのコメントで指摘をいただいたのが、<code>.inputrc</code> に</p>
-<div class="highlight"><pre><span class="nb">set </span>convert-meta off
-<span class="nb">set </span>meta-flag on
-<span class="nb">set </span>output-meta on
-</pre></div>
+<pre class="sh">set convert-meta off
+set meta-flag on
+set output-meta on</pre>
 <p>と設定してみる、という方法だった。</p>
 <p>しかし、この通りに設定しても期待通りの結果にはならなかった。</p>
 <p>いろいろ検索してみると、生の MSYS では「この方法でうまくいく」と記述してあるページは多かった。</p>
@@ -76,33 +75,32 @@
 <p>そのパッチがこちら。</p>
 <ul><li><a href="https://github.com/msysgit/msysgit/blob/be1eadf11789b4ef295731a5049732c5eb4c51fa/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch">msysgit/src/rt/patches/0013-msys.dll-basic-Unicode-support.patch at be1eadf11789b4ef295731a5049732c5eb4c51fa &#183; msysgit/msysgit</a></li></ul>
 <p>ざっと覗いてみると、コンソールの出力が ANSI から Unicode になるように頑張っている箇所があった。</p>
-<div class="highlight"><pre><span class="gu">@@ -1008,7 +1010,7 @@ fhandler_console::clear_screen (int x1, int y1, int x2, int y2)</span>
+<pre class="patch">@@ -1008,7 +1010,7 @@ fhandler_console::clear_screen (int x1, int y1, int x2, int y2)
        tlc.X = x2;
        tlc.Y = y2;
      }
-<span class="gd">-  FillConsoleOutputCharacterA (get_output_handle (), &#39; &#39;,</span>
-<span class="gi">+  FillConsoleOutputCharacterW (get_output_handle (), L&#39; &#39;,</span>
+-  FillConsoleOutputCharacterA (get_output_handle (), ' ',
++  FillConsoleOutputCharacterW (get_output_handle (), L' ',
  			       num,
  			       tlc,
  			       &amp;done);
-<span class="gu">@@ -1244,7 +1246,7 @@ fhandler_console::char_command (char c)</span>
+@@ -1244,7 +1246,7 @@ fhandler_console::char_command (char c)
  	      savebuf = (PCHAR_INFO) cmalloc (HEAP_1_BUF, sizeof (CHAR_INFO) *
  					     savebufsiz.X * savebufsiz.Y);
  
-<span class="gd">-	      ReadConsoleOutputA (get_output_handle (), savebuf,</span>
-<span class="gi">+	      ReadConsoleOutputW (get_output_handle (), savebuf,</span>
+-	      ReadConsoleOutputA (get_output_handle (), savebuf,
++	      ReadConsoleOutputW (get_output_handle (), savebuf,
  				  savebufsiz, cob, &amp;now.srWindow);
  	    }
  	  else          /* restore */
-<span class="gu">@@ -1258,7 +1260,7 @@ fhandler_console::char_command (char c)</span>
+@@ -1258,7 +1260,7 @@ fhandler_console::char_command (char c)
  	      if (!savebuf)
  		break;
  
-<span class="gd">-	      WriteConsoleOutputA (get_output_handle (), savebuf,</span>
-<span class="gi">+	      WriteConsoleOutputW (get_output_handle (), savebuf,</span>
+-	      WriteConsoleOutputA (get_output_handle (), savebuf,
++	      WriteConsoleOutputW (get_output_handle (), savebuf,
  				   savebufsiz, cob, &amp;now.srWindow);
- 
-</pre></div>
+ </pre>
 <p>そしてパッチの先頭を見ると、次のようなコメントがあった。</p>
 <pre>Still TODO:
 - handle console input

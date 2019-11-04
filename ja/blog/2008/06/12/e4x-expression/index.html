@@ -61,21 +61,19 @@
 <div class="entry-body">
 <section>
 <p>E4X の変数展開が <a href="http://d.hatena.ne.jp/javascripter/20080611/1213137474">E4Xで変数展開、テンプレート - 素人がプログラミングを勉強するブログ</a> で取り上げられていた。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">foo</span><span class="o">=</span><span class="mi">123</span><span class="p">;</span>
-<span class="o">&lt;&gt;</span><span class="err">変数</span><span class="nx">foo</span><span class="err">は</span><span class="p">{</span><span class="nx">foo</span><span class="p">}</span><span class="err">です。</span><span class="o">&lt;</span><span class="err">/&gt;.toString();</span>
-<span class="c1">// &quot;変数fooは123です。&quot;</span>
-</pre></div>
+<pre class="javascript">var foo=123;
+&lt;&gt;変数fooは{foo}です。&lt;/&gt;.toString();
+// &quot;変数fooは123です。&quot;</pre>
 <p>ほー。</p>
 <h1>仕様書では</h1>
 <p><a href="http://os0x.g.hatena.ne.jp/os0x/20080611/1213154953">E4XのリテラルXMLでの式評価 - 0x廃棄階層 - 統治局</a> によると、仕様書には次のようなコードがあるらしい。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">tagname</span> <span class="o">=</span> <span class="s2">&quot;name&quot;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">attributename</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">attributevalue</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="s2">&quot;Fred&quot;</span><span class="p">;</span>
+<pre class="javascript">var tagname = &quot;name&quot;;
+var attributename = &quot;id&quot;;
+var attributevalue = 5;
+var content = &quot;Fred&quot;;
 
-<span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="o">&lt;</span><span class="p">{</span><span class="nx">tagname</span><span class="p">}</span> <span class="p">{</span><span class="nx">attributename</span><span class="p">}</span><span class="o">=</span><span class="p">{</span><span class="nx">attributevalue</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">content</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/{tagname}&gt;;</span>
-<span class="c1">// &lt;name id=&quot;5&quot;&gt;Fred&lt;/name&gt;</span>
-</pre></div>
+var x = &lt;{tagname} {attributename}={attributevalue}&gt;{content}&lt;/{tagname}&gt;;
+// &lt;name id=&quot;5&quot;&gt;Fred&lt;/name&gt;</pre>
 <p>タグ名にも属性名にも属性の値にもタグの中身にも使える模様。</p>
 <p>仕様書によると、例えばタグ名は次のように解釈される。</p>
 <pre>XMLTagName : 
@@ -84,43 +82,38 @@
 <p>{} で囲まれた部分は Expression（式）として評価される。文はダメ。</p>
 <h1>試してみた</h1>
 <p>リテラル XML が評価されるときに中の式の評価も行われる。だから、コンパイル時に値が定まってなくてもOK。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">xml1</span><span class="p">(</span><span class="nx">str</span><span class="p">){</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">test</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">str</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/test&gt;;</span>
-<span class="p">}</span>
+<pre class="javascript">function xml1(str){
+  return &lt;test&gt;{str}&lt;/test&gt;;
+}
 
-<span class="nx">xml1</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">).</span><span class="nx">toXMLString</span><span class="p">();</span>
-<span class="c1">// &lt;test&gt;Hello&lt;/test&gt;</span>
-</pre></div>
+xml1(&quot;Hello&quot;).toXMLString();
+// &lt;test&gt;Hello&lt;/test&gt;</pre>
 <p>ってことは、演算とか関数呼び出しもOK。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">xml2</span><span class="p">(</span><span class="nx">str</span><span class="p">){</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">test</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">str</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nx">str</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/test&gt;;</span>
-<span class="p">}</span>
+<pre class="javascript">function xml2(str){
+  return &lt;test&gt;{str + &quot;,&quot; + str}&lt;/test&gt;;
+}
 
-<span class="nx">xml2</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">).</span><span class="nx">toXMLString</span><span class="p">();</span>
-<span class="c1">// &lt;test&gt;Hello,Hello&lt;/test&gt;</span>
-</pre></div>
+xml2(&quot;Hello&quot;).toXMLString();
+// &lt;test&gt;Hello,Hello&lt;/test&gt;</pre>
 <p>もいっちょ。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">xml3</span><span class="p">(</span><span class="nx">str</span><span class="p">){</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">test</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">str</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span><span class="o">&lt;</span><span class="err">/test&gt;;</span>
-<span class="p">}</span>
+<pre class="javascript">function xml3(str){
+  return &lt;test&gt;{str.substr(2)}&lt;/test&gt;;
+}
 
-<span class="nx">xml3</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">).</span><span class="nx">toXMLString</span><span class="p">();</span>
-<span class="c1">// &lt;test&gt;llo&lt;/test&gt;</span>
-</pre></div>
+xml3(&quot;Hello&quot;).toXMLString();
+// &lt;test&gt;llo&lt;/test&gt;</pre>
 <p>ってことは、無名関数実行してもいいよね。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">xml5</span><span class="p">(</span><span class="nx">str</span><span class="p">){</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">test</span><span class="o">&gt;</span><span class="p">{(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">){</span><span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">a</span><span class="p">})(</span><span class="nx">str</span><span class="p">)}</span><span class="o">&lt;</span><span class="err">/test&gt;;</span>
-<span class="p">}</span>
+<pre class="javascript">function xml5(str){
+  return &lt;test&gt;{(function(a){return a + a})(str)}&lt;/test&gt;;
+}
 
-<span class="nx">xml5</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">).</span><span class="nx">toXMLString</span><span class="p">();</span>
-<span class="c1">// &lt;test&gt;HelloHello&lt;/test&gt;</span>
-</pre></div>
+xml5(&quot;Hello&quot;).toXMLString();
+// &lt;test&gt;HelloHello&lt;/test&gt;</pre>
 <p>いけた。式であれば {} の中に function も入れれる。</p>
 <p>ただ、XML リテラルのときしか展開されない。new XML() の中に入れてもダメ。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-<span class="k">new</span> <span class="nx">XML</span><span class="p">(</span><span class="s2">&quot;&lt;hoge&gt;{a}&lt;/hoge&gt;&quot;</span><span class="p">).</span><span class="nx">toXMLString</span><span class="p">()</span>
-<span class="c1">// &lt;hoge&gt;{a}&lt;/hoge&gt;</span>
-</pre></div>
+<pre class="javascript">var a = 3;
+new XML(&quot;&lt;hoge&gt;{a}&lt;/hoge&gt;&quot;).toXMLString()
+// &lt;hoge&gt;{a}&lt;/hoge&gt;</pre>
 <h1>まとめ</h1>
 <p>ちょっと楽に書けそう。</p>
 <p>→<a href="/ja/blog/2008/06/13/p1/">その２に続く</a>。</p>

@@ -72,27 +72,25 @@
 <p>関連ページ：<a href="http://labs.cybozu.co.jp/blog/nakatani/2007/05/lingrtickr.html">LingrTickr - 誰でもニコニコメソッドプレゼン (nakatani @ cybozu labs)</a></p>
 <h1>CGI のソース</h1>
 <p>post.html</p>
-<div class="highlight"><pre><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&quot;post.cgi&quot;</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;input</span> <span class="na">name=</span><span class="s">&quot;comment&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">size=</span><span class="s">&quot;30&quot;</span><span class="nt">&gt;&lt;input</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">value=</span><span class="s">&quot;つっこみ&quot;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;/form&gt;</span>
-</pre></div>
+<pre class="html">&lt;form action=&quot;post.cgi&quot; method=&quot;post&quot;&gt;
+&lt;input name=&quot;comment&quot; type=&quot;text&quot; size=&quot;30&quot;&gt;&lt;input type=&quot;submit&quot; value=&quot;つっこみ&quot;&gt;
+&lt;/form&gt;</pre>
 <p>post.cgi</p>
-<div class="highlight"><pre><span class="k">use</span> <span class="n">CGI</span><span class="p">;</span>
+<pre class="perl">use CGI;
 
-<span class="k">my</span> <span class="nv">$q</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CGI</span><span class="p">;</span>
+my $q = new CGI;
 
-<span class="k">if</span><span class="p">(</span><span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;comment&quot;</span><span class="p">)</span> <span class="ow">ne</span> <span class="s">&quot;&quot;</span><span class="p">){</span>
-	<span class="nb">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s">&quot;&gt;&gt;C:\\Documents and Settings\\nitoyon\\My Documents\\niconico.txt&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
-	<span class="k">print</span> <span class="n">FILE</span> <span class="nv">$ENV</span><span class="p">{</span><span class="s">&quot;REMOTE_ADDR&quot;</span><span class="p">}</span><span class="o">.</span><span class="s">&quot;:&quot;</span><span class="o">.</span><span class="nb">time</span><span class="o">.</span><span class="s">&quot;,&quot;</span><span class="o">.</span><span class="nv">$q</span><span class="o">-&gt;</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;comment&quot;</span><span class="p">)</span><span class="o">.</span><span class="s">&quot;\n&quot;</span><span class="p">;</span>
-	<span class="nb">close</span><span class="p">(</span><span class="n">FILE</span><span class="p">);</span>
-<span class="p">}</span>
+if($q-&gt;param(&quot;comment&quot;) ne &quot;&quot;){
+	open(FILE, &quot;&gt;&gt;C:\\Documents and Settings\\nitoyon\\My Documents\\niconico.txt&quot;) or die;
+	print FILE $ENV{&quot;REMOTE_ADDR&quot;}.&quot;:&quot;.time.&quot;,&quot;.$q-&gt;param(&quot;comment&quot;).&quot;\n&quot;;
+	close(FILE);
+}
 
-<span class="k">print</span> <span class="s">&quot;Content-type: text/html\n\n&quot;</span><span class="p">;</span>
+print &quot;Content-type: text/html\n\n&quot;;
 
-<span class="nb">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s">&quot;post.html&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
-<span class="k">while</span><span class="p">(</span><span class="sr">&lt;FILE&gt;</span><span class="p">){</span><span class="k">print</span><span class="p">}</span>
-<span class="nb">close</span><span class="p">(</span><span class="n">FILE</span><span class="p">);</span>
-</pre></div>
+open(FILE, &quot;post.html&quot;) or die;
+while(&lt;FILE&gt;){print}
+close(FILE);</pre>
 <p>Active Perl で動作確認済み。</p>
 <h1>おまけ。</h1>
 <p>実装で苦労したところ。</p>

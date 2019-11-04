@@ -72,120 +72,117 @@
 <ol><li>グラデーションを定義</li><li><code>drawRoundRect()</code> で角丸四角を描く</li><li>内側に向けて <code>GlowFilter</code> で光らせる</li><li>太めに境界線を描く</li><li>マウスが乗っていないときには白黒にする</li></ol>
 <h1>みどころ</h1>
 <p>テキストの中身の HTML を作るときに、E4X を使ってテンプレート風の書き方をしてる。</p>
-<div class="highlight"><pre><span class="nx">textField</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="p">{</span><span class="nx">size</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="nx">label</span><span class="p">}</span>
-  <span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
-</pre></div>
+<pre class="javascript">textField.htmlText = &lt;font size={size} color=&quot;#6B8399&quot;&gt;
+    {label}
+  &lt;/font&gt;.toXMLString();</pre>
 <p>たとえば、size 変数が 11 で label 変数が foo だったときには、</p>
-<div class="highlight"><pre><span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="s2">&quot;11&quot;</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span>
-  <span class="nx">foo</span>
-<span class="o">&lt;</span><span class="err">/font&gt;</span>
-</pre></div>
+<pre class="javascript">&lt;font size=&quot;11&quot; color=&quot;#6B8399&quot;&gt;
+  foo
+&lt;/font&gt;</pre>
 <p>が入るわけですな。</p>
 <p>コレはお手軽！</p>
 <p>(関連) <a href="/ja/blog/2008/06/12/e4x-expression/">E4X の変数展開 深追い (1)</a></p>
 <h1>ソース</h1>
 <p>ソースは以下に（99行）</p>
-<div class="highlight"><pre><span class="kr">package</span><span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package{
+import flash.display.*;
+import flash.events.*;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#f0f3f9&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;180&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;120&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">ButtonTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ButtonTest</span><span class="p">(){</span>
-        <span class="kd">var</span> <span class="nx">up</span><span class="o">:</span><span class="nx">Button</span>   <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;▲&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span> <span class="nx">as</span> <span class="nx">Button</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">down</span><span class="o">:</span><span class="nx">Button</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;▼&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span> <span class="nx">as</span> <span class="nx">Button</span><span class="p">;</span>
-        <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#f0f3f9&quot;, width=&quot;180&quot;, height=&quot;120&quot;)]
+public class ButtonTest extends Sprite{
+    public function ButtonTest(){
+        var up:Button   = addChild(new Button(30, 30, 30, &quot;▲&quot;, 21)) as Button;
+        var down:Button = addChild(new Button(30, 30, 30, &quot;▼&quot;, 21)) as Button;
+        down.y = 40;
 
-        <span class="nx">up</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">up</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="p">});</span>
-        <span class="nx">down</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">up</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">down</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="p">});</span>
+        up.addEventListener(&quot;click&quot;, function(event:Event):void{
+            up.y -= 5; down.y -= 5;
+        });
+        down.addEventListener(&quot;click&quot;, function(event:Event):void{
+            up.y += 5; down.y += 5;
+        });
 
-        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Button</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="s2">&quot;TEST&quot;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
+        addChild(new Button(100, 40, 20, &quot;TEST&quot;, 32)).x = 50;
+    }
+}
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">ColorMatrixFilter</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">GlowFilter</span><span class="p">;</span>
+import flash.display.Sprite;
+import flash.events.Event;
+import flash.text.TextField;
+import flash.geom.Matrix;
+import flash.filters.ColorMatrixFilter;
+import flash.filters.GlowFilter;
 
-<span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">mono</span><span class="o">:</span><span class="nx">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorMatrixFilter</span><span class="p">([</span>
-        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
-            <span class="mi">0</span><span class="p">,</span>     <span class="mi">0</span><span class="p">,</span>     <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
-    <span class="p">]);</span>
+class Button extends Sprite{
+    private static const mono:ColorMatrixFilter = new ColorMatrixFilter([
+        1 / 3, 1 / 3, 1 / 3, 0, 10,
+        1 / 3, 1 / 3, 1 / 3, 0, 10,
+        1 / 3, 1 / 3, 1 / 3, 0, 10,
+            0,     0,     0, 1, 0
+    ]);
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_hover</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">hover</span><span class="p">()</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">{</span>
-        <span class="k">return</span> <span class="nx">_hover</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">set</span> <span class="nx">hover</span><span class="p">(</span><span class="nx">value</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">_hover</span> <span class="o">!=</span> <span class="nx">value</span><span class="p">){</span>
-            <span class="nx">_hover</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
-            <span class="nx">filters</span> <span class="o">=</span> <span class="p">(</span><span class="nx">_hover</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="p">[</span><span class="nx">mono</span><span class="p">]);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    private var _hover:Boolean = false;
+    public function get hover():Boolean{
+        return _hover;
+    }
+    public function set hover(value:Boolean):void{
+        if(_hover != value){
+            _hover = value;
+            filters = (_hover ? null : [mono]);
+        }
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">W</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">H</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">R</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">label</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">size</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">){</span>
-        <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-        <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+    public function Button(W:Number, H:Number, R:Number, label:String = &quot;&quot;, size:int = 11){
+        var matrix:Matrix = new Matrix();
+        matrix.createGradientBox(W, H, Math.PI / 2);
 
-        <span class="kd">var</span> <span class="nx">bg</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
+        var bg:Sprite = new Sprite();
 
-        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xDDE9F4</span><span class="p">,</span> <span class="mh">0xD5E4F1</span><span class="p">,</span> <span class="mh">0xBAD2E8</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">136</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nx">R</span><span class="p">,</span> <span class="nx">R</span><span class="p">);</span>
-        <span class="nx">bg</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        bg.graphics.beginGradientFill(&quot;linear&quot;, [0xDDE9F4, 0xD5E4F1, 0xBAD2E8], [1, 1, 1],
+            [0, 120, 136], matrix);
+        bg.graphics.drawRoundRect(0, 0, W, H, R, R);
+        bg.graphics.endFill();
 
-        <span class="nx">bg</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xFFFFBE</span><span class="p">,</span> <span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">true</span><span class="p">)];</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bg</span><span class="p">);</span>
+        bg.filters = [new GlowFilter(0xFFFFBE, .5, 10, 10, 2, 1, true)];
+        addChild(bg);
 
-        <span class="kd">var</span> <span class="nx">line</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xBAD2E8</span><span class="p">);</span>
-        <span class="nx">line</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">W</span><span class="p">,</span> <span class="nx">H</span><span class="p">,</span> <span class="nx">R</span><span class="p">,</span> <span class="nx">R</span><span class="p">);</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">line</span><span class="p">);</span>
+        var line:Sprite = new Sprite();
+        line.graphics.lineStyle(3, 0xBAD2E8);
+        line.graphics.drawRoundRect(0, 0, W, H, R, R);
+        addChild(line);
 
-        <span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="nx">mono</span><span class="p">];</span>
-        <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">mouseChildren</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        filters = [mono];
+        buttonMode = true;
+        mouseChildren = false;
 
-        <span class="k">if</span> <span class="p">(</span><span class="nx">label</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">textField</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">selectable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">htmlText</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">font</span> <span class="nx">size</span><span class="o">=</span><span class="p">{</span><span class="nx">size</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;#6B8399&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">label</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/font&gt;.toXMLString();</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">W</span> <span class="o">-</span> <span class="nx">textField</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="p">(</span><span class="nx">H</span> <span class="o">-</span> <span class="nx">textField</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
-        <span class="p">}</span>
+        if (label != &quot;&quot;){
+            var textField:TextField = new TextField();
+            textField.selectable = false;
+            textField.autoSize = &quot;left&quot;;
+            textField.htmlText = &lt;font size={size} color=&quot;#6B8399&quot;&gt;{label}&lt;/font&gt;.toXMLString();
+            textField.x = (W - textField.width) / 2;
+            textField.y = (H - textField.height) / 2;
+            addChild(textField);
+        }
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;rollOver&quot;</span><span class="p">,</span> <span class="nx">buttonRollOver</span><span class="p">);</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;rollOut&quot;</span><span class="p">,</span> <span class="nx">buttonRollOut</span><span class="p">);</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;removed&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;rollOver&quot;</span><span class="p">,</span> <span class="nx">buttonRollOver</span><span class="p">);</span>
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;rollOut&quot;</span><span class="p">,</span> <span class="nx">buttonRollOut</span><span class="p">);</span>
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;removed&quot;</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
+        addEventListener(&quot;rollOver&quot;, buttonRollOver);
+        addEventListener(&quot;rollOut&quot;, buttonRollOut);
+        addEventListener(&quot;removed&quot;, function(event:Event):void{
+            removeEventListener(&quot;rollOver&quot;, buttonRollOver);
+            removeEventListener(&quot;rollOut&quot;, buttonRollOut);
+            removeEventListener(&quot;removed&quot;, arguments.callee);
+        });
+    }
 
-    <span class="kr">protected</span> <span class="kd">function</span> <span class="nx">buttonRollOver</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="nx">hover</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
+    protected function buttonRollOver(event:Event):void{
+        hover = true;
+    }
 
-    <span class="kr">protected</span> <span class="kd">function</span> <span class="nx">buttonRollOut</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="nx">hover</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    protected function buttonRollOut(event:Event):void{
+        hover = false;
+    }
+}</pre>
 </section>
 
 </div>

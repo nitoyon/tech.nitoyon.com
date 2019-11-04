@@ -89,35 +89,34 @@ ken_all.csv     - Melted   :  ooooooooooooooooooooooooooooooooooooooooooooooo
 <ul><li>Ruby 1.8.5<ul><li>ActiveRecord 1.15</li><li>sqlite3-ruby 1.2.4</li></ul></li><li>sqlite3 3.6.6.2</li></ul>
 <h1>テーブルの準備</h1>
 <p>まずは、DB とテーブルの作成。ActiveRecord の Migration 機能を使ってテーブル構造を定義してやる。</p>
-<div class="highlight"><pre><span class="c1"># EntrySchema.rb</span>
-<span class="nb">require</span> <span class="s1">&#39;rubygems&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
+<pre class="ruby"># EntrySchema.rb
+require 'rubygems'
+require 'active_record'
 
-<span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
-  <span class="ss">:adapter</span> <span class="o">=&gt;</span> <span class="s1">&#39;sqlite3&#39;</span><span class="p">,</span>
-  <span class="ss">:dbfile</span> <span class="o">=&gt;</span> <span class="s2">&quot;geocode.db&quot;</span>
-  <span class="p">)</span>
+ActiveRecord::Base.establish_connection(
+  :adapter =&gt; 'sqlite3',
+  :dbfile =&gt; &quot;geocode.db&quot;
+  )
 
-<span class="k">class</span> <span class="nc">EntrySchema</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
-  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">up</span>
-    <span class="n">create_table</span><span class="p">(</span><span class="ss">:codes</span><span class="p">){</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:high</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:low</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:pref</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:city</span><span class="p">,</span> <span class="ss">:string</span><span class="p">,</span> <span class="ss">:null</span> <span class="o">=&gt;</span> <span class="kp">false</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:lat</span><span class="p">,</span> <span class="ss">:float</span>
-      <span class="n">t</span><span class="o">.</span><span class="n">column</span> <span class="ss">:lng</span><span class="p">,</span> <span class="ss">:float</span>
-    <span class="p">}</span>
-  <span class="k">end</span>
+class EntrySchema &lt; ActiveRecord::Migration
+  def self.up
+    create_table(:codes){ |t|
+      t.column :high, :string, :null =&gt; false
+      t.column :low, :string, :null =&gt; false
+      t.column :pref, :string, :null =&gt; false
+      t.column :city, :string, :null =&gt; false
+      t.column :lat, :float
+      t.column :lng, :float
+    }
+  end
 
-  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">down</span>
-    <span class="n">drop_table</span> <span class="ss">:codes</span>
-   <span class="k">end</span>
-<span class="k">end</span>
+  def self.down
+    drop_table :codes
+   end
+end
 
-<span class="k">class</span> <span class="nc">Code</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-<span class="k">end</span>
-</pre></div>
+class Code &lt; ActiveRecord::Base
+end</pre>
 <p>こう書いておくと、次のようなコードを実行させるだけでテーブルを作成してくれる。</p>
 <pre>% ruby -e 'require &quot;EntrySchema&quot;; EntrySchema.migrate(:up)'
  == EntrySchema: migrating
@@ -132,30 +131,29 @@ ken_all.csv     - Melted   :  ooooooooooooooooooooooooooooooooooooooooooooooo
 <p>お次は DB に CSV のデータを流し込むところ。</p>
 <p>Ruby には標準で CSV クラスがついてくる。こいつを使えば１行を配列としてパースしてくれる。</p>
 <p>DB 側は ActiveRecord と併用すればいとも簡単。コードがこれ。</p>
-<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;EntrySchema&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;csv&#39;</span>
+<pre class="ruby">require 'EntrySchema'
+require 'csv'
 
-<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="no">CSV</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;ken_all_utf8.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">row</span><span class="o">|</span>
-  <span class="c1"># 下４桁が 0000 のだけ突っ込む</span>
-  <span class="k">next</span> <span class="k">unless</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;0000&quot;</span>
+i = 1
+CSV.open('ken_all_utf8.csv', 'r') do |row|
+  # 下４桁が 0000 のだけ突っ込む
+  next unless row[2].to_s.slice(3, 4) == &quot;0000&quot;
 
-  <span class="c1"># 既に突っ込んだ場合はそのデータを読み取る</span>
-  <span class="n">code</span> <span class="o">=</span> <span class="no">Code</span><span class="o">.</span><span class="n">find_by_id</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-  <span class="n">code</span> <span class="o">=</span> <span class="no">Code</span><span class="o">.</span><span class="n">new</span> <span class="k">if</span> <span class="n">code</span><span class="o">.</span><span class="n">nil?</span>
+  # 既に突っ込んだ場合はそのデータを読み取る
+  code = Code.find_by_id(i)
+  code = Code.new if code.nil?
 
-  <span class="c1"># CSV のデータを保存する</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">2</span><span class="o">].</span><span class="n">to_s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">pref</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">6</span><span class="o">]</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">city</span> <span class="o">=</span> <span class="n">row</span><span class="o">[</span><span class="mi">7</span><span class="o">]</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">save</span>
+  # CSV のデータを保存する
+  code.high = row[2].to_s.slice(0, 3)
+  code.low = row[2].to_s.slice(3, 4)
+  code.pref = row[6]
+  code.city = row[7]
+  code.save
 
-  <span class="c1"># 出力</span>
-  <span class="nb">puts</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">pref</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">city</span><span class="si">}</span><span class="s2">&quot;</span>
-  <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-<span class="k">end</span>
-</pre></div>
+  # 出力
+  puts &quot;#{code.pref} #{code.city}&quot;
+  i += 1
+end</pre>
 <p>ActiveRecord のおかげで、Code オブジェクトのプロパティを設定して save するだけで DB に格納してくれる。抽象度が高くて幸せ。</p>
 <p>実行してみる。</p>
 <pre>% ruby script/parse_postal.rb

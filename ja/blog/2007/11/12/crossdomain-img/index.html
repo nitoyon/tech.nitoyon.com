@@ -64,16 +64,14 @@
 <p>AS3 で調べたけど、AS2 でもセキュリティの機構自体は同じ（だと思う）。</p>
 <h1>読み込み方</h1>
 <p>Loader クラスを使えば<strong>外部ドメインの画像をロードできる</strong>。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
-<span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">);</span>
-<span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var loader:Loader = new Loader();
+var req:URLRequest = new URLRequest(&quot;http://www.example.com/sample.gif&quot;);
+loader.load(req);
+addChild(loader);</pre>
 <p>画像形式は PNG、GIF、JPEG のみ。BMP はダメ。アニメーション GIF の場合は１フレーム目しか描画されない。</p>
 <p>読み込み完了したことを知るためには、contentLoaderInfo プロパティの complete イベントを監視すればよい。ファイルが存在しなかったり、ファイル形式が不正だった場合は ioError イベントが発生する。ioError を listen していない場合には例外が投げられる。</p>
-<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="nx">completeHandler</span><span class="p">);</span>
-<span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;ioError&quot;</span><span class="p">,</span> <span class="nx">ioErrorHandler</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">loader.contentLoaderInfo.addEventListener(&quot;complete&quot;, completeHandler);
+loader.contentLoaderInfo.addEventListener(&quot;ioError&quot;, ioErrorHandler);</pre>
 <p>読み込んだ画像は、回転・拡大したり、透明度を変えたり、フィルタをかけたりすることが可能だ。以下の例を見ていただきたい。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FImageLoader1.swf&amp;bgcolor=%23ffffff" width="200" height="80" class="flash"></iframe></center></p>
 <p>この例では、mixi のロゴを img.mixi.jp のドメインから動的に読み込んでいる。ColorMatrixFilter で紫色に変色させ、DisplacementMapFilter でマウスの上を歪ませている。</p>
@@ -88,48 +86,43 @@
 <p>画像が置いてあるドメインのクロスドメインポリシーファイル（いわゆる crossdomain.xml）で、アクセスが許可されている場合、データとしてアクセスできる。</p>
 <p>(追記) AS2 では crossdomain.xml があっても、BitmapData.draw() できないらしい。</p>
 <p>例えば、Flickr のようなサービスでは、全てのドメインからのアクセスを認める設定が<a href="http://farm2.static.flickr.com/crossdomain.xml">記述されている</a>。</p>
-<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> 
-<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;</span>
-<span class="nt">&lt;cross-domain-policy&gt;</span>
-  <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
-<span class="nt">&lt;/cross-domain-policy&gt;</span>
-</pre></div>
+<pre class="xml">&lt;?xml version=&quot;1.0&quot; ?&gt; 
+&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;
+&lt;cross-domain-policy&gt;
+  &lt;allow-access-from domain=&quot;*&quot; secure=&quot;true&quot; /&gt; 
+&lt;/cross-domain-policy&gt;</pre>
 <p>一方、mixi にも crossdomain.xml はあるのだけど、現時点では<a href="http://mixi.jp/crossdomain.xml">任意のドメインからのアクセスは許可されていない</a>。</p>
-<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> 
-<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;</span>
-<span class="nt">&lt;cross-domain-policy&gt;</span>
-  <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">&quot;*.mixi.jp&quot;</span> <span class="na">secure=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span> 
-<span class="nt">&lt;/cross-domain-policy&gt;</span>
-</pre></div>
+<pre class="xml">&lt;?xml version=&quot;1.0&quot; ?&gt; 
+&lt;!DOCTYPE cross-domain-policy SYSTEM &quot;http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd&quot;&gt;
+&lt;cross-domain-policy&gt;
+  &lt;allow-access-from domain=&quot;*.mixi.jp&quot; secure=&quot;true&quot; /&gt; 
+&lt;/cross-domain-policy&gt;</pre>
 <p>では、実際にロード時に crossdomain.xml を読み込ませてみよう。といっても２箇所修正するだけだ。</p>
-<div class="highlight"><pre><span class="c1">// LoaderContextを準備</span>
-<span class="kd">var</span> <span class="nx">context</span><span class="o">:</span><span class="nx">LoaderContext</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LoaderContext</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+<pre class="javascript">// LoaderContextを準備
+var context:LoaderContext = new LoaderContext(true);
 
-<span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">Loader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Loader</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">req</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;http://www.example.com/sample.gif&quot;</span><span class="p">);</span>
-<span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">context</span><span class="p">);</span> <span class="c1">// 第２引数に context を渡す</span>
-<span class="nx">addChild</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-</pre></div>
+var loader:Loader = new Loader();
+var req:URLRequest = new URLRequest(&quot;http://www.example.com/sample.gif&quot;);
+loader.load(req, context); // 第２引数に context を渡す
+addChild(loader);</pre>
 <p>LoaderContext の checkPolicyFile を true にするところがポイント。これ以外に、Security.loadPolicyFile() メソッドを使って、事前に読み込んでおく方法もある。loadPolicyFile() を使うと、crossdomain.xml 以外の URL からクロスドメインポリシーファイルを読み取ることができる。</p>
 <p>crossdomain.xml が存在しない場合、もしくは許可されなかった場合にも、<strong>画像はロードされる</strong>。ロードした段階では例外も発生しない。BitmapData.draw() しようとした段階になって初めて例外が出るので注意が必要だ。</p>
 <p>では、どうやって許可されたかを調べるかというと、実際に試してみて例外を拾うのが一番簡単。</p>
-<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
-    <span class="k">try</span><span class="p">{</span>
-        <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">loader</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nx">SecurityError</span><span class="p">){</span>
-        <span class="nx">trace</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
-    <span class="p">}</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">loader.contentLoaderInfo.addEventListener(&quot;complete&quot;, function(event:*):void{
+    var bmd:BitmapData = new BitmapData(loader.width, loader.height);
+    try{
+        bmd.draw(loader);
+    }
+    catch(e:SecurityError){
+        trace(e.toString());
+    }
+});</pre>
 <p>もう１つの方法として、loader.contentLoaderInfo.childAllowsParent で調べることもできる。</p>
-<div class="highlight"><pre><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">contentLoaderInfo</span><span class="p">.</span><span class="nx">childAllowsParent</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// あとはお好きに</span>
-    <span class="p">}</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">loader.contentLoaderInfo.addEventListener(&quot;complete&quot;, function(event:*):void{
+    if(loader.contentLoaderInfo.childAllowsParent) {
+        // あとはお好きに
+    }
+});</pre>
 <p>どちらでもお好きな方を。</p>
 <p>具体例を１つ。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FImageLoader2.swf&amp;bgcolor=%23ffffff" width="300" height="60" class="flash"></iframe></center></p>

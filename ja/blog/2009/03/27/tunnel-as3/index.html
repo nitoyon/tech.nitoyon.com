@@ -80,135 +80,134 @@
 <ol><li>回転中の映像が一定周期でループするようにパラメータを調整する</li><li>再生前に１ループを50個の BitmapData に描画しておく</li><li>実際にアニメーションが始まったら、BitmapData を順番に表示していく</li></ol>
 <p>結果として、CPU 2～3% 程度に収まったので、なんとか Web 上で公開できるレベルになりました。</p>
 <p>以下、ソースコードです。高速化のために、だいぶ長くなっちゃいました。</p>
-<div class="highlight"><pre><span class="c1">// Processing Tunnel (AS3 version) </span>
-<span class="c1">// original source: http://processing.org/learning/topics/tunnel.html</span>
-<span class="kr">package</span> <span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">;</span>
+<pre class="javascript">// Processing Tunnel (AS3 version) 
+// original source: http://processing.org/learning/topics/tunnel.html
+package {
+import flash.display.*;
+import flash.geom.*;
+import flash.text.*;
+import flash.utils.setTimeout;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;320&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Tunnel</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;red_smoke.jpg&#39;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">Texture</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">textureImg</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#ffffff&quot;, width=&quot;320&quot;, height=&quot;200&quot;)]
+public class Tunnel extends Sprite{
+    [Embed(source='red_smoke.jpg')]
+    private var Texture:Class;
+    private var textureImg:BitmapData;
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">tunnelEffect</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">distanceTable</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">angleTable</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    private var tunnelEffect:BitmapData;
+    private var distanceTable:Array = [];
+    private var angleTable:Array = [];
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">w</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    private var w:int;
+    private var h:int;
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">CYCLE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmdCache</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    private var count:int;
+    private const CYCLE:int = 50;
+    private var bmdCache:Array = [];
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Tunnel</span><span class="p">(){</span>
-        <span class="c1">// Load texture 512 x 512</span>
-        <span class="nx">textureImg</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Texture</span><span class="p">().</span><span class="nx">bitmapData</span><span class="p">;</span>
+    public function Tunnel(){
+        // Load texture 512 x 512
+        textureImg = new Texture().bitmapData;
 
-        <span class="c1">// Create buffer screen</span>
-        <span class="nx">tunnelEffect</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">tunnelEffect</span><span class="p">));</span>
-        <span class="nx">w</span> <span class="o">=</span> <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
-        <span class="nx">h</span> <span class="o">=</span> <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+        // Create buffer screen
+        tunnelEffect = new BitmapData(320, 200);
+        addChild(new Bitmap(tunnelEffect));
+        w = tunnelEffect.width;
+        h = tunnelEffect.height;
 
-        <span class="kd">var</span> <span class="nx">ratio</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">32.0</span>
+        var ratio:Number = 32.0
 
-        <span class="c1">// Make the tables twice as big as the screen. </span>
-        <span class="c1">// The center of the buffers is now the position (w,h).</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">){</span>
-            <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">){</span>
-                <span class="kd">var</span> <span class="nx">depth</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="kr">int</span><span class="p">(</span><span class="nx">ratio</span> <span class="o">*</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">((</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">)))</span> <span class="p">;</span>
-                <span class="kd">var</span> <span class="nx">angle</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="kr">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">atan2</span><span class="p">(</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">h</span><span class="p">,</span> <span class="nx">x</span> <span class="o">-</span> <span class="nx">w</span><span class="p">)</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="p">;</span>
+        // Make the tables twice as big as the screen. 
+        // The center of the buffers is now the position (w,h).
+        for (var x:int = 0; x &lt; w * 2; x++){
+            distanceTable[x] = [];
+            angleTable[x] = [];
+            for (var y:int = 0; y &lt; h * 2; y++){
+                var depth:int = int(ratio * textureImg.height / Math.sqrt((x - w) * (x - w) + (y - h) * (y - h))) ;
+                var angle:int = int(0.5 * textureImg.width * atan2(y - h, x - w) / Math.PI) ;
 
-                <span class="c1">// The distance table contains for every pixel of the </span>
-                <span class="c1">// screen, the inverse of the distance to the center of </span>
-                <span class="c1">// the screen this pixel has.</span>
-                <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="nx">depth</span> <span class="p">;</span>
+                // The distance table contains for every pixel of the 
+                // screen, the inverse of the distance to the center of 
+                // the screen this pixel has.
+                distanceTable[x][y] = depth ;
 
-                <span class="c1">// The angle table contains the angle of every pixel of the screen, </span>
-                <span class="c1">// where the center of the screen represents the origin.</span>
-                <span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="nx">angle</span> <span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+                // The angle table contains the angle of every pixel of the screen, 
+                // where the center of the screen represents the origin.
+                angleTable[x][y] = angle ;
+            }
+        }
 
-        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Click to start...&quot;</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
+        var tf:TextField = new TextField();
+        tf.text = &quot;Click to start...&quot;;
+        addChild(tf);
 
-        <span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>
-            <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">i</span> <span class="o">&gt;=</span> <span class="nx">CYCLE</span><span class="p">){</span>
-                    <span class="c1">// Buffering finish. Start animating.</span>
-                    <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span><span class="nx">draw</span><span class="p">()});</span>
-                    <span class="nx">removeChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
-                    <span class="k">return</span><span class="p">;</span>
-                <span class="p">}</span>
+        var i:int = 0;
+        stage.addEventListener(&quot;click&quot;, function(event:*):void{
+            stage.removeEventListener(&quot;click&quot;, arguments.callee);
+            setTimeout(function():void{
+                if(i &gt;= CYCLE){
+                    // Buffering finish. Start animating.
+                    addEventListener(&quot;enterFrame&quot;, function(event:*):void{draw()});
+                    removeChild(tf);
+                    return;
+                }
 
-                <span class="c1">// Create buffered images.</span>
-                <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Buffering &quot;</span> <span class="o">+</span> <span class="kr">int</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="nx">CYCLE</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%...&quot;</span><span class="p">;</span>
-                <span class="nx">createBmdCache</span><span class="p">(</span><span class="nx">i</span><span class="o">++</span><span class="p">);</span>
-                <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
-            <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
+                // Create buffered images.
+                tf.text = &quot;Buffering &quot; + int(i / CYCLE * 100) + &quot;%...&quot;;
+                createBmdCache(i++);
+                setTimeout(arguments.callee, 20);
+            }, 0);
+        });
+    }
 
-    <span class="c1">// Create i-th buffered image.</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createBmdCache</span><span class="p">(</span><span class="nx">i</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">timeDisplacement</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">count</span><span class="o">++</span> <span class="err">/ CYCLE;</span>
+    // Create i-th buffered image.
+    private function createBmdCache(i:int):void{
+        var timeDisplacement:Number = count++ / CYCLE;
 
-        <span class="c1">// Calculate the shift values out of the time value</span>
-        <span class="kd">var</span> <span class="nx">shiftX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">timeDisplacement</span><span class="p">;</span> <span class="c1">// speed of zoom</span>
-        <span class="kd">var</span> <span class="nx">shiftY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="nx">timeDisplacement</span><span class="p">;</span> <span class="c1">//speed of spin</span>
+        // Calculate the shift values out of the time value
+        var shiftX:int = textureImg.width * timeDisplacement; // speed of zoom
+        var shiftY:int = textureImg.height * timeDisplacement; //speed of spin
 
-        <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">);</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>  <span class="p">{</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">w</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="c1">// Make sure that x + shiftLookX never goes outside </span>
-                <span class="c1">// the dimensions of the table</span>
-                <span class="kd">var</span> <span class="nx">texture_x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="p">(</span><span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">+</span> <span class="nx">shiftX</span><span class="p">)</span> <span class="o">%</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
-                <span class="kd">var</span> <span class="nx">texture_y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="p">(</span><span class="nx">angleTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]</span> <span class="o">+</span> <span class="nx">shiftY</span> <span class="o">+</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span> <span class="o">%</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+        var bmd:BitmapData = new BitmapData(w * 2, h * 2);
+        for (var y:int = 0; y &lt; h * 2; y++)  {
+            for (var x:int = 0; x &lt; w * 2; x++) {
+                // Make sure that x + shiftLookX never goes outside 
+                // the dimensions of the table
+                var texture_x:int = (distanceTable[x][y] + shiftX) % textureImg.width;
+                var texture_y:int = (angleTable[x][y] + shiftY + textureImg.height) % textureImg.height;
 
-                <span class="kd">var</span> <span class="nx">color</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">textureImg</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">texture_x</span><span class="p">,</span> <span class="nx">texture_y</span><span class="p">);</span>
-                <span class="nx">color</span> <span class="o">=</span> <span class="nx">darken</span><span class="p">(</span><span class="nx">color</span><span class="p">,</span> <span class="mi">300</span> <span class="o">/</span> <span class="nx">distanceTable</span><span class="p">[</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">]);</span>
-                <span class="nx">bmd</span><span class="p">.</span><span class="nx">setPixel</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">color</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="nx">bmdCache</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">;</span>
-    <span class="p">}</span>
+                var color:uint = textureImg.getPixel(texture_x, texture_y);
+                color = darken(color, 300 / distanceTable[x][y]);
+                bmd.setPixel(x, y, color);
+            }
+        }
+        bmdCache[i] = bmd;
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="c1">// looking left/right and up/down</span>
-        <span class="kd">var</span> <span class="nx">shiftLookX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">w</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">w</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">count</span> <span class="o">/</span> <span class="mi">20</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">shiftLookY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">h</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">count</span> <span class="o">/</span> <span class="mi">20</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">shiftLookX</span><span class="p">,</span> <span class="nx">shiftLookY</span><span class="p">,</span> <span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">);</span>
+    private function draw():void{
+        // looking left/right and up/down
+        var shiftLookX:int = w / 2 + w / 4 * Math.sin(count / 20);
+        var shiftLookY:int = h / 2 + h / 4 * Math.sin(count / 20 * 1.5);
+        var rect:Rectangle = new Rectangle(shiftLookX, shiftLookY, w, h);
 
-        <span class="nx">tunnelEffect</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">bmdCache</span><span class="p">[</span><span class="nx">count</span> <span class="o">%</span> <span class="nx">CYCLE</span><span class="p">],</span> <span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
-        <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
-    <span class="p">}</span>
+        tunnelEffect.copyPixels(bmdCache[count % CYCLE], rect, new Point(0, 0));
+        count++;
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">darken</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="nx">uint</span><span class="p">,</span> <span class="nx">brightness</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">uint</span><span class="p">{</span>
-        <span class="nx">brightness</span> <span class="o">=</span> <span class="nx">brightness</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="nx">brightness</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">brightness</span><span class="p">;</span>
-        <span class="k">return</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0xff0000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
-             <span class="o">+</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x00ff00</span><span class="p">)</span> <span class="o">&gt;&gt;</span>  <span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span><span class="p">)</span>
-             <span class="o">+</span> <span class="p">(((</span><span class="nx">color</span> <span class="o">&amp;</span> <span class="mh">0x0000ff</span><span class="p">)</span>      <span class="p">)</span> <span class="o">*</span> <span class="nx">brightness</span>      <span class="p">);</span>
-    <span class="p">}</span>
+    private function darken(color:uint, brightness:Number):uint{
+        brightness = brightness &gt; 1 ? 1 : brightness &lt; 0 ? 0 : brightness;
+        return (((color &amp; 0xff0000) &gt;&gt; 16) * brightness &lt;&lt; 16)
+             + (((color &amp; 0x00ff00) &gt;&gt;  8) * brightness &lt;&lt;  8)
+             + (((color &amp; 0x0000ff)      ) * brightness      );
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">atan2</span><span class="p">(</span><span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="p">.</span><span class="mi">5</span> <span class="o">:</span> <span class="o">-</span><span class="p">.</span><span class="mi">5</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">atan</span><span class="p">(</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">x</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function atan2(y:Number, x:Number):Number{
+        if (x == 0) return Math.PI * (y &gt; 0 ? .5 : -.5);
+        if (x &lt; 0 &amp;&amp; y &lt; 0) return Math.atan(y / x) - Math.PI;
+        return Math.atan(y / x) + (x &gt; 0 ? 0 : Math.PI)
+    }
+}
+}</pre>
 </section>
 
 </div>

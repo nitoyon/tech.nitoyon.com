@@ -77,79 +77,78 @@
 <h1>ソースコード</h1>
 <p>ソースコードは <a href="http://tech.nitoyon.com/misc/live_coding5/test.mxml">こちら</a> に置いておきました。</p>
 <p>いちおうここにも張っておきます(72行)</p>
-<div class="highlight"><pre><span class="o">&lt;?</span><span class="nx">xml</span> <span class="nx">version</span><span class="o">=</span><span class="s2">&quot;1.0&quot;</span><span class="o">?&gt;</span>
-<span class="c">&lt;!--</span> <span class="nx">DataGrid</span> <span class="nx">control</span> <span class="nx">example</span><span class="p">.</span> <span class="o">--&gt;</span>
-<span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">Application</span> <span class="nx">xmlns</span><span class="o">:</span><span class="nx">mx</span><span class="o">=</span><span class="s2">&quot;http://www.adobe.com/2006/mxml&quot;</span> <span class="nx">applicationComplete</span><span class="o">=</span><span class="s2">&quot;init()&quot;</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">Script</span><span class="o">&gt;</span>
-    <span class="o">&lt;!</span><span class="p">[</span><span class="nx">CDATA</span><span class="p">[</span>
-      <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-      <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;complete&quot;</span><span class="p">,</span> <span class="nx">complete</span><span class="p">);</span>
-        <span class="nx">loader</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="s2">&quot;xml/dump.xml&quot;</span><span class="p">));</span>
-      <span class="p">}</span>
+<pre class="javascript">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!-- DataGrid control example. --&gt;
+&lt;mx:Application xmlns:mx=&quot;http://www.adobe.com/2006/mxml&quot; applicationComplete=&quot;init()&quot;&gt;
+  &lt;mx:Script&gt;
+    &lt;![CDATA[
+      private function init():void
+      {
+        var loader:URLLoader = new URLLoader();
+        loader.addEventListener(&quot;complete&quot;, complete);
+        loader.load(new URLRequest(&quot;xml/dump.xml&quot;));
+      }
 
-      <span class="kr">private</span> <span class="kd">function</span> <span class="nx">complete</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-      <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="nx">URLLoader</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">xml</span><span class="o">:</span><span class="nx">XML</span> <span class="o">=</span> <span class="nx">XML</span><span class="p">(</span><span class="nx">loader</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+      private function complete(event:*):void
+      {
+        var loader:URLLoader = URLLoader(event.target);
+        var xml:XML = XML(loader.data);
 
-        <span class="nx">dg</span><span class="p">.</span><span class="nx">dataProvider</span> <span class="o">=</span> <span class="nx">xml</span><span class="p">..</span><span class="nx">item</span><span class="p">;</span>
+        dg.dataProvider = xml..item;
 
-        <span class="nx">parseTag</span><span class="p">(</span><span class="nx">xml</span><span class="p">);</span>
-      <span class="p">}</span>
+        parseTag(xml);
+      }
 
-      <span class="kr">private</span> <span class="kd">function</span> <span class="nx">parseTag</span><span class="p">(</span><span class="nx">xml</span><span class="o">:</span><span class="nx">XML</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-      <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">ns</span><span class="o">:</span><span class="nx">Namespace</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Namespace</span><span class="p">(</span><span class="s2">&quot;http://purl.org/dc/elements/1.1/&quot;</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">tags</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="p">{};</span>
-        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">tag</span><span class="o">:</span><span class="nx">XML</span> <span class="k">in</span> <span class="nx">xml</span><span class="p">..</span><span class="nx">ns</span><span class="o">::</span><span class="nx">subject</span><span class="p">)</span>
-        <span class="p">{</span>
-          <span class="nx">tags</span><span class="p">[</span><span class="nx">tag</span><span class="p">.</span><span class="nx">toString</span><span class="p">()]</span> <span class="o">=</span> <span class="nx">tags</span><span class="p">[</span><span class="nx">tag</span><span class="p">.</span><span class="nx">toString</span><span class="p">()]</span> <span class="o">?</span> <span class="nx">tags</span><span class="p">[</span><span class="nx">tag</span><span class="p">.</span><span class="nx">toString</span><span class="p">()]</span><span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">trace</span><span class="p">(</span><span class="nx">tags</span><span class="p">);</span>
+      private function parseTag(xml:XML):void
+      {
+        var ns:Namespace = new Namespace(&quot;http://purl.org/dc/elements/1.1/&quot;);
+        var tags:Object = {};
+        for each(var tag:XML in xml..ns::subject)
+        {
+          tags[tag.toString()] = tags[tag.toString()] ? tags[tag.toString()]+ 1 : 1;
+        }
+        trace(tags);
 
-        <span class="kd">var</span> <span class="nx">a</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">id</span><span class="o">:</span><span class="nb">String</span> <span class="k">in</span> <span class="nx">tags</span><span class="p">)</span>
-        <span class="p">{</span>
-          <span class="nx">trace</span><span class="p">(</span><span class="nx">id</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nx">tags</span><span class="p">[</span><span class="nx">id</span><span class="p">]);</span>
-        <span class="p">}</span>
-      <span class="p">}</span>
+        var a:Array = [];
+        for(var id:String in tags)
+        {
+          trace(id + &quot; &quot; + tags[id]);
+        }
+      }
 
-      <span class="kr">private</span> <span class="kd">function</span> <span class="nx">clickHandler</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-      <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">url</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="nx">dg</span><span class="p">.</span><span class="nx">selectedItem</span><span class="p">.</span><span class="nx">link</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+      private function clickHandler():void
+      {
+        var url:String = dg.selectedItem.link.toString();
         
-        <span class="nx">navigateToURL</span><span class="p">(</span><span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="nx">url</span><span class="p">));</span>
-      <span class="p">}</span>
+        navigateToURL(new URLRequest(url));
+      }
 
 
-      <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-      <span class="p">{</span>
-        <span class="nx">dg</span><span class="p">.</span><span class="nx">dataProvider</span><span class="p">.</span><span class="nx">filterFunction</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="nb">Boolean</span>
-        <span class="p">{</span>
-          <span class="k">return</span> <span class="nx">item</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">dg</span><span class="p">.</span><span class="nx">dataProvider</span><span class="p">.</span><span class="nx">refresh</span><span class="p">();</span>
-        <span class="nx">trace</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">);</span>
-      <span class="p">}</span>
-    <span class="p">]]</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="err">/mx:Script&gt;</span>
+      private function changeHandler():void
+      {
+        dg.dataProvider.filterFunction = function(item:Object):Boolean
+        {
+          return item.title.indexOf(q.text) != -1;
+        }
+        dg.dataProvider.refresh();
+        trace(&quot;change&quot;);
+      }
+    ]]&gt;
+  &lt;/mx:Script&gt;
 
-      <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">HBox</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">Text</span> <span class="nx">text</span><span class="o">=</span><span class="s2">&quot;検索&quot;</span><span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">TextInput</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;q&quot;</span> <span class="nx">change</span><span class="o">=</span><span class="s2">&quot;changeHandler()&quot;</span><span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/mx:HBox&gt;</span>
+      &lt;mx:HBox&gt;
+        &lt;mx:Text text=&quot;検索&quot;/&gt;
+        &lt;mx:TextInput id=&quot;q&quot; change=&quot;changeHandler()&quot;/&gt;
+      &lt;/mx:HBox&gt;
 
-      <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">DataGrid</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;dg&quot;</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;100%&quot;</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;100%&quot;</span> <span class="nx">rowCount</span><span class="o">=</span><span class="s2">&quot;5&quot;</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">columns</span><span class="o">&gt;</span>
-              <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">DataGridColumn</span> <span class="nx">dataField</span><span class="o">=</span><span class="s2">&quot;title&quot;</span> <span class="nx">headerText</span><span class="o">=</span><span class="s2">&quot;title&quot;</span><span class="o">/&gt;</span>
-              <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">DataGridColumn</span> <span class="nx">dataField</span><span class="o">=</span><span class="s2">&quot;description&quot;</span><span class="o">/&gt;</span>
-          <span class="o">&lt;</span><span class="err">/mx:columns&gt;</span>
-      <span class="o">&lt;</span><span class="err">/mx:DataGrid&gt;</span>
-      <span class="o">&lt;</span><span class="nx">mx</span><span class="o">:</span><span class="nx">Button</span> <span class="nx">label</span><span class="o">=</span><span class="s2">&quot;open&quot;</span> <span class="nx">click</span><span class="o">=</span><span class="s2">&quot;clickHandler()&quot;</span><span class="o">/&gt;</span>
-<span class="o">&lt;</span><span class="err">/mx:Application&gt;</span>
-</pre></div>
+      &lt;mx:DataGrid id=&quot;dg&quot; width=&quot;100%&quot; height=&quot;100%&quot; rowCount=&quot;5&quot;&gt;
+          &lt;mx:columns&gt;
+              &lt;mx:DataGridColumn dataField=&quot;title&quot; headerText=&quot;title&quot;/&gt;
+              &lt;mx:DataGridColumn dataField=&quot;description&quot;/&gt;
+          &lt;/mx:columns&gt;
+      &lt;/mx:DataGrid&gt;
+      &lt;mx:Button label=&quot;open&quot; click=&quot;clickHandler()&quot;/&gt;
+&lt;/mx:Application&gt;</pre>
 </section>
 
 </div>

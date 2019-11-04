@@ -69,22 +69,20 @@
 <ol><li>世界の作成</li><li>床の作成</li><li>落下する物体の作成</li><li>シミュレーションの開始</li><li>描画</li></ol>
 <h1>1. 世界の作成</h1>
 <p>シミュレーションを行うための世界を作成する。</p>
-<div class="highlight"><pre><span class="c1">// シミュレーションする座標の範囲を指定する</span>
-<span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
-<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">lowerBound</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
-<span class="nx">worldAABB</span><span class="p">.</span><span class="nx">upperBound</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
+<pre class="javascript">// シミュレーションする座標の範囲を指定する
+var worldAABB:b2AABB = new b2AABB();
+worldAABB.lowerBound.Set(-100.0, -100.0);
+worldAABB.upperBound.Set(100.0, 100.0);
 
-<span class="c1">// 重力を定義する</span>
-<span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
+// 重力を定義する
+var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
 
-<span class="c1">// 世界のインスタンスを作成する</span>
-<span class="nx">world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</pre></div>
+// 世界のインスタンスを作成する
+world = new b2World(worldAABB, gravity, true);</pre>
 <p>まずは、<code>worldAABB</code> を作ってシミュレーション計算する範囲を指定する。<span class="footnote"><a href="#f1" title="ver 1 では b2AABB の範囲を指定するプロパティは minVertex, maxVertex だったのが、ver 2 からはそれぞれ lowerBound, upperBound に変わっいてる" name="fn1">*1</a></span></p>
 <p>次に重力を設定する。y 軸正方向に 10.0。物理をかじったことある人にはおなじみの値（正確には 9.80665… [m/s<sup>2</sup>]）。</p>
 <p>これで準備完了。世界を生成する。</p>
-<div class="highlight"><pre><span class="nx">m_world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">m_world = new b2World(worldAABB, gravity, true);</pre>
 <p>第3パラメータは <code>doSleep</code>。ここを <code>true</code> にしておくと、物体が動いていないときはその分のシミュレーション処理を削減できる。</p>
 <h1>2. 床の作成</h1>
 <p>さて、世界ができたら床を作っていこう。</p>
@@ -93,212 +91,204 @@
 <p><code>XXXDef</code> というのは <code>XXX</code> を作成するときのパラメータだと考えるとよいだろう。事前に <code>XXXDef</code> に値を設定しておいて、<code>CreateXXXX(XXXDef);</code> メソッドで実体を作る、という流れになる。</p>
 <p>それでは、手順に沿って作成していこう。</p>
 <h2>2-1. 物体の定義を作る。</h2>
-<div class="highlight"><pre><span class="c1">// 物体の定義を作る</span>
-<span class="kd">var</span> <span class="nx">wallBdDef</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-<span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">300</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-<span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">angle</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">24</span><span class="p">;</span>
-</pre></div>
+<pre class="javascript">// 物体の定義を作る
+var wallBdDef:b2BodyDef = new b2BodyDef();
+wallBdDef.position.Set(400 / SCALE / 2, 300 / SCALE);
+wallBdDef.angle = Math.PI / 24;</pre>
 <p>400, 300 の位置に物体を作る。角度はラジアンで指定する（π(=180°) / 24 なので 7.5°傾ける）。</p>
 <h2>2-2. 物体を作る。</h2>
 <p>世界上に物体を作成する。</p>
-<div class="highlight"><pre><span class="c1">// 物体を作る</span>
-<span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBdDef</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// 物体を作る
+var wallBd:b2Body = world.CreateBody(wallBdDef);</pre>
 <h2>2-3. 形の定義を作成する</h2>
-<div class="highlight"><pre><span class="c1">// 形の定義を作る</span>
-<span class="kd">var</span> <span class="nx">wallShapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
-<span class="nx">wallShapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// 形の定義を作る
+var wallShapeDef:b2PolygonDef = new b2PolygonDef();
+wallShapeDef.SetAsBox(180 / SCALE, 10 / SCALE);</pre>
 <p><code>b2PolygonDef</code> を使って 180×10 の四角形の定義を作る。<span class="footnote"><a href="#f2" title="ver1 には b2BoxDef があったが、ver2 からは箱は b2PolygonDef.SetAsBox() で作成するようになった" name="fn2">*2</a></span></p>
 <h2>2-4. 形を物体に追加する</h2>
 <p>定義を作っただけではだめで物体に追加しなきゃいけない。</p>
-<div class="highlight"><pre><span class="c1">// 形を物体に追加する</span>
-<span class="nx">wallBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">wallShapeDef</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// 形を物体に追加する
+wallBd.CreateShape(wallShapeDef);</pre>
 <p><code>b2Body</code> オブジェクトの <code>CreateShape</code> を呼ぶ。<span class="footnote"><a href="#f3" title="ver 2.0.0 では CreateStaticShape() と CreateDynamicShape() に分かれていたが、ver 2.0.1 からは CreateShape() に統一された" name="fn3">*3</a></span></p>
 <h2>2-5. (動く物体の場合のみ) 重さを計算する</h2>
 <p>今回は動かない物体なので必要ない。</p>
 <h1>3. 落下する物体の作成</h1>
 <p>同じようにして積み木を作成していく。</p>
-<div class="highlight"><pre><span class="c1">// 物体の定義を作る (x 座標と角度はランダム)</span>
-<span class="kd">var</span> <span class="nx">objBdDef</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-<span class="nx">objBdDef</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">((</span><span class="mi">300</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">objBdDef</span><span class="p">.</span><span class="nx">angle</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+<pre class="javascript">// 物体の定義を作る (x 座標と角度はランダム)
+var objBdDef:b2BodyDef = new b2BodyDef();
+objBdDef.position.Set((300 * Math.random()) / SCALE, 0);
+objBdDef.angle = Math.PI / 2 * Math.random();
 
-<span class="c1">// 物体を作る</span>
-<span class="kd">var</span> <span class="nx">objBd</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">objBdDef</span><span class="p">);</span>
+// 物体を作る
+var objBd:b2Body = world.CreateBody(objBdDef);
 
-<span class="c1">// 形の定義を作る</span>
-<span class="kd">var</span> <span class="nx">shapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">30</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">restitution</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">;</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">;</span>
+// 形の定義を作る
+var shapeDef:b2PolygonDef = new b2PolygonDef();
+shapeDef.SetAsBox(30 / SCALE, 30 / SCALE);
+shapeDef.density = 1;
+shapeDef.restitution = 0.4;
+shapeDef.friction = 0.1;
 
-<span class="c1">// 形を物体に追加する</span>
-<span class="nx">objBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
+// 形を物体に追加する
+objBd.CreateShape(shapeDef);
 
-<span class="c1">// 定義を変更してもう１個の形を追加する</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">40</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">5</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-<span class="nx">objBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
+// 定義を変更してもう１個の形を追加する
+shapeDef.SetAsBox(40 / SCALE, 5 / SCALE);
+objBd.CreateShape(shapeDef);
 
-<span class="c1">// 重さ・重心を計算する</span>
-<span class="nx">objBd</span><span class="p">.</span><span class="nx">SetMassFromShapes</span><span class="p">();</span>
-</pre></div>
+// 重さ・重心を計算する
+objBd.SetMassFromShapes();</pre>
 <p>先ほどの手順と同じだが、動く物体なので最後に <code>SetMassFromShapes()</code> を利用して重さや重心を計算している。</p>
 <p><code>ShepeDef</code> のプロパティは次の通り。</p>
 <dl><dt><code>density</code></dt><dd><code>0</code> 以外に設定すると、固定されない（自由落下する）ようになる。</dd><dt><code>restitution</code></dt><dd>はね返り具合。</dd><dt><code>friction</code></dt><dd>摩擦ぐあいを表すパラメータ。<code>0</code> だとよく滑る。</dd></dl>
 <p>物体にはいくつも形を追加できる。ここでは、２個の四角を追加している。</p>
 <h1>4. シミュレーションの開始</h1>
 <p><code>enterFrame</code> の中で次の関数を実行する。</p>
-<div class="highlight"><pre><span class="nx">world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">world.Step(1 / 9, 10);</pre>
 <ul><li>第一引数（<code>timeStep</code>）は１回のステップで進める秒数。</li><li>第二引数（<code>iterations</code>）はシミュレーションの精度。小さいとパフォーマンスがよくなり、大きいと正確になる（めり込んだりしない）</li></ul>
 <h1>5. 描画</h1>
 <p>ver 2 から DebugView が導入された。開発の初期の段階では、物体を正しく定義できているか調べるのに便利だ。今回も DebugView を使って描画している。</p>
 <p>一回、次のように定義するだけで、自動的に描画してくれるようになる。ありがたい。</p>
-<div class="highlight"><pre><span class="c1">//----------------------------------</span>
-<span class="c1">// DebugDraw を有効にする</span>
-<span class="c1">//----------------------------------</span>
-<span class="kd">var</span> <span class="nx">debugDraw</span><span class="o">:</span><span class="nx">b2DebugDraw</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2DebugDraw</span><span class="p">();</span>
-<span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_sprite</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
-<span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_drawScale</span> <span class="o">=</span> <span class="nx">SCALE</span><span class="p">;</span>
-<span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_fillAlpha</span> <span class="o">=</span> <span class="p">.</span><span class="mi">8</span><span class="p">;</span>
-<span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_lineThickness</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_drawFlags</span> <span class="o">=</span> <span class="nx">b2DebugDraw</span><span class="p">.</span><span class="nx">e_shapeBit</span><span class="p">;</span>
-<span class="nx">world</span><span class="p">.</span><span class="nx">SetDebugDraw</span><span class="p">(</span><span class="nx">debugDraw</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">//----------------------------------
+// DebugDraw を有効にする
+//----------------------------------
+var debugDraw:b2DebugDraw = new b2DebugDraw();
+debugDraw.m_sprite = this;
+debugDraw.m_drawScale = SCALE;
+debugDraw.m_fillAlpha = .8;
+debugDraw.m_lineThickness = 1;
+debugDraw.m_drawFlags = b2DebugDraw.e_shapeBit;
+world.SetDebugDraw(debugDraw);</pre>
 <h1>ソース</h1>
 <p>コメントを細かく書いているので128行あります。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-<span class="kr">import</span> <span class="nx">Box2D</span><span class="p">.</span><span class="nx">Dynamics</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">Box2D</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">Box2D</span><span class="p">.</span><span class="nx">Collision</span><span class="p">.</span><span class="nx">Shapes</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">Box2D</span><span class="p">.</span><span class="nx">Common</span><span class="p">.</span><span class="nb">Math</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
+<pre class="javascript">package {
+import Box2D.Dynamics.*;
+import Box2D.Collision.*;
+import Box2D.Collision.Shapes.*;
+import Box2D.Common.Math.*;
+import flash.events.Event
+import flash.display.Sprite;
+import flash.text.TextField;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#666666&quot;</span><span class="p">,</span> <span class="nx">width</span><span class="o">=</span><span class="s2">&quot;350&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;200&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">Box2dSimpleSample202</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SCALE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">world</span><span class="o">:</span><span class="nx">b2World</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#666666&quot;, width=&quot;350&quot;, height=&quot;200&quot;)]
+public class Box2dSimpleSample202 extends Sprite {
+    private const SCALE:Number = 10;
+    private var world:b2World;
 
-    <span class="c1">// コンストラクタ</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Box2dSimpleSample202</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+    // コンストラクタ
+    public function Box2dSimpleSample202() {
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
 
-        <span class="c1">// メッセージとクリック時の処理</span>
-        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Click to start&quot;</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">animation</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">animation</span> <span class="o">=</span> <span class="o">!</span><span class="nx">animation</span><span class="p">;</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Click to &quot;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">animation</span> <span class="o">?</span> <span class="s2">&quot;stop&quot;</span> <span class="o">:</span> <span class="s2">&quot;start&quot;</span><span class="p">);</span>
-        <span class="p">});</span>
+        // メッセージとクリック時の処理
+        var tf:TextField = new TextField();
+        tf.textColor = 0xffffff;
+        tf.text = &quot;Click to start&quot;;
+        addChild(tf);
+        var animation:Boolean = false;
+        stage.addEventListener(&quot;click&quot;, function(event:Event):void{
+            count = 0;
+            animation = !animation;
+            tf.text = &quot;Click to &quot; + (animation ? &quot;stop&quot; : &quot;start&quot;);
+        });
 
-        <span class="c1">// 初期化</span>
-        <span class="nx">init</span><span class="p">();</span>
-        <span class="nx">createObject</span><span class="p">();</span>
+        // 初期化
+        init();
+        createObject();
 
-        <span class="c1">// 毎フレームの処理</span>
-        <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">world</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">animation</span><span class="p">){</span>
-                <span class="nx">createObject</span><span class="p">();</span>
-            <span class="p">}</span>
-            <span class="nx">count</span> <span class="o">=</span> <span class="p">(</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">30</span><span class="p">;</span>
+        // 毎フレームの処理
+        var count:int = 0;
+        addEventListener(&quot;enterFrame&quot;, function(event:Event):void {
+            world.Step(1 / 9, 10);
+            if (count == 0 &amp;&amp; animation){
+                createObject();
+            }
+            count = (count + 1) % 30;
 
-            <span class="c1">// 下に行ったオブジェクトを削除する</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">b</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">GetBodyList</span><span class="p">();</span> <span class="nx">b</span><span class="p">;</span> <span class="nx">b</span> <span class="o">=</span> <span class="nx">b</span><span class="p">.</span><span class="nx">GetNext</span><span class="p">())</span> <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">b</span><span class="p">.</span><span class="nx">GetWorldCenter</span><span class="p">().</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">SCALE</span> <span class="o">&gt;</span> <span class="mi">600</span><span class="p">){</span>
-                    <span class="nx">world</span><span class="p">.</span><span class="nx">DestroyBody</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
+            // 下に行ったオブジェクトを削除する
+            for (var b:b2Body = world.GetBodyList(); b; b = b.GetNext()) {
+                if (b.GetWorldCenter().y * SCALE &gt; 600){
+                    world.DestroyBody(b);
+                }
+            }
+        });
+    }
 
-    <span class="c1">// 初期化</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">//----------------------------------</span>
-        <span class="c1">// 世界を作成する</span>
-        <span class="c1">//----------------------------------</span>
-        <span class="c1">// シミュレーションする座標の範囲を指定する</span>
-        <span class="kd">var</span> <span class="nx">worldAABB</span><span class="o">:</span><span class="nx">b2AABB</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2AABB</span><span class="p">();</span>
-        <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">lowerBound</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">);</span>
-        <span class="nx">worldAABB</span><span class="p">.</span><span class="nx">upperBound</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">);</span>
+    // 初期化
+    private function init():void {
+        //----------------------------------
+        // 世界を作成する
+        //----------------------------------
+        // シミュレーションする座標の範囲を指定する
+        var worldAABB:b2AABB = new b2AABB();
+        worldAABB.lowerBound.Set(-100.0, -100.0);
+        worldAABB.upperBound.Set(100.0, 100.0);
 
-        <span class="c1">// 重力を定義する</span>
-        <span class="kd">var</span> <span class="nx">gravity</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2Vec2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">);</span>
+        // 重力を定義する
+        var gravity:b2Vec2 = new b2Vec2(0.0, 10.0);
 
-        <span class="c1">// 世界のインスタンスを作成する</span>
-        <span class="nx">world</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2World</span><span class="p">(</span><span class="nx">worldAABB</span><span class="p">,</span> <span class="nx">gravity</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+        // 世界のインスタンスを作成する
+        world = new b2World(worldAABB, gravity, true);
 
-        <span class="c1">//----------------------------------</span>
-        <span class="c1">// 床を作る</span>
-        <span class="c1">//----------------------------------</span>
-        <span class="c1">// 物体の定義を作る</span>
-        <span class="kd">var</span> <span class="nx">wallBdDef</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-        <span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">300</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-        <span class="nx">wallBdDef</span><span class="p">.</span><span class="nx">angle</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">24</span><span class="p">;</span>
+        //----------------------------------
+        // 床を作る
+        //----------------------------------
+        // 物体の定義を作る
+        var wallBdDef:b2BodyDef = new b2BodyDef();
+        wallBdDef.position.Set(400 / SCALE / 2, 300 / SCALE);
+        wallBdDef.angle = Math.PI / 24;
 
-        <span class="c1">// 物体を作る</span>
-        <span class="kd">var</span> <span class="nx">wallBd</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">wallBdDef</span><span class="p">);</span>
+        // 物体を作る
+        var wallBd:b2Body = world.CreateBody(wallBdDef);
 
-        <span class="c1">// 形の定義を作る</span>
-        <span class="kd">var</span> <span class="nx">wallShapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
-        <span class="nx">wallShapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">180</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
+        // 形の定義を作る
+        var wallShapeDef:b2PolygonDef = new b2PolygonDef();
+        wallShapeDef.SetAsBox(180 / SCALE, 10 / SCALE);
 
-        <span class="c1">// 形を物体に追加する</span>
-        <span class="nx">wallBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">wallShapeDef</span><span class="p">);</span>
+        // 形を物体に追加する
+        wallBd.CreateShape(wallShapeDef);
 
-        <span class="c1">//----------------------------------</span>
-        <span class="c1">// DebugDraw を有効にする</span>
-        <span class="c1">//----------------------------------</span>
-        <span class="kd">var</span> <span class="nx">debugDraw</span><span class="o">:</span><span class="nx">b2DebugDraw</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2DebugDraw</span><span class="p">();</span>
-        <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_sprite</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
-        <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_drawScale</span> <span class="o">=</span> <span class="nx">SCALE</span><span class="p">;</span>
-        <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_fillAlpha</span> <span class="o">=</span> <span class="p">.</span><span class="mi">8</span><span class="p">;</span>
-        <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_lineThickness</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">debugDraw</span><span class="p">.</span><span class="nx">m_drawFlags</span> <span class="o">=</span> <span class="nx">b2DebugDraw</span><span class="p">.</span><span class="nx">e_shapeBit</span><span class="p">;</span>
-        <span class="nx">world</span><span class="p">.</span><span class="nx">SetDebugDraw</span><span class="p">(</span><span class="nx">debugDraw</span><span class="p">);</span>
-    <span class="p">}</span>
+        //----------------------------------
+        // DebugDraw を有効にする
+        //----------------------------------
+        var debugDraw:b2DebugDraw = new b2DebugDraw();
+        debugDraw.m_sprite = this;
+        debugDraw.m_drawScale = SCALE;
+        debugDraw.m_fillAlpha = .8;
+        debugDraw.m_lineThickness = 1;
+        debugDraw.m_drawFlags = b2DebugDraw.e_shapeBit;
+        world.SetDebugDraw(debugDraw);
+    }
 
-    <span class="c1">// 物体を１個作る</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createObject</span><span class="p">()</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="c1">// 物体の定義を作る (x 座標と角度はランダム)</span>
-        <span class="kd">var</span> <span class="nx">objBdDef</span><span class="o">:</span><span class="nx">b2BodyDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2BodyDef</span><span class="p">();</span>
-        <span class="nx">objBdDef</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">Set</span><span class="p">((</span><span class="mi">300</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="nx">objBdDef</span><span class="p">.</span><span class="nx">angle</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">();</span>
+    // 物体を１個作る
+    private function createObject():void{
+        // 物体の定義を作る (x 座標と角度はランダム)
+        var objBdDef:b2BodyDef = new b2BodyDef();
+        objBdDef.position.Set((300 * Math.random()) / SCALE, 0);
+        objBdDef.angle = Math.PI / 2 * Math.random();
 
-        <span class="c1">// 物体を作る</span>
-        <span class="kd">var</span> <span class="nx">objBd</span><span class="o">:</span><span class="nx">b2Body</span> <span class="o">=</span> <span class="nx">world</span><span class="p">.</span><span class="nx">CreateBody</span><span class="p">(</span><span class="nx">objBdDef</span><span class="p">);</span>
+        // 物体を作る
+        var objBd:b2Body = world.CreateBody(objBdDef);
 
-        <span class="c1">// 形の定義を作る</span>
-        <span class="kd">var</span> <span class="nx">shapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
-        <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">30</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">30</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-        <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">density</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">restitution</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">;</span>
-        <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">friction</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">;</span>
+        // 形の定義を作る
+        var shapeDef:b2PolygonDef = new b2PolygonDef();
+        shapeDef.SetAsBox(30 / SCALE, 30 / SCALE);
+        shapeDef.density = 1;
+        shapeDef.restitution = 0.4;
+        shapeDef.friction = 0.1;
 
-        <span class="c1">// 形を物体に追加する</span>
-        <span class="nx">objBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
+        // 形を物体に追加する
+        objBd.CreateShape(shapeDef);
 
-        <span class="c1">// 定義を変更してもう１個の形を追加する</span>
-        <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">SetAsBox</span><span class="p">(</span><span class="mi">40</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">,</span> <span class="mi">5</span> <span class="o">/</span> <span class="nx">SCALE</span><span class="p">);</span>
-        <span class="nx">objBd</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
+        // 定義を変更してもう１個の形を追加する
+        shapeDef.SetAsBox(40 / SCALE, 5 / SCALE);
+        objBd.CreateShape(shapeDef);
 
-        <span class="c1">// 重さ・重心を計算する</span>
-        <span class="nx">objBd</span><span class="p">.</span><span class="nx">SetMassFromShapes</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // 重さ・重心を計算する
+        objBd.SetMassFromShapes();
+    }
+}
+}</pre>
 <div class="footnote"><p class="footnote"><a href="#fn1" name="f1">*1</a>: ver 1 では <code>b2AABB</code> の範囲を指定するプロパティは minVertex, maxVertex だったのが、ver 2 からはそれぞれ <code>lowerBound</code>, <code>upperBound</code> に変わっいてる</p><p class="footnote"><a href="#fn2" name="f2">*2</a>: ver1 には <code>b2BoxDef</code> があったが、ver2 からは箱は <code>b2PolygonDef.SetAsBox()</code> で作成するようになった</p><p class="footnote"><a href="#fn3" name="f3">*3</a>: ver 2.0.0 では <code>CreateStaticShape()</code> と <code>CreateDynamicShape()</code> に分かれていたが、ver 2.0.1 からは <code>CreateShape()</code> に統一された</p></div>
 </section>
 

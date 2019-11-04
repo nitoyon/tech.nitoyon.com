@@ -92,183 +92,180 @@
 <p>ちなみに、f がどんどん大きくなってくと、x<sub>s</sub> = x, y<sub>s</sub> = y に近づく。つまり、焦点がスクリーンから遠ざかると、透視投影の遠近感の影響が少なくなって平行投影に近づいていくことを表す。</p>
 <h1>透視投影のデモ</h1>
 <p>実は、FIVe3D の Point3D クラスには、透視投影を行うメソッドが定義されている。</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kd">function</span> <span class="nx">getPerspective</span><span class="p">(</span><span class="nx">viewdistance</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">viewdistance</span><span class="o">/</span><span class="p">(</span><span class="nx">z</span><span class="o">+</span><span class="nx">viewdistance</span><span class="p">);</span>
-<span class="p">}</span>
+<pre class="javascript">public function getPerspective(viewdistance:Number):Number {
+    return viewdistance/(z+viewdistance);
+}
 
-<span class="kr">public</span> <span class="kd">function</span> <span class="nx">project</span><span class="p">(</span><span class="nx">perspective</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-    <span class="nx">x</span> <span class="o">*=</span> <span class="nx">perspective</span><span class="p">;</span>
-    <span class="nx">y</span> <span class="o">*=</span> <span class="nx">perspective</span><span class="p">;</span>
-    <span class="nx">z</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+public function project(perspective:Number):void {
+    x *= perspective;
+    y *= perspective;
+    z = 0;
+}</pre>
 <p>viewdistance というのが、「スクリーンが原点にある場合」の f そのものだ。</p>
 <p>このメソッドを利用して、透視投影のデモを作ってみた。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FStudy3d3.swf&amp;bgcolor=%23000000" width="450" height="300" class="flash"></iframe></center></p>
 <p>左のスライダで f の値を調整できる。f が小さい（スライダが上）になるほど、図形が歪むのが確認いただけるだろう。</p>
 <p>ソースは最後に掲載しておく。スクロールバーの分だけ30行ほど増えているが、ほとんど前回のソースと同じだ。透視投影後の座標を取得する部分は次のようになっている。</p>
-<div class="highlight"><pre>    <span class="c1">// 点を透視投影する</span>
-    <span class="nx">pt</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="nx">f</span><span class="p">));</span>
-</pre></div>
+<pre class="javascript">    // 点を透視投影する
+    pt.project(pt.getPerspective(f));</pre>
 <h1>まとめ</h1>
 <p>透視投影の一般解を求めた。透視投影として紹介される式にはいくつかのパターンがあるが、そのいずれも一般解の形に収まるはずだ。ここでは、２通りの計算を簡単にするパターンを紹介し、後者を利用してデモを行った。</p>
 <p><a href="/ja/blog/2008/06/20/as-3d-lessen3/">次回に続く</a>。</p>
 <p>ソースは以下に(153行)。</p>
 <p>要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.utils.Dictionary;
+    import five3D.geom.Matrix3D;
+    import five3D.geom.Point3D;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d3</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cubes</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">scrollBar</span><span class="o">:</span><span class="nx">ScrollBar</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;0x000000&quot;)]
+    public class Study3d3 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+        private var rad:Number;
+        private var scrollBar:ScrollBar;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d3</span><span class="p">(){</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function Study3d3(){
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="nx">cubes</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 50));
+            cubes.push(new Cube(0, 100, 0, 20));
+            cubes.push(new Cube(0, -100, 0, 20));
+            cubes.push(new Cube(100, 0, 0, 20));
+            cubes.push(new Cube(-100, 0, 0, 20));
+            cubes.push(new Cube(0, 0, 100, 20));
+            cubes.push(new Cube(0, 0, -100, 20));
 
-            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 200;
+            canvas.y = 150;
 
-            <span class="nx">scrollBar</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ScrollBar</span><span class="p">();</span>
-            <span class="nx">scrollBar</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">scrollBar</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">scrollBar</span><span class="p">);</span>
+            scrollBar = new ScrollBar();
+            scrollBar.x = scrollBar.y = 30;
+            addChild(scrollBar);
 
-            <span class="nx">rad</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+            rad = 0;
+            addEventListener(&quot;enterFrame&quot;, changeHandler);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        private function changeHandler(event:Event):void {
+            canvas.graphics.clear();
 
-            <span class="c1">// 回転行列を作成</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateX(Math.PI / 6);
+            matrix.rotateY(rad / 180 * Math.PI * 3);
+            matrix.rotateZ(rad / 180 * Math.PI);
 
-            <span class="c1">// 描画</span>
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">150</span> <span class="o">+</span> <span class="nx">scrollBar</span><span class="p">.</span><span class="nx">value</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
-            <span class="p">}</span>
+            // 描画
+            for each(var c:Cube in cubes){
+                c.draw(canvas.graphics, matrix, 150 + scrollBar.value * 3);
+            }
 
-            <span class="c1">// 角度更新</span>
-            <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+            // 角度更新
+            rad = (rad + 1) % 360;
+        }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+import flash.display.*;
+import flash.events.Event;
+import flash.geom.Point;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
 
-<span class="kr">class</span> <span class="nx">Cube</span> <span class="p">{</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+class Cube {
+    private var points:Array = [];
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Cube</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="nb">Number</span><span class="p">){</span>
-        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span><span class="k">return</span> <span class="nx">f</span> <span class="o">?</span> <span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">:</span> <span class="o">-</span><span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;};</span>
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
 
-        <span class="c1">// 立方体の頂点８つを作成する</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>  <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">z</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">));</span>
-            <span class="nx">points</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i &lt; 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 &lt; 2), z + diff(i &lt; 4));
+            points.push(p);
+        }
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">// 回転後の各頂点の座標を計算</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+    public function draw(g:Graphics, matrix:Matrix3D, f:Number):void {
+        // 回転後の各頂点の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i &lt; points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
 
-            <span class="c1">// 点を透視投影する</span>
-            <span class="nx">pt</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="nx">f</span><span class="p">));</span>
+            // 点を透視投影する
+            pt.project(pt.getPerspective(f));
 
-            <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">pt</span><span class="p">);</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pt</span><span class="p">);</span>
-        <span class="p">}</span>
+            drawPoint(g, pt);
+            p.push(pt);
+        }
 
-        <span class="c1">// 頂点の間を線で結ぶ</span>
-        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]);</span>
-            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">p</span><span class="p">[(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]);</span>
-            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">p</span><span class="p">[</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[(</span><span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 頂点の間を線で結ぶ
+        for(i = 0; i &lt; 4; i++){
+            drawLine(g, p[i], p[i + 4]);
+            drawLine(g, p[i], p[(i + 1) % 4]);
+            drawLine(g, p[i + 4], p[(i + 1) % 4 + 4]);
+        }
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPoint</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-    <span class="p">}</span>
+    private function drawPoint(g:Graphics, p:Point3D):void {
+        g.beginFill(0xffffff);
+        g.drawCircle(p.x, p.y, 3);
+        g.endFill();
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    private function drawLine(g:Graphics, p1:Point3D, p2:Point3D):void {
+        g.beginFill(0, 0);
+        g.lineStyle(1, 0xffffff);
+        g.moveTo(p1.x, p1.y);
+        g.lineTo(p2.x, p2.y);
+        g.lineStyle();
+        g.endFill();
+    }
+}
 
-<span class="kr">class</span> <span class="nx">ScrollBar</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">var</span> <span class="nx">value</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+class ScrollBar extends Sprite {
+    public var value:int;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ScrollBar</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="nx">useHandCursor</span> <span class="o">=</span> <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">112</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+    public function ScrollBar():void {
+        useHandCursor = buttonMode = true;
+        graphics.beginFill(0xffffff);
+        graphics.lineStyle(0);
+        graphics.drawRect(0, -2, 8, 112);
+        graphics.endFill();
 
-        <span class="kd">var</span> <span class="nx">tab</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">tab</span><span class="p">);</span>
+        var tab:Sprite = new Sprite();
+        tab.graphics.beginFill(0xffffff);
+        tab.graphics.lineStyle(0);
+        tab.graphics.drawRect(-8, 0, 24, 8);
+        tab.graphics.endFill();
+        tab.y = 0;
+        addChild(tab);
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-            <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
-        <span class="p">});</span>
+        addEventListener(&quot;mouseDown&quot;, function(event:Event):void {
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+            mouseMoveHandler(event);
+        });
 
-        <span class="kd">var</span> <span class="nx">mouseMoveHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">));</span>
-            <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">),</span> <span class="mi">100</span><span class="p">);</span>
-            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="kd">var</span> <span class="nx">mouseUpHandler</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">value</span> <span class="o">=</span> <span class="nx">tab</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-            <span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        var mouseMoveHandler:Function = function(event:Event):void {
+            var p:Point = globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            tab.y = Math.min(Math.max(0, p.y), 100);
+            value = tab.y;
+        }
+        var mouseUpHandler:Function = function(event:Event):void {
+            value = tab.y;
+            dispatchEvent(new Event(&quot;change&quot;));
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}</pre>
 </section>
 
 </div>

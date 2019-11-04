@@ -63,12 +63,11 @@
 <p>Internet Explorer で Location Hash を利用したページに Flash を表示すると、IE のタイトルが #hoge のようになってしまうことがある。発生する条件は、Flash にフォーカスがあたったり、location.hash 値が変わったりしたとき。</p>
 <p>この問題、世間の人はどうやって解決してるんだろうと思って、swfaddress のソースをみてみた。swfaddress は Flash で location.hash 扱うための有名ライブラリ。</p>
 <p>swfaddress の JavaScript 側に次のようなソースを発見した。setInterval でこの処理が定期的に呼ばれているようだ。</p>
-<div class="highlight"><pre><span class="c1">// _d は document</span>
-<span class="kd">var</span> <span class="nx">_titleCheck</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">_browser</span><span class="p">.</span><span class="nx">isIE</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="nx">_d</span><span class="p">.</span><span class="nx">title</span> <span class="o">!=</span> <span class="nx">_title</span><span class="p">)</span>
-    <span class="nx">SWFAddress</span><span class="p">.</span><span class="nx">setTitle</span><span class="p">(</span><span class="nx">_title</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// _d は document
+var _titleCheck = function() {
+  if (_browser.isIE() &amp;&amp; _d.title != _title)
+    SWFAddress.setTitle(_title);
+}</pre>
 <p>要約すると、「IE でページのタイトルが勝手に変わってたら元に戻す」という処理になってる。んー、結局こうするしかないのか…。swfaddress はちょっと大げさだったので、自力で document.title を定期的に書き戻す処理を実装することにした。</p>
 <p>IE7 でもこの問題は直ってない模様。MS と Adobe のどっちが悪いんだろなぁ…。ちなみに、IE8 には <a href="http://msdn.microsoft.com/en-us/library/cc288209(VS.85).aspx">onhashchange イベント</a> が追加されるらしいので、このバグ(?)が残っていたとしても、比較的すっきりと対処できそうだ。</p>
 

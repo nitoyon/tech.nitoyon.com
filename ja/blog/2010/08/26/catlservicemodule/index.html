@@ -64,76 +64,75 @@
 <p>今回のコードは atlbase.h 内の <code>CAtlServiceModuleT</code> 周辺のソースコードを追いつつ、Visual C++ 2005 と Visual C++ 2008 で動作することを確認している。ただし、Microsoft の意図とは違う使い方をしているので、実戦投入する場合は十分に注意してほしい。</p>
 <h1>ソースコード</h1>
 <p>さっそくソースコード。</p>
-<div class="highlight"><pre><span class="cp">#define _ATL_NO_COM_SUPPORT</span>
-<span class="cp">#include &lt;atlbase.h&gt;</span>
-<span class="cp">#include &lt;tchar.h&gt;</span>
-<span class="cp">#define SERVICE_NAME TEXT(&quot;ServiceName&quot;)</span>
+<pre class="cpp">#define _ATL_NO_COM_SUPPORT
+#include &lt;atlbase.h&gt;
+#include &lt;tchar.h&gt;
+#define SERVICE_NAME TEXT(&quot;ServiceName&quot;)
 
-<span class="k">class</span> <span class="nc">CMyServiceModule</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CAtlServiceModuleT</span><span class="o">&lt;</span><span class="n">CMyServiceModule</span><span class="o">&gt;</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-    <span class="n">HANDLE</span> <span class="n">m_hStopEvent</span><span class="p">;</span>
+class CMyServiceModule : public CAtlServiceModuleT&lt;CMyServiceModule&gt;
+{
+public:
+    HANDLE m_hStopEvent;
 
-    <span class="n">CMyServiceModule</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-        <span class="n">_tcscpy_s</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_countof</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">),</span> <span class="n">SERVICE_NAME</span><span class="p">);</span>
-    <span class="p">}</span>
+    CMyServiceModule()
+    {
+        m_hStopEvent = NULL;
+        _tcscpy_s(m_szServiceName, _countof(m_szServiceName), SERVICE_NAME);
+    }
 
-    <span class="kt">bool</span> <span class="n">ParseCommandLine</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">lpCmdLine</span><span class="p">,</span> <span class="n">HRESULT</span><span class="o">*</span> <span class="n">pnRetCode</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="o">*</span><span class="n">pnRetCode</span> <span class="o">=</span> <span class="n">S_OK</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-    <span class="p">}</span>
+    bool ParseCommandLine(LPCTSTR lpCmdLine, HRESULT* pnRetCode) throw()
+    {
+        *pnRetCode = S_OK;
+        return true;
+    }
 
-    <span class="n">HRESULT</span> <span class="n">Start</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">SERVICE_TABLE_ENTRY</span> <span class="n">st</span><span class="p">[]</span> <span class="o">=</span>
-        <span class="p">{</span>
-            <span class="p">{</span> <span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_ServiceMain</span> <span class="p">},</span>
-            <span class="p">{</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">}</span>
-        <span class="p">};</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">::</span><span class="n">StartServiceCtrlDispatcher</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span> <span class="o">=</span> <span class="n">GetLastError</span><span class="p">();</span>
-        <span class="k">return</span> <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span><span class="p">;</span>
-    <span class="p">}</span>
+    HRESULT Start(int nShowCmd) throw()
+    {
+        SERVICE_TABLE_ENTRY st[] =
+        {
+            { m_szServiceName, _ServiceMain },
+            { NULL, NULL }
+        };
+        if (::StartServiceCtrlDispatcher(st) == 0)
+            m_status.dwWin32ExitCode = GetLastError();
+        return m_status.dwWin32ExitCode;
+    }
 
-    <span class="n">HRESULT</span> <span class="n">Run</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span> <span class="o">=</span> <span class="n">SW_HIDE</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="n">CreateEvent</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">TRUE</span><span class="p">,</span> <span class="n">FALSE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">m_hStopEvent</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="n">AtlHresultFromLastError</span><span class="p">();</span>
-        <span class="p">}</span>
+    HRESULT Run(int nShowCmd = SW_HIDE) throw()
+    {
+        m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+        if (m_hStopEvent == NULL)
+        {
+            return AtlHresultFromLastError();
+        }
 
-        <span class="n">LogEvent</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;Service started&quot;</span><span class="p">));</span>
-        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_RUNNING</span><span class="p">);</span>
+        LogEvent(_T(&quot;Service started&quot;));
+        SetServiceStatus(SERVICE_RUNNING);
 
-        <span class="c1">// ここでワーカー スレッドを作るなり、何らかの処理を実装する</span>
+        // ここでワーカー スレッドを作るなり、何らかの処理を実装する
 
-        <span class="n">WaitForSingleObject</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">,</span> <span class="n">INFINITE</span><span class="p">);</span>
-        <span class="n">CloseHandle</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+        WaitForSingleObject(m_hStopEvent, INFINITE);
+        CloseHandle(m_hStopEvent);
 
-        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
-    <span class="p">}</span>
+        return S_OK;
+    }
 
-    <span class="kt">void</span> <span class="n">OnStop</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_STOP_PENDING</span><span class="p">);</span>
-        <span class="n">SetEvent</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">};</span>
+    void OnStop() throw()
+    {
+        SetServiceStatus(SERVICE_STOP_PENDING);
+        SetEvent(m_hStopEvent);
+    }
+};
 
-<span class="kt">int</span> <span class="n">WINAPI</span> <span class="nf">_tWinMain</span><span class="p">(</span><span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">LPTSTR</span><span class="p">,</span> <span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">CMyServiceModule</span> <span class="n">module</span><span class="p">;</span>
+int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int nShowCmd)
+{
+    CMyServiceModule module;
 
-    <span class="c1">//if (!module.IsInstalled())</span>
-    <span class="c1">//    module.Install();</span>
+    //if (!module.IsInstalled())
+    //    module.Install();
 
-    <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+    return module.WinMain(nShowCmd);
+}</pre>
 <h1>使い方</h1>
 <p>サービス登録するには、<code>sc create</code> コマンドを使うか、<code>_tWinMain()</code> のコメントアウトしてある部分を消して一度実行するとよい。</p>
 <p>登録したサービスを [開始] すると、サービスが開始する。現在の実装では何もせずに停止されるのを待機するだけのものとなっている。[停止] を実行すると無事に停止することを確認できる。</p>
@@ -143,110 +142,102 @@
 <p>まずは、<code>CAtlServiceModuleT</code> が定義されている <code>atlbase.h</code> を include する。</p>
 <p><code>CAtlServiceModuleT</code> は ATL で定義される <code>CAtlExeModuleT</code> を継承したクラスだ。</p>
 <p>ATL の XXXXModule クラスは COM に必要な初期化などをやってくれるが、今回は COM は使わないので <code>_ATL_NO_COM_SUPPORT</code> を事前に define しておく。</p>
-<div class="highlight"><pre><span class="cp">#define _ATL_NO_COM_SUPPORT</span>
-<span class="cp">#include &lt;atlbase.h&gt;</span>
-<span class="cp">#include &lt;tchar.h&gt;</span>
-</pre></div>
+<pre class="cpp">#define _ATL_NO_COM_SUPPORT
+#include &lt;atlbase.h&gt;
+#include &lt;tchar.h&gt;</pre>
 <h2>クラス定義</h2>
 <p><code>CAtlServiceModuleT</code> は ATL の <code>CComObject</code> クラスなどと同じように、クラス名をテンプレート引数に渡して継承してやる。</p>
-<div class="highlight"><pre><span class="k">class</span> <span class="nc">CMyServiceModule</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CAtlServiceModuleT</span><span class="o">&lt;</span><span class="n">CMyServiceModule</span><span class="o">&gt;</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-    <span class="c1">// 停止用のイベント</span>
-    <span class="n">HANDLE</span> <span class="n">m_hStopEvent</span><span class="p">;</span>
+<pre class="cpp">class CMyServiceModule : public CAtlServiceModuleT&lt;CMyServiceModule&gt;
+{
+public:
+    // 停止用のイベント
+    HANDLE m_hStopEvent;
 
-<span class="c1">// ...</span>
-<span class="p">};</span>
-</pre></div>
+// ...
+};</pre>
 <p><code>CAtlServiceModuleT</code> には <code>WinMain</code> メソッドや、その他のサービス実装に便利なメソッドが定義されている。</p>
 <p>ここでは、追加でサービス停止時にシグナル化される <code>m_hStopEvent</code> を追加で定義してあげた。public なのは気持ち悪いが、<code>CAtlServiceModuleT</code> クラスの他のフィールドも public なのでそれに合わせる形とした。</p>
 <h2>コンストラクタ</h2>
-<div class="highlight"><pre>    <span class="n">CMyServiceModule</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">// 停止用のイベントを初期化</span>
-        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<pre class="cpp">    CMyServiceModule()
+    {
+        // 停止用のイベントを初期化
+        m_hStopEvent = NULL;
 
-        <span class="c1">// サービス名を設定</span>
-        <span class="n">_tcscpy_s</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_countof</span><span class="p">(</span><span class="n">m_szServiceName</span><span class="p">),</span> <span class="n">SERVICE_NAME</span><span class="p">);</span>
-    <span class="p">}</span>
-</pre></div>
+        // サービス名を設定
+        _tcscpy_s(m_szServiceName, _countof(m_szServiceName), SERVICE_NAME);
+    }</pre>
 <p><code>m_szServiceName</code> にサービス名を設定している。</p>
 <p><code>CAtlServiceModuleT</code> のコンストラクタには、リソースからサービス名を取得する実装があるのだが、リソースに依存するのは不便だったので、自力でサービス名を設定するようにしておいた。これでリソースがなくても、<code>m_szServiceName</code> にサービス名が設定される。<code>ServiceName</code> のところは自分で作るサービス名に適宜置き換えるべし。</p>
 <h2>エントリポイント</h2>
 <p>ここでアプリケーションのエントリポイントを見ておく。</p>
-<div class="highlight"><pre><span class="kt">int</span> <span class="n">WINAPI</span> <span class="nf">_tWinMain</span><span class="p">(</span><span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">LPTSTR</span><span class="p">,</span> <span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// サービス モジュールのインスタンスを作成</span>
-    <span class="n">CMyServiceModule</span> <span class="n">module</span><span class="p">;</span>
+<pre class="cpp">int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int nShowCmd)
+{
+    // サービス モジュールのインスタンスを作成
+    CMyServiceModule module;
 
-    <span class="c1">// サービスをインストールするには次のようにする</span>
-    <span class="c1">//if (!module.IsInstalled())</span>
-    <span class="c1">//    module.Install();</span>
+    // サービスをインストールするには次のようにする
+    //if (!module.IsInstalled())
+    //    module.Install();
 
-    <span class="c1">// モジュールの WinMain に処理を委譲すうｒ</span>
-    <span class="k">return</span> <span class="n">module</span><span class="p">.</span><span class="n">WinMain</span><span class="p">(</span><span class="n">nShowCmd</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+    // モジュールの WinMain に処理を委譲すうｒ
+    return module.WinMain(nShowCmd);
+}</pre>
 <p>単純に処理を <code>CAtlServiceModuleT::WinMain</code> に委譲している。呼ばれた <code>CAtlServiceModuleT::WinMain()</code> は、「<code>CAtlServiceModuleT::GetCommandLine()</code> を実行し、成功すれば <code>CAtlServiceModuleT::Start()</code> を呼ぶ」という実装になっている。</p>
 <p>コメントアウトされてる部分はサービスの登録処理だ。必要に応じて活用してもよいだろう。</p>
 <h2>ParseCommandLine メソッド</h2>
 <p><code>CAtlServiceModuleT::GetCommandLine()</code> は COM サーバーとして登録するための処理を実装しているので、次のように何もしない処理でオーバーライドした。</p>
-<div class="highlight"><pre>    <span class="kt">bool</span> <span class="nf">ParseCommandLine</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">lpCmdLine</span><span class="p">,</span> <span class="n">HRESULT</span><span class="o">*</span> <span class="n">pnRetCode</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="o">*</span><span class="n">pnRetCode</span> <span class="o">=</span> <span class="n">S_OK</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="cpp">    bool ParseCommandLine(LPCTSTR lpCmdLine, HRESULT* pnRetCode) throw()
+    {
+        *pnRetCode = S_OK;
+        return true;
+    }</pre>
 <h2>Start メソッド</h2>
 <p><code>CAtlServiceModuleT::Start()</code> は、「サービスの登録を行う」以外にも、「レジストリの <code>HKCR\AppID</code> から COM サーバーの情報を読み出してサービスかどうか判定する」という処理が入っている。</p>
 <p>そこで、「サービスを登録を行う」部分だけを抜き出してオーバーライドしている。</p>
-<div class="highlight"><pre>    <span class="n">HRESULT</span> <span class="nf">Start</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">SERVICE_TABLE_ENTRY</span> <span class="n">st</span><span class="p">[]</span> <span class="o">=</span>
-        <span class="p">{</span>
-            <span class="p">{</span> <span class="n">m_szServiceName</span><span class="p">,</span> <span class="n">_ServiceMain</span> <span class="p">},</span>
-            <span class="p">{</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">}</span>
-        <span class="p">};</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">::</span><span class="n">StartServiceCtrlDispatcher</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span> <span class="o">=</span> <span class="n">GetLastError</span><span class="p">();</span>
-        <span class="k">return</span> <span class="n">m_status</span><span class="p">.</span><span class="n">dwWin32ExitCode</span><span class="p">;</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="cpp">    HRESULT Start(int nShowCmd) throw()
+    {
+        SERVICE_TABLE_ENTRY st[] =
+        {
+            { m_szServiceName, _ServiceMain },
+            { NULL, NULL }
+        };
+        if (::StartServiceCtrlDispatcher(st) == 0)
+            m_status.dwWin32ExitCode = GetLastError();
+        return m_status.dwWin32ExitCode;
+    }</pre>
 <p>この部分で StartServiceCtrlDispatcher() API を使って _ServiceMain を登録する。</p>
 <p>CAtlServiceModuleT::_ServiceMain() は Handler を登録して、成功すれば Run() を呼び出すようになっている。次は Run() の実装を見ていく。</p>
 <h2>Run メソッド</h2>
 <p>CAtlServiceModuleT::Run() ではメッセージ ループを使った実装があるが、ここではシンプルな独自定義を行うことにした。</p>
-<div class="highlight"><pre>    <span class="n">HRESULT</span> <span class="nf">Run</span><span class="p">(</span><span class="kt">int</span> <span class="n">nShowCmd</span> <span class="o">=</span> <span class="n">SW_HIDE</span><span class="p">)</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">// イベントを作成</span>
-        <span class="n">m_hStopEvent</span> <span class="o">=</span> <span class="n">CreateEvent</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">TRUE</span><span class="p">,</span> <span class="n">FALSE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">m_hStopEvent</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="n">AtlHresultFromLastError</span><span class="p">();</span>
-        <span class="p">}</span>
+<pre class="cpp">    HRESULT Run(int nShowCmd = SW_HIDE) throw()
+    {
+        // イベントを作成
+        m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+        if (m_hStopEvent == NULL)
+        {
+            return AtlHresultFromLastError();
+        }
 
-        <span class="c1">// サービス起動成功</span>
-        <span class="n">LogEvent</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;Service started&quot;</span><span class="p">));</span>
-        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_RUNNING</span><span class="p">);</span>
+        // サービス起動成功
+        LogEvent(_T(&quot;Service started&quot;));
+        SetServiceStatus(SERVICE_RUNNING);
 
-        <span class="c1">// ここでワーカー スレッドを作るなり、何らかの処理を実装する</span>
+        // ここでワーカー スレッドを作るなり、何らかの処理を実装する
 
-        <span class="c1">// イベントがシグナル化するまで待機する</span>
-        <span class="n">WaitForSingleObject</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">,</span> <span class="n">INFINITE</span><span class="p">);</span>
-        <span class="n">CloseHandle</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
+        // イベントがシグナル化するまで待機する
+        WaitForSingleObject(m_hStopEvent, INFINITE);
+        CloseHandle(m_hStopEvent);
 
-        <span class="k">return</span> <span class="n">S_OK</span><span class="p">;</span>
-    <span class="p">}</span>
-</pre></div>
+        return S_OK;
+    }</pre>
 <h2>OnStop メソッド</h2>
 <p>サービス停止が要求されると、<code>OnStop()</code> メソッドが呼ばれる。このあたりの流れは、<code>CAtlServiceModuleT::Handler()</code> の実装を確認するとよい。</p>
 <p>ここでは <code>OnStop()</code> のデフォルト実装をオーバーライドし、停止通知用のイベントをシグナル化している。</p>
-<div class="highlight"><pre>    <span class="kt">void</span> <span class="nf">OnStop</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="n">SetServiceStatus</span><span class="p">(</span><span class="n">SERVICE_STOP_PENDING</span><span class="p">);</span>
-        <span class="n">SetEvent</span><span class="p">(</span><span class="n">m_hStopEvent</span><span class="p">);</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="cpp">    void OnStop() throw()
+    {
+        SetServiceStatus(SERVICE_STOP_PENDING);
+        SetEvent(m_hStopEvent);
+    }</pre>
 <h2>その他</h2>
 <p><code>LogEvent()</code> ではデフォルトでイベントログに出力するが、これもオーバーライドしてもよいかもしれない。</p>
 <h1>まとめ</h1>

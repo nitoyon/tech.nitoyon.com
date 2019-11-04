@@ -64,86 +64,72 @@
 <p>ここでは、jQuery と配列の関係に絞って目的別に逆引きできるようにしておく。</p>
 <h1>配列から jQuery オブジェクトを作成</h1>
 <p>$ 関数に渡せばOK</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
-</pre></div>
+<pre class="javascript">$([1,2,3])</pre>
 <p>NodeList のような配列っぽいものを渡しても解釈してくれる。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">))</span>
-<span class="c1">// $(&quot;div&quot;) と同じ</span>
-</pre></div>
+<pre class="javascript">$(document.getElementsByTagName(&quot;div&quot;))
+// $(&quot;div&quot;) と同じ</pre>
 <p>※内部的には setArray メソッドが呼ばれてるが、外から使うことは稀。</p>
 <h1>jQuery オブジェクトを配列のように扱う</h1>
 <h2>要素数を取得する</h2>
 <p>length プロパティを使えばOK。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">length</span>
-<span class="c1">// document.getElementsByTagName(&quot;div&quot;).length と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).length
+// document.getElementsByTagName(&quot;div&quot;).length と同じ</pre>
 <p>jQuery のメソッドを使って操作する限りは、適切に length が更新されていく。</p>
 <h2>特定のインデックスの要素を取得</h2>
 <p>[] か get(index) を使えば、特定のインデックスの DOM 要素を取得できる。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="c1">// document.getElementsByTagName(&quot;div&quot;)[0] と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;)[0]
+$(&quot;div&quot;).get(0)
+// document.getElementsByTagName(&quot;div&quot;)[0] と同じ</pre>
 <p>eq を使うと、特定のインデックスの要素のみを含む jQuery オブジェクトが返ってくる。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="c1">// $(document.getElementsByTagName(&quot;div&quot;)[0]) または</span>
-<span class="c1">// $(&quot;div:first&quot;) と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).eq(0)
+// $(document.getElementsByTagName(&quot;div&quot;)[0]) または
+// $(&quot;div:first&quot;) と同じ</pre>
 <h2>jQuery オブジェクトから配列を作成</h2>
 <p>jQuery オブジェクトは配列のように扱えるんだけど、Array の全てのメソッドが使えるわけではない。</p>
 <p>生の配列を取得するには get() を使う。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">get</span><span class="p">().</span><span class="nx">reverse</span><span class="p">()</span>
-<span class="c1">// div 配列の一覧を逆順にした配列</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).get().reverse()
+// div 配列の一覧を逆順にした配列</pre>
 <p>reverse したあとにさらに jQuery オブジェクトにするには、冒頭に紹介したように、$() に入れる。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">get</span><span class="p">().</span><span class="nx">reverse</span><span class="p">())</span>
-</pre></div>
+<pre class="javascript">$($(&quot;div&quot;).get().reverse())</pre>
 <p>get() の内部では $.makeArray(this) が実行されている。</p>
 <p>$.makeArray() は配列のようなもの(NodeList や arguments, jQuery オブジェクトなど)を配列に変換するとき便利だ。Array.prototype.slice.call( array_like ) という技もあるんだけど、IE7 でエラーになることがある。</p>
 <h2>each！ map！　filter！</h2>
 <p>中身について処理を行うには <strong>each</strong> を使う。第一引数がインデックス、第二引数が要素。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">elem</span><span class="p">){</span><span class="nx">elem</span><span class="p">.</span><span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="o">+</span><span class="nx">i</span><span class="p">;})</span>
-<span class="c1">// 以下のコードと同じ</span>
-<span class="c1">// var elems = document.getElementsByTagName(&quot;div&quot;);</span>
-<span class="c1">// for(var i = 0; i &lt; elems.length; i++)</span>
-<span class="c1">//     elems[i].className = &quot;foo&quot; + i;</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).each(function(i, elem){elem.className=&quot;foo&quot;+i;})
+// 以下のコードと同じ
+// var elems = document.getElementsByTagName(&quot;div&quot;);
+// for(var i = 0; i &lt; elems.length; i++)
+//     elems[i].className = &quot;foo&quot; + i;</pre>
 <p>this が第二引数にバインドされているので引数なしで this を使って要素にアクセスするとスマート。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="k">this</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;foo&quot;</span><span class="p">;})</span>
-<span class="c1">// $(&quot;div&quot;).attr(&quot;className&quot;, &quot;foo&quot;) と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).each(function(){this.className = &quot;foo&quot;;})
+// $(&quot;div&quot;).attr(&quot;className&quot;, &quot;foo&quot;) と同じ</pre>
 <p>配列の要素を置き換えるには <strong>map</strong> が使える。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">className</span><span class="p">;})</span>
-<span class="c1">// [&quot;&quot;, &quot;class1&quot;, &quot;class2&quot;, ...]</span>
-<span class="c1">// (クラス名一覧を含む jQuery オブジェクト)</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).map(function(){return this.className;})
+// [&quot;&quot;, &quot;class1&quot;, &quot;class2&quot;, ...]
+// (クラス名一覧を含む jQuery オブジェクト)</pre>
 <p>要素を絞り込むには <strong>filter</strong> が使える。関数を呼び出した結果が true のものだけに絞り込む。select みたいなもん。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">className</span> <span class="o">==</span> <span class="s2">&quot;foo&quot;</span><span class="p">;</span>
-<span class="p">})</span>
-<span class="c1">// $(&quot;div.foo&quot;) と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).filter(function(){
+    return this.className == &quot;foo&quot;;
+})
+// $(&quot;div.foo&quot;) と同じ</pre>
 <p>第一引数にはインデックス番号が渡る。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
-    <span class="k">return</span> <span class="nx">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">})</span>
-<span class="c1">// $(&quot;div:even&quot;) と同じ</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).filter(function(i){
+    return i % 2 == 0;
+})
+// $(&quot;div:even&quot;) と同じ</pre>
 <p>filter には CSS セレクタも使える。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">).</span><span class="nx">filter</span><span class="p">(</span><span class="s2">&quot;.foo&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;).filter(&quot;.foo&quot;)</pre>
 <p>map と filter をした後に end() を呼ぶと、元の jQuery オブジェクトに戻る。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="s2">&quot;.foo&quot;</span><span class="p">)</span>
-        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;display&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">end</span><span class="p">()</span>
-    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="s2">&quot;.bar&quot;</span><span class="p">)</span>
-        <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s2">&quot;display&quot;</span><span class="p">,</span> <span class="s2">&quot;block&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">end</span><span class="p">()</span>
-<span class="c1">// 以下の処理と同じ</span>
-<span class="c1">// $(&quot;div.foo&quot;).style(&quot;display&quot;, &quot;none&quot;);</span>
-<span class="c1">// $(&quot;div.bar&quot;).style(&quot;display&quot;, &quot;none&quot;);</span>
-</pre></div>
+<pre class="javascript">$(&quot;div&quot;)
+    .filter(&quot;.foo&quot;)
+        .style(&quot;display&quot;, &quot;none&quot;)
+    .end()
+    .filter(&quot;.bar&quot;)
+        .style(&quot;display&quot;, &quot;block&quot;)
+    .end()
+// 以下の処理と同じ
+// $(&quot;div.foo&quot;).style(&quot;display&quot;, &quot;none&quot;);
+// $(&quot;div.bar&quot;).style(&quot;display&quot;, &quot;none&quot;);</pre>
 <p>end() は find(), add(), children() などを呼んだあとにも使える。ややこしくなるので使わないんだけど…。</p>
 </section>
 

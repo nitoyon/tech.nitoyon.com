@@ -65,31 +65,29 @@
 <p>ということで、久々の Tamarin ネタ。</p>
 <p>先日の <a href="/ja/blog/2007/02/13/p1/">Tamarin の avmplus.exe に独自関数を実装</a> のノリで、Tamarin でマルチスレッドを実装してみました。</p>
 <p>このコードを動かすのが目標でした。</p>
-<div class="highlight"><pre><span class="kr">import</span> <span class="nx">avmplus</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">import avmplus.*;
 
-<span class="kd">function</span> <span class="nx">proc</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-<span class="p">{</span>
-	<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-	<span class="p">{</span>
-		<span class="nx">System</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="p">);</span>
-	<span class="p">}</span>
-<span class="p">}</span>
+function proc():void
+{
+	for(var i:int = 0; i &lt; 1000; i++)
+	{
+		System.write(i + &quot; &quot;);
+	}
+}
 
-<span class="nx">System</span><span class="p">.</span><span class="nx">threadCreate</span><span class="p">(</span><span class="nx">proc</span><span class="p">);</span>
-<span class="nx">System</span><span class="p">.</span><span class="nx">threadCreate</span><span class="p">(</span><span class="nx">proc</span><span class="p">);</span>
-</pre></div>
+System.threadCreate(proc);
+System.threadCreate(proc);</pre>
 <p>avmplus に System.threadCreate 関数を実装して、意気揚々と動かしてみたところ、こんな警告が出力されてしまいました。</p>
 <pre>Unsafe access to GC from wrong thread!</pre>
 <p>Tamarin のソースを grep してみると、MMgc\GC.cpp に該当部分発見。</p>
-<div class="highlight"><pre>    <span class="kt">void</span> <span class="n">GC</span><span class="o">::</span><span class="n">CheckThread</span><span class="p">()</span>
-    <span class="p">{</span>
-<span class="cp">#ifdef _DEBUG</span>
-<span class="cp">#ifdef WIN32</span>
-        <span class="n">GCAssertMsg</span><span class="p">(</span><span class="n">disableThreadCheck</span> <span class="o">||</span> <span class="n">m_gcThread</span> <span class="o">==</span> <span class="n">GetCurrentThreadId</span><span class="p">(),</span> <span class="s">&quot;Unsafe access to GC from wrong thread!&quot;</span><span class="p">);</span>
-<span class="cp">#endif</span>
-<span class="cp">#endif</span>
-    <span class="p">}</span>
-</pre></div>
+<pre class="cpp">    void GC::CheckThread()
+    {
+#ifdef _DEBUG
+#ifdef WIN32
+        GCAssertMsg(disableThreadCheck || m_gcThread == GetCurrentThreadId(), &quot;Unsafe access to GC from wrong thread!&quot;);
+#endif
+#endif
+    }</pre>
 <p>つまり、<strong>Tamarin のガベコレはマルチスレッドをサポートしていない</strong>、ということらしい。ActionScript の仕様上、マルチスレッド対応で作る必要はないから考えてみれば当たり前ですね。</p>
 <p>ちなみに、Tamarin のソースには ECMAScript の仕様で出てくる Internal Method の Function.[[Call]] が native に定義されていて、実際に呼び出すこともできます。いや、内部的にあるのは知ってましたが、実際に呼べるという事実にワクワクしてしまいますね。</p>
 

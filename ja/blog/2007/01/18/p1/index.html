@@ -62,82 +62,79 @@
 
 <p>前回の <a href="/ja/blog/2007/01/16/p1/">AS3で１ファイルに複数のクラスを定義する方法</a> を応用して、デザインパターンのファクトリーメソッドを実現してみます。</p>
 <p>まずはインターフェースの定義。雑煮インターフェース IZouni を定義します。</p>
-<div class="highlight"><pre><span class="c1">// sample/IZouni.as</span>
-<span class="kr">package</span> <span class="nx">sample</span>
-<span class="p">{</span>
-    <span class="kr">public</span> <span class="kr">interface</span> <span class="nx">IZouni</span>
-    <span class="p">{</span>
-        <span class="kd">function</span> <span class="nx">get</span> <span class="nx">soup</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span>
-        <span class="kd">function</span> <span class="nx">get</span> <span class="nx">mochi</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// sample/IZouni.as
+package sample
+{
+    public interface IZouni
+    {
+        function get soup():String;
+        function get mochi():String;
+    }
+}</pre>
 <p>次に雑煮ファクトリー、および IZouni の実装です。</p>
 <p>IZouni を実装した TokyoZouni, KyotoZouni は ZouniFactory.as 以外からは参照することがでません。</p>
-<div class="highlight"><pre><span class="c1">// sample/ZouniFactory.as</span>
-<span class="kr">package</span> <span class="nx">sample</span>
-<span class="p">{</span>
-    <span class="c1">// 雑煮ファクトリー</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">ZouniFactory</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">create</span><span class="p">(</span><span class="nx">place</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="nx">IZouni</span>
-        <span class="p">{</span>
-            <span class="nx">place</span> <span class="o">=</span> <span class="nx">place</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
-            <span class="k">switch</span><span class="p">(</span><span class="nx">place</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="k">case</span> <span class="s2">&quot;tokyo&quot;</span><span class="o">:</span>
-                    <span class="k">return</span> <span class="k">new</span> <span class="nx">TokyoZouni</span><span class="p">();</span>
-                <span class="k">case</span> <span class="s2">&quot;kyoto&quot;</span><span class="o">:</span>
-                    <span class="k">return</span> <span class="k">new</span> <span class="nx">KyotoZouni</span><span class="p">();</span>
-                <span class="k">default</span><span class="o">:</span>
-                    <span class="k">throw</span> <span class="k">new</span> <span class="nx">ArgumentError</span><span class="p">(</span><span class="s2">&quot;not implemented&quot;</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<pre class="javascript">// sample/ZouniFactory.as
+package sample
+{
+    // 雑煮ファクトリー
+    public class ZouniFactory
+    {
+        public function create(place:String):IZouni
+        {
+            place = place.toLowerCase();
+            switch(place)
+            {
+                case &quot;tokyo&quot;:
+                    return new TokyoZouni();
+                case &quot;kyoto&quot;:
+                    return new KyotoZouni();
+                default:
+                    throw new ArgumentError(&quot;not implemented&quot;);
+            }
+            return null;
+        }
+    }
+}
 
-<span class="c1">// 以下、雑煮インターフースの実装</span>
-<span class="kr">import</span> <span class="nx">sample</span><span class="p">.</span><span class="nx">IZouni</span><span class="p">;</span>
-<span class="kr">class</span> <span class="nx">TokyoZouni</span> <span class="kr">implements</span> <span class="nx">IZouni</span>
-<span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">soup</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">{</span><span class="k">return</span> <span class="s2">&quot;醤油&quot;</span><span class="p">}</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">mochi</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">{</span><span class="k">return</span> <span class="s2">&quot;角焼&quot;</span><span class="p">}</span>
-<span class="p">}</span>
+// 以下、雑煮インターフースの実装
+import sample.IZouni;
+class TokyoZouni implements IZouni
+{
+    public function get soup():String{return &quot;醤油&quot;}
+    public function get mochi():String{return &quot;角焼&quot;}
+}
 
-<span class="kr">class</span> <span class="nx">KyotoZouni</span> <span class="kr">implements</span> <span class="nx">IZouni</span>
-<span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">soup</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">{</span><span class="k">return</span> <span class="s2">&quot;白味噌&quot;</span><span class="p">}</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">mochi</span><span class="p">()</span><span class="o">:</span><span class="nb">String</span><span class="p">{</span><span class="k">return</span> <span class="s2">&quot;丸煮&quot;</span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+class KyotoZouni implements IZouni
+{
+    public function get soup():String{return &quot;白味噌&quot;}
+    public function get mochi():String{return &quot;丸煮&quot;}
+}</pre>
 <p>これで準備完了。次のように使います。</p>
-<div class="highlight"><pre><span class="c1">// Test.as</span>
-<span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">sample</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getQualifiedClassName</span><span class="p">;</span>
+<pre class="javascript">// Test.as
+package
+{
+    import sample.*;
+    import flash.display.Sprite;
+    import flash.utils.getQualifiedClassName;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Test</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">factory</span><span class="o">:</span><span class="nx">ZouniFactory</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ZouniFactory</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nx">IZouni</span><span class="p">;</span>
+    public class Test extends Sprite
+    {
+        public function Test()
+        {
+            var factory:ZouniFactory = new ZouniFactory();
+            var z:IZouni;
 
-            <span class="nx">z</span> <span class="o">=</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;Tokyo&quot;</span><span class="p">);</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">z</span><span class="p">.</span><span class="nx">soup</span><span class="p">);</span> <span class="c1">// 醤油</span>
+            z = factory.create(&quot;Tokyo&quot;);
+            trace(z.soup); // 醤油
 
-            <span class="nx">z</span> <span class="o">=</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;Kyoto&quot;</span><span class="p">);</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">z</span><span class="p">.</span><span class="nx">soup</span><span class="p">);</span> <span class="c1">// 白味噌</span>
+            z = factory.create(&quot;Kyoto&quot;);
+            trace(z.soup); // 白味噌
 
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">getQualifiedClassName</span><span class="p">(</span><span class="nx">factory</span><span class="p">));</span> <span class="c1">// sample::ZouniFactory</span>
-            <span class="nx">trace</span><span class="p">(</span><span class="nx">getQualifiedClassName</span><span class="p">(</span><span class="nx">z</span><span class="p">));</span>       <span class="c1">// ::KyotoZouni</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            trace(getQualifiedClassName(factory)); // sample::ZouniFactory
+            trace(getQualifiedClassName(z));       // ::KyotoZouni
+        }
+    }
+}</pre>
 <p>TokyoZouni や KyotoZouni クラスのメソッドに Zouni インターフェース経由でアクセスできていることが分かるかと思います。</p>
 <p>getQualifiedClassName で KyotoZouni クラスの完全修飾クラス名を取得してみると、::KyotoZouni となっています。無名パッケージ空間にいるのでしょうか。ちなみに、Test クラスの完全修飾クラス名は Test となるため、KyotoZouni クラスは Test とも ZouniFactory とも違う名前空間で定義されているようです。</p>
 <br />

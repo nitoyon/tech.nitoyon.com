@@ -79,34 +79,33 @@
 <h2>内部的なこと</h2>
 <p>ウインドウ操作の部分は CraftLaunch 3 に同梱されている同じ作者が作った Python でウインドウを扱うライブラリ、pyauto を利用している。Win32 API を知っていれば素直に扱えた。</p>
 <p>今回作ったコマンドでは、登録済みのコマンドを取得するために <code>loadCommandListFromIniFile</code> という関数を定義している。この実装は CraftLaunch 本体の<code>clnch_mainwindow.MainWindow.loadCommandFromIniFile()</code> 関数の真似をして実装している。そのまま流用できればよかったんだけれども、<code>clnch_mainwindow.MainWindow.loadCommandFromIniFile()</code>関数が破壊的だったので流用が難しかったのが残念だ。ぜひとも、設定ファイルから一覧を取得するメソッドとして実装しなおしてほしいと思った。こんな風に…。</p>
-<div class="highlight"><pre><span class="gu">@@ -850,7 +850,7 @@</span>
+<pre class="diff">@@ -850,7 +850,7 @@
              ( u&quot;Quit&quot;,      self.command_Quit ),
          ]
 
-<span class="gd">-        self.loadCommandFromIniFile()</span>
-<span class="gi">+        self.launcher.command_list += self.loadCommandFromIniFile()</span>
+-        self.loadCommandFromIniFile()
++        self.launcher.command_list += self.loadCommandFromIniFile()
 
          try:
-             fd = file( self.config_filename, &#39;r&#39; )
-<span class="gu">@@ -899,6 +899,7 @@</span>
+             fd = file( self.config_filename, 'r' )
+@@ -899,6 +899,7 @@
      def loadCommandFromIniFile(self):
 
          i=0
-<span class="gi">+        ret = []</span>
++        ret = []
          while True:
              try:
                  command_string = unicode( clnch_ini.get( &quot;COMMANDLIST&quot;, &quot;comman
 d_%d&quot;%(i,) ), &quot;utf8&quot; )
-<span class="gu">@@ -909,9 +910,10 @@</span>
+@@ -909,9 +910,10 @@
              command_name, command_args = command_tuple[0], command_tuple[1:]
 
              command = self.command_ShellExecute( None, *command_args )
-<span class="gd">-            self.launcher.command_list.append( ( command_name, command ) )</span>
-<span class="gi">+            ret.append( ( command_name, command ) )</span>
+-            self.launcher.command_list.append( ( command_name, command ) )
++            ret.append( ( command_name, command ) )
 
              i+=1
-<span class="gi">+        return ret</span>
-</pre></div>
++        return ret</pre>
 <h1>まとめ</h1>
 <p>普段つかうソフトウェアが拡張可能になってると楽しい。Windows 文化では結構珍しいことだからなおさら楽しい。</p>
 </section>

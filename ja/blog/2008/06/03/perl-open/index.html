@@ -63,8 +63,7 @@
 <p><a href="http://itpro.nikkeibp.co.jp/article/COLUMN/20080528/304549/">第1回　Perlの文法の基本：ITpro</a> という記事の <a href="http://b.hatena.ne.jp/entry/http://itpro.nikkeibp.co.jp/article/COLUMN/20080528/304549/">はてブコメント</a>を見ていたら、Perl なすごい人達が文句言ってた。</p>
 <blockquote><p><a href="/otsune/"><img src="http://www.hatena.ne.jp/users/ot/otsune/profile_s.gif" class="hatena-id-icon" alt="otsune" title="otsune" width="16" height="16" /></a> <a href="/otsune/20080602#bookmark-8806292">otsune</a>  <span class="comment">2006年のhyuki Catalyst記事を載せるのもアレなのに2003年の記事を載せるのは無しだろ……open IN, ...のあたりは有害情報なので全力で見逃せ</span><br></p><p><a href="/TAKESAKO/"><img src="http://www.hatena.ne.jp/users/TA/TAKESAKO/profile_s.gif" class="hatena-id-icon" alt="TAKESAKO" title="TAKESAKO" width="16" height="16" /></a> <a href="/TAKESAKO/20080602#bookmark-8806292">TAKESAKO</a> <span class="comment"> ちょｗ→出典：日経Linux 2003年7月号　125ページより</span><br></p><p><a href="/miyagawa/"><img src="http://www.hatena.ne.jp/users/mi/miyagawa/profile_s.gif" class="hatena-id-icon" alt="miyagawa" title="miyagawa" width="16" height="16" /></a> <a href="/miyagawa/20080602#bookmark-8806292">miyagawa</a>  <span class="comment"> 2008年にこの記事はねーよ、と思ったら2003年の記事をいまさら再掲か。なんでわざわざ古い記事を新しいものかのように出して混乱させる？</span></p></blockquote>
 <p>問題があるというソースコードはこんなの。</p>
-<div class="highlight"><pre><span class="nb">open</span> <span class="n">IN</span><span class="p">,</span> <span class="s">&#39;&lt;/etc/passwd&#39;</span><span class="p">;</span>
-</pre></div>
+<pre class="perl">open IN, '&lt;/etc/passwd';</pre>
 <p>えー！　どこが問題あるのかさっぱり分からん！！！！！！</p>
 <h1>調べてみた</h1>
 <p>2008年流の Perl な書き方を調べるなら <a href="http://perl-users.jp/">perl-users.jp</a>。</p>
@@ -75,19 +74,16 @@
 <p>こういうときは、<a href="http://perldoc.perl.org/perlvar.html">perlvar</a> を眺める。どうやら $! はエラーメッセージになるらしい。</p>
 <blockquote><p>If used as a string, yields the corresponding system error string.</p></blockquote>
 <p>どれどれ。</p>
-<div class="highlight"><pre>&gt; perl -e <span class="s2">&quot;open FH, &#39;__not__found__&#39; or die $!&quot;</span>
-No such file or directory at -e line 1.
-</pre></div>
+<pre class="sh">&gt; perl -e &quot;open FH, '__not__found__' or die $!&quot;
+No such file or directory at -e line 1.</pre>
 <p>おー、確かに。</p>
 <p>数値リテラルだとエラーコードになるらしい。どれどれ...</p>
-<div class="highlight"><pre>&gt; perl -e <span class="s2">&quot;open FH, &#39;__not__found__&#39; or print int($!)&quot;</span>
-2
-</pre></div>
+<pre class="sh">&gt; perl -e &quot;open FH, '__not__found__' or print int($!)&quot;
+2</pre>
 <p>ほんとだ。</p>
 <h1>MODE を分ける</h1>
 <p>それでは、modern その１のコードを見てみる。</p>
-<div class="highlight"><pre><span class="nb">open</span> <span class="k">my</span> <span class="nv">$fh</span><span class="p">,</span> <span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s">&#39;filename&#39;</span> <span class="ow">or</span> <span class="nb">die</span> <span class="vg">$!</span><span class="p">;</span>
-</pre></div>
+<pre class="perl">open my $fh, '&lt;', 'filename' or die $!;</pre>
 <p>謎だ。</p>
 <p>困ってても仕方がないので、perldoc の <a href="http://perldoc.perl.org/functions/open.html">open</a> を見てみた。いくつもの書き方があるようだ。</p>
 <pre>open FILEHANDLE,EXPR 
@@ -108,14 +104,12 @@ open FILEHANDLE </pre>
 <p>なるほど。これは安心。</p>
 <p>open IN, ... 形式がグローバル変数で、open my $in, ... がローカル変数、というイメージ。</p>
 <p>読んだり閉じたりするには次のようにする。</p>
-<div class="highlight"><pre><span class="k">print</span> <span class="sr">&lt;$fh&gt;</span><span class="p">;</span>
-<span class="nb">close</span> <span class="nv">$fh</span><span class="p">;</span>
-</pre></div>
+<pre class="perl">print &lt;$fh&gt;;
+close $fh;</pre>
 <p>Perl 5.6 以降限定だけど、これも明日から使えそうなテクニックだ。</p>
 <h1>modern その２</h1>
 <p>modern その２はお手上げ。</p>
-<div class="highlight"><pre><span class="n">file</span><span class="p">(</span><span class="s">&#39;filename&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-</pre></div>
+<pre class="perl">file('filename')-&gt;open('r')</pre>
 <p>file 関数ってなんだ？？　なんかのモジュール？？</p>
 <p>(追記) コメント欄でkzysさんに教えてもらいました。Path::Class モジュールのようです（<a href="http://search.cpan.org/dist/Path-Class/lib/Path/Class.pm">Path::Class</a>）。ありがとうございます。ファイルやディレクトリをたどるのが簡単になりそうですね。</p>
 <h1>まとめ</h1>

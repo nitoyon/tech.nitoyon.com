@@ -73,91 +73,90 @@
 <p>すごくスマートだ…。BlurFilter とか ConvolutionFilter を使えばできそうだとは思ってたのですが、試行錯誤の末にギブアップしてました。blendMode を使えばよかったんですね。完全に盲点でした。ありがとうございます！！！（追記ここまで）</p>
 <p>ちなみに、ベジェ曲線を範囲拡張するアルゴリズムについては <a href="http://www.junko-k.com/cthema/44bezier.htm">コロキウム室(Bezier曲線の問題)</a> で触れられていました。画像処理のアルゴリズムって、数式がいっぱい出てきて難しい…。</p>
 <p>ソースは以下に（84行）。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.geom.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">BitmapOffset</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;techni.png&#39;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">Logo</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    public class BitmapOffset extends Sprite {
+        [Embed(source='techni.png')]
+        private var Logo:Class;
 
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">size</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">SIGN</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">static</span> <span class="kr">const</span> <span class="nx">MARGIN</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">brush</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd1</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">;</span>
+        private var size:Number = 5;
+        private static const SIGN:int = 20;
+        private static const MARGIN:int = 20;
+        private var brush:Sprite;
+        private var bmd:BitmapData;
+        private var bmd1:BitmapData;
+        private var bmd2:BitmapData;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BitmapOffset</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Logo</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+        public function BitmapOffset() {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
+            var bmp:Bitmap = new Logo();
+            addChild(bmp);
 
-            <span class="nx">bmd</span>  <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">;</span>
-            <span class="nx">bmd1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-            <span class="nx">bmd2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+            bmd  = bmp.bitmapData;
+            bmd1 = new BitmapData(bmd.width, bmd.height, false);
+            bmd2 = new BitmapData(bmd.width, bmd.height);
 
-            <span class="kd">var</span> <span class="nx">curX</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">curY</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+            var curX:int = bmd.width + MARGIN;
+            var curY:int = bmd.height / 2;
 
-            <span class="c1">// x</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+            // x
+            graphics.lineStyle(5, 0xff0000, 1, false, &quot;normal&quot;, &quot;none&quot;);
+            graphics.moveTo(curX       , curY - SIGN / 2);
+            graphics.lineTo(curX + SIGN, curY + SIGN / 2);
+            graphics.moveTo(curX       , curY + SIGN / 2);
+            graphics.lineTo(curX + SIGN, curY - SIGN / 2);
 
-            <span class="c1">// brush</span>
-            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">SIGN</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">brush</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">()).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">curX</span> <span class="o">+</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">;</span>
-            <span class="nx">brush</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">curY</span><span class="p">;</span>
+            // brush
+            curX += SIGN + MARGIN;
+            addChild(brush = new Sprite()).x = curX + bmd.width * 0.25;
+            brush.y = curY;
 
-            <span class="c1">// =</span>
-            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mh">0x0099ff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">-</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">curX</span>       <span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">curX</span> <span class="o">+</span> <span class="nx">SIGN</span><span class="p">,</span> <span class="nx">curY</span> <span class="o">+</span> <span class="nx">SIGN</span> <span class="o">*</span> <span class="mf">0.3</span><span class="p">);</span>
+            // =
+            curX += bmd.width / 2 + MARGIN;
+            graphics.lineStyle(5, 0x0099ff, 1, false, &quot;normal&quot;, &quot;none&quot;);
+            graphics.moveTo(curX       , curY - SIGN * 0.3);
+            graphics.lineTo(curX + SIGN, curY - SIGN * 0.3);
+            graphics.moveTo(curX       , curY + SIGN * 0.3);
+            graphics.lineTo(curX + SIGN, curY + SIGN * 0.3);
 
-            <span class="c1">// result</span>
-            <span class="nx">curX</span> <span class="o">+=</span> <span class="nx">SIGN</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">)).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">curX</span><span class="p">;</span>
+            // result
+            curX += SIGN + MARGIN;
+            addChild(new Bitmap(bmd2)).x = curX;
 
-            <span class="nx">draw</span><span class="p">();</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="nx">size</span> <span class="o">=</span> <span class="nx">size</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">?</span> <span class="nx">size</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
-                <span class="nx">draw</span><span class="p">();</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            draw();
+            stage.addEventListener(&quot;click&quot;, function(event:*):void {
+                size = size &lt; 10 ? size + 1 : 1;
+                draw();
+            });
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">bmd1</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">);</span>
+        private function draw():void {
+            bmd1.fillRect(bmd.rect, 0xffffff);
+            bmd2.fillRect(bmd.rect, 0xffffff);
 
-            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">brush</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            brush.graphics.clear();
+            brush.graphics.beginFill(0);
+            brush.graphics.drawCircle(0, 0, size / 2);
+            brush.graphics.endFill();
 
-            <span class="kd">var</span> <span class="nx">m</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-            <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-            <span class="nx">bmd1</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">brush</span><span class="p">,</span> <span class="nx">m</span><span class="p">);</span>
+            var m:Matrix = new Matrix();
+            m.tx = m.ty = size / 2;
+            bmd1.draw(brush, m);
 
-            <span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">ColorTransform</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorTransform</span><span class="p">();</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">size</span> <span class="o">*</span> <span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">%</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">5</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">alpha</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="o">-</span><span class="nx">bmd1</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">tx</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0x100</span><span class="p">;</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">alphaOffset</span> <span class="o">=</span> <span class="nx">alpha</span><span class="p">;</span>
-                <span class="nx">m</span><span class="p">.</span><span class="nx">tx</span> <span class="o">-=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">m</span><span class="p">.</span><span class="nx">ty</span> <span class="o">-=</span> <span class="nx">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
-                <span class="nx">bmd2</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">m</span><span class="p">,</span> <span class="nx">c</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            var c:ColorTransform = new ColorTransform();
+            for(var i:int = 0; i &lt; size * size; i++) {
+                m.tx = i % 5; m.ty = Math.floor(i / 5);
+                var alpha:int = -bmd1.getPixel(m.tx, m.ty) % 0x100;
+                c.alphaOffset = alpha;
+                m.tx -= size / 2; m.ty -= size / 2;
+                bmd2.draw(bmd, m, c);
+            }
+        }
+    }
+}</pre>
 
 </div>
 

@@ -63,70 +63,66 @@
 <p><a href="/ja/blog/2007/08/10/begin-fill-end-fill-case-study/">前回</a>に引き続き、今度は Graphics クラスの lineTo と lineStyle あたりの挙動と、beginFill のからみを調べてみた。</p>
 <p>今回も環境は AS3 だけど、最後に AS2 で試した場合の補足をつけておいた。</p>
 <h1>Case 1： 普通に線を描画</h1>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Test</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">erase</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+    public class Test extends Sprite
+    {
+        public function erase()
+        {
+            graphics.lineStyle(3, 0xff0000);
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+            graphics.moveTo(100, 0);
+            graphics.lineTo(0, 50);
+            graphics.lineTo(100, 100);
 
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            graphics.moveTo(150, 100);
+            graphics.curveTo(240, 50, 150, 0);
+        }
+    }
+}</pre>
 <p>lineStyle で線の色と太さを設定して、moveTo で現在の位置を移動、lineTo および curveTo で描画してる。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031414.gif" width="209" height="118"></center>
 <h1>Case 2： beginFill と endFill の効果</h1>
 <p>左側の図形描画を beginFill と endFill を挟んでみた。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffcc</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+<pre class="javascript">graphics.beginFill(0xffffcc);
+graphics.lineStyle(3, 0xff0000);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+graphics.endFill();
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
 <p>始点と終点が結ばれて、内側が beginFill で指定した色で塗られた。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031413.gif" width="209" height="118"></center>
 <p>endFill のあとも、線のスタイルは変化していない点に注意したい。塗りの情報と線の情報は独立のようだ。</p>
 <p>塗りの情報は endFill を呼び出せば初期化される。では、線のスタイルを初期化するにはどうするかというと、lineStyle メソッドを引数なしで呼び出せばよい。</p>
 <p>例えば、次のように endFill の前に線のスタイルを初期化してみると…。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffcc</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+<pre class="javascript">graphics.beginFill(0xffffcc);
+graphics.lineStyle(3, 0xff0000);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-</pre></div>
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
+graphics.lineStyle();
+graphics.endFill();</pre>
 <p>こうなった。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031412.gif" width="209" height="118"></center>
 <p>パスを閉じる線が太さ0で初期化されているのが分かる。</p>
 <h1>Case 3： beginFill しっぱなしで、endFill しない</h1>
 <p>最初に beginFill して、endFill しない。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffcc</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+<pre class="javascript">graphics.beginFill(0xffffcc);
+graphics.lineStyle(3, 0xff0000);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
 <p>両方塗られる。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031411.gif" width="209" height="118"></center>
 <p>moveTo すると、その時点でパスが閉じられて、塗られるようだ。</p>
@@ -134,30 +130,28 @@
 <p>Case 2 では、右の図形が塗られていないところと比較すると面白い。</p>
 <h1>Case 4： ２つ目のみ beginFill</h1>
 <p>moveTo のあとに beginFill で塗りを設定。</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+<pre class="javascript">graphics.lineStyle(3, 0xff0000);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffcc</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+graphics.moveTo(150, 100);
+graphics.beginFill(0xffffcc);
+graphics.curveTo(240, 50, 150, 0);</pre>
 <p>想像通り。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031608.gif" width="209" height="118"></center>
 <p>でも、moveTo の前に beginFill を持ってくると…</p>
-<div class="highlight"><pre><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mh">0xff0000</span><span class="p">);</span>
+<pre class="javascript">graphics.lineStyle(3, 0xff0000);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+graphics.moveTo(100, 0);
+graphics.lineTo(0, 50);
+graphics.lineTo(100, 100);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffcc</span><span class="p">);</span>
+graphics.beginFill(0xffffcc);
 
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-<span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+graphics.moveTo(150, 100);
+graphics.curveTo(240, 50, 150, 0);</pre>
 <p>ナニコレ。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070812/20070812031607.gif" width="209" height="118"></center>
 <p>謎だ。</p>

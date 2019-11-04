@@ -69,188 +69,184 @@
 <h1>1. 素直に外枠をなぞるパスを作る</h1>
 <p>１つ目は一番最初に思いついた単純だけどめんどくさい方法。</p>
 <p>内側のドーナッツ作成コードがこれです。</p>
-<div class="highlight"><pre><span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern1</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-<span class="p">{</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">52</span><span class="p">);</span>
-    <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+<pre class="javascript">private function drawPattern1(g:Graphics):void
+{
+    g.beginFill(0xffffff);
+    g.moveTo(24, 52);
+    arcTo(g, 24, 108, 56, -Math.PI / 2, 0);
+    arcTo(g, 24, 108, 40, 0, -Math.PI / 2);
+    g.endFill();
 
-    <span class="c1">// ...</span>
-</pre></div>
+    // ...</pre>
 <p>座標がいっぱい出てくるので、イメージがつかみやすいように図を描いてみました。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20070830/20070830090742.gif" width="192" height="159" alt="RSSドーナッツ部分の座標"></center>
 <p>Graphics クラスには弧を描画する関数がないので、arcTo というメソッドを定義しています。<a href="http://www.fumiononaka.com/TechNotes/Flash/FN0506002.html">FN0506002 - 描画メソッドで円を描く - Flash : テクニカルノート</a> を参考にしてベジェ曲線で描いています。</p>
 <h1>2. 線として弧を描く</h1>
 <p>２つ目は太い線として描く方法。</p>
 <p>先ほどと同じく、arcTo 関数を使って描画します。</p>
-<div class="highlight"><pre><span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern2</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-<span class="p">{</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">60</span><span class="p">);</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="nx">CapsStyle</span><span class="p">.</span><span class="nx">NONE</span><span class="p">);</span>
-    <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<pre class="javascript">private function drawPattern2(g:Graphics):void
+{
+    g.moveTo(24, 60);
+    g.lineStyle(16, 0xffffff, 1, false, &quot;normal&quot;, CapsStyle.NONE);
+    arcTo(g, 24, 108, 48, -Math.PI / 2, 0);
+    g.lineStyle(0, 0, 0);
 
-    <span class="c1">// ...</span>
-</pre></div>
+    // ...</pre>
 <p>だいぶシンプルになりました。</p>
 <h1>3. 扇から扇を引く</h1>
 <p>最後はちょっとアクロバットに描画。</p>
-<div class="highlight"><pre><span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern2</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-<span class="p">{</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-    <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+<pre class="javascript">private function drawPattern2(g:Graphics):void
+{
+    g.beginFill(0xffffff);
+    drawPie(g, 24, 106, 56, -Math.PI / 2, 0);
+    drawPie(g, 24, 106, 40, -Math.PI / 2, 0);
+    g.endFill();
 
-    <span class="c1">// ...</span>
-</pre></div>
+    // ...</pre>
 <p>1/4円を２つ描いて XOR にしてます。このテクニックについては <a href="/ja/blog/2007/08/10/begin-fill-end-fill-case-study/">beginFill と endFill のケーススタディ</a> で説明済みです。</p>
 <p>drawPie は独自に定義したメソッドなのですが、内部で arcTo を使っているので行数は短くなってます。</p>
 <h1>ソース全体</h1>
 <p>まとめ代わりにソースを掲載。長いよ。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;128&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;128&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">RssIcon</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">ROUND</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">48</span><span class="p">;</span>
+    [SWF(width=&quot;128&quot;, height=&quot;128&quot;)]
+    public class RssIcon extends Sprite
+    {
+        private const SIZE:int = 128;
+        private const ROUND:int = 48;
         
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">RssIcon</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">4</span><span class="p">);</span>
+        public function RssIcon():void
+        {
+            var matrix:Matrix = new Matrix();
+            matrix.createGradientBox(SIZE, SIZE, Math.PI * 1 / 4);
 
-            <span class="kd">var</span> <span class="nx">glowFilter</span><span class="o">:</span><span class="nx">GlowFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">GlowFilter</span><span class="p">(</span><span class="mh">0xffffbe</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">);</span>
-            <span class="nx">glowFilter</span><span class="p">.</span><span class="nx">inner</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            var glowFilter:GlowFilter = new GlowFilter(0xffffbe, 0.75);
+            glowFilter.inner = true;
 
-            <span class="c1">// 外側の角円四角</span>
-            <span class="kd">var</span> <span class="nx">base</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xcc6611</span><span class="p">);</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">base</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">base</span><span class="p">);</span>
+            // 外側の角円四角
+            var base:Shape = new Shape();
+            base.graphics.beginFill(0xcc6611);
+            base.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            base.graphics.endFill();
+            addChild(base);
 
-            <span class="c1">// 内側の角円四角</span>
-            <span class="kd">var</span> <span class="nx">base2</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">base2</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xee7722</span><span class="p">);</span>
-            <span class="nx">base2</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">SIZE</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">ROUND</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">ROUND</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
-            <span class="nx">base2</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">base2</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="nx">glowFilter</span><span class="p">];</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">base2</span><span class="p">);</span>
+            // 内側の角円四角
+            var base2:Shape = new Shape();
+            base2.graphics.beginFill(0xee7722);
+            base2.graphics.drawRoundRect(1, 1, SIZE - 2, SIZE - 2, ROUND - 1, ROUND - 1);
+            base2.graphics.endFill();
+            base2.filters = [glowFilter];
+            addChild(base2);
 
-            <span class="c1">// グラデーション</span>
-            <span class="kd">var</span> <span class="nx">gross</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0x000000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">,</span> <span class="nx">ROUND</span><span class="p">);</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">gross</span><span class="p">.</span><span class="nx">blendMode</span> <span class="o">=</span> <span class="nx">BlendMode</span><span class="p">.</span><span class="nx">OVERLAY</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">gross</span><span class="p">);</span>
+            // グラデーション
+            var gross:Shape = new Shape();
+            gross.graphics.beginGradientFill(&quot;linear&quot;, [0xffffff, 0x000000], [0.2, 0.2], [0, 255], matrix);
+            gross.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            gross.graphics.endFill();
+            gross.graphics.beginGradientFill(&quot;linear&quot;, [0xffffff, 0xffffff, 0xffffff], [0, 0.2, 0], [0, 112, 255], matrix);
+            gross.graphics.drawRoundRect(0, 0, SIZE, SIZE, ROUND, ROUND);
+            gross.graphics.endFill();
+            gross.blendMode = BlendMode.OVERLAY;
+            addChild(gross);
 
-            <span class="c1">// ●</span>
-            <span class="kd">var</span> <span class="nx">white</span><span class="o">:</span><span class="nx">Shape</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">white</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">white</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
-            <span class="nx">white</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+            // ●
+            var white:Shape = new Shape();
+            white.graphics.beginFill(0xffffff);
+            white.graphics.drawCircle(36, 96, 12);
+            white.graphics.endFill();
 
-            <span class="c1">// ))</span>
-            <span class="nx">drawPattern1</span><span class="p">(</span><span class="nx">white</span><span class="p">.</span><span class="nx">graphics</span><span class="p">);</span>
-            <span class="c1">//drawPattern2(white.graphics);</span>
-            <span class="c1">//drawPattern3(white.graphics);</span>
+            // ))
+            drawPattern1(white.graphics);
+            //drawPattern2(white.graphics);
+            //drawPattern3(white.graphics);
 
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">white</span><span class="p">);</span>
-        <span class="p">}</span>
+            addChild(white);
+        }
 
-        <span class="c1">// その1: 素直に外枠をなぞるパスを作る</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern1</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">52</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        // その1: 素直に外枠をなぞるパスを作る
+        private function drawPattern1(g:Graphics):void
+        {
+            g.beginFill(0xffffff);
+            g.moveTo(24, 52);
+            arcTo(g, 24, 108, 56, -Math.PI / 2, 0);
+            arcTo(g, 24, 108, 40, 0, -Math.PI / 2);
+            g.endFill();
 
-            <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">22</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span>
+            g.beginFill(0xffffff);
+            g.moveTo(24, 22);
+            arcTo(g, 24, 108, 86, -Math.PI / 2, 0);
+            arcTo(g, 24, 108, 70, 0, -Math.PI / 2);
+            g.endFill();
+        }
 
-        <span class="c1">// その2: 線として弧を描く</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern2</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">60</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="nx">CapsStyle</span><span class="p">.</span><span class="nx">NONE</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        // その2: 線として弧を描く
+        private function drawPattern2(g:Graphics):void
+        {
+            g.moveTo(24, 60);
+            g.lineStyle(16, 0xffffff, 1, false, &quot;normal&quot;, CapsStyle.NONE);
+            arcTo(g, 24, 108, 48, -Math.PI / 2, 0);
+            g.lineStyle(0, 0, 0);
 
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">30</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="nx">CapsStyle</span><span class="p">.</span><span class="nx">NONE</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">78</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="p">}</span>
+            g.moveTo(24, 30);
+            g.lineStyle(16, 0xffffff, 1, false, &quot;normal&quot;, CapsStyle.NONE);
+            arcTo(g, 24, 108, 78, -Math.PI / 2, 0);
+            g.lineStyle(0, 0, 0);
+        }
 
-        <span class="c1">// その3: 扇から扇を引く</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPattern3</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        // その3: 扇から扇を引く
+        private function drawPattern3(g:Graphics):void
+        {
+            g.beginFill(0xffffff);
+            drawPie(g, 24, 106, 56, -Math.PI / 2, 0);
+            drawPie(g, 24, 106, 40, -Math.PI / 2, 0);
+            g.endFill();
 
-            <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span>
+            g.beginFill(0xffffff);
+            drawPie(g, 24, 106, 86, -Math.PI / 2, 0);
+            drawPie(g, 24, 106, 70, -Math.PI / 2, 0);
+            g.endFill();
+        }
 
-        <span class="c1">// 弧を描くメソッド</span>
-        <span class="c1">// (参考) http://www.fumiononaka.com/TechNotes/Flash/FN0506002.html</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">radius</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">startAngle</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">endAngle</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">clockwise</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="nx">startAngle</span> <span class="o">&lt;</span> <span class="nx">endAngle</span><span class="p">;</span>
+        // 弧を描くメソッド
+        // (参考) http://www.fumiononaka.com/TechNotes/Flash/FN0506002.html
+        private function arcTo(g:Graphics, x:Number, y:Number, radius:Number, startAngle:Number, endAngle:Number):void
+        {
+            var clockwise:Boolean = startAngle &lt; endAngle;
 
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">radius</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">startAngle</span><span class="p">),</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">radius</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">startAngle</span><span class="p">));</span>
+            g.lineTo(x + radius * Math.cos(startAngle), y + radius * Math.sin(startAngle));
             
-            <span class="k">while</span><span class="p">(</span><span class="nx">clockwise</span> <span class="o">&amp;&amp;</span> <span class="nx">startAngle</span> <span class="o">&lt;</span> <span class="nx">endAngle</span> <span class="o">||</span> <span class="o">!</span><span class="nx">clockwise</span> <span class="o">&amp;&amp;</span> <span class="nx">startAngle</span> <span class="o">&gt;</span> <span class="nx">endAngle</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">nextAngle</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">clockwise</span> <span class="o">?</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">endAngle</span><span class="p">,</span> <span class="nx">startAngle</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
-                                                 <span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">endAngle</span><span class="p">,</span> <span class="nx">startAngle</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">4</span><span class="p">);</span>
+            while(clockwise &amp;&amp; startAngle &lt; endAngle || !clockwise &amp;&amp; startAngle &gt; endAngle)
+            {
+                var nextAngle:Number = clockwise ? Math.min(endAngle, startAngle + Math.PI / 4)
+                                                 : Math.max(endAngle, startAngle - Math.PI / 4);
 
-                <span class="kd">var</span> <span class="nx">nextPos</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span>
-                    <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">nextAngle</span><span class="p">)</span> <span class="o">*</span> <span class="nx">radius</span><span class="p">,</span> 
-                    <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">nextAngle</span><span class="p">)</span> <span class="o">*</span> <span class="nx">radius</span><span class="p">);</span>
+                var nextPos:Point = new Point(
+                    Math.cos(nextAngle) * radius, 
+                    Math.sin(nextAngle) * radius);
 
-                <span class="kd">var</span> <span class="nx">controlPos</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span>
-                    <span class="nx">radius</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">tan</span><span class="p">((</span><span class="nx">nextAngle</span> <span class="o">-</span> <span class="nx">startAngle</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">nextAngle</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
-                    <span class="nx">radius</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">tan</span><span class="p">((</span><span class="nx">nextAngle</span> <span class="o">-</span> <span class="nx">startAngle</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">nextAngle</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
-                    <span class="p">);</span>
+                var controlPos:Point = new Point(
+                    radius * Math.tan((nextAngle - startAngle) / 2) * Math.cos(nextAngle - Math.PI / 2),
+                    radius * Math.tan((nextAngle - startAngle) / 2) * Math.sin(nextAngle - Math.PI / 2)
+                    );
 
-                <span class="nx">g</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">nextPos</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">controlPos</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">nextPos</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">controlPos</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">nextPos</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">nextPos</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+                g.curveTo(x + nextPos.x + controlPos.x, y + nextPos.y + controlPos.y, x + nextPos.x, y + nextPos.y);
 
-                <span class="nx">startAngle</span> <span class="o">=</span> <span class="nx">nextAngle</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+                startAngle = nextAngle;
+            }
+        }
 
-        <span class="c1">// 扇形を描くメソッド</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPie</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">radius</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">startAngle</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">endAngle</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
-            <span class="nx">arcTo</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">radius</span><span class="p">,</span> <span class="nx">startAngle</span><span class="p">,</span> <span class="nx">endAngle</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // 扇形を描くメソッド
+        private function drawPie(g:Graphics, x:Number, y:Number, radius:Number, startAngle:Number, endAngle:Number):void
+        {
+            g.moveTo(x, y);
+            arcTo(g, x, y, radius, startAngle, endAngle);
+        }
+    }
+}</pre>
 </section>
 
 </div>

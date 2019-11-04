@@ -69,163 +69,162 @@
 <p>木構造は木で図示するに限りますね。</p>
 <p>(参考文献) <a href="http://www.sumita-planning.jp/~shunta/elementary/squeak/fractal-explain.html">フラクタルについて</a></p>
 <p>ソースコードは以下に(157行)。</p>
-<div class="highlight"><pre><span class="c1">// Parse Node</span>
-<span class="c1">// see also: http://fxp.hp.infoseek.co.jp/arti/parser.html</span>
-<span class="kr">package</span><span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">// Parse Node
+// see also: http://fxp.hp.infoseek.co.jp/arti/parser.html
+package{
+import flash.display.*;
+import flash.events.Event;
+import flash.text.*;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span>
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">ParseNode</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">THETA</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">.</span><span class="mi">6</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">RATIO</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="p">.</span><span class="mi">6</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">180</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">CIRCLE_R</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+[SWF(backgroundColor=&quot;#ffffff&quot;)]
+public class ParseNode extends Sprite{
+    private const THETA:Number = .6;
+    private const RATIO:Number = .6;
+    private const SIZE:Number = 180;
+    private const WIDTH:Number = 15;
+    private const CIRCLE_R:Number = 10;
+    private var canvas:Sprite;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ParseNode</span><span class="p">(){</span>
-        <span class="kd">var</span> <span class="nx">parser</span><span class="o">:</span><span class="nx">Parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">();</span>
+    public function ParseNode(){
+        var parser:Parser = new Parser();
 
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">());</span>
+        addChild(canvas = new Sprite());
 
-        <span class="kd">var</span> <span class="nx">input</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">border</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">input</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">180</span><span class="p">;</span> <span class="nx">input</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span><span class="p">;</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;1*(2+3)+4/5+6+7*(-8+9)&quot;</span><span class="p">;</span>
+        var input:TextField = new TextField();
+        input.border = true;
+        input.x = 10; input.y = 10;
+        input.width = 180; input.height = 20;
+        input.type = &quot;input&quot;;
+        input.text = &quot;1*(2+3)+4/5+6+7*(-8+9)&quot;;
 
-        <span class="nx">input</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="k">while</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">numChildren</span><span class="p">)</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">removeChildAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        input.addEventListener(&quot;change&quot;, function(event:*):void{
+            while(canvas.numChildren) canvas.removeChildAt(0);
+            canvas.graphics.clear();
 
-            <span class="k">try</span><span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">result</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span>
-                <span class="nx">draw</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
-            <span class="p">}</span><span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="o">:</span><span class="nb">Error</span><span class="p">){</span>
-            <span class="p">}</span>
-        <span class="p">});</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">dispatchEvent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Event</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">));</span>
-        <span class="nx">input</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+            try{
+                var result:Object = parser.parse(input.text)
+                draw(result, 100, 500, -Math.PI);
+            }catch(e:Error){
+            }
+        });
+        input.dispatchEvent(new Event(&quot;change&quot;));
+        input.scaleX = input.scaleY = 2;
+        addChild(input);
 
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
+        stage.scaleMode = &quot;noScale&quot;;
+        stage.align = &quot;TL&quot;;
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">result</span><span class="o">:</span><span class="nb">Object</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">angle</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">ratio</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="nx">WIDTH</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">,</span> <span class="mh">0x994c00</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">);</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
-        <span class="nx">x</span> <span class="o">+=</span> <span class="nx">SIZE</span> <span class="o">*</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">angle</span><span class="p">);</span>
-        <span class="nx">y</span> <span class="o">+=</span> <span class="nx">SIZE</span> <span class="o">*</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">angle</span><span class="p">);</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
+    private function draw(result:Object, x:Number, y:Number, angle:Number, ratio:Number = 1, f:Boolean = false):void{
+        canvas.graphics.lineStyle(WIDTH * ratio, 0x994c00, 1, false, &quot;normal&quot;, &quot;none&quot;);
+        canvas.graphics.moveTo(x, y);
+        x += SIZE * ratio * Math.sin(angle);
+        y += SIZE * ratio * Math.cos(angle);
+        canvas.graphics.lineTo(x, y);
 
-        <span class="kd">var</span> <span class="nx">isBranch</span> <span class="o">=</span> <span class="nx">result</span> <span class="nx">is</span> <span class="nb">Array</span><span class="p">;</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">isBranch</span><span class="p">){</span>
-            <span class="nx">angle</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">-</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">.</span><span class="mi">2</span><span class="p">;</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">angle</span><span class="p">,</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="nx">RATIO</span><span class="p">,</span> <span class="o">!</span><span class="nx">f</span><span class="p">);</span>
-            <span class="nx">angle</span> <span class="o">+=</span> <span class="nx">THETA</span> <span class="o">*</span> <span class="p">(</span><span class="nx">f</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">result</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">angle</span><span class="p">,</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="nx">RATIO</span><span class="p">,</span> <span class="o">!</span><span class="nx">f</span><span class="p">);</span>
-        <span class="p">}</span>
+        var isBranch = result is Array;
+        if(isBranch){
+            angle += (Math.random() - .5) * .2;
+            if(result.length &gt; 1) draw(result[1], x, y, angle, ratio * RATIO, !f);
+            angle += THETA * (f ? 1 : -1)
+            if(result.length &gt; 2) draw(result[2], x, y, angle, ratio * RATIO, !f);
+        }
 
-        <span class="nx">ratio</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="nx">ratio</span><span class="p">,</span> <span class="p">.</span><span class="mi">8</span><span class="p">);</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">isBranch</span><span class="p">){</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(.</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">WIDTH</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">,</span> <span class="mh">0x994c00</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">CIRCLE_R</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">leaf</span><span class="o">:</span><span class="nx">Leaf</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Leaf</span><span class="p">();</span>
-            <span class="nx">leaf</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
-            <span class="nx">leaf</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
-            <span class="nx">leaf</span><span class="p">.</span><span class="nx">rotation</span> <span class="o">=</span> <span class="o">-</span><span class="nx">angle</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">180</span><span class="p">;</span>
-            <span class="nx">leaf</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">leaf</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="nx">CIRCLE_R</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">;</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">leaf</span><span class="p">);</span>
-        <span class="p">}</span>
+        ratio = Math.pow(ratio, .8);
+        if(isBranch){
+            canvas.graphics.lineStyle(.2 * WIDTH * ratio, 0x994c00);
+            canvas.graphics.beginFill(0xffffff);
+            canvas.graphics.drawCircle(x, y, CIRCLE_R * ratio);
+            canvas.graphics.endFill();
+        }else{
+            var leaf:Leaf = new Leaf();
+            leaf.x = x;
+            leaf.y = y;
+            leaf.rotation = -angle / Math.PI * 180;
+            leaf.scaleX = leaf.scaleY = CIRCLE_R * ratio;
+            canvas.addChild(leaf);
+        }
 
-        <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">autoSize</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="p">(</span><span class="nx">result</span> <span class="nx">is</span> <span class="nb">Array</span> <span class="o">?</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">:</span> <span class="nx">result</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="mi">4</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">-</span> <span class="nx">ratio</span> <span class="o">*</span> <span class="mi">8</span><span class="p">;</span>
-        <span class="nx">tf</span><span class="p">.</span><span class="nx">selectable</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="nx">canvas</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">tf</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
+        var tf:TextField = new TextField();
+        tf.autoSize = &quot;left&quot;;
+        tf.text = (result is Array ? result[0] : result.toString());
+        tf.scaleX = tf.scaleY = ratio * 4;
+        tf.x = x;
+        tf.y = y - ratio * 8;
+        tf.selectable = false;
+        canvas.addChild(tf);
+    }
+}
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+import flash.display.*;
 
-<span class="kr">class</span> <span class="nx">Leaf</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Leaf</span><span class="p">(){</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x006600</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawEllipse</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class Leaf extends Sprite{
+    public function Leaf(){
+        graphics.beginFill(0x006600);
+        graphics.drawEllipse(-2, -4, 4, 8);
+        graphics.endFill();
+    }
+}
 
-<span class="kr">class</span> <span class="nx">Parser</span><span class="p">{</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">pos</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">str</span><span class="o">:</span><span class="nb">String</span><span class="p">;</span>
+class Parser{
+    private var pos:int;
+    private var str:String;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">parse</span><span class="p">(</span><span class="nx">s</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="nb">Object</span><span class="p">{</span>
-        <span class="nx">str</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/ /g</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">);</span>
-        <span class="nx">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nx">expr</span><span class="p">();</span>
-    <span class="p">}</span>
+    public function parse(s:String):Object{
+        str = s.replace(/ /g, &quot;&quot;);
+        pos = 0;
+        return expr();
+    }
 
-    <span class="c1">// Expr = Term { (+|-) Term}</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">expr</span><span class="p">()</span><span class="o">:</span><span class="nb">Object</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">term</span><span class="p">();</span>
-        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">){</span>
-            <span class="k">switch</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)){</span>
-                <span class="k">case</span> <span class="s2">&quot;+&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">,</span> <span class="nx">term</span><span class="p">()];</span> <span class="k">break</span><span class="p">;</span>
-                <span class="k">case</span> <span class="s2">&quot;-&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">,</span> <span class="nx">term</span><span class="p">()];</span> <span class="k">break</span><span class="p">;</span>
-                <span class="k">default</span><span class="o">:</span>  <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// never comes here</span>
-    <span class="p">}</span>
+    // Expr = Term { (+|-) Term}
+    private function expr():Object{
+        var ret:Object = term();
+        while(true){
+            switch(str.charAt(pos)){
+                case &quot;+&quot;: pos++; ret = [&quot;+&quot;, ret, term()]; break;
+                case &quot;-&quot;: pos++; ret = [&quot;-&quot;, ret, term()]; break;
+                default:  return ret;
+            }
+        }
+        return 0; // never comes here
+    }
 
-    <span class="c1">// Term = Fact { (*|/) Fact}</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">term</span><span class="p">()</span><span class="o">:</span><span class="nb">Object</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">fact</span><span class="p">();</span>
-        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">){</span>
-            <span class="k">switch</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)){</span>
-                <span class="k">case</span> <span class="s2">&quot;*&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">,</span> <span class="nx">fact</span><span class="p">()];</span> <span class="k">break</span><span class="p">;</span>
-                <span class="k">case</span> <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="nx">pos</span><span class="o">++</span><span class="p">;</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">,</span> <span class="nx">fact</span><span class="p">()];</span> <span class="k">break</span><span class="p">;</span>
-                <span class="k">default</span><span class="o">:</span>  <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// never comes here</span>
-    <span class="p">}</span>
+    // Term = Fact { (*|/) Fact}
+    private function term():Object{
+        var ret:Object = fact();
+        while(true){
+            switch(str.charAt(pos)){
+                case &quot;*&quot;: pos++; ret = [&quot;*&quot;, ret, fact()]; break;
+                case &quot;/&quot;: pos++; ret = [&quot;/&quot;, ret, fact()]; break;
+                default:  return ret;
+            }
+        }
+        return 0; // never comes here
+    }
 
-    <span class="c1">// Fact = ( Expr ) | - Fact | number</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">fact</span><span class="p">()</span><span class="o">:</span><span class="nb">Object</span><span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">ret</span><span class="o">:</span><span class="nb">Object</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">m</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
-        <span class="k">if</span><span class="p">((</span><span class="nx">m</span> <span class="o">=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">pos</span><span class="p">).</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^(\d+)/</span><span class="p">))){</span>
-            <span class="nx">pos</span> <span class="o">+=</span> <span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span>
-            <span class="k">return</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">){</span>
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span>
-            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="nx">fact</span><span class="p">()];</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;(&quot;</span><span class="p">){</span>
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span>
-            <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;( )&quot;</span><span class="p">,</span> <span class="nx">expr</span><span class="p">()];</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;No match for )&quot;</span><span class="p">);</span>
-            <span class="nx">pos</span><span class="o">++</span><span class="p">;</span>
-            <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;invalid format&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    // Fact = ( Expr ) | - Fact | number
+    private function fact():Object{
+        var ret:Object;
+        var m:Array;
+        if((m = str.substr(pos).match(/^(\d+)/))){
+            pos += m[1].length;
+            return parseInt(m[1]);
+        }
+        else if(str.charAt(pos) == &quot;-&quot;){
+            pos++;
+            return [&quot;-&quot;, fact()];
+        }
+        else if(str.charAt(pos) == &quot;(&quot;){
+            pos++;
+            ret = [&quot;( )&quot;, expr()];
+            if(str.charAt(pos) != &quot;)&quot;) throw new Error(&quot;No match for )&quot;);
+            pos++;
+            return ret;
+        }
+        throw new Error(&quot;invalid format&quot;);
+    }
+}</pre>
 
 </div>
 

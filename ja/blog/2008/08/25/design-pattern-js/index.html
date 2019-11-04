@@ -73,14 +73,13 @@
 <p>new を使わずにインスタンス生成をメソッドで行う。パラメータによって生成するものを変えることも多い。</p>
 <h2>具体例</h2>
 <p>HTML DOM の createElement() が該当する。</p>
-<div class="highlight"><pre><span class="c1">// table タグを作成</span>
-<span class="kd">var</span> <span class="nx">table</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">);</span>
-<span class="nx">table</span><span class="p">.</span><span class="nx">rows</span><span class="p">;</span>                     <span class="c1">// 空の配列</span>
+<pre class="javascript">// table タグを作成
+var table = document.createElement(&quot;table&quot;);
+table.rows;                     // 空の配列
 
-<span class="c1">// div タグを作成</span>
-<span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
-<span class="nx">div</span><span class="p">.</span><span class="nx">rows</span><span class="p">;</span>                       <span class="c1">// undefined</span>
-</pre></div>
+// div タグを作成
+var div = document.createElement('div');
+div.rows;                       // undefined</pre>
 <p>第一引数に与えたタグ名によって、異なる HTML ノードが作成されているのが分かる。</p>
 <p>DOM 仕様で言えば、createElement(&quot;table&quot;) では HTMLTableElement オブジェクトが、createElement(&quot;div&quot;) では HTMLDivElement オブジェクトが返されている。</p>
 <h2>まとめ</h2>
@@ -91,18 +90,17 @@
 <h2>具体例</h2>
 <p>HTML DOM と XML DOM の document には共通の Factory メソッド createElement() や createTextNode を備えている。</p>
 <p>これを利用して次のような create() 関数を作ってみた。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">create</span><span class="p">(</span><span class="nx">factory</span><span class="p">,</span><span class="nx">nodeName</span><span class="p">){</span>
-  <span class="k">return</span> <span class="nx">factory</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">nodeName</span><span class="p">);</span>
-<span class="p">}</span>
+<pre class="javascript">function create(factory,nodeName){
+  return factory.createElement(nodeName);
+}
 
-<span class="kd">var</span> <span class="nx">html_div</span> <span class="o">=</span> <span class="nx">create</span><span class="p">(</span><span class="nb">document</span><span class="p">,</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">html_div</span> <span class="k">instanceof</span> <span class="nx">HTMLDivElement</span><span class="p">);</span> <span class="c1">// true</span>
+var html_div = create(document,&quot;div&quot;);
+console.log(html_div instanceof HTMLDivElement); // true
 
-<span class="kd">var</span> <span class="nx">xmldoc</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">implementation</span><span class="p">.</span><span class="nx">createDocument</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;&quot;</span><span class="p">,</span><span class="kc">null</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">xml_div</span> <span class="o">=</span> <span class="nx">create</span><span class="p">(</span><span class="nx">xmldoc</span><span class="p">,</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">xml_div</span> <span class="k">instanceof</span> <span class="nx">HTMLDivElement</span><span class="p">);</span> <span class="c1">// false</span>
-</pre></div>
+var xmldoc = document.implementation.createDocument(&quot;&quot;,
+  &quot;&quot;,null);
+var xml_div = create(xmldoc,&quot;div&quot;);
+console.log(xml_div instanceof HTMLDivElement); // false</pre>
 <p>create() 関数は、渡される Factory がどのようなものかは知らないが、createElement() メソッドを実行すればインスタンス生成できることを知っている。</p>
 <p>そのため、HTML DOM の document を渡されたときは、HTML 用のタグを作成するし、XML DOM の document を渡されたときは、XML 用のノードを作成する。</p>
 <h2>まとめ</h2>
@@ -112,28 +110,25 @@
 <p>オブジェクトを作成して組み立てていくためのライブラリを提供する。既存の組み立て方では複雑になる場合や、将来変わる可能性があるときに威力を発揮する。</p>
 <h2>具体例</h2>
 <p>DOM ツリーを作成する手順は煩雑だしソースも読みにくい。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">);</span>
-<span class="nx">p</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;myParagraph&quot;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">);</span>
-<span class="nx">p</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">txt</span><span class="p">);</span>
-<span class="nx">div</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
-<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var div = document.createElement(&quot;div&quot;);
+var p = document.createElement(&quot;p&quot;);
+p.className = &quot;myParagraph&quot;;
+var txt = document.createTextNode(&quot;foo&quot;);
+p.appendChild(txt);
+div.appendChild(div);
+document.body.appendChild(div);</pre>
 <p>だけども、innerHTML を使えば一発。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-<span class="nx">div</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&lt;p class=&#39;myParagraph&#39;&gt;foo&lt;/p&gt;&quot;</span><span class="p">;</span>
-<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">div</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var div = document.createElement(&quot;div&quot;);
+div.innerHTML = &quot;&lt;p class='myParagraph'&gt;foo&lt;/p&gt;&quot;;
+document.body.appendChild(div);</pre>
 <p>innerHTML はある意味 DOM ノードの Builder であると言ってよいだろう。</p>
 <p>jQuery のノード生成の機能、Builder みたいなもんだ。簡単に DOM ツリーを作れる。</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;div&gt;&quot;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span><span class="s2">&quot;myParagraph&quot;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
-   <span class="p">)</span>
-  <span class="p">.</span><span class="nx">appendTo</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">$(&quot;&lt;div&gt;&quot;)
+  .append($(&quot;&lt;p&gt;&quot;)
+    .attr(&quot;class&quot;,&quot;myParagraph&quot;)
+    .text(&quot;foo&quot;)
+   )
+  .appendTo(&quot;body&quot;);</pre>
 <h2>まとめ</h2>
 <ul><li>複雑なものを簡単に作れるようにしておく</li><li>作るための手順が変わったときにも、Builder さえ変更すればよいので依存性が小さくなる</li><li>DOM ノードの Builder として innerHTML や jQuery が挙げられる</li></ul>
 <h1><a name="prototype"></a>Prototype</h1>
@@ -142,34 +137,32 @@
 <h2>具体例</h2>
 <p>JavaScript の prototype オブジェクトが近い。ただ、デザパタの Prototype パターンとは少し違うので注意すべし。</p>
 <p>デザパタの Prototype パターンは、原型(prototype)からコピーすることでインスタンス生成する。clone() といったほうがイメージが近いかもしれない。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">prototypeGoF</span><span class="p">(</span><span class="nx">proto</span><span class="p">){</span>
-  <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{};</span>
-  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">name</span> <span class="k">in</span> <span class="nx">proto</span><span class="p">){</span>
-    <span class="nx">obj</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">proto</span><span class="p">[</span><span class="nx">name</span><span class="p">];</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
-<span class="p">}</span>
+<pre class="javascript">function prototypeGoF(proto){
+  var obj = {};
+  for(var name in proto){
+    obj[name] = proto[name];
+  }
+  return obj;
+}
 
-<span class="kd">var</span> <span class="nx">base</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;prop&quot;</span> <span class="o">:</span><span class="s2">&quot;foo&quot;</span><span class="p">};</span>
-<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">prototypeGoF</span><span class="p">(</span><span class="nx">base</span><span class="p">);</span>
+var base = {&quot;prop&quot; :&quot;foo&quot;};
+var a = prototypeGoF(base);
 
-<span class="c1">// 複製されている</span>
-<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>        <span class="c1">// &quot;foo&quot;</span>
+// 複製されている
+a.prop;        // &quot;foo&quot;
 
-<span class="c1">// 原型 base を変更しても、a の値は変わらない</span>
-<span class="nx">base</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span><span class="p">;</span>
-<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span>         <span class="c1">// &quot;foo&quot;</span>
-</pre></div>
+// 原型 base を変更しても、a の値は変わらない
+base.prop = &quot;bar&quot;;
+a.prop         // &quot;foo&quot;</pre>
 <p>それに対して、JavaScript の prototype では、prototype オブジェクトが参照として渡される。あとから prototype を変更しても反映される。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">A</span><span class="p">(){}</span>
-<span class="nx">A</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;foo&quot;</span><span class="p">;</span>
+<pre class="javascript">function A(){}
+A.prototype.prop = &quot;foo&quot;;
 
-<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">A</span><span class="p">();</span>
-<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>  <span class="c1">// &quot;foo&quot;</span>
+var a = new A();
+a.prop;  // &quot;foo&quot;
 
-<span class="nx">A</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">prop</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span><span class="p">;</span>
-<span class="nx">a</span><span class="p">.</span><span class="nx">prop</span><span class="p">;</span>  <span class="c1">// &quot;bar&quot;</span>
-</pre></div>
+A.prototype.prop = &quot;bar&quot;;
+a.prop;  // &quot;bar&quot;</pre>
 <h2>まとめ</h2>
 <ul><li>原型からオブジェクトを作る</li><li>JavaScript の言語仕様に取り込まれているけど、Prototype パターンがコピーなのに対して、JavaScript の prototype は参照渡しなので注意してね</li></ul>
 <h1><a name="singleton"></a>Singleton</h1>
@@ -178,12 +171,11 @@
 <h2>具体例</h2>
 <p>JavaScript ではグローバル空間汚染できまくりなので、いまさら例える必要はないんじゃないかな。</p>
 <p>とはいえ、Singleton にはインスタンスが１つしかないことを保証する、という意味合いもある。これを JavaScript で実現するには次のようにするのが定石になっている。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-  <span class="nb">window</span><span class="p">.</span><span class="nx">$</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-    <span class="c1">// ...</span>
-  <span class="p">};</span>
-<span class="p">}());</span>
-</pre></div>
+<pre class="javascript">(function(){
+  window.$ = function(){
+    // ...
+  };
+}());</pre>
 <p>無名関数で隠して、グローバル領域に書き込んでる。JavaScript のいくつかのライブラリで実際に使われている手法。</p>
 <h2>まとめ</h2>
 <ul><li>グローバル変数を使いにくい or 使えない言語でグローバル変数を実現するためのもの。</li></ul>
@@ -192,13 +184,12 @@
 <p>クラスのインターフェースを変える。別名 Wrapper。</p>
 <h2>具体例</h2>
 <p>IE では addEventListener がなくて困るので定義してあげる。</p>
-<div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">){</span>
-  <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span><span class="nx">fn</span><span class="p">){</span>
-    <span class="nx">attachEvent</span><span class="p">(</span><span class="s2">&quot;on&quot;</span> <span class="o">+</span> <span class="nx">type</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span><span class="nx">fn</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="nb">window</span><span class="p">.</span><span class="nx">event</span><span class="p">);});</span>
-  <span class="p">};</span>
-  <span class="nx">Element</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">if (!window.addEventListener){
+  window.addEventListener = function(type,fn){
+    attachEvent(&quot;on&quot; + type,function(){fn.call(this,window.event);});
+  };
+  Element.prototype.addEventListener = window.addEventListener;
+}</pre>
 <p>これで IE でも addEventListener が使えるようになった。</p>
 <p>ただ、デザインパターンの流儀では、サブクラスを定義して元のクラスを隠蔽するのが基本。ここでは、JavaScript 流のやり方で、直接インターフェースを変えてるので、Adapter パターンと言い切るのは少し苦しいかもしれない。</p>
 <h2>まとめ</h2>
@@ -217,21 +208,20 @@
 <h2>具体例</h2>
 <p>DOM イベントでは、イベントオブジェクトが対象のオブジェクトから親ノードへ順番に伝わっていく。</p>
 <p>例えば、この例では、div タグでクリックされると、イベントが div タグに到達して「div clicked!!」と表示される。そのあと、body タグにイベントが到達し、「body clicked!!」と表示される。div と body でそれぞれ独立に同じイベントを処理できるようになっている。</p>
-<div class="highlight"><pre><span class="o">&lt;</span><span class="nx">body</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span><span class="nx">example</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+<pre class="javascript">&lt;body&gt;
+&lt;div id=&quot;example&quot;&gt;example&lt;/div&gt;
 
-<span class="o">&lt;</span><span class="nx">script</span><span class="o">&gt;</span>
-<span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">);</span>
-<span class="nx">div</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">){</span>
-  <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;div clicked!!&quot;</span><span class="p">);</span>
-<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+&lt;script&gt;
+var div = document.getElementById(&quot;example&quot;);
+div.addEventListener(&quot;click&quot;,function(event){
+  alert(&quot;div clicked!!&quot;);
+},false);
 
-<span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
-  <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;body clicked!!&quot;</span><span class="p">);</span>
-<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
-<span class="o">&lt;</span><span class="err">/script&gt;</span>
-<span class="o">&lt;</span><span class="err">/body&gt;</span>
-</pre></div>
+document.body.addEventListener(&quot;click&quot;,function(){
+  alert(&quot;body clicked!!&quot;);
+},false);
+&lt;/script&gt;
+&lt;/body&gt;</pre>
 <p>もう一例挙げておこう。プロトタイプチェーンという言葉にもあるとおり、prototype は Chain Of Responsibility パターンだ。例えば、arr という配列に対して、arr.myProperty を参照すると、</p>
 <ol><li>a.myProperty</li><li>Array.prototype.myProperty</li><li>Object.prototype.myProperty</li></ol>
 <p>の順番に myProperty プロパティを探す。</p>
@@ -242,19 +232,17 @@
 <p>オブジェクトを順番にアクセスするための方法を提供する。</p>
 <h2>具体例</h2>
 <p>JavaScript ではあんまりイテレータは使わないんだけど、DOM ノードをイテレータ的に使ってみよう。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">;</span>
-<span class="k">while</span><span class="p">(</span><span class="nx">p</span><span class="p">){</span>
-  <span class="nx">myFunc</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-  <span class="nx">p</span> <span class="o">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">nextSibling</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">var p = document.body.firstChild;
+while(p){
+  myFunc(p);
+  p = p.nextSibling;
+}</pre>
 <p>nextSibling は同じ階層の次の要素を取得するプロパティ。nextSibling を使えば、ノード自身をイテレータのように扱える。</p>
 <p>実際、jQuery のソースコード中には</p>
-<div class="highlight"><pre><span class="k">for</span> <span class="p">(</span> <span class="p">;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">nextSibling</span> <span class="p">)</span>
-  <span class="k">if</span> <span class="p">(</span> <span class="nx">n</span><span class="p">.</span><span class="nx">nodeType</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// 省略</span>
-  <span class="p">}</span>
-</pre></div>
+<pre class="javascript">for ( ; n; n = n.nextSibling )
+  if ( n.nodeType == 1 ) {
+    // 省略
+  }</pre>
 <p>というようなコードがある。カウンタ変数 i を使ったほうが読みやすい気もするが、この辺は好みだね。</p>
 <h2>まとめ</h2>
 <ul><li>順番にアクセスする</li><li>nextSibling プロパティを使えば、DOM ノードをイテレータ的に使える</li></ul>
@@ -264,14 +252,13 @@
 <h2>具体例</h2>
 <p>DOM イベントは Observer パターンそのもの。</p>
 <p>addEventListener を使えば、イベント発生したときに呼ばれる関数を登録できる。</p>
-<div class="highlight"><pre><span class="nx">elm</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
-  <span class="c1">// その１</span>
-<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
+<pre class="javascript">elm.addEventListener(&quot;click&quot;,function(){
+  // その１
+},false);
 
-<span class="nx">elm</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
-  <span class="c1">// その２</span>
-<span class="p">},</span><span class="kc">false</span><span class="p">);</span>
-</pre></div>
+elm.addEventListener(&quot;click&quot;,function(){
+  // その２
+},false);</pre>
 <p>このように、１つの対象(Subject)に対して複数のイベントリスナ(Observer)を登録できるところがポイント。イベントが発生すると、全部のイベントリスナが呼ばれる。</p>
 <p>あんまり使わないけど、removeEventListener で登録解除できる。また、イベント発生させるときには、dispatchEvent() メソッドを利用できる。</p>
 <h2>まとめ</h2>
@@ -282,39 +269,38 @@
 <h2>具体例</h2>
 <p>SAX（Simple API for XML）。</p>
 <p>Java のソースだけど、<a href="http://ja.wikipedia.org/wiki/Simple_API_for_XML">Simple API for XML - Wikipedia</a> より引用。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">javax.xml.parsers.*</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">org.xml.sax.*</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">org.xml.sax.helpers.DefaultHandler</span><span class="o">;</span>
+<pre class="java">import java.io.IOException;
+import javax.xml.parsers.*;
+import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
  
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ParserConfigurationException</span><span class="o">,</span><span class="n">SAXException</span><span class="o">,</span><span class="n">IOException</span> <span class="o">{</span>
-    <span class="n">SAXParserFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="n">SAXParserFactory</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
-    <span class="n">SAXParser</span> <span class="n">parser</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="na">newSAXParser</span><span class="o">();</span>
+public class Test {
+  public static void main(String[] args) throws ParserConfigurationException,SAXException,IOException {
+    SAXParserFactory factory = SAXParserFactory.newInstance();
+    SAXParser parser = factory.newSAXParser();
  
-    <span class="n">parser</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">&quot;http://example.com/rss&quot;</span><span class="o">,</span><span class="k">new</span> <span class="nf">DefaultHandler</span><span class="o">()</span> <span class="o">{</span>
-      <span class="kd">private</span> <span class="n">String</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">;</span>
-      <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">isItemStarted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    parser.parse(&quot;http://example.com/rss&quot;,new DefaultHandler() {
+      private String text = &quot;&quot;;
+      private boolean isItemStarted = false;
  
-      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">startElement</span><span class="o">(</span><span class="n">String</span> <span class="n">uri</span><span class="o">,</span><span class="n">String</span> <span class="n">localName</span><span class="o">,</span><span class="n">String</span> <span class="n">qName</span><span class="o">,</span><span class="n">Attributes</span> <span class="n">attributes</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span><span class="o">(</span><span class="n">qName</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">&quot;item&quot;</span><span class="o">))</span> <span class="o">{</span>
-          <span class="n">isItemStarted</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
-        <span class="o">}</span>
-      <span class="o">}</span>
+      public void startElement(String uri,String localName,String qName,Attributes attributes) {
+        if(qName.equals(&quot;item&quot;)) {
+          isItemStarted = true;
+        }
+      }
  
-      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">endElement</span><span class="o">(</span><span class="n">String</span> <span class="n">uri</span><span class="o">,</span><span class="n">String</span> <span class="n">localName</span><span class="o">,</span><span class="n">String</span> <span class="n">qName</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">isItemStarted</span> <span class="o">&amp;&amp;</span> <span class="n">qName</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">&quot;title&quot;</span><span class="o">))</span> <span class="o">{</span>
-          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">text</span><span class="o">);</span>
-        <span class="o">}</span>
-      <span class="o">}</span>
+      public void endElement(String uri,String localName,String qName) {
+        if (isItemStarted &amp;&amp; qName.equals(&quot;title&quot;)) {
+          System.out.println(text);
+        }
+      }
  
-      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">characters</span><span class="o">(</span><span class="kt">char</span><span class="o">[]</span> <span class="n">ch</span><span class="o">,</span><span class="kt">int</span> <span class="n">start</span><span class="o">,</span><span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="n">ch</span><span class="o">,</span><span class="n">start</span><span class="o">,</span><span class="n">length</span><span class="o">);</span>
-      <span class="o">}</span>
-    <span class="o">});</span>
-  <span class="o">}</span>
-<span class="o">}</span>
-</pre></div>
+      public void characters(char[] ch,int start,int length) {
+        text = new String(ch,start,length);
+      }
+    });
+  }
+}</pre>
 <p>SAX でパース処理を開始すると、XML のノードを上から順番に見ていき、ノードの内容に応じて、Visitor（ここでは、DefaultHandler） の startElement(),endElement(),characters() などのメソッドを呼び出していく。</p>
 <h2>まとめ</h2>
 <ul><li>SAX はライブラリの構造として Visitor パターンを取り入れている</li></ul>

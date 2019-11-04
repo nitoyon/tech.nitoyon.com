@@ -63,44 +63,42 @@
 <p>Alchemy は malloc にも対応している。malloc で確保したメモリのポインタを AS3 側に伝えるのも簡単だ。</p>
 <h1>C 側の実装例</h1>
 <p>C で malloc した場所を AS3 に渡してみる。</p>
-<div class="highlight"><pre><span class="k">static</span> <span class="n">AS3_Val</span> <span class="nf">myAlloc</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">self</span><span class="p">,</span> <span class="n">AS3_Val</span> <span class="n">args</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 確保した値の初期値を受け取る</span>
-    <span class="kt">int</span> <span class="n">v</span><span class="p">;</span>
-    <span class="n">AS3_ArrayValue</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&quot;IntType&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">v</span><span class="p">);</span>
+<pre class="c">static AS3_Val myAlloc(void* self, AS3_Val args)
+{
+    // 確保した値の初期値を受け取る
+    int v;
+    AS3_ArrayValue(args, &quot;IntType&quot;, &amp;v);
 
-    <span class="c1">// malloc でメモリ確保</span>
-    <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+    // malloc でメモリ確保
+    int* p = (int*)malloc(sizeof(int));
 
-    <span class="c1">// 確保したメモリに初期値を代入する</span>
-    <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+    // 確保したメモリに初期値を代入する
+    *p = v;
 
-    <span class="c1">// ポインタを返す</span>
-    <span class="k">return</span> <span class="n">AS3_Ptr</span><span class="p">((</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">p</span><span class="p">);</span>
-<span class="p">}</span>
+    // ポインタを返す
+    return AS3_Ptr((void*)p);
+}
 
-<span class="k">static</span> <span class="n">AS3_Val</span> <span class="nf">myGetPtr</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">self</span><span class="p">,</span> <span class="n">AS3_Val</span> <span class="n">args</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// ポインタを受け取る</span>
-    <span class="kt">int</span><span class="o">*</span> <span class="n">p</span><span class="p">;</span>
-    <span class="n">AS3_ArrayValue</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&quot;PtrType&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">p</span><span class="p">);</span>
+static AS3_Val myGetPtr(void* self, AS3_Val args)
+{
+    // ポインタを受け取る
+    int* p;
+    AS3_ArrayValue(args, &quot;PtrType&quot;, &amp;p);
 
-    <span class="c1">// ポインタが指す値を返す</span>
-    <span class="k">return</span> <span class="n">AS3_Int</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+    // ポインタが指す値を返す
+    return AS3_Int(*p);
+}</pre>
 <p>AS3_Ptr, PtrType がキーワード。</p>
 <h1>ActionScript3 側の実装例</h1>
 <p>ポインタは uint で受け取れますよ。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">lib</span><span class="o">:</span><span class="nx">CLibInit</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CLibInit</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">obj</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">lib</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+<pre class="javascript">var lib:CLibInit = new CLibInit();
+var obj:Object = lib.init();
 
-<span class="c1">// メモリを確保する</span>
-<span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">myAlloc</span><span class="p">(</span><span class="mi">9999</span><span class="p">);</span>
+// メモリを確保する
+var p:uint = obj.myAlloc(9999);
 
-<span class="c1">// ポインタを渡して中身を受け取る</span>
-<span class="kd">var</span> <span class="nx">v</span><span class="o">:</span><span class="kr">int</span>  <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getPtr</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-</pre></div>
+// ポインタを渡して中身を受け取る
+var v:int  = obj.getPtr(p);</pre>
 <h1>ヒープの実装方法は？</h1>
 <p>AS3 にはご存知の通りポインタの概念はないんだけど、どのように実現されてるんだろう。また、C 側では malloc で確保したメモリがヒープ上にあるように見えるはずなんだけど、これはいったいどのように実現されているんだろう。</p>
 <p>答えは簡単。ByteArray でヒープがエミュレートされている。ポインタの値はヒープのオフセット＋ByteArray の先頭から何バイト目かの値になるわけだ。</p>

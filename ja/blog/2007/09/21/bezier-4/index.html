@@ -73,229 +73,228 @@
 <ol><li><a href="/ja/blog/2007/09/18/bezier-1/">ベジエ曲線の仕組み (1) - 昔話</a></li><li><a href="/ja/blog/2007/09/19/bezier-2/">ベジエ曲線の仕組み (2) - ２次ベジエ曲線を詳しく</a></li><li><a href="/ja/blog/2007/09/20/bezier-3/">ベジエ曲線の仕組み (3) - ３次ベジエ曲線</a></li><li><a href="/ja/blog/2007/09/21/bezier-4/">ベジエ曲線の仕組み (4) - ActionScript 3.0 でベジエ曲線を描く</a></li></ol>
 <h1>ソースコード</h1>
 <p>以下にソースを掲載します(220行)。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Timer</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.Sprite;
+    import flash.display.Graphics;
+    import flash.text.TextField;
+    import flash.geom.Point;
+    import flash.utils.Timer;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">BezierTest4</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">BezierPoint</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BezierPoint</span><span class="p">();</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">BezierPoint</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BezierPoint</span><span class="p">();</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p0</span><span class="o">:</span><span class="nx">BezierPoint</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BezierPoint</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">BezierPoint</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BezierPoint</span><span class="p">(</span><span class="nx">p2</span><span class="p">);</span>
+    public class BezierTest4 extends Sprite
+    {
+        private var p1:BezierPoint = new BezierPoint();
+        private var p2:BezierPoint = new BezierPoint();
+        private var p0:BezierPoint = new BezierPoint(p1);
+        private var p3:BezierPoint = new BezierPoint(p2);
 
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">button1</span><span class="o">:</span><span class="nx">AnimeButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AnimeButton</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x900000</span><span class="p">);</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">button2</span><span class="o">:</span><span class="nx">AnimeButton</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AnimeButton</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x009000</span><span class="p">);</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">text</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
+        private var button1:AnimeButton = new AnimeButton(0, 0x900000);
+        private var button2:AnimeButton = new AnimeButton(1, 0x009000);
+        private var text:TextField = new TextField();
 
-        <span class="kr">public</span> <span class="kd">var</span> <span class="nx">mouseOver</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        public var mouseOver:Boolean = false;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BezierTest4</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">p0</span><span class="p">);</span> <span class="nx">addChild</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">p2</span><span class="p">);</span> <span class="nx">addChild</span><span class="p">(</span><span class="nx">p3</span><span class="p">);</span>
-            <span class="nx">p0</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>   <span class="mi">0</span><span class="p">;</span>   <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">120</span><span class="p">;</span>
-            <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>  <span class="mi">60</span><span class="p">;</span>   <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span>  <span class="mi">20</span><span class="p">;</span>
-            <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">180</span><span class="p">;</span>   <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span>  <span class="mi">40</span><span class="p">;</span>
-            <span class="nx">p3</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">260</span><span class="p">;</span>   <span class="nx">p3</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">160</span><span class="p">;</span>
+        public function BezierTest4()
+        {
+            addChild(p0); addChild(p1);
+            addChild(p2); addChild(p3);
+            p0.x =   0;   p0.y = 120;
+            p1.x =  60;   p1.y =  20;
+            p2.x = 180;   p2.y =  40;
+            p3.x = 260;   p3.y = 160;
 
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">button1</span><span class="p">);</span> <span class="nx">button1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span>  <span class="mi">0</span><span class="p">;</span> <span class="nx">button1</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">button2</span><span class="p">);</span> <span class="nx">button2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span> <span class="nx">button2</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>    <span class="nx">text</span><span class="p">.</span><span class="nx">x</span>    <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="nx">text</span><span class="p">.</span><span class="nx">y</span>    <span class="o">=</span> <span class="mi">150</span><span class="p">;</span> <span class="nx">text</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;4&quot;</span><span class="p">;</span>
+            addChild(button1); button1.x =  0; button1.y = 150;
+            addChild(button2); button2.x = 50; button2.y = 150;
+            addChild(text);    text.x    = 25; text.y    = 150; text.width = 20;
+            text.text = &quot;4&quot;;
 
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-            <span class="p">{</span>
-                <span class="nx">drawBezier</span><span class="p">();</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            addEventListener(&quot;enterFrame&quot;, function(event:*):void
+            {
+                drawBezier();
+            });
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">drawBezier</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        public function drawBezier():void
+        {
+            graphics.clear();
 
-            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">p0</span><span class="p">,</span> <span class="nx">p1</span><span class="p">,</span> <span class="mh">0x999999</span><span class="p">);</span>
-            <span class="nx">drawLine</span><span class="p">(</span><span class="nx">p2</span><span class="p">,</span> <span class="nx">p3</span><span class="p">,</span> <span class="mh">0x999999</span><span class="p">);</span>
+            drawLine(p0, p1, 0x999999);
+            drawLine(p2, p3, 0x999999);
 
-            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point</span><span class="p">,</span> <span class="nx">pt2</span><span class="o">:</span><span class="nx">Point</span><span class="p">,</span> <span class="nx">pt3</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+            var pt:Point, pt2:Point, pt3:Point;
+            var t:Number;
+            var diff:Number = 1.0 / parseInt(text.text);
 
-            <span class="c1">// line approximation</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x339933</span><span class="p">);</span>
-            <span class="k">for</span><span class="p">(</span><span class="nx">t</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="nx">t</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="nx">t</span> <span class="o">+=</span> <span class="nx">diff</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">pt</span> <span class="o">=</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p3</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+            // line approximation
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineStyle(1, 0x339933);
+            for(t = 0.0; t &lt;= 1.0; t += diff)
+            {
+                pt = getBezierPoint(t);
+                graphics.lineTo(pt.x, pt.y);
+            }
+            graphics.lineTo(p3.x, p3.y);
 
-            <span class="c1">// curve approximation</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xff9999</span><span class="p">);</span>
-            <span class="k">for</span><span class="p">(</span><span class="nx">t</span> <span class="o">=</span> <span class="nx">diff</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">t</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="nx">t</span> <span class="o">+=</span> <span class="nx">diff</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">pt</span>  <span class="o">=</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span>
-                <span class="nx">pt2</span> <span class="o">=</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span> <span class="o">-</span> <span class="nx">diff</span><span class="p">);</span>
-                <span class="nx">pt3</span> <span class="o">=</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">diff</span><span class="p">);</span>
+            // curve approximation
+            graphics.moveTo(p0.x, p0.y);
+            graphics.lineStyle(1, 0xff9999);
+            for(t = diff * 2; t &lt;= 1.0; t += diff * 2)
+            {
+                pt  = getBezierPoint(t);
+                pt2 = getBezierPoint(t - diff);
+                pt3 = getBezierPoint(t - 2 * diff);
 
-                <span class="nx">pt2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">pt2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-                                <span class="mi">2</span> <span class="o">*</span> <span class="nx">pt2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">pt3</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">curveTo</span><span class="p">(</span><span class="nx">pt2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="p">}</span>
+                pt2 = new Point(2 * pt2.x - (pt.x + pt3.x) / 2,
+                                2 * pt2.y - (pt.y + pt3.y) / 2);
+                graphics.curveTo(pt2.x, pt2.y, pt.x, pt.y);
+            }
 
-            <span class="c1">// bezier</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">mouseOver</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x0099ff</span><span class="p">);</span>
-                <span class="k">for</span><span class="p">(</span><span class="nx">t</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="nx">t</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="nx">t</span> <span class="o">+=</span> <span class="mf">0.01</span><span class="p">)</span>
-                <span class="p">{</span>
-                    <span class="nx">pt</span> <span class="o">=</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span>
-                    <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">pt</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">pt</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p3</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // bezier
+            if(mouseOver)
+            {
+                graphics.moveTo(p0.x, p0.y);
+                graphics.lineStyle(1, 0x0099ff);
+                for(t = 0.0; t &lt;= 1.0; t += 0.01)
+                {
+                    pt = getBezierPoint(t);
+                    graphics.lineTo(pt.x, pt.y);
+                }
+                graphics.lineTo(p3.x, p3.y);
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getBezierPoint</span><span class="p">(</span><span class="nx">t</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="nx">Point</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="o">*</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span>
-                       <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span>
-                         <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="o">*</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span>
-                       <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">t</span><span class="p">)</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">t</span> <span class="o">*</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="p">}</span>
+        private function getBezierPoint(t:Number):Point
+        {
+            return new Point(Math.pow(1 - t, 3)  * p0.x + 3 * t * Math.pow(1 - t, 2) * p1.x
+                       + 3 * t * t * (1 - t) * p2.x + t * t * t * p3.x,
+                         Math.pow(1 - t, 3)  * p0.y + 3 * t * Math.pow(1 - t, 2) * p1.y
+                       + 3 * t * t * (1 - t) * p2.y + t * t * t * p3.y);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawLine</span><span class="p">(</span><span class="nx">p0</span><span class="o">:*</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:*</span><span class="p">,</span> <span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">g</span> <span class="o">=</span> <span class="nx">g</span> <span class="o">||</span> <span class="nx">graphics</span><span class="p">;</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">color</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p0</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p0</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-        <span class="p">}</span>
+        private function drawLine(p0:*, p1:*, color:int, g:Graphics = null):void
+        {
+            g = g || graphics;
+            g.lineStyle(1, color);
+            g.moveTo(p0.x, p0.y);
+            g.lineTo(p1.x, p1.y);
+            g.lineStyle();
+        }
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">changeNum</span><span class="p">(</span><span class="nx">num</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">text</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">num</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">)));</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+        public function changeNum(num:int):void
+        {
+            text.text = String(Math.max(1, parseInt(text.text) + (num ? 1 : -1)));
+        }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Sprite</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="nx">BevelFilter</span><span class="p">;</span>
+import flash.display.Sprite;
+import flash.geom.Point;
+import flash.filters.BevelFilter;
 
-<span class="nx">internal</span> <span class="kr">class</span> <span class="nx">BezierPoint</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-<span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">COLOR</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x000000</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">RADIUS</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+internal class BezierPoint extends Sprite
+{
+    private const COLOR:int = 0x000000;
+    private const RADIUS:int = 3;
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
+    private var dragging:Boolean;
+    private var diff:Point = new Point();
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">child</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+    private var child:Sprite;
     
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">BezierPoint</span><span class="p">(</span><span class="nx">_child</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="nx">child</span> <span class="o">=</span> <span class="nx">_child</span><span class="p">;</span>
+    public function BezierPoint(_child:Sprite = null):void
+    {
+        child = _child;
 
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">COLOR</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">RADIUS</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        graphics.beginFill(COLOR);
+        graphics.drawCircle(0, 0, RADIUS);
+        graphics.endFill();
 
-        <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        buttonMode = true;
 
-        <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">();</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="nx">mouseDownHandler</span><span class="p">);</span>
-    <span class="p">}</span>
+        var dragging:Boolean = false;
+        var diff:Point = new Point();
+        addEventListener(&quot;mouseDown&quot;, mouseDownHandler);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseDownHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">dragging</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">startDrag</span><span class="p">();</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">child</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">diff</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">child</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">x</span><span class="p">;</span>
-                <span class="nx">diff</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">child</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">y</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    private function mouseDownHandler(event:*):void
+    {
+        if(!dragging)
+        {
+            dragging = true;
+            startDrag();
+            if(child)
+            {
+                diff.x = child.x - x;
+                diff.y = child.y - y;
+            }
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">&amp;&amp;</span> <span class="nx">child</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="nx">child</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-            <span class="nx">child</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    private function mouseMoveHandler(event:*):void
+    {
+        if(dragging &amp;&amp; child)
+        {
+            child.x = x + diff.x;
+            child.y = y + diff.y;
+        }
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseUpHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="nx">stopDrag</span><span class="p">();</span>
-            <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    private function mouseUpHandler(event:*):void
+    {
+        if(dragging)
+        {
+            stopDrag();
+            dragging = false;
 
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+            removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
+    }
+}
 
-<span class="nx">internal</span> <span class="kr">class</span> <span class="nx">AnimeButton</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-<span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+internal class AnimeButton extends Sprite
+{
+    private const WIDTH:int = 20;
+    private const HEIGHT:int = 20;
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">num</span><span class="o">:</span><span class="kr">int</span><span class="p">;</span>
+    private var num:int;
     
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">AnimeButton</span><span class="p">(</span><span class="nx">_num</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nx">num</span> <span class="o">=</span> <span class="nx">_num</span><span class="p">;</span>
+    public function AnimeButton(_num:int, color:int)
+    {
+        num = _num;
 
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRoundRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-        <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        graphics.beginFill(color);
+        graphics.drawRoundRect(0, 0, WIDTH, HEIGHT, 10, 10);
+        graphics.endFill();
 
-        <span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">BevelFilter</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mh">0x000000</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)];</span>
-        <span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        filters = [new BevelFilter(3, 45, 0xffffff, 0.6, 0x000000, 0.6)];
+        buttonMode = true;
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseOver&quot;</span><span class="p">,</span> <span class="nx">mouseOver</span><span class="p">);</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span>     <span class="nx">changeNum</span><span class="p">);</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseOut&quot;</span><span class="p">,</span>  <span class="nx">mouseOut</span><span class="p">);</span>
-    <span class="p">}</span>
+        addEventListener(&quot;mouseOver&quot;, mouseOver);
+        addEventListener(&quot;click&quot;,     changeNum);
+        addEventListener(&quot;mouseOut&quot;,  mouseOut);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeNum</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">main</span><span class="o">:</span><span class="nx">BezierTest4</span> <span class="o">=</span> <span class="nx">parent</span> <span class="nx">as</span> <span class="nx">BezierTest4</span><span class="p">;</span>
-        <span class="nx">main</span><span class="p">.</span><span class="nx">changeNum</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
-    <span class="p">}</span>
+    private function changeNum(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.changeNum(num);
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseOver</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">main</span><span class="o">:</span><span class="nx">BezierTest4</span> <span class="o">=</span> <span class="nx">parent</span> <span class="nx">as</span> <span class="nx">BezierTest4</span><span class="p">;</span>
-        <span class="nx">main</span><span class="p">.</span><span class="nx">mouseOver</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
+    private function mouseOver(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.mouseOver = true;
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseOut</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">main</span><span class="o">:</span><span class="nx">BezierTest4</span> <span class="o">=</span> <span class="nx">parent</span> <span class="nx">as</span> <span class="nx">BezierTest4</span><span class="p">;</span>
-        <span class="nx">main</span><span class="p">.</span><span class="nx">mouseOver</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    private function mouseOut(event:*):void
+    {
+        var main:BezierTest4 = parent as BezierTest4;
+        main.mouseOver = false;
+    }
+}</pre>
 </section>
 
 </div>

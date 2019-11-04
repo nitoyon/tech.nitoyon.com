@@ -75,44 +75,43 @@
 <p>動画の上でマウスを移動させて位置調整できます。マウス動かしても反応ないなら、動画をクリックしてみる必要があるかも。</p>
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FBloggie360Test.swf&amp;bgcolor=%23ffffff" width="400" height="248" class="flash"></iframe></center></p>
 <p>ソースはこんな感じ。ソース中に出てくる out.swf は YouTube にアップロードした動画を ffmpeg で swf として出力したもの。</p>
-<div class="highlight"><pre><span class="kd">package</span><span class="p">{</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nb">Matrix</span><span class="o">;</span>
-<span class="kd">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nb">Event</span><span class="o">;</span>
+<pre class="actionscript">package{
+import flash.display.*;
+import flash.geom.Matrix;
+import flash.events.Event;
 
-<span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;#ffffff&quot;</span><span class="p">)]</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nx">Bloggie360Test</span> <span class="kd">extends</span> <span class="nb">Sprite</span><span class="p">{</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;out.swf&quot;</span><span class="p">)]</span>
-    <span class="kd">private</span> <span class="k">var</span> <span class="nx">movie</span><span class="o">:</span><span class="nb">Class</span><span class="o">;</span>
+[SWF(backgroundColor=&quot;#ffffff&quot;)]
+public class Bloggie360Test extends Sprite{
+    [Embed(source=&quot;out.swf&quot;)]
+    private var movie:Class;
 
-    <span class="kd">public</span> <span class="kd">function</span> <span class="nx">Bloggie360Test</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">var</span> <span class="nx">mc</span><span class="o">:</span><span class="nb">MovieClip</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">movie</span><span class="p">();</span>
+    public function Bloggie360Test() {
+        var mc:MovieClip = new movie();
 
-        <span class="k">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nb">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">BitmapData</span><span class="p">(</span><span class="mi">400</span><span class="o">,</span> <span class="mi">248</span><span class="p">);</span>
-        <span class="k">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nb">Bitmap</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nb">Bitmap</span><span class="p">(</span><span class="nx">bmd</span><span class="p">))</span> <span class="nx">as</span> <span class="nb">Bitmap</span><span class="o">;</span>
+        var bmd:BitmapData = new BitmapData(400, 248);
+        var bmp:Bitmap = addChild(new Bitmap(bmd)) as Bitmap;
 
-        <span class="k">var</span> <span class="nx">mtx</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
-        <span class="k">var</span> <span class="nx">mtx2</span><span class="o">:</span><span class="nb">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Matrix</span><span class="p">();</span>
+        var mtx:Matrix = new Matrix();
+        var mtx2:Matrix = new Matrix();
 
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Event</span><span class="p">)</span><span class="o">:</span><span class="nx">void</span> <span class="p">{</span>
-            <span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">200</span> <span class="o">-</span> <span class="nx">stage</span><span class="p">.</span><span class="nx">mouseX</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="o">;</span>
-            <span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">%=</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">width</span><span class="o">;</span>
+        addEventListener(&quot;enterFrame&quot;, function(event:Event):void {
+            mtx.tx += (200 - stage.mouseX) / 10;
+            mtx.tx %= mc.width;
 
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">mc</span><span class="o">,</span> <span class="nx">mtx</span><span class="p">);</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">mtx2</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">-</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">width</span><span class="o">;</span>
-                <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">mc</span><span class="o">,</span> <span class="nx">mtx2</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">&lt;</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">width</span> <span class="o">-</span> <span class="mi">400</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">mtx2</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mtx</span><span class="p">.</span><span class="nx">tx</span> <span class="o">+</span> <span class="nx">mc</span><span class="p">.</span><span class="nx">width</span><span class="o">;</span>
-                <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">mc</span><span class="o">,</span> <span class="nx">mtx2</span><span class="p">);</span>
-            <span class="p">}</span>
+            bmd.draw(mc, mtx);
+            if (mtx.tx &gt; 0) {
+                mtx2.tx = mtx.tx - mc.width;
+                bmd.draw(mc, mtx2);
+            }
+            if (mtx.tx &lt; mc.width - 400) {
+                mtx2.tx = mtx.tx + mc.width;
+                bmd.draw(mc, mtx2);
+            }
             
-        <span class="p">});</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        });
+    }
+}
+}</pre>
 <p>商品情報はこちら。自分が購入したお店で値下がりしていて税抜2万円切っていた。</p>
 <div class="hatena-asin-detail">
 <a href="http://hb.afl.rakuten.co.jp/hgc/04049a54.f60ead88.04049a55.f27bbb04/?pc=http%3A%2F%2Fitem.rakuten.co.jp%2Fkaden-sakura%2F10015963%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fkaden-sakura%2Fi%2F10015963%2F"><img src="http://thumbnail.image.rakuten.co.jp/@0_mall/kaden-sakura/cabinet/01260387/mhspm5kl.jpg?_ex=128x128" class="hatena-asin-detail-image" alt="■ソニー【☆bloggie】モバイルHDスナップカメラ MHS-PM5K-L（ブルー）★送料無料【MHSPM5K】" title="■ソニー【☆bloggie】モバイルHDスナップカメラ MHS-PM5K-L（ブルー）★送料無料【MHSPM5K】"></a>

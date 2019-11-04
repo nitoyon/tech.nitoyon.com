@@ -68,59 +68,58 @@
 <p>サーバー側の資源を使わずにこういうことができちゃうのは素敵じゃないでしょうか。</p>
 <p>Flickr は <a href="http://static.flickr.com/crossdomain.xml">crossdomain.xml を設置している</a> ので、その辺と連携する ActionScript を書いてみても面白そうですね。</p>
 <p>ソースは以下に（52行）。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.geom.*;
+    import flash.filters.*;
+    import flash.text.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">ShowaPhoto</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;photo3.jpg&quot;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SamplePic</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    public class ShowaPhoto extends Sprite {
+        [Embed(source=&quot;photo3.jpg&quot;)]
+        private var SamplePic:Class;
 
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">fontName</span><span class="o">=</span><span class="s2">&quot;7barSPBd&quot;</span><span class="p">,</span> <span class="nx">source</span><span class="o">=</span><span class="s2">&quot;7barSPBd.TTF&quot;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SevenBarFont</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+        [Embed(fontName=&quot;7barSPBd&quot;, source=&quot;7barSPBd.TTF&quot;)]
+        private var SevenBarFont:Class;
         
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ShowaPhoto</span><span class="p">()</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SamplePic</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">;</span>
+        public function ShowaPhoto() {
+            var bmp:Bitmap = new SamplePic();
+            var bmd:BitmapData = bmp.bitmapData;
 
-            <span class="c1">// color transform</span>
-            <span class="kd">var</span> <span class="nx">colorTrans</span><span class="o">:</span><span class="nx">ColorTransform</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorTransform</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mh">0x44</span><span class="p">,</span> <span class="mh">0x33</span><span class="p">,</span> <span class="mh">0x22</span><span class="p">);</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">colorTransform</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">colorTrans</span><span class="p">);</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BlurFilter</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">));</span>
+            // color transform
+            var colorTrans:ColorTransform = new ColorTransform(0.7, 0.7, 0.7, 0x44, 0x33, 0x22);
+            bmd.colorTransform(bmd.rect, colorTrans);
+            bmd.applyFilter(bmd, bmd.rect, new Point(), new BlurFilter(0.2, 0.2));
 
-            <span class="c1">// add letter</span>
-            <span class="kd">var</span> <span class="nx">t</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="kd">var</span> <span class="nx">tf</span><span class="o">:</span><span class="nx">TextFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextFormat</span><span class="p">();</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">size</span> <span class="o">=</span> <span class="mi">18</span><span class="p">;</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">font</span> <span class="o">=</span> <span class="s2">&quot;7barSPBd&quot;</span><span class="p">;</span>
-            <span class="nx">tf</span><span class="p">.</span><span class="nx">color</span> <span class="o">=</span> <span class="mh">0xffaa33</span><span class="p">;</span>
-            <span class="nx">t</span><span class="p">.</span><span class="nx">defaultTextFormat</span> <span class="o">=</span> <span class="nx">tf</span><span class="p">;</span>
-            <span class="nx">t</span><span class="p">.</span><span class="nx">embedFonts</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">t</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;78 09 21&quot;</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">textWidth</span> <span class="o">-</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">textHeight</span> <span class="o">-</span> <span class="mi">5</span><span class="p">);</span>
-            <span class="nx">bmd</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+            // add letter
+            var t:TextField = new TextField();
+            var tf:TextFormat = new TextFormat();
+            tf.size = 18;
+            tf.font = &quot;7barSPBd&quot;;
+            tf.color = 0xffaa33;
+            t.defaultTextFormat = tf;
+            t.embedFonts = true;
+            t.text = &quot;78 09 21&quot;;
+            var matrix:Matrix = new Matrix();
+            matrix.translate(bmd.width - t.textWidth - 10, bmd.height - t.textHeight - 5);
+            bmd.draw(t, matrix);
 
-            <span class="c1">// add border</span>
-            <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="mh">0xffeedd</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">identity</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">translate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+            // add border
+            var bmd2:BitmapData = new BitmapData(bmd.width + 10, bmd.height + 10, false);
+            bmd2.fillRect(bmd2.rect, 0xffeedd);
+            matrix.identity();
+            matrix.translate(5, 5);
+            bmd2.draw(bmd, matrix);
 
-            <span class="c1">// add noise</span>
-            <span class="kd">var</span> <span class="nx">bmdNoise</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-            <span class="nx">bmdNoise</span><span class="p">.</span><span class="nx">noise</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xee</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">bmdNoise</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;multiply&quot;</span><span class="p">);</span>
+            // add noise
+            var bmdNoise:BitmapData = new BitmapData(bmd2.width, bmd2.height, false);
+            bmdNoise.noise(0, 0xee, 0xff, 7, true);
+            bmd2.draw(bmdNoise, null, null, &quot;multiply&quot;);
 
-            <span class="c1">// display</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">)).</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">[</span><span class="k">new</span> <span class="nx">DropShadowFilter</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)];</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+            // display
+            addChild(new Bitmap(bmd2)).filters = [new DropShadowFilter(4, 45, 45, 0.3)];
+        }
+    }
+}</pre>
 
 </div>
 

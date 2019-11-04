@@ -67,87 +67,84 @@
 <p>いえいえ、そんなことはありません。.NET 5 から導入される <code>async</code>/<code>await</code> キーワードでとても簡単に書けてしまいます。</p>
 <h1>HelloWorld アプリケーションのサンプル</h1>
 <p>たとえば、<a href="http://msdn.microsoft.com/en-us/library/windows/apps/br211380%28v=vs.85%29.aspx">HelloWorld アプリケーション</a>では次のようなサンプルが紹介されています。</p>
-<div class="highlight"><pre><span class="c1">// UI を表示するページのコンストラクタ</span>
-<span class="c1">// UI スレッドで実行される</span>
-<span class="k">public</span> <span class="nf">MainPage</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="n">InitializeComponent</span><span class="p">();</span>
+<pre class="cs">// UI を表示するページのコンストラクタ
+// UI スレッドで実行される
+public MainPage()
+{
+    InitializeComponent();
 
-    <span class="c1">// RSS/Atom を読み取る</span>
-    <span class="n">GetFeedAsync</span><span class="p">(</span><span class="s">&quot;http://windowsteamblog.com/windows/b/developers/atom.aspx&quot;</span><span class="p">);</span>
-<span class="p">}</span>
+    // RSS/Atom を読み取る
+    GetFeedAsync(&quot;http://windowsteamblog.com/windows/b/developers/atom.aspx&quot;);
+}
 
-<span class="c1">// 非同期に RSS/Atom を読み取るメソッド</span>
-<span class="c1">// async キーワードがついているので、非同期で</span>
-<span class="c1">// 実行される可能性がある </span>
-<span class="c1">// (メソッドの完了を待たずに、呼び出し元に</span>
-<span class="c1">//  処理を返すことがある)</span>
-<span class="k">private</span> <span class="k">async</span> <span class="n">Task</span> <span class="nf">GetFeedAsync</span><span class="p">(</span><span class="kt">string</span> <span class="n">feedUriString</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">SyndicationClient</span> <span class="n">client</span> <span class="p">=</span> <span class="k">new</span> <span class="n">SyndicationClient</span><span class="p">();</span>
-    <span class="n">Uri</span> <span class="n">feedUri</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Uri</span><span class="p">(</span><span class="n">feedUriString</span><span class="p">);</span>
+// 非同期に RSS/Atom を読み取るメソッド
+// async キーワードがついているので、非同期で
+// 実行される可能性がある 
+// (メソッドの完了を待たずに、呼び出し元に
+//  処理を返すことがある)
+private async Task GetFeedAsync(string feedUriString)
+{
+    SyndicationClient client = new SyndicationClient();
+    Uri feedUri = new Uri(feedUriString);
 
-    <span class="k">try</span>
-    <span class="p">{</span>
-        <span class="c1">// 非同期で RSS/Atom を読み取る</span>
-        <span class="c1">// await キーワードがあるので、GetFeedAsync()</span>
-        <span class="c1">// メソッドは処理の完了を待たずに、いったん</span>
-        <span class="c1">// 呼び出し元に return する</span>
-        <span class="n">SyndicationFeed</span> <span class="n">feed</span> <span class="p">=</span> 
-            <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
+    try
+    {
+        // 非同期で RSS/Atom を読み取る
+        // await キーワードがあるので、GetFeedAsync()
+        // メソッドは処理の完了を待たずに、いったん
+        // 呼び出し元に return する
+        SyndicationFeed feed = 
+            await client.RetrieveFeedAsync(feedUri);
 
-        <span class="c1">// ここから先は、非同期で RSS/Atom を</span>
-        <span class="c1">// 読み取り完了時の処理</span>
-        <span class="n">FeedData</span> <span class="n">feedData</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FeedData</span><span class="p">();</span>
-        <span class="n">feedData</span><span class="p">.</span><span class="n">Title</span> <span class="p">=</span> <span class="n">feed</span><span class="p">.</span><span class="n">Title</span><span class="p">.</span><span class="n">Text</span><span class="p">;</span>
+        // ここから先は、非同期で RSS/Atom を
+        // 読み取り完了時の処理
+        FeedData feedData = new FeedData();
+        feedData.Title = feed.Title.Text;
 
-        <span class="k">foreach</span> <span class="p">(</span><span class="n">SyndicationItem</span> <span class="n">item</span> <span class="k">in</span> <span class="n">feed</span><span class="p">.</span><span class="n">Items</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="c1">// RSS の各要素の処理を行う</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">catch</span> <span class="p">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="c1">// 非同期での RSS/Atom の読み取りに</span>
-        <span class="c1">// 失敗したときの処理</span>
-        <span class="n">TitleText</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="n">ex</span><span class="p">.</span><span class="n">Message</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        foreach (SyndicationItem item in feed.Items)
+        {
+            // RSS の各要素の処理を行う
+        }
+    }
+    catch (Exception ex)
+    {
+        // 非同期での RSS/Atom の読み取りに
+        // 失敗したときの処理
+        TitleText.Text = ex.Message;
+    }
+}</pre>
 <p>コメントで説明してしまいましたが、詳しく見ていきましょう。</p>
 <h1><code>await</code> でいったん呼び出し元に戻る</h1>
 <p><code>await</code> の部分の処理の構造は次のようになっています。</p>
-<div class="highlight"><pre><span class="k">try</span>
-<span class="p">{</span>
-    <span class="c1">// 非同期で RSS/Atom を読み取る</span>
-    <span class="n">SyndicationFeed</span> <span class="n">feed</span> <span class="p">=</span> 
-        <span class="k">await</span> <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
+<pre class="cs">try
+{
+    // 非同期で RSS/Atom を読み取る
+    SyndicationFeed feed = 
+        await client.RetrieveFeedAsync(feedUri);
 
-    <span class="c1">// 成功時の処理</span>
-<span class="p">}</span>
-<span class="k">catch</span> <span class="p">(</span><span class="n">Exception</span> <span class="n">ex</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 失敗時の処理</span>
-<span class="p">}</span>
-</pre></div>
+    // 成功時の処理
+}
+catch (Exception ex)
+{
+    // 失敗時の処理
+}</pre>
 <p>同期処理のようなコードになっていますね。</p>
 <p>しかし、実際には <code>await</code> キーワードの場所で、メソッドは呼び出し元に処理を返します。その結果、非同期処理の実行中に UI をブロックすることはありません。</p>
 <p>その後、RSS/Atom の読み取りが成功または失敗した段階で、メソッドの続きが実行されます。</p>
 <p>成功時には、読み取り結果があたかも同期で実行したかのように戻り値として返され、成功時の処理を実行します。失敗時には例外が投げられるので、異常系の処理も簡単に書けます。</p>
 <p>イメージ的には次のようなコードを書いているのと同じになります。</p>
-<div class="highlight"><pre>    <span class="cm">/* !!!! 実際には動かない擬似的なコード !!!! */</span>
-    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedSuccess</span> <span class="p">+=</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span>
-    <span class="p">{</span>
-        <span class="c1">// 成功時の処理</span>
-    <span class="p">}</span>
-    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedError</span> <span class="p">+=</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="p">=&gt;</span>
-    <span class="p">{</span>
-        <span class="c1">// 失敗時の処理</span>
-    <span class="p">}</span>
+<pre class="cs">    /* !!!! 実際には動かない擬似的なコード !!!! */
+    client.RetrieveFeedSuccess += (sender, e) =&gt;
+    {
+        // 成功時の処理
+    }
+    client.RetrieveFeedError += (sender, e) =&gt;
+    {
+        // 失敗時の処理
+    }
 
-    <span class="c1">// 非同期で RSS/Atom を読み取る</span>
-    <span class="n">client</span><span class="p">.</span><span class="n">RetrieveFeedAsync</span><span class="p">(</span><span class="n">feedUri</span><span class="p">);</span>
-</pre></div>
+    // 非同期で RSS/Atom を読み取る
+    client.RetrieveFeedAsync(feedUri);</pre>
 <br />
 <h1>すばらしい！</h1>
 <p>非同期を同期的に書けるなんてすばらしい。</p>
@@ -163,46 +160,43 @@
 <p>そこで、<code>yield</code> を使っても同じような仕組みを実現できるんじゃないかと思って作ってみました。</p>
 <p>ほぼ形は似ていますが、XHR を使った Ajax 処理を <code>await</code> 風に書けるようにしてみました。</p>
 <p><code>await</code> や <code>return</code> の変わりに <code>yield</code> を使っています。また、XHR を <code>await</code> できるように変換する <code>awaitable</code> 関数を作っています。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">doXhrTwice</span> <span class="o">=</span> <span class="nx">async</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="kd">var</span> <span class="nx">xhr</span> <span class="o">=</span> <span class="nx">awaitable</span><span class="p">(</span><span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">());</span>
-    <span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;finished: &quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span>  <span class="s2">&quot;, </span>
-<span class="s2">        status: &quot;</span> <span class="o">+</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+<pre class="javascript">var doXhrTwice = async(function(){
+    var xhr = awaitable(new XMLHttpRequest());
+    xhr.open('GET', location.href, true);
+    var result = yield xhr.send(null);
+    log(&quot;finished: &quot; + result +  &quot;, 
+        status: &quot; + xhr.status);
 
-    <span class="nx">xhr</span> <span class="o">=</span> <span class="nx">awaitable</span><span class="p">(</span><span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">());</span>
-    <span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s2">&quot;not_found.png&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-    <span class="nx">result</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;finished: &quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span>  <span class="s2">&quot;, </span>
-<span class="s2">        status: &quot;</span> <span class="o">+</span> <span class="nx">xhr</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+    xhr = awaitable(new XMLHttpRequest());
+    xhr.open('GET', &quot;not_found.png&quot;, true);
+    result = yield xhr.send(null);
+    log(&quot;finished: &quot; + result +  &quot;, 
+        status: &quot; + xhr.status);
 
-    <span class="k">yield</span> <span class="mi">3</span><span class="p">;</span>
-<span class="p">});</span>
-</pre></div>
+    yield 3;
+});</pre>
 <p>これの関数を普通に呼び出すと、ログ出力は次のようになります。</p>
-<div class="highlight"><pre><span class="cm">/*   doXhr start</span>
-<span class="cm"> *   doXhr end</span>
-<span class="cm"> *   finished: true, status: 200</span>
-<span class="cm"> *   finished: false, status: 404</span>
-<span class="cm"> */</span>
-<span class="kd">function</span> <span class="nx">init1</span><span class="p">(){</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr start&quot;</span><span class="p">);</span>
-    <span class="nx">doXhrTwice</span><span class="p">();</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr end&quot;</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">/*   doXhr start
+ *   doXhr end
+ *   finished: true, status: 200
+ *   finished: false, status: 404
+ */
+function init1(){
+    log(&quot;doXhr start&quot;);
+    doXhrTwice();
+    log(&quot;doXhr end&quot;);
+}</pre>
 <p><code>init1</code> から <code>doXhrTwice</code> を呼んでもすぐに処理が返ってくるので、関数呼び出し直後に `doXhr end` が出力されます。ただ、<code>doXhrTwice</code> の中では同期的に処理を書けています。</p>
 <p>次に、<code>doXhrTwice</code> を同期的に呼んでみます。</p>
-<div class="highlight"><pre><span class="err">/*   doXhr start</span>
- <span class="o">*</span>   <span class="nx">finished</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="mi">200</span>
- <span class="o">*</span>   <span class="nx">finished</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="mi">404</span>
- <span class="o">*</span>   <span class="nx">doXhr</span> <span class="nx">end</span><span class="o">:</span> <span class="mi">3</span>
-<span class="kd">var</span> <span class="nx">init2</span> <span class="o">=</span> <span class="nx">async</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr start&quot;</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="k">yield</span> <span class="nx">doXhrTwice</span><span class="p">();</span>
-    <span class="nx">log</span><span class="p">(</span><span class="s2">&quot;doXhr end: &quot;</span> <span class="o">+</span> <span class="nx">ret</span><span class="p">);</span>
-<span class="p">});</span>
-</pre></div>
+<pre class="javascript">/*   doXhr start
+ *   finished: true, status: 200
+ *   finished: false, status: 404
+ *   doXhr end: 3
+var init2 = async(function(){
+    log(&quot;doXhr start&quot;);
+    var ret = yield doXhrTwice();
+    log(&quot;doXhr end: &quot; + ret);
+});</pre>
 <p><code>doXhrTwice</code> の戻り値 <code>3</code> を <code>init2</code> で取得できています。<code>doXhrTwice</code> が終わったあと、`doXhr end` が出力されています。</p>
 <p>もちろん、処理は同期的に書いていますが、この間、<code>init2</code> 関数は <code>yield</code> で処理をシステムに返しているので、UI はブロックされません。<code>async</code> の実装の中で、<code>doXhrTwice</code> 完了時に <code>yield</code> された処理を再開しています。</p>
 <p><code>async</code> や <code>awaitable</code> の実装も含めたソースは <a href="https://gist.github.com/1232433">https://gist.github.com/1232433</a> に置いています。</p>

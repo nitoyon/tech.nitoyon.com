@@ -62,8 +62,7 @@
 <section>
 <p>続き。変数展開するときに、どういうバイトコードになってるか気になったので調べてみた。</p>
 <p>ActionScript のコードはこんなの。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">hoge</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">3</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/hoge&gt;;</span>
-</pre></div>
+<pre class="javascript">var a = &lt;hoge&gt;{3}&lt;/hoge&gt;;</pre>
 <p>asc でコンパイルして、abcdump でダンプしたらこうなった。</p>
 <pre>  0         getlocal0
   1         pushscope
@@ -82,8 +81,7 @@
   21        returnvoid</pre>
 <h1>new String() と比較</h1>
 <p>new String() するコードと比べてみる。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">String</span><span class="p">(</span><span class="s2">&quot;hoge&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var a = new String(&quot;hoge&quot;);</pre>
 <p>ダンプしたらこうなった。</p>
 <pre>  0         getlocal0
   1         pushscope
@@ -138,13 +136,11 @@
 <p>で、ここで construct を呼ぶので、<code>new XML(&quot;&lt;hoge&gt;3&lt;/hoge&gt;&quot;)</code> した結果がスタックに入るわけだ。</p>
 <h1>まとめ</h1>
 <p>イメージ的には</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">hoge</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">3</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/hoge&gt;;</span>
-</pre></div>
+<pre class="javascript">var a = &lt;hoge&gt;{3}&lt;/hoge&gt;;</pre>
 <p>は</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XML</span><span class="p">(</span><span class="s2">&quot;&lt;hoge&gt;&quot;</span>
-              <span class="o">+</span> <span class="nx">ToXmlString</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-              <span class="o">+</span> <span class="s2">&quot;&lt;/hoge&gt;&quot;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var a = new XML(&quot;&lt;hoge&gt;&quot;
+              + ToXmlString(3)
+              + &quot;&lt;/hoge&gt;&quot;);</pre>
 <p>というコードに変換される感じ。</p>
 <p>{} の中身は ToXmlString() の引数として扱われる、というイメージで捉えておくと、前回の {} の中に無名関数突っ込んだやつが動いたのも納得できる。</p>
 <p>実際には、ToXmlString は内部的な関数なので呼び出せないんだけど、あくまでイメージということで。</p>

@@ -71,33 +71,33 @@
 <h1>さっそく作った</h1>
 
 <p>ということで、Flickr の API とにらめっこしながら作ってみました。</p>
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">&#39;flickraw&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;date&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;set&#39;</span>
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">'flickraw'</span>
+<span class="nb">require</span> <span class="s1">'date'</span>
+<span class="nb">require</span> <span class="s1">'set'</span>
 
 <span class="c1"># load conf and set API key and access token</span>
 <span class="c1"># (ex)</span>
-<span class="c1"># { &quot;api_key&quot;: &quot;xxxxxxx&quot;,</span>
-<span class="c1">#  &quot;shared_secret&quot;: &quot;xxxxx&quot;,</span>
-<span class="c1">#  &quot;access_token&quot;: &quot;xxxxxxx&quot;,</span>
-<span class="c1">#  &quot;access_secret&quot;: &quot;xxxxxx&quot;</span>
+<span class="c1"># { "api_key": "xxxxxxx",</span>
+<span class="c1">#  "shared_secret": "xxxxx",</span>
+<span class="c1">#  "access_token": "xxxxxxx",</span>
+<span class="c1">#  "access_secret": "xxxxxx"</span>
 <span class="c1"># }</span>
 <span class="n">conf</span> <span class="o">=</span> <span class="kp">nil</span>
-<span class="nb">open</span><span class="p">(</span><span class="s1">&#39;flickr.conf&#39;</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
-  <span class="n">conf</span> <span class="o">=</span> <span class="no">JSON</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="nb">open</span><span class="p">(</span><span class="s1">'flickr.conf'</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
+  <span class="n">conf</span> <span class="o">=</span> <span class="no">JSON</span><span class="p">.</span><span class="nf">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="no">FlickRaw</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;api_key&#39;</span><span class="o">]</span>
-<span class="no">FlickRaw</span><span class="o">.</span><span class="n">shared_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;shared_secret&#39;</span><span class="o">]</span>
-<span class="n">flickr</span><span class="o">.</span><span class="n">access_token</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;access_token&#39;</span><span class="o">]</span>
-<span class="n">flickr</span><span class="o">.</span><span class="n">access_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="o">[</span><span class="s1">&#39;access_secret&#39;</span><span class="o">]</span>
+<span class="no">FlickRaw</span><span class="p">.</span><span class="nf">api_key</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">'api_key'</span><span class="p">]</span>
+<span class="no">FlickRaw</span><span class="p">.</span><span class="nf">shared_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">'shared_secret'</span><span class="p">]</span>
+<span class="n">flickr</span><span class="p">.</span><span class="nf">access_token</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">'access_token'</span><span class="p">]</span>
+<span class="n">flickr</span><span class="p">.</span><span class="nf">access_secret</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">'access_secret'</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">get_set_id_by_name</span><span class="p">(</span><span class="n">set_name</span><span class="p">)</span>
-  <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">getList</span>
+  <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="p">.</span><span class="nf">photosets</span><span class="p">.</span><span class="nf">getList</span>
   <span class="k">for</span> <span class="n">set</span> <span class="k">in</span> <span class="n">res</span>
-    <span class="k">if</span> <span class="n">set</span><span class="o">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">set_name</span>
-      <span class="k">return</span> <span class="n">set</span><span class="o">.</span><span class="n">id</span>
+    <span class="k">if</span> <span class="n">set</span><span class="p">.</span><span class="nf">title</span> <span class="o">==</span> <span class="n">set_name</span>
+      <span class="k">return</span> <span class="n">set</span><span class="p">.</span><span class="nf">id</span>
     <span class="k">end</span>
   <span class="k">end</span>
   <span class="kp">nil</span>
@@ -106,89 +106,89 @@
 <span class="k">def</span> <span class="nf">get_photos_in_a_set</span><span class="p">(</span><span class="n">photoset_id</span><span class="p">)</span>
   <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
   <span class="n">pages</span> <span class="o">=</span> <span class="mi">1</span>
-  <span class="n">photo_ids</span> <span class="o">=</span> <span class="o">[]</span>
+  <span class="n">photo_ids</span> <span class="o">=</span> <span class="p">[]</span>
   <span class="k">while</span> <span class="n">page</span> <span class="o">&lt;=</span> <span class="n">pages</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">getPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">photoset_id</span><span class="o">.</span><span class="n">to_s</span><span class="p">,</span>
-                                     <span class="ss">:page</span> <span class="o">=&gt;</span> <span class="n">page</span><span class="o">.</span><span class="n">to_s</span>
-    <span class="n">photo_ids</span><span class="o">.</span><span class="n">concat</span> <span class="n">res</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">photo</span><span class="o">|</span> <span class="n">photo</span><span class="o">.</span><span class="n">id</span> <span class="p">}</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="p">.</span><span class="nf">photosets</span><span class="p">.</span><span class="nf">getPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">photoset_id</span><span class="p">.</span><span class="nf">to_s</span><span class="p">,</span>
+                                     <span class="ss">:page</span> <span class="o">=&gt;</span> <span class="n">page</span><span class="p">.</span><span class="nf">to_s</span>
+    <span class="n">photo_ids</span><span class="p">.</span><span class="nf">concat</span> <span class="n">res</span><span class="p">.</span><span class="nf">photo</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">photo</span><span class="o">|</span> <span class="n">photo</span><span class="p">.</span><span class="nf">id</span> <span class="p">}</span>
 
-    <span class="n">page</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">to_i</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">pages</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pages</span><span class="o">.</span><span class="n">to_i</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">res</span><span class="p">.</span><span class="nf">page</span><span class="p">.</span><span class="nf">to_i</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="n">res</span><span class="p">.</span><span class="nf">pages</span><span class="p">.</span><span class="nf">to_i</span>
   <span class="k">end</span>
-  <span class="p">{</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-    <span class="ss">:primary</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> 
+  <span class="p">{</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="p">.</span><span class="nf">id</span><span class="p">,</span>
+    <span class="ss">:primary</span> <span class="o">=&gt;</span> <span class="n">res</span><span class="p">.</span><span class="nf">primary</span><span class="p">,</span> 
     <span class="ss">:photo</span> <span class="o">=&gt;</span> <span class="n">photo_ids</span> <span class="p">}</span>
 <span class="k">end</span>
 
 <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">str</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">str</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="no">Time</span><span class="p">.</span><span class="nf">now</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">str</span><span class="si">}</span><span class="s2">"</span>
 <span class="k">end</span>
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">cur_set_id</span><span class="p">)</span>
-  <span class="c1"># get set &#39;YYYY-MM-DD&#39;</span>
-  <span class="n">new_set_name</span> <span class="o">=</span> <span class="no">Date</span><span class="o">::</span><span class="n">today</span><span class="o">.</span><span class="n">to_s</span>
+  <span class="c1"># get set 'YYYY-MM-DD'</span>
+  <span class="n">new_set_name</span> <span class="o">=</span> <span class="no">Date</span><span class="o">::</span><span class="n">today</span><span class="p">.</span><span class="nf">to_s</span>
   <span class="n">new_set_id</span> <span class="o">=</span> <span class="n">get_set_id_by_name</span><span class="p">(</span><span class="n">new_set_name</span><span class="p">)</span>
-  <span class="k">if</span> <span class="n">new_set_id</span><span class="o">.</span><span class="n">nil?</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">new_set_id</span><span class="p">.</span><span class="nf">nil?</span>
+    <span class="n">log</span><span class="p">(</span><span class="s2">"set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
     <span class="nb">exit</span>
   <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> found: </span><span class="si">#{</span><span class="n">new_set_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"set </span><span class="si">#{</span><span class="n">new_set_name</span><span class="si">}</span><span class="s2"> found: </span><span class="si">#{</span><span class="n">new_set_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
   <span class="c1"># Get set information</span>
   <span class="n">cur_set</span> <span class="o">=</span> <span class="n">get_photos_in_a_set</span><span class="p">(</span><span class="n">cur_set_id</span><span class="p">)</span>
   <span class="n">new_set</span> <span class="o">=</span> <span class="n">get_photos_in_a_set</span><span class="p">(</span><span class="n">new_set_id</span><span class="p">)</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;current set has </span><span class="si">#{</span><span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span><span class="si">}</span><span class="s2"> photos&quot;</span><span class="p">)</span>
-  <span class="k">if</span> <span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;no photo&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"current set has </span><span class="si">#{</span><span class="n">cur_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">].</span><span class="nf">length</span><span class="si">}</span><span class="s2"> photos"</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">new_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">].</span><span class="nf">length</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">log</span><span class="p">(</span><span class="s2">"no photo"</span><span class="p">)</span>
     <span class="nb">exit</span>
   <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;add </span><span class="si">#{</span><span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">length</span><span class="si">}</span><span class="s2"> photo(s) to it&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"add </span><span class="si">#{</span><span class="n">new_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">].</span><span class="nf">length</span><span class="si">}</span><span class="s2"> photo(s) to it"</span><span class="p">)</span>
 
   <span class="c1"># Create new photo_ids</span>
-  <span class="n">cur_photos_set</span> <span class="o">=</span> <span class="no">Set</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">]</span><span class="p">)</span>
-  <span class="n">photos</span> <span class="o">=</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">].</span><span class="n">dup</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;current photos: </span><span class="si">#{</span><span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="n">cur_photos_set</span> <span class="o">=</span> <span class="no">Set</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">cur_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">])</span>
+  <span class="n">photos</span> <span class="o">=</span> <span class="n">cur_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">].</span><span class="nf">dup</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"current photos: </span><span class="si">#{</span><span class="n">photos</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="s1">','</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
   <span class="n">modified</span> <span class="o">=</span> <span class="kp">false</span>
-  <span class="k">for</span> <span class="n">photo</span> <span class="k">in</span> <span class="n">new_set</span><span class="o">[</span><span class="ss">:photo</span><span class="o">]</span>
-    <span class="k">if</span> <span class="n">cur_photos_set</span><span class="o">.</span><span class="n">include?</span> <span class="n">photo</span>
-      <span class="n">log</span><span class="p">(</span><span class="s2">&quot;skip photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">photo</span> <span class="k">in</span> <span class="n">new_set</span><span class="p">[</span><span class="ss">:photo</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">cur_photos_set</span><span class="p">.</span><span class="nf">include?</span> <span class="n">photo</span>
+      <span class="n">log</span><span class="p">(</span><span class="s2">"skip photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">else</span>
-      <span class="n">log</span><span class="p">(</span><span class="s2">&quot;add photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-      <span class="n">photos</span><span class="o">.</span><span class="n">unshift</span><span class="p">(</span><span class="n">photo</span><span class="p">)</span> 
+      <span class="n">log</span><span class="p">(</span><span class="s2">"add photo </span><span class="si">#{</span><span class="n">photo</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+      <span class="n">photos</span><span class="p">.</span><span class="nf">unshift</span><span class="p">(</span><span class="n">photo</span><span class="p">)</span> 
       <span class="n">modified</span> <span class="o">=</span> <span class="kp">true</span>
     <span class="k">end</span>
   <span class="k">end</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;new photos: </span><span class="si">#{</span><span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"new photos: </span><span class="si">#{</span><span class="n">photos</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="s1">','</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
   <span class="k">if</span> <span class="n">modified</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhotos start&quot;</span><span class="p">)</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">editPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">,</span>
-                                      <span class="ss">:primary_photo_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="o">[</span><span class="ss">:primary</span><span class="o">]</span><span class="p">,</span>
-                                      <span class="ss">:photo_ids</span> <span class="o">=&gt;</span> <span class="n">photos</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhotos finished&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s2">"editPhotos start"</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">flickr</span><span class="p">.</span><span class="nf">photosets</span><span class="p">.</span><span class="nf">editPhotos</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="p">[</span><span class="ss">:id</span><span class="p">],</span>
+                                      <span class="ss">:primary_photo_id</span> <span class="o">=&gt;</span> <span class="n">cur_set</span><span class="p">[</span><span class="ss">:primary</span><span class="p">],</span>
+                                      <span class="ss">:photo_ids</span> <span class="o">=&gt;</span> <span class="n">photos</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s2">"editPhotos finished"</span><span class="p">)</span>
   <span class="k">else</span>
-    <span class="n">log</span><span class="p">(</span><span class="s2">&quot;editPhots skipped&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s2">"editPhots skipped"</span><span class="p">)</span>
   <span class="k">end</span>
 
   <span class="c1"># delete set</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;delete photoset start&quot;</span><span class="p">)</span>
-  <span class="n">flickr</span><span class="o">.</span><span class="n">photosets</span><span class="o">.</span><span class="n">delete</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">new_set_id</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;delete photoset finished&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"delete photoset start"</span><span class="p">)</span>
+  <span class="n">flickr</span><span class="p">.</span><span class="nf">photosets</span><span class="p">.</span><span class="nf">delete</span> <span class="ss">:photoset_id</span> <span class="o">=&gt;</span> <span class="n">new_set_id</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"delete photoset finished"</span><span class="p">)</span>
 <span class="k">end</span>
 
 
-<span class="k">if</span> <span class="no">ARGV</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mi">1</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;set_id not specified&quot;</span><span class="p">)</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;ruby flickr_update.rb [set_id]&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="no">ARGV</span><span class="p">.</span><span class="nf">length</span> <span class="o">&lt;</span> <span class="mi">1</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"set_id not specified"</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"ruby flickr_update.rb [set_id]"</span><span class="p">)</span>
   <span class="nb">exit</span>
 <span class="k">end</span>
 
 <span class="k">begin</span>
-  <span class="n">main</span><span class="p">(</span><span class="no">ARGV</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="p">)</span>
+  <span class="n">main</span><span class="p">(</span><span class="no">ARGV</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="k">rescue</span> <span class="no">SystemExit</span>
 <span class="k">rescue</span> <span class="no">Exception</span> <span class="o">=&gt;</span> <span class="n">e</span>
-  <span class="n">log</span><span class="p">(</span><span class="s2">&quot;exception </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="se">\n</span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">backtrace</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="n">log</span><span class="p">(</span><span class="s2">"exception </span><span class="si">#{</span><span class="n">e</span><span class="p">.</span><span class="nf">inspect</span><span class="si">}</span><span class="se">\n</span><span class="si">#{</span><span class="n">e</span><span class="p">.</span><span class="nf">backtrace</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="k">end</span>
 </code></pre></div>
 <h2>使い方</h2>
@@ -198,7 +198,7 @@
 <p>たとえば、2012年11月06日に公開したい写真は、<code>2012-11-06</code> という Set に入れておきます。</p>
 
 <p>その状態で、シェルから</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>ruby update_flickr.rb <span class="o">[</span>set_id<span class="o">]</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>ruby update_flickr.rb <span class="o">[</span>set_id]
 </code></pre></div>
 <p>のように実行してやると、<code>2012-11-06</code> というセット内の写真を列挙して、コマンドライン引数で指定した <code>[set_id]</code> のセットの先頭に追加してくれます。作業が完了すれば <code>2012-11-06</code> というセットは消えます。</p>
 

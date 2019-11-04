@@ -73,29 +73,28 @@
 <p>面を塗るにあたっては、塗る順番が重要になる。先に手前の物体を描いてしまうと、奥の物体が上に描画されてしまう。</p>
 <p>そこで、奥のものから順番に塗る必要がある。ここでは一番手軽な Z ソートという手法を使う。立派な名前がついてるが、何のことはない、奥の面から順番に塗っていく手法のことである。</p>
 <p>今回のソースでは、まずは立方体ごとに塗る順番を決めることにした。Cube クラスに center プロパティを導入して、Z 座標が大きい（奥のもの）から順番に描画している。</p>
-<div class="highlight"><pre><span class="c1">// 回転行列を作成</span>
-<span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
-<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
-<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
-<span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+<pre class="javascript">// 回転行列を作成
+var matrix:Matrix3D = new Matrix3D();
+matrix.rotateX(Math.PI / 6);
+matrix.rotateY(rad / 180 * Math.PI * 3);
+matrix.rotateZ(rad / 180 * Math.PI);
 
-<span class="c1">// それぞれの立方体の中心のZ座標を取得する</span>
-<span class="kd">var</span> <span class="nx">dic</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
-<span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">center</span><span class="p">);</span>
-    <span class="nx">dic</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">center</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
-<span class="p">}</span>
+// それぞれの立方体の中心のZ座標を取得する
+var dic:Dictionary = new Dictionary();
+for each(var c:Cube in cubes){
+    var center:Point3D = matrix.transformPoint(c.center);
+    dic[c] = center.z;
+}
 
-<span class="c1">// Zソート (奥のものから順番に並べる)</span>
-<span class="nx">cubes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nx">Cube</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nx">Cube</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
-<span class="p">});</span>
+// Zソート (奥のものから順番に並べる)
+cubes.sort(function(a:Cube, b:Cube):Number {
+    return dic[b] - dic[a];
+});
 
-<span class="c1">// 奥から描画</span>
-<span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-    <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+// 奥から描画
+for each(c in cubes){
+    c.draw(canvas.graphics, matrix, 200);
+}</pre>
 <p>Zソートは簡単な分、入り組んだ物体や面が交差するような場合には使えない。そういう複雑な物体を描画するときにどうするかはまだよく分かってない。</p>
 <h1>2. 立方体の面についても奥の面から描画するために並べ替える</h1>
 <p>立方体のそれぞれの面についても、奥の面から順番に描画していく。手順は 1. と同じなので省略。</p>
@@ -103,29 +102,24 @@
 <p>ここからは面の色を求める作業が始まる。まずは、面の法線ベクトルを求める。法線ベクトルというのは、面に垂直なベクトルのこと。</p>
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20080620/20080620012709.png" width="443" height="221"></center>
 <p>まず、面の２辺を表すベクトル v1 と v2 を求める。Point3D のベクトルの差を求めるメソッド subtract を利用している。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">v1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">v2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var v1:Point3D = p2.subtract(p1);
+var v2:Point3D = p4.subtract(p1);</pre>
 <p>次に v1 と v2 の外積を計算する。外積は２つのベクトルに垂直なベクトルとなる。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var n:Point3D = cross(v1, v2);</pre>
 <p>外積を計算する関数は Point3D に用意されていなかったので自前で作った。</p>
-<div class="highlight"><pre><span class="c1">// 外積</span>
-<span class="kd">function</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">// 外積
+function cross(p1:Point3D, p2:Point3D):Point3D {
+    return new Point3D(p1.y * p2.z - p1.z * p2.y,
+                       p1.z * p2.x - p1.x * p2.z,
+                       p1.x * p2.y - p1.y * p2.x);
+}</pre>
 <p>あと、外積は順番が大事なのでそこに気をつけるべし。v1×v2 は立方体の外側に向かうベクトルだが、v2×v1だと内側に向かうベクトルになってしまう。</p>
 <p>最後に、n を単位ベクトル（長さ１のベクトル）にしておこう。</p>
-<div class="highlight"><pre><span class="nx">n</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">n.normalize(1);</pre>
 <p>normalize() は Poitn3D に定義されているものをそのまま活用した。</p>
 <h1>4. 面の明るさを求める</h1>
 <p>光源の方向を表すベクトルを l とする。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">l</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var l:Point3D = new Point3D(0, 0, -1);</pre>
 <p>l と n の内積を面の明るさとする（ランバートの法則というらしい）。</p>
 <p>l も n も単位ベクトルのため、</p>
 <pre>l・n = |l||n|cosθ = cosθ
@@ -133,176 +127,174 @@
 <p>となる。つまり、l と n が同じ向きのときに最も明るくなる。</p>
 <h1>5. 面を描画する</h1>
 <p>明るさが求まれば、あとは色を求めて塗るだけ。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">product</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+<pre class="javascript">var product:Number = n.dot(l);
 
-<span class="kd">var</span> <span class="nx">b</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x3f</span> <span class="o">*</span> <span class="nx">product</span> <span class="o">+</span> <span class="mh">0xc0</span><span class="p">;</span>
-<span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span> <span class="mh">0x10000</span> <span class="o">+</span> <span class="nx">b</span> <span class="o">*</span> <span class="mh">0x100</span> <span class="o">+</span> <span class="nx">b</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">);</span>
-</pre></div>
+var b:int = 0x3f * product + 0xc0;
+g.beginFill(b * 0x10000 + b * 0x100 + b, 0.6);</pre>
 <h1>まとめ</h1>
 <p>面を塗ると 3D っぽくなる。幸せ。</p>
 <p>あと、<a href="http://d.hatena.ne.jp/rch850/">id:rch850</a> さんは早く <a href="http://codezine.jp/a/article/aid/1872.aspx">ActionScriptによるWebの3Dグラフィックス再入門：CodeZine</a> の第３回を執筆すべき。</p>
 <p><a href="/ja/blog/2008/06/23/as-3d-lessen5/">第5回に続く</a>。</p>
 <p>ソースコードは以下に(157行)。</p>
 <p>要 <a href="http://five3d.mathieu-badimon.com/">FIVe3D 2.1</a> の five3d.geom.Matrix3D クラスと five3d.geom.Point3D クラス。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.utils.Dictionary;
+    import five3D.geom.Matrix3D;
+    import five3D.geom.Point3D;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d4</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cubes</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;0x000000&quot;)]
+    public class Study3d4 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+        private var rad:Number;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d4</span><span class="p">(){</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function Study3d4(){
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="nx">cubes</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 50));
+            cubes.push(new Cube(0, 100, 0, 20));
+            cubes.push(new Cube(0, -100, 0, 20));
+            cubes.push(new Cube(100, 0, 0, 20));
+            cubes.push(new Cube(-100, 0, 0, 20));
+            cubes.push(new Cube(0, 0, 100, 20));
+            cubes.push(new Cube(0, 0, -100, 20));
 
-            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 200;
+            canvas.y = 150;
 
-            <span class="nx">rad</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">changeHandler</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+            rad = 0;
+            changeHandler(null);
+            addEventListener(&quot;enterFrame&quot;, changeHandler);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        private function changeHandler(event:Object):void {
+            canvas.graphics.clear();
 
-            <span class="c1">// 回転行列を作成</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateX(Math.PI / 6);
+            matrix.rotateY(rad / 180 * Math.PI * 3);
+            matrix.rotateZ(rad / 180 * Math.PI);
 
-            <span class="c1">// それぞれの立方体の中心のZ座標を取得する</span>
-            <span class="kd">var</span> <span class="nx">dic</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-                <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">center</span><span class="p">);</span>
-                <span class="nx">dic</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">center</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
-            <span class="p">}</span>
+            // それぞれの立方体の中心のZ座標を取得する
+            var dic:Dictionary = new Dictionary();
+            for each(var c:Cube in cubes){
+                var center:Point3D = matrix.transformPoint(c.center);
+                dic[c] = center.z;
+            }
 
-            <span class="c1">// Zソート (奥のものから順番に並べる)</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nx">Cube</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nx">Cube</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-                <span class="k">return</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
-            <span class="p">});</span>
+            // Zソート (奥のものから順番に並べる)
+            cubes.sort(function(a:Cube, b:Cube):Number {
+                return dic[b] - dic[a];
+            });
 
-            <span class="c1">// 奥から描画</span>
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-            <span class="p">}</span>
+            // 奥から描画
+            for each(c in cubes){
+                c.draw(canvas.graphics, matrix, 200);
+            }
 
-           <span class="c1">// 角度更新</span>
-            <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
-         <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+           // 角度更新
+            rad = (rad + 1) % 360;
+         }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+import flash.display.Graphics;
+import flash.geom.Point;
+import flash.utils.Dictionary;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
 
-<span class="kr">class</span> <span class="nx">Cube</span> <span class="p">{</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_center</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
+class Cube {
+    private var points:Array = [];
+    private var _center:Point3D;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">center</span><span class="p">()</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">_center</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function get center():Point3D {
+        return _center;
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Cube</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="nb">Number</span><span class="p">){</span>
-        <span class="nx">_center</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">);</span>
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        _center = new Point3D(x, y, z);
 
-        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span><span class="k">return</span> <span class="nx">f</span> <span class="o">?</span> <span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">:</span> <span class="o">-</span><span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;};</span>
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
 
-        <span class="c1">// 立方体の頂点８つを作成する</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>  <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">z</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">));</span>
-            <span class="nx">points</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i &lt; 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 &lt; 2), z + diff(i &lt; 4));
+            points.push(p);
+        }
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">// 回転後の座標を計算</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pt</span><span class="p">);</span>
-        <span class="p">}</span>
+    public function draw(g:Graphics, matrix:Matrix3D, f:Number):void {
+        // 回転後の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i &lt; points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
+            p.push(pt);
+        }
 
-        <span class="c1">// 面の一覧</span>
-        <span class="kd">var</span> <span class="nx">planes</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="p">];</span>
+        // 面の一覧
+        var planes:Array = [
+            [p[0], p[1], p[2], p[3]],
+            [p[7], p[6], p[5], p[4]],
+            [p[0], p[4], p[5], p[1]],
+            [p[1], p[5], p[6], p[2]],
+            [p[2], p[6], p[7], p[3]],
+            [p[3], p[7], p[4], p[0]]
+        ];
 
-        <span class="c1">// 面の中心のZ座標を求める</span>
-        <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
-        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">planes</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="nx">z</span><span class="p">[</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">1</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">2</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">3</span><span class="p">].</span><span class="nx">z</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">;</span>
-        <span class="p">}</span>
+        // 面の中心のZ座標を求める
+        var z:Dictionary = new Dictionary();
+        for(i = 0; i &lt; planes.length; i++){
+            z[planes[i]] = (planes[i][0].z + planes[i][1].z + planes[i][2].z + planes[i][3].z) / 4;
+        }
 
-        <span class="c1">// Zソート (奥のものから順番に並べる)</span>
-        <span class="nx">planes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">z</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">z</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
-        <span class="p">});</span>
+        // Zソート (奥のものから順番に並べる)
+        planes.sort(function(a:Array, b:Array):Number {
+            return z[b] - z[a];
+        });
 
-        <span class="c1">// 奥から順番に面を描画</span>
-        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">plane</span><span class="o">:</span><span class="nb">Array</span> <span class="k">in</span> <span class="nx">planes</span><span class="p">){</span>
-            <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 奥から順番に面を描画
+        for each(var plane:Array in planes){
+            drawPlane(g, plane[0], plane[1], plane[2], plane[3]);
+        }
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p4</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">// 単位法線ベクトル</span>
-        <span class="kd">var</span> <span class="nx">v1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">v2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">);</span>
-        <span class="nx">n</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    private function drawPlane(g:Graphics, p1:Point3D, p2:Point3D, p3:Point3D, p4:Point3D):void {
+        // 単位法線ベクトル
+        var v1:Point3D = p2.subtract(p1);
+        var v2:Point3D = p4.subtract(p1);
+        var n:Point3D = cross(v1, v2);
+        n.normalize(1);
 
-        <span class="c1">// 光源の方向ベクトルとの内積</span>
-        <span class="kd">var</span> <span class="nx">l</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">product</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+        // 光源の方向ベクトルとの内積
+        var l:Point3D = new Point3D(0, 0, -1);
+        var product:Number = n.dot(l);
 
-        <span class="c1">// 透視投影しつつ面を塗る</span>
-        <span class="kd">var</span> <span class="nx">b</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0x3f</span> <span class="o">*</span> <span class="nx">product</span> <span class="o">+</span> <span class="mh">0xc0</span><span class="p">;</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span> <span class="mh">0x10000</span> <span class="o">+</span> <span class="nx">b</span> <span class="o">*</span> <span class="mh">0x100</span> <span class="o">+</span> <span class="nx">b</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x666666</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">g</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">g</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+        // 透視投影しつつ面を塗る
+        var b:int = 0x3f * product + 0xc0;
+        g.beginFill(b * 0x10000 + b * 0x100 + b, 0.6);
+        g.lineStyle(0, 0x666666);
+        var p:Point3D;
+        p = p1.clone(); p.project(p.getPerspective(500)); g.moveTo(p.x, p.y);
+        p = p2.clone(); p.project(p.getPerspective(500)); g.lineTo(p.x, p.y);
+        p = p3.clone(); p.project(p.getPerspective(500)); g.lineTo(p.x, p.y);
+        p = p4.clone(); p.project(p.getPerspective(500)); g.lineTo(p.x, p.y);
+        g.endFill();
+    }
+}
 
-<span class="c1">// 外積</span>
-<span class="kd">function</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+// 外積
+function cross(p1:Point3D, p2:Point3D):Point3D {
+    return new Point3D(p1.y * p2.z - p1.z * p2.y,
+                       p1.z * p2.x - p1.x * p2.z,
+                       p1.x * p2.y - p1.y * p2.x);
+}</pre>
 </section>
 
 </div>

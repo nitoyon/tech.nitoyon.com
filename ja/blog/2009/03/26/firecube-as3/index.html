@@ -78,90 +78,89 @@
 <h1><b>まとめ</b></h1>
 <p>さらに炎っぽくさせるとしたら「ゆらめき」を与えるところでしょうか。当然、DisplacementMapFilter を使って頑張ることになります。</p>
 <p>ソースは以下に（83行）。</p>
-<div class="highlight"><pre><span class="c1">// Processing FireCube (AS3 version) </span>
-<span class="c1">// original source: http://processing.org/learning/topics/firecube.html</span>
-<span class="kr">package</span> <span class="p">{</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">// Processing FireCube (AS3 version) 
+// original source: http://processing.org/learning/topics/firecube.html
+package {
+import flash.display.*;
+import flash.filters.*;
+import flash.geom.*;
 
-<span class="kr">public</span> <span class="kr">class</span> <span class="nx">FireCube</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">WIDTH</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
-    <span class="kr">private</span> <span class="kr">const</span> <span class="nx">HEIGHT</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+public class FireCube extends Sprite{
+    private const WIDTH:int = 200;
+    private const HEIGHT:int = 150;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">FireCube</span><span class="p">(){</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
-        <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-        <span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    public function FireCube(){
+        stage.align = &quot;TL&quot;;
+        stage.scaleMode = &quot;noScale&quot;;
+        scaleX = scaleY = 2;
 
-        <span class="c1">// Create circle</span>
-        <span class="kd">var</span> <span class="nx">circle</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0x808080</span><span class="p">);</span>
-        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-        <span class="nx">circle</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
+        // Create circle
+        var circle:Sprite = new Sprite();
+        circle.graphics.beginFill(0x808080);
+        circle.graphics.drawCircle(0, 0, 10);
+        circle.graphics.endFill();
 
-        <span class="c1">// Create buffered image</span>
-        <span class="kd">var</span> <span class="nx">fire</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="nx">HEIGHT</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">pg</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-        <span class="kd">var</span> <span class="nx">noiseBmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">WIDTH</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+        // Create buffered image
+        var fire:BitmapData = new BitmapData(WIDTH, HEIGHT, false, 0);
+        var pg:BitmapData = fire.clone();
+        var noiseBmd:BitmapData = new BitmapData(WIDTH, 1);
 
-        <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">pg</span><span class="p">);</span>
-        <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
+        var bmp:Bitmap = new Bitmap(pg);
+        addChild(bmp);
 
-        <span class="c1">// Generate the palette</span>
-        <span class="kd">var</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="c1">//Hue goes from 0 to 85: red to yellow</span>
-            <span class="c1">//Saturation is always the maximum: 255</span>
-            <span class="c1">//Lightness is 0..255 for x=0..128, and 255 for x=128..255</span>
-            <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">x</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">x</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">g</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
-        <span class="p">}</span>
+        // Generate the palette
+        var r:Array = [], g:Array = [], b:Array = [];
+        for(var x:int = 0; x &lt; 256; x++) {
+            //Hue goes from 0 to 85: red to yellow
+            //Saturation is always the maximum: 255
+            //Lightness is 0..255 for x=0..128, and 255 for x=128..255
+            HSVtoRGB(x / 3, 1, Math.min(x * 3 / 255.0, 1), r, g, b);
+        }
 
-        <span class="c1">// Use ConvolutionFilter to calculate for every pixel</span>
-        <span class="kd">var</span> <span class="nx">filter</span><span class="o">:</span><span class="nx">ConvolutionFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ConvolutionFilter</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">65</span><span class="p">);</span>
+        // Use ConvolutionFilter to calculate for every pixel
+        var filter:ConvolutionFilter = new ConvolutionFilter(3, 3, [0, 0, 0, 16, 16, 16, 0, 16, 0], 65);
 
-        <span class="c1">// Prepare points and matrix</span>
-        <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-        <span class="kd">var</span> <span class="nx">pt0</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">HEIGHT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">pt1</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">pt2</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+        // Prepare points and matrix
+        var matrix:Matrix = new Matrix();
+        var pt0:Point = new Point(0, HEIGHT - 1);
+        var pt1:Point = new Point(0, -1);
+        var pt2:Point = new Point(0, 1);
 
-        <span class="c1">// Do loop</span>
-        <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-            <span class="c1">// Randomize the bottom row of the fire buffer</span>
-            <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">noise</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-            <span class="nx">fire</span><span class="p">.</span><span class="nx">copyPixels</span><span class="p">(</span><span class="nx">noiseBmd</span><span class="p">,</span> <span class="nx">noiseBmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt0</span><span class="p">);</span>
+        // Do loop
+        addEventListener(&quot;enterFrame&quot;, function(event:*):void{
+            // Randomize the bottom row of the fire buffer
+            noiseBmd.noise(Math.random() * 0xffffffff, 0, 190, 7, true);
+            fire.copyPixels(noiseBmd, noiseBmd.rect, pt0);
 
-            <span class="c1">// Display circle</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">tx</span> <span class="o">=</span> <span class="nx">mouseX</span><span class="p">;</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">ty</span> <span class="o">=</span> <span class="nx">mouseY</span><span class="p">;</span>
-            <span class="nx">fire</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">circle</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">);</span>
+            // Display circle
+            matrix.tx = mouseX;
+            matrix.ty = mouseY;
+            fire.draw(circle, matrix);
 
-            <span class="c1">// Add pixel values around current pixel</span>
-            <span class="nx">fire</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">fire</span><span class="p">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt1</span><span class="p">,</span> <span class="nx">filter</span><span class="p">);</span>
+            // Add pixel values around current pixel
+            fire.applyFilter(fire, fire.rect, pt1, filter);
 
-            <span class="c1">// Output everything to screen using our palette colors</span>
-            <span class="nx">pg</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">fire</span><span class="p">,</span> <span class="nx">fire</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="nx">pt2</span><span class="p">,</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">g</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
-        <span class="p">});</span>
-    <span class="p">}</span>
+            // Output everything to screen using our palette colors
+            pg.paletteMap(fire, fire.rect, pt2, r, g, b);
+        });
+    }
 
-    <span class="c1">// AS3 does not natively support HSV...  :-(</span>
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">HSVtoRGB</span><span class="p">(</span><span class="nx">h</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">v</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">r</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">g</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
-            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">h</span> <span class="o">&lt;</span> <span class="mi">120</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="nx">h</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">);</span>
-            <span class="nx">g</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">v</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
-            <span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">s</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">);</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;not implemented&#39;</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+    // AS3 does not natively support HSV...  :-(
+    private function HSVtoRGB(h:int, s:Number, v:Number, r:Array, g:Array, b:Array):void {
+        if (h &lt; 60) {
+            r.push((v * 255) &lt;&lt; 16);
+            g.push((v * (1 - (1 - h / 60.0) * s) * 255) &lt;&lt; 8)
+            b.push(v * (1 - s) * 255);
+        } else if (h &lt; 120) {
+            r.push((v * (1 - (-h / 60.0 - 1) * s) * 255) &lt;&lt; 16);
+            g.push((v * 255) &lt;&lt; 8);
+            b.push(v * (1 - s) * 255);
+        } else {
+            throw Error('not implemented');
+        }
+    }
+}
+}</pre>
 </section>
 
 </div>

@@ -13,7 +13,7 @@
 	<meta property="og:title" content="郵便番号マップ作成記 (2) - ジオコーディングで経度緯度を求める"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/03/18/postal-map2/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="第１回 では郵便番号データをデータベースに格納するところまでを作った。今回は住所から緯度経度を求めていこう。ビジュアライズのための下準備は今回で完了だ。ジオコーディング API は何を使おうジオコーディングとは、住所や名所から緯度経度を求めること。世の中にはいくつかジオコーディングの API が存在するが、今回は Google が提供する ジオコーディング API を選択した。理由はGoogle が提供するという安心感と、１日あたり1万5千回まで OK と太っ腹なところ。REST で利用できるのも魅力的だった。いざ実行スクリプトをがーっと書いてひたすら実行する。require &#39;..."/>
+	<meta property="og:description" content="第１回 では郵便番号データをデータベースに格納するところまでを作った。今回は住所から緯度経度を求めていこう。ビジュアライズのための下準備は今回で完了だ。ジオコーディング API は何を使おうジオコーディングとは、住所や名所から緯度経度を求めること。世の中にはいくつかジオコーディングの API が存在するが、今回は Google が提供する ジオコーディング API を選択した。理由はGoogle が提供するという安心感と、１日あたり1万5千回まで OK と太っ腹なところ。REST で利用できるのも魅力的だった。いざ実行スクリプトをがーっと書いてひたすら実行する。require &#39;Entr..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -66,43 +66,42 @@
 <p>理由はGoogle が提供するという安心感と、<a href="http://googlejapan.blogspot.com/2007/09/ip.html">１日あたり1万5千回まで OK</a> と太っ腹なところ。REST で利用できるのも魅力的だった。</p>
 <h1>いざ実行</h1>
 <p>スクリプトをがーっと書いてひたすら実行する。</p>
-<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;EntrySchema&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;cgi&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;open-uri&#39;</span>
+<pre class="ruby">require 'EntrySchema'
+require 'cgi'
+require 'open-uri'
 
-<span class="vg">$URL</span> <span class="o">=</span> <span class="s2">&quot;http://maps.google.com/maps/geo?&quot;</span>
+$URL = &quot;http://maps.google.com/maps/geo?&quot;
 
-<span class="no">Code</span><span class="o">.</span><span class="n">find_all_by_low</span><span class="p">(</span><span class="s2">&quot;0000&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">code</span><span class="o">|</span>
-  <span class="c1"># 経度緯度を既に求めていたら次</span>
-  <span class="k">next</span> <span class="k">unless</span> <span class="n">code</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">nil?</span> <span class="ow">and</span> <span class="n">code</span><span class="o">.</span><span class="n">lng</span><span class="o">.</span><span class="n">nil?</span>
+Code.find_all_by_low(&quot;0000&quot;).each do |code|
+  # 経度緯度を既に求めていたら次
+  next unless code.lat.nil? and code.lng.nil?
 
-  <span class="c1"># URL を求める</span>
-  <span class="n">q</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">pref</span> <span class="o">+</span> <span class="n">code</span><span class="o">.</span><span class="n">city</span>
-  <span class="n">url</span> <span class="o">=</span> <span class="vg">$URL</span> <span class="o">+</span> <span class="p">{</span><span class="s2">&quot;q&quot;</span> <span class="o">=&gt;</span> <span class="n">q</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;xml&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span>
-    <span class="s2">&quot;</span><span class="si">#{</span><span class="no">CGI</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">#{</span><span class="no">CGI</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-  <span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)</span>
+  # URL を求める
+  q = code.pref + code.city
+  url = $URL + {&quot;q&quot; =&gt; q, &quot;output&quot; =&gt; &quot;xml&quot;}.map { |key, value|
+    &quot;#{CGI.escape(key)}=#{CGI.escape(value)}&quot;
+  }.join(&quot;&amp;&quot;)
 
-  <span class="c1"># 読み取る</span>
-  <span class="nb">open</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span>
-    <span class="n">xml</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span>
-    <span class="nb">puts</span> <span class="n">xml</span>
-    <span class="n">doc</span> <span class="o">=</span> <span class="no">REXML</span><span class="o">::</span><span class="no">Document</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+  # 読み取る
+  open(url) do |f|
+    xml = f.read
+    puts xml
+    doc = REXML::Document.new(xml)
 
-    <span class="c1"># coordinates タグの中身を読み取る</span>
-    <span class="n">latlng</span> <span class="o">=</span> <span class="no">REXML</span><span class="o">::</span><span class="no">XPath</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;//coordinates&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
-    <span class="n">lng</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">latlng</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sr">/,/</span><span class="p">)</span>
-    <span class="n">code</span><span class="o">.</span><span class="n">lng</span> <span class="o">=</span> <span class="n">lng</span><span class="o">.</span><span class="n">to_f</span>
-    <span class="n">code</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">lat</span><span class="o">.</span><span class="n">to_f</span>
-    <span class="nb">puts</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">q</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">lng</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">lat</span><span class="si">}</span><span class="s2">&quot;</span>
-  <span class="k">end</span>
+    # coordinates タグの中身を読み取る
+    latlng = REXML::XPath.first(doc.root, '//coordinates').text
+    lng, lat = latlng.split(/,/)
+    code.lng = lng.to_f
+    code.lat = lat.to_f
+    puts &quot;#{q} #{lng} #{lat}&quot;
+  end
 
-  <span class="c1"># 保存</span>
-  <span class="n">code</span><span class="o">.</span><span class="n">save</span>
+  # 保存
+  code.save
 
-  <span class="c1"># ３秒スリープしておく</span>
-  <span class="nb">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="k">end</span>
-</pre></div>
+  # ３秒スリープしておく
+  sleep(3)
+end</pre>
 <p>エラー処理は特にやってないので、例外が起きたらそこで止まる。データ量も多くないので、止まってたらそのときに手作業で対応すればよいだろう。</p>
 <p>途中、「岡山市北区」でエラーになった。「Google さん、しっかりしてよー」と調べてみたら…</p>
 <blockquote><p>北区（きたく）は岡山県岡山市が2009年4月1日の政令指定都市移行に伴い設置を決めた4つの行政区のうちの一つ</p></blockquote>
@@ -112,15 +111,14 @@
 <h1>DB の中身を JSON で出力</h1>
 <p>さて、これで緯度経度のデータが出揃った。JavaScript で扱いやすいように、JSON データとして出力しておく。</p>
 <p>これも簡単なスクリプトを書いて実現した。住所に \ が含まれることはないので凝った JSON 化は不要だろう。何も考えず使い捨てな勢いで出力コードを書いておいた。</p>
-<div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;EntrySchema&#39;</span>
+<pre class="ruby">require 'EntrySchema'
 
-<span class="n">json</span> <span class="o">=</span> <span class="no">Code</span><span class="o">.</span><span class="n">find_all_by_low</span><span class="p">(</span><span class="s2">&quot;0000&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">code</span><span class="o">|</span>
-  <span class="sx">%Q|{&quot;lat&quot; : </span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">lat</span><span class="si">}</span><span class="sx">, &quot;lng&quot; : </span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">lng</span><span class="si">}</span><span class="sx">, &quot;name&quot; : &quot;</span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">pref</span><span class="si">}#{</span><span class="n">code</span><span class="o">.</span><span class="n">city</span><span class="si">}</span><span class="sx">&quot;, &quot;code</span>
-<span class="sx">&quot; : &quot;</span><span class="si">#{</span><span class="n">code</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="sx">&quot;}|</span>
-<span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+json = Code.find_all_by_low(&quot;0000&quot;).map { |code|
+  %Q|{&quot;lat&quot; : #{code.lat}, &quot;lng&quot; : #{code.lng}, &quot;name&quot; : &quot;#{code.pref}#{code.city}&quot;, &quot;code
+&quot; : &quot;#{code.high}&quot;}|
+}.join(&quot;,\n&quot;)
 
-<span class="nb">puts</span> <span class="s2">&quot;[</span><span class="si">#{</span><span class="n">json</span><span class="si">}</span><span class="s2">]&quot;</span>
-</pre></div>
+puts &quot;[#{json}]&quot;</pre>
 <p>続く。</p>
 </section>
 

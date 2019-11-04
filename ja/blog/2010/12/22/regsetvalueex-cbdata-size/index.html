@@ -61,15 +61,14 @@
 <div class="entry-body">
 <section>
 <p>Windows でレジストリにデータを格納するときに使う <code>RegSetValueEx()</code> 関数を掘り下げてみた。RegSetValueEx() の定義は次のようになってる。</p>
-<div class="highlight"><pre><span class="n">LONG</span> <span class="nf">RegSetValueEx</span><span class="p">(</span>
-  <span class="n">HKEY</span>    <span class="n">hKey</span><span class="p">,</span>        <span class="c1">// キーのハンドル</span>
-  <span class="n">LPCTSTR</span> <span class="n">lpValueName</span><span class="p">,</span> <span class="c1">// 値の名前</span>
-  <span class="n">DWORD</span>   <span class="n">Reserved</span><span class="p">,</span>    <span class="c1">// NULL</span>
-  <span class="n">DWORD</span>   <span class="n">dwType</span><span class="p">,</span>      <span class="c1">// 種類</span>
-  <span class="n">LPCBYTE</span> <span class="n">lpData</span><span class="p">,</span>      <span class="c1">// 値のデータ</span>
-  <span class="n">DWORD</span>   <span class="n">cbData</span>       <span class="c1">// 値のデータのサイズ</span>
-<span class="p">);</span>
-</pre></div>
+<pre class="cpp">LONG RegSetValueEx(
+  HKEY    hKey,        // キーのハンドル
+  LPCTSTR lpValueName, // 値の名前
+  DWORD   Reserved,    // NULL
+  DWORD   dwType,      // 種類
+  LPCBYTE lpData,      // 値のデータ
+  DWORD   cbData       // 値のデータのサイズ
+);</pre>
 <p>MSDN によると、<code>cbData</code> については、</p>
 <blockquote><p>If the data is of type REG_SZ, REG_EXPAND_SZ, or REG_MULTI_SZ, cbData must include the size of the terminating null character or characters.</p><blockquote><p>データの種類が REG_SZ、REG_EXPAND_SZ、REG_MULTI_SZ のいずれかである場合、cbData パラメータで終端の NULL のサイズも含めなければなりません。 </p><cite><a href="http://msdn.microsoft.com/ja-jp/library/cc429936.aspx">RegSetValueEx 関数</a></cite></blockquote><cite><a href="http://msdn.microsoft.com/en-us/library/aa916717.aspx">RegSetValueEx</a></cite></blockquote>
 <p>とあるだけで、<code>NULL</code> のサイズを含めない場合にどうなるのかが分からなかった。</p>
@@ -114,89 +113,87 @@
 <p>また、何も考えずにバッファサイズ分の文字をレジストリに格納していると、NULL 文字以降の情報もレジストリに保存されてしまうので、秘密のデータがこっそり漏れてしまうかもしれないので注意が必要だ。</p>
 <h1>RegSetValue と RegQueryValue</h1>
 <p><code>RegSetValue</code> は現在は利用を推奨されていないが、データの型に REG_SZ しか指定できない時代の関数である分、REG_SZ を書き込む場合には簡単に使える。</p>
-<div class="highlight"><pre><span class="n">RegSetValue</span><span class="p">(</span>
-  <span class="n">HKEY</span>    <span class="n">hKey</span><span class="p">,</span>       <span class="c1">// キーのハンドル</span>
-  <span class="n">LPCTSTR</span> <span class="n">lpSubKey</span><span class="p">,</span>   <span class="c1">// 値の名前</span>
-  <span class="n">DWORD</span>   <span class="n">dwType</span><span class="p">,</span>     <span class="c1">// REG_SZ でなければならない</span>
-  <span class="n">LPCTSTR</span> <span class="n">lpData</span><span class="p">,</span>     <span class="c1">// NULL 終端文字列</span>
-  <span class="n">DWORD</span>   <span class="n">cbData</span>      <span class="c1">// 無視される</span>
-<span class="p">);</span>
-</pre></div>
+<pre class="cpp">RegSetValue(
+  HKEY    hKey,       // キーのハンドル
+  LPCTSTR lpSubKey,   // 値の名前
+  DWORD   dwType,     // REG_SZ でなければならない
+  LPCTSTR lpData,     // NULL 終端文字列
+  DWORD   cbData      // 無視される
+);</pre>
 <p><code>RegSetValue</code> の内部で文字列の長さからバイト数も決定してくれるので非常に楽だ。</p>
 <p><code>RegQueryValue</code> も現在は利用を推奨されていないが、途中に NULL 文字を含む文字列も取得できることが確認できた。</p>
 <h1>ソース</h1>
 <p>今回の実験に使ったソースを掲載しておく。</p>
-<div class="highlight"><pre><span class="cp">#include &lt;windows.h&gt;</span>
-<span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;tchar.h&gt;</span>
+<pre class="cpp">#include &lt;windows.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;tchar.h&gt;
 
-<span class="kt">void</span> <span class="nf">dump5</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">buf</span><span class="p">);</span>
-<span class="kt">void</span> <span class="nf">testRegSetValueEx</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">buf</span><span class="p">,</span> <span class="n">DWORD</span> <span class="n">size</span><span class="p">);</span>
+void dump5(LPCTSTR buf);
+void testRegSetValueEx(LPCTSTR buf, DWORD size);
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
-    <span class="c1">// RegSetValueEx でサイズに正しい値を与えたとき</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">5</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
+int main(){
+    // RegSetValueEx でサイズに正しい値を与えたとき
+    testRegSetValueEx(TEXT(&quot;test&quot;), 5 * sizeof(TCHAR));
 
-    <span class="c1">// RegSetValueEx でサイズに NULL 文字を含めるのを忘れたとき</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">4</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
+    // RegSetValueEx でサイズに NULL 文字を含めるのを忘れたとき
+    testRegSetValueEx(TEXT(&quot;test&quot;), 4 * sizeof(TCHAR));
 
-    <span class="c1">// RegSetValueEx でサイズに小さい値を与えたとき</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">3</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">1</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
+    // RegSetValueEx でサイズに小さい値を与えたとき
+    testRegSetValueEx(TEXT(&quot;test&quot;), 3 * sizeof(TCHAR));
+    testRegSetValueEx(TEXT(&quot;test&quot;), 2 * sizeof(TCHAR));
+    testRegSetValueEx(TEXT(&quot;test&quot;), 1 * sizeof(TCHAR));
 
-    <span class="c1">// RegSetValueEx でサイズに 0 を与えたとき</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
+    // RegSetValueEx でサイズに 0 を与えたとき
+    testRegSetValueEx(TEXT(&quot;test&quot;), 0);
 
-    <span class="c1">// RegSetValueEx で NULL 文字を含む値を与えたとき</span>
-    <span class="n">testRegSetValueEx</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;t</span><span class="se">\0</span><span class="s">st&quot;</span><span class="p">),</span> <span class="mi">5</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">));</span>
+    // RegSetValueEx で NULL 文字を含む値を与えたとき
+    testRegSetValueEx(TEXT(&quot;t\0st&quot;), 5 * sizeof(TCHAR));
 
-<span class="p">}</span>
+}
 
-<span class="kt">void</span> <span class="nf">testRegSetValueEx</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">buf</span><span class="p">,</span> <span class="n">DWORD</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">DWORD</span> <span class="n">dwType</span><span class="p">;</span>
+void testRegSetValueEx(LPCTSTR buf, DWORD size) {
+    DWORD dwType;
 
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;  set %d bytes = &quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
-    <span class="n">dump5</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+    _tprintf(_T(&quot;  set %d bytes = &quot;), size);
+    dump5(buf);
 
-    <span class="c1">// exec</span>
-    <span class="n">RegSetValueEx</span><span class="p">(</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">REG_SZ</span><span class="p">,</span> <span class="p">(</span><span class="n">LPCBYTE</span><span class="p">)</span><span class="n">buf</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
-    <span class="c1">//RegSetValue(HKEY_LOCAL_MACHINE, NULL, REG_SZ, (LPTSTR)buf, size);</span>
-    <span class="n">RegQueryValueEx</span><span class="p">(</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dwType</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">);</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot; -&gt; wrote %d bytes</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
+    // exec
+    RegSetValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, REG_SZ, (LPCBYTE)buf, size);
+    //RegSetValue(HKEY_LOCAL_MACHINE, NULL, REG_SZ, (LPTSTR)buf, size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &amp;dwType, NULL, &amp;size);
+    _tprintf(_T(&quot; -&gt; wrote %d bytes\n&quot;), size);
 
-    <span class="c1">// query value 1</span>
-    <span class="n">TCHAR</span> <span class="n">result1</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;query %d bytes = &quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
-    <span class="n">RegQueryValueEx</span><span class="p">(</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dwType</span><span class="p">,</span> <span class="p">(</span><span class="n">LPBYTE</span><span class="p">)</span><span class="n">result1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">);</span>
+    // query value 1
+    TCHAR result1[5];
+    _tprintf(_T(&quot;query %d bytes = &quot;), size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &amp;dwType, (LPBYTE)result1, &amp;size);
 
-    <span class="n">dump5</span><span class="p">(</span><span class="n">result1</span><span class="p">);</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot; (lpcbData=%d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
+    dump5(result1);
+    _tprintf(_T(&quot; (lpcbData=%d)\n&quot;), size);
 
-    <span class="c1">// query value 2</span>
-    <span class="n">TCHAR</span> <span class="n">result2</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
-    <span class="n">size</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">TCHAR</span><span class="p">);</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;query %d bytes = &quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
-    <span class="n">RegQueryValueEx</span><span class="p">(</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dwType</span><span class="p">,</span> <span class="p">(</span><span class="n">LPBYTE</span><span class="p">)</span><span class="n">result2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">);</span>
+    // query value 2
+    TCHAR result2[5];
+    size = 5 * sizeof(TCHAR);
+    _tprintf(_T(&quot;query %d bytes = &quot;), size);
+    RegQueryValueEx(HKEY_LOCAL_MACHINE, NULL, NULL, &amp;dwType, (LPBYTE)result2, &amp;size);
 
-    <span class="n">dump5</span><span class="p">(</span><span class="n">result2</span><span class="p">);</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot; (lpcbData=%d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
+    dump5(result2);
+    _tprintf(_T(&quot; (lpcbData=%d)\n&quot;), size);
 
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">));</span>
-<span class="p">}</span>
+    _tprintf(_T(&quot;\n&quot;));
+}
 
-<span class="kt">void</span> <span class="nf">dump5</span><span class="p">(</span><span class="n">LPCTSTR</span> <span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">_tprintf</span><span class="p">(</span><span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;%c&quot;</span><span class="p">),</span> <span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">_T</span><span class="p">(</span><span class="sc">&#39;\0&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="n">_T</span><span class="p">(</span><span class="sc">&#39;_&#39;</span><span class="p">)</span> <span class="o">:</span> <span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot; (&quot;</span><span class="p">));</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">));</span>
-        <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;%02x&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">UINT</span><span class="p">)</span><span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="n">_tprintf</span><span class="p">(</span><span class="n">_T</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">));</span>
-<span class="p">}</span>
-</pre></div>
+void dump5(LPCTSTR buf) {
+    for (int i = 0; i &lt; 5; i++) {
+        _tprintf(TEXT(&quot;%c&quot;), buf[i] == _T('\0') ? _T('_') : buf[i]);
+    }
+    _tprintf(_T(&quot; (&quot;));
+    for (int i = 0; i &lt; 5; i++) {
+        if (i != 0) _tprintf(_T(&quot; &quot;));
+        _tprintf(_T(&quot;%02x&quot;), (UINT)buf[i] &amp; 0xff);
+    }
+    _tprintf(_T(&quot;)&quot;));
+}</pre>
 </section>
 
 </div>

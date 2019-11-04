@@ -77,187 +77,186 @@
 <p>赤い「て」、青い「っ」、緑の「く」がうっすら見えるところがチャームポイント。</p>
 <h1>ソースコード</h1>
 <p>ソースコードは以下に(180行)</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.events.*;
+    import flash.geom.*;
+    import flash.utils.*;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">ChannelDrawer</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s1">&#39;clear.png&#39;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">ClearImage</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    public class ChannelDrawer extends Sprite
+    {
+        [Embed(source='clear.png')]
+        private var ClearImage:Class;
 
-        <span class="c1">// 画像のサイズ</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">MARGIN</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE</span><span class="o">:</span><span class="kr">int</span>   <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE2</span><span class="o">:</span><span class="kr">int</span>  <span class="o">=</span> <span class="nx">SIZE</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE3</span><span class="o">:</span><span class="kr">int</span>  <span class="o">=</span> <span class="nx">SIZE</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kr">const</span> <span class="nx">SIZE4</span><span class="o">:</span><span class="kr">int</span>  <span class="o">=</span> <span class="nx">SIZE3</span> <span class="o">+</span> <span class="nx">SIZE3</span> <span class="o">+</span> <span class="nx">MARGIN</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span>
+        // 画像のサイズ
+        private const MARGIN:int = 5;
+        private const SIZE:int   = 100;
+        private const SIZE2:int  = SIZE + MARGIN;
+        private const SIZE3:int  = SIZE * 2 + MARGIN;
+        private const SIZE4:int  = SIZE3 + SIZE3 + MARGIN + 10;
 
-        <span class="c1">// 色</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">color</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
+        // 色
+        private var color:int = 0xffffff;
 
-        <span class="c1">// チャンネルの順番</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">channels</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span><span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">GREEN</span><span class="p">,</span> 
-            <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">BLUE</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">ALPHA</span><span class="p">];</span>
+        // チャンネルの順番
+        private var channels:Array = [BitmapDataChannel.RED, BitmapDataChannel.GREEN, 
+            BitmapDataChannel.BLUE, BitmapDataChannel.ALPHA];
 
-        <span class="c1">// BitmapData</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmpPreview</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">bmpCanvas</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">SIZE3</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">);</span>
+        // BitmapData
+        private var bmpPreview:BitmapData = new BitmapData(SIZE, SIZE);
+        private var bmpCanvas:BitmapData = new BitmapData(SIZE3, SIZE3);
 
-        <span class="c1">// Sprite</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">clearBtn</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">curColor</span><span class="o">:</span><span class="nx">Shape</span><span class="p">;</span>
+        // Sprite
+        private var canvas:Sprite;
+        private var clearBtn:Sprite;
+        private var curColor:Shape;
 
-        <span class="c1">// change flag</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">changed</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        // change flag
+        private var changed:Boolean = false;
 
-        <span class="c1">// コンストラクタ</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ChannelDrawer</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        // コンストラクタ
+        public function ChannelDrawer()
+        {
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="c1">// 左のプレビュー</span>
-            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">bmpPreview</span><span class="p">))</span> <span class="nx">as</span> <span class="nx">Bitmap</span><span class="p">;</span>
-            <span class="nx">bmp</span><span class="p">.</span><span class="nx">scaleX</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">scaleY</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+            // 左のプレビュー
+            var bmp:Bitmap = addChild(new Bitmap(bmpPreview)) as Bitmap;
+            bmp.scaleX = bmp.scaleY = 2;
 
-            <span class="c1">// 描画領域</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">()).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">SIZE3</span><span class="p">;</span>
-            <span class="nx">clear</span><span class="p">();</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="nx">mouseDownHandler</span><span class="p">);</span>
+            // 描画領域
+            addChild(canvas = new Sprite()).x = SIZE3;
+            clear();
+            canvas.addEventListener(&quot;mouseDown&quot;, mouseDownHandler);
 
-            <span class="c1">// 描画領域の枠</span>
-            <span class="kd">var</span> <span class="nx">mask</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">SIZE3</span> <span class="o">+</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="mi">0</span>   <span class="p">,</span> <span class="nx">MARGIN</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">);</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="nx">SIZE3</span>       <span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE3</span> <span class="p">,</span> <span class="nx">MARGIN</span><span class="p">);</span>
-            <span class="nx">mask</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">mask</span><span class="p">);</span>
+            // 描画領域の枠
+            var mask:Sprite = new Sprite();
+            mask.graphics.beginFill(0xffffff);
+            mask.graphics.drawRect(SIZE3 + SIZE, 0   , MARGIN, SIZE3);
+            mask.graphics.drawRect(SIZE3       , SIZE, SIZE3 , MARGIN);
+            mask.graphics.endFill();
+            addChild(mask);
 
-            <span class="c1">// CLEARボタン</span>
-            <span class="nx">clearBtn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">clearBtn</span><span class="p">);</span>
-            <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">ClearImage</span><span class="p">());</span>
-            <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">SIZE4</span><span class="p">;</span>
-            <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">SIZE3</span> <span class="o">-</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
-            <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">clear</span><span class="p">);</span>
+            // CLEARボタン
+            clearBtn = new Sprite();
+            addChild(clearBtn);
+            clearBtn.addChild(new ClearImage());
+            clearBtn.buttonMode = true;
+            clearBtn.x = SIZE4;
+            clearBtn.y = SIZE3 - clearBtn.height;
+            clearBtn.addEventListener(&quot;click&quot;, clear);
 
-            <span class="c1">// 色選択</span>
-            <span class="kd">var</span> <span class="nx">choiseColor</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix</span><span class="p">();</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">createGradientBox</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">SIZE3</span> <span class="o">-</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="nx">MARGIN</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginGradientFill</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0x000000</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">],</span> <span class="nx">matrix</span><span class="p">);</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">SIZE3</span> <span class="o">-</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="nx">MARGIN</span> <span class="o">*</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">SIZE4</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">choiseColor</span><span class="p">);</span>
-            <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-            <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">255</span> <span class="o">-</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">localY</span> <span class="o">/</span> <span class="nx">choiseColor</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">;</span>
-                <span class="nx">trace</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">));</span>
-                <span class="nx">color</span> <span class="o">=</span> <span class="p">(</span><span class="nx">c</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">c</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="nx">c</span><span class="p">;</span>
-                <span class="nx">trace</span><span class="p">(</span><span class="nx">color</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">));</span>
-                <span class="nx">updateCurColor</span><span class="p">();</span>
-            <span class="p">});</span>
+            // 色選択
+            var choiseColor:Sprite = new Sprite();
+            choiseColor.buttonMode = true;
+            var matrix:Matrix = new Matrix();
+            choiseColor.graphics.lineStyle(0x000000, 1);
+            matrix.createGradientBox(1, SIZE3 - clearBtn.height * 2 - MARGIN * 2, Math.PI / 2);
+            choiseColor.graphics.beginGradientFill(&quot;linear&quot;, [0xffffff, 0x000000], [100, 100], [0x00, 0xff], matrix);
+            choiseColor.graphics.drawRect(0, 0, clearBtn.width, SIZE3 - clearBtn.height * 2 - MARGIN * 2);
+            choiseColor.graphics.endFill();
+            choiseColor.x = SIZE4;
+            addChild(choiseColor);
+            choiseColor.addEventListener(&quot;click&quot;, function(event:MouseEvent):void
+            {
+                var c:int = 255 - (event.localY / choiseColor.height) * 255;
+                trace(c.toString(16));
+                color = (c &lt;&lt; 16) + (c &lt;&lt; 8) + c;
+                trace(color.toString(16));
+                updateCurColor();
+            });
 
-            <span class="c1">// 色表示</span>
-            <span class="nx">curColor</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Shape</span><span class="p">();</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">SIZE4</span><span class="p">;</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">SIZE3</span> <span class="o">-</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="nx">MARGIN</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">curColor</span><span class="p">);</span>
-            <span class="nx">updateCurColor</span><span class="p">();</span>
+            // 色表示
+            curColor = new Shape();
+            curColor.x = SIZE4;
+            curColor.y = SIZE3 - clearBtn.height * 2 - MARGIN;
+            addChild(curColor);
+            updateCurColor();
 
-            <span class="c1">// loop</span>
-            <span class="kd">var</span> <span class="nx">count</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-            <span class="p">{</span>
-                <span class="nx">count</span> <span class="o">=</span> <span class="p">(</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">;</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">changed</span><span class="p">)</span>
-                <span class="p">{</span>
-                    <span class="nx">updatePreview</span><span class="p">();</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            // loop
+            var count:int = 0;
+            addEventListener(&quot;enterFrame&quot;, function(event:Event):void
+            {
+                count = (count + 1) % 5;
+                if(count == 0 &amp;&amp; changed)
+                {
+                    updatePreview();
+                }
+            });
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseDownHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nx">color</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">localY</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">localY</span><span class="p">);</span>
+        private function mouseDownHandler(event:MouseEvent):void
+        {
+            canvas.graphics.beginFill(0, 0);
+            canvas.graphics.lineStyle(3, color);
+            canvas.graphics.moveTo(event.localX, event.localY);
+            canvas.graphics.lineTo(event.localX, event.localY);
 
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+            stage.addEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.addEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseMoveHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span> <span class="o">==</span> <span class="nx">canvas</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nx">color</span><span class="p">);</span>
-                <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">localY</span><span class="p">);</span>
-                <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-                <span class="nx">changed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+        private function mouseMoveHandler(event:MouseEvent):void
+        {
+            if(event.target == canvas)
+            {
+                canvas.graphics.lineStyle(3, color);
+                canvas.graphics.lineTo(event.localX, event.localY);
+                canvas.graphics.lineStyle();
+                changed = true;
+            }
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">mouseUpHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">MouseEvent</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">();</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">mouseMoveHandler</span><span class="p">);</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="nx">mouseUpHandler</span><span class="p">);</span>
-        <span class="p">}</span>
+        private function mouseUpHandler(event:MouseEvent):void
+        {
+            canvas.graphics.lineStyle();
+            canvas.graphics.endFill();
+            stage.removeEventListener(&quot;mouseMove&quot;, mouseMoveHandler);
+            stage.removeEventListener(&quot;mouseUp&quot;, mouseUpHandler);
+        }
 
-        <span class="c1">// チャンネルを合成する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updatePreview</span><span class="p">()</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">rect</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">zeroPoint</span><span class="o">:</span><span class="nx">Point</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        // チャンネルを合成する
+        private function updatePreview():void
+        {
+            var rect:Rectangle = new Rectangle(0, 0, SIZE, SIZE);
+            var zeroPoint:Point = new Point(0, 0);
 
-            <span class="c1">// init</span>
-            <span class="nx">bmpCanvas</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">),</span> <span class="mh">0xff000000</span><span class="p">);</span>
-            <span class="nx">bmpCanvas</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
+            // init
+            bmpCanvas.fillRect(new Rectangle(0, 0, SIZE3, SIZE3), 0xff000000);
+            bmpCanvas.draw(canvas);
 
-            <span class="c1">// copy channel</span>
-            <span class="nx">bmpPreview</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">channel</span><span class="o">:</span><span class="nx">uint</span> <span class="o">=</span> <span class="nx">channels</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-                <span class="kd">var</span> <span class="nx">fromRect</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">SIZE</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">),</span> <span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">SIZE</span> <span class="o">+</span> <span class="nx">MARGIN</span><span class="p">),</span> <span class="nx">SIZE</span><span class="p">,</span> <span class="nx">SIZE</span><span class="p">);</span>
-                <span class="nx">bmpPreview</span><span class="p">.</span><span class="nx">copyChannel</span><span class="p">(</span><span class="nx">bmpCanvas</span><span class="p">,</span> <span class="nx">fromRect</span><span class="p">,</span> <span class="nx">zeroPoint</span><span class="p">,</span> <span class="nx">BitmapDataChannel</span><span class="p">.</span><span class="nx">RED</span><span class="p">,</span> <span class="nx">channel</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="nx">bmpPreview</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
-        <span class="p">}</span>
+            // copy channel
+            bmpPreview.lock();
+            for(var i:int = 0; i &lt; 4; i++)
+            {
+                var channel:uint = channels[i];
+                var fromRect:Rectangle = new Rectangle(Math.floor(i / 2) * (SIZE + MARGIN), (i % 2) * (SIZE + MARGIN), SIZE, SIZE);
+                bmpPreview.copyChannel(bmpCanvas, fromRect, zeroPoint, BitmapDataChannel.RED, channel);
+            }
+            bmpPreview.unlock();
+        }
 
-        <span class="c1">// 初期化</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">clear</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">,</span> <span class="nx">SIZE3</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">updatePreview</span><span class="p">();</span>
-        <span class="p">}</span>
+        // 初期化
+        private function clear(event:* = null):void
+        {
+            canvas.graphics.clear();
+            canvas.graphics.beginFill(0);
+            canvas.graphics.drawRect(0, 0, SIZE3, SIZE3);
+            canvas.graphics.endFill();
+            updatePreview();
+        }
 
-        <span class="c1">// 色変更</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateCurColor</span><span class="p">(</span><span class="nx">event</span><span class="o">:*</span> <span class="o">=</span> <span class="kc">null</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">clearBtn</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
-            <span class="nx">curColor</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // 色変更
+        private function updateCurColor(event:* = null):void
+        {
+            curColor.graphics.lineStyle(0x000000, 1);
+            curColor.graphics.beginFill(color);
+            curColor.graphics.drawRect(0, 0, clearBtn.width, clearBtn.height);
+            curColor.graphics.endFill();
+        }
+    }
+}</pre>
 </section>
 
 </div>

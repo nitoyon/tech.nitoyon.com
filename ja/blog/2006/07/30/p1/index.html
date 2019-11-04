@@ -66,41 +66,40 @@
 <p>以下のソースを「texwordpro.html」という名前で PC に保存して、IE なり Firefox なりで開いてください。JavaScript を有効にするのをお忘れなく。</p>
 <p>テキストボックスにいろいろ入力すると、リアルタイムに TeX のコンパイル結果が画像で出力されます。</p>
 <h1>ソース</h1>
-<div class="highlight"><pre><span class="nt">&lt;html&gt;</span>
-<span class="nt">&lt;head&gt;&lt;title&gt;</span>てふわーぷろ<span class="nt">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="nt">&lt;body&gt;</span>
+<pre class="html">&lt;html&gt;
+&lt;head&gt;&lt;title&gt;てふわーぷろ&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
 
-<span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;output&quot;</span> <span class="na">style=</span><span class="s">&quot;height: 60px&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+&lt;div id=&quot;output&quot; style=&quot;height: 60px&quot;&gt;&lt;/div&gt;
 
-<span class="nt">&lt;textarea</span> <span class="na">onkeyup=</span><span class="s">&quot;txt_changed(this.value)&quot;</span> <span class="na">cols=</span><span class="s">&quot;50&quot;</span> <span class="na">rows=</span><span class="s">&quot;20&quot;</span><span class="nt">&gt;</span>
+&lt;textarea onkeyup=&quot;txt_changed(this.value)&quot; cols=&quot;50&quot; rows=&quot;20&quot;&gt;
 x^2+y^2=1
-<span class="nt">&lt;/textarea&gt;</span>
+&lt;/textarea&gt;
 
-<span class="nt">&lt;script&gt;</span>
-<span class="kd">var</span> <span class="nx">timer_id</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">prev_param</span><span class="p">;</span>
-<span class="kd">function</span> <span class="nx">txt_changed</span><span class="p">(</span><span class="nx">src</span><span class="p">){</span>
-  <span class="k">if</span><span class="p">(</span><span class="nx">timer_id</span><span class="p">){</span>
-    <span class="nx">clearTimeout</span><span class="p">(</span><span class="nx">timer_id</span><span class="p">);</span>
-  <span class="p">}</span>
+&lt;script&gt;
+var timer_id;
+var prev_param;
+function txt_changed(src){
+  if(timer_id){
+    clearTimeout(timer_id);
+  }
 
-  <span class="nx">timer_id</span> <span class="o">=</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="kd">var</span> <span class="nx">param</span> <span class="o">=</span> <span class="nx">escape</span><span class="p">(</span><span class="nx">src</span><span class="p">);</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">param</span> <span class="o">!=</span> <span class="nx">prev_param</span><span class="p">){</span>
-      <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">);</span>
-      <span class="nx">a</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&lt;img src=&#39;http://d.hatena.ne.jp/cgi-bin/mimetex.cgi?&quot;</span>
-         <span class="o">+</span> <span class="nx">param</span> <span class="o">+</span> <span class="s2">&quot;&#39;&gt;&quot;</span><span class="p">;</span>
-      <span class="nx">timer_id</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-      <span class="nx">prev_param</span> <span class="o">=</span> <span class="nx">param</span><span class="p">;</span>
-    <span class="p">}</span>
-  <span class="p">},</span> <span class="mi">700</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="nx">txt_changed</span><span class="p">(</span><span class="s2">&quot;x^2+y^2=1&quot;</span><span class="p">);</span>
-<span class="nt">&lt;/script&gt;</span>
+  timer_id = setTimeout(function(){
+    var param = escape(src);
+    if(param != prev_param){
+      var a = document.getElementById(&quot;output&quot;);
+      a.innerHTML = &quot;&lt;img src='http://d.hatena.ne.jp/cgi-bin/mimetex.cgi?&quot;
+         + param + &quot;'&gt;&quot;;
+      timer_id = null;
+      prev_param = param;
+    }
+  }, 700);
+}
+txt_changed(&quot;x^2+y^2=1&quot;);
+&lt;/script&gt;
 
-<span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</pre></div>
+&lt;/body&gt;
+&lt;/html&gt;</pre>
 <h1>仕組み</h1>
 <p>テキストボックスが更新されたら はてな の mimetex.cgi に投げてるだけです。たいしたことはやってません。（問題あったら公開停止します＞はてなの中の人）</p>
 <p>便利だなーと思って満足していたら、既に <a href="http://www.forkosh.com/mimetex.html">mimetex のサイト</a> にはボタンを押したら画像が更新されるものがありました…。「TeX ワープロ」は、それのリアルタイム版だと考えてください。</p>

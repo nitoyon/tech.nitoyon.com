@@ -64,48 +64,43 @@
 <p>JSON の仕様で個人的に面倒だと思うのは次の３つ。</p>
 <ol><li>object や array の最後に <code>,</code> があるとエラーになる</li><li>object のキーは文字列じゃないといけない</li><li><code>0.3</code> を <code>.3</code> と書くとエラーになる</li></ol>
 <p>たとえば、次のような JSON はパースエラーとなる。</p>
-<div class="highlight"><pre><span class="p">{</span>
-    <span class="nx">a</span><span class="o">:</span> <span class="p">.</span><span class="mi">3</span><span class="p">,</span> 
-    <span class="nx">b</span><span class="o">:</span> <span class="p">.</span><span class="mi">4</span><span class="p">,</span> 
-    <span class="nx">c</span><span class="o">:</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">{
+    a: .3, 
+    b: .4, 
+    c: .9, 
+}</pre>
 <p>本当はこうすべき。</p>
-<div class="highlight"><pre><span class="p">{</span>
-    <span class="c1">// a → &quot;a&quot;</span>
-    <span class="s2">&quot;a&quot;</span><span class="o">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="c1">// .3 → 0.3</span>
-    <span class="s2">&quot;b&quot;</span><span class="o">:</span> <span class="mf">0.4</span><span class="p">,</span> 
-    <span class="s2">&quot;c&quot;</span><span class="o">:</span> <span class="mf">0.9</span>  <span class="c1">// カンマを削った</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">{
+    // a → &quot;a&quot;
+    &quot;a&quot;: 0.3, // .3 → 0.3
+    &quot;b&quot;: 0.4, 
+    &quot;c&quot;: 0.9  // カンマを削った
+}</pre>
 <p>オレオレなプロジェクトで JSON を手書きするときには、この３つの制限を緩和してあげたくなる。json.org の仕様には違反しちゃうけど、書きやすさを優先で GO!!!</p>
 <p>そこで、ActionScript の定番 JSON パーサーである <a href="http://code.google.com/p/as3corelib/">as3corelib</a> の .92.1 に手を入れてみた。</p>
 <p>たとえば、配列末尾のカンマを許容するには <code>com/adobe/serialization/json/JSONDecoder.as</code> の parseArray() 関数に次のように手を入れた。</p>
-<div class="highlight"><pre>     <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span> <span class="nx">token</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="nx">JSONTokenType</span><span class="p">.</span><span class="nx">COMMA</span> <span class="p">)</span> <span class="p">{</span>
-         <span class="c1">// move past the comma and read another value</span>
-         <span class="nx">nextToken</span><span class="p">();</span>
-<span class="o">+</span>
-<span class="o">+</span>        <span class="c1">// allow trailing comma.</span>
-<span class="o">+</span>        <span class="k">if</span> <span class="p">(</span> <span class="nx">token</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="nx">JSONTokenType</span><span class="p">.</span><span class="nx">RIGHT_BRACKET</span> <span class="p">)</span> <span class="p">{</span>
-<span class="o">+</span>            <span class="k">return</span> <span class="nx">a</span><span class="o">;</span>
-<span class="o">+</span>        <span class="p">}</span>
-     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</pre></div>
+<pre class="actionscript">     } else if ( token.type == JSONTokenType.COMMA ) {
+         // move past the comma and read another value
+         nextToken();
++
++        // allow trailing comma.
++        if ( token.type == JSONTokenType.RIGHT_BRACKET ) {
++            return a;
++        }
+     } else {</pre>
 <p>カンマだったときに次が <code>]</code> だったら、配列を返すようにする。</p>
 <p>こんな感じで、ごにょごにょといじっていく。</p>
 <p>「2. object のキーは文字列じゃないといけない」については、そもそも JSON の仕様に identifier がないので、ECMAScript の仕様を参考にしつつ、<code>JSONTokenizer.as</code> に手を入れていった。本当はキー名として日本語などの Unicode 文字も許可しなきゃいけないんだけど、めんどくさいので</p>
-<div class="highlight"><pre><span class="sr">/^[a-z_$][a-z_$0-9]*$/</span>
-</pre></div>
+<pre class="javascript">/^[a-z_$][a-z_$0-9]*$/</pre>
 <p>を許可するキー名の条件とした。</p>
 <p>完成品のソースはここにおいてる：</p>
 <ul><li><a href="http://tech.nitoyon.com/misc/swf/as3corelib_lazy_json.zip">http://tech.nitoyon.com/misc/swf/as3corelib_lazy_json.zip</a></li></ul>
 <p>ここに置いてるやつを使えば</p>
-<div class="highlight"><pre><span class="p">{</span>
-    <span class="nx">a</span><span class="o">:</span> <span class="p">.</span><span class="mi">3</span><span class="p">,</span> 
-    <span class="nx">b</span><span class="o">:</span> <span class="p">.</span><span class="mi">4</span><span class="p">,</span> 
-    <span class="nx">c</span><span class="o">:</span> <span class="p">.</span><span class="mi">9</span><span class="p">,</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">{
+    a: .3, 
+    b: .4, 
+    c: .9, 
+}</pre>
 <p>がパースエラーにならない。やったね。</p>
 
 </div>

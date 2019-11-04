@@ -72,67 +72,65 @@
 <p>の模様。今回は swc なので CSystemLocal::open を見る。</p>
 <h1>CSystemLocal::open</h1>
 <p>flags が 0 以外のとき、つまり、read only 以外のときは失敗するようだ。</p>
-<div class="highlight"><pre>  <span class="kr">public</span> <span class="kd">function</span> <span class="nx">open</span><span class="p">(</span><span class="nx">path</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">flags</span><span class="o">:</span><span class="kr">int</span><span class="p">,</span> <span class="nx">mode</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="kr">int</span>
-  <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">spath</span><span class="o">:</span><span class="nb">String</span> <span class="o">=</span> <span class="nx">gstate</span><span class="p">.</span><span class="nx">gworker</span><span class="p">.</span><span class="nx">stringFromPtr</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+<pre class="javascript">  public function open(path:int, flags:int, mode:int):int
+  {
+    var spath:String = gstate.gworker.stringFromPtr(path);
 
-    <span class="k">if</span><span class="p">(</span><span class="nx">flags</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="p">{</span>
-<span class="nx">log</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;failed open(&quot;</span> <span class="o">+</span> <span class="nx">spath</span> <span class="o">+</span> <span class="s2">&quot;) flags(&quot;</span> <span class="o">+</span> <span class="nx">flags</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span><span class="p">);</span>
-      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
+    if(flags != 0)
+    {
+log(3, &quot;failed open(&quot; + spath + &quot;) flags(&quot; + flags + &quot;)&quot;);
+      return -1;
+    }
 
-    <span class="kd">var</span> <span class="nx">stat</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">fetch</span><span class="p">(</span><span class="nx">spath</span><span class="p">);</span>
+    var stat:Object = fetch(spath);
 
-    <span class="k">if</span><span class="p">(</span><span class="nx">stat</span><span class="p">.</span><span class="nx">pending</span><span class="p">)</span>
-      <span class="k">throw</span><span class="p">(</span><span class="k">new</span> <span class="nx">AlchemyBlock</span><span class="p">);</span>
+    if(stat.pending)
+      throw(new AlchemyBlock);
 
-    <span class="c1">// snip...</span>
+    // snip...
 
-<span class="nx">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;open(&quot;</span> <span class="o">+</span> <span class="nx">spath</span> <span class="o">+</span> <span class="s2">&quot;): &quot;</span> <span class="o">+</span> <span class="nx">io</span><span class="p">.</span><span class="nx">size</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">n</span><span class="p">;</span>
-  <span class="p">}</span>
-</pre></div>
+log(4, &quot;open(&quot; + spath + &quot;): &quot; + io.size);
+    return n;
+  }</pre>
 <p>read only のときは fetch() を呼び出す。</p>
 <h1>CSystemLocal::fetch</h1>
 <p>fetch は次のようになってる。</p>
-<div class="highlight"><pre>  <span class="kr">private</span> <span class="kd">function</span> <span class="nx">fetch</span><span class="p">(</span><span class="nx">path</span><span class="o">:</span><span class="nb">String</span><span class="p">)</span><span class="o">:</span><span class="nb">Object</span>
-  <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">res</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">statCache</span><span class="p">[</span><span class="nx">path</span><span class="p">];</span>
+<pre class="javascript">  private function fetch(path:String):Object
+  {
+    var res:Object = statCache[path];
 
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">)</span>
-    <span class="p">{</span>
-      <span class="kd">var</span> <span class="nx">gf</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="nx">gfiles</span><span class="p">[</span><span class="nx">path</span><span class="p">];</span>
+    if(!res)
+    {
+      var gf:ByteArray = gfiles[path];
 
-      <span class="k">if</span><span class="p">(</span><span class="nx">gf</span><span class="p">)</span>
-      <span class="p">{</span>
-        <span class="nx">res</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">pending</span><span class="o">:</span><span class="kc">false</span><span class="p">,</span> <span class="nx">size</span><span class="o">:</span><span class="nx">gf</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span><span class="nx">gf</span> <span class="p">};</span>
-        <span class="nx">statCache</span><span class="p">[</span><span class="nx">path</span><span class="p">]</span> <span class="o">=</span> <span class="nx">res</span><span class="p">;</span>
+      if(gf)
+      {
+        res = { pending:false, size:gf.length, data:gf };
+        statCache[path] = res;
 
-        <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
-      <span class="p">}</span>
-    <span class="p">}</span>
+        return res;
+      }
+    }
 
-    <span class="nx">Alchemy</span><span class="o">::</span><span class="nx">Shell</span> <span class="p">{</span>
+    Alchemy::Shell {
 
-      <span class="kd">var</span> <span class="nx">ns</span><span class="o">:</span><span class="nx">Namespace</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Namespace</span><span class="p">(</span><span class="s2">&quot;avmshell&quot;</span><span class="p">);</span>
-      <span class="kd">var</span> <span class="nx">file</span><span class="o">:</span><span class="nb">Object</span> <span class="o">=</span> <span class="nx">ns</span><span class="o">::</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">];</span>
-      <span class="c1">// snip...</span>
-    <span class="p">}</span>
+      var ns:Namespace = new Namespace(&quot;avmshell&quot;);
+      var file:Object = ns::[&quot;File&quot;];
+      // snip...
+    }
 
-    <span class="k">if</span><span class="p">(</span><span class="nx">forceSync</span><span class="p">)</span>
-      <span class="k">return</span> <span class="nx">res</span> <span class="o">||</span> <span class="p">{</span> <span class="nx">size</span><span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">pending</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
+    if(forceSync)
+      return res || { size: -1, pending: false };
 
-    <span class="nx">Alchemy</span><span class="o">::</span><span class="nx">NoShell</span> <span class="p">{</span>
+    Alchemy::NoShell {
 
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">)</span>
-    <span class="p">{</span>
-      <span class="kd">var</span> <span class="nx">request</span><span class="o">:</span><span class="nx">URLRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLRequest</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
-      <span class="kd">var</span> <span class="nx">loader</span><span class="o">:</span><span class="nx">URLLoader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">URLLoader</span><span class="p">();</span>
-      <span class="c1">// snip...</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-</pre></div>
+    if(!res)
+    {
+      var request:URLRequest = new URLRequest(path);
+      var loader:URLLoader = new URLLoader();
+      // snip...
+    }
+  }</pre>
 <p>ざっと見た感じでは次のように実装されている。</p>
 <ol><li>キャッシュがあればそれを利用する</li><li>gfiles からファイルのデータを取得する（gfiles には <a href="http://labs.adobe.com/wiki/index.php/Alchemy:Documentation:Developing_with_Alchemy:AS3_API#CLibInit">CLibInit::supplyFile()</a> 経由で AS3 から ByteArray を追加できる）</li><li>avmshell 上で実行しているときはファイルを開く</li><li>URLLoader を使ってロードする</li></ol>
 <p>試してみたけど、URLLoader が使われることはなかった。公式のドキュメントには特に何も書いてなかったので深追いはしなかった。</p>

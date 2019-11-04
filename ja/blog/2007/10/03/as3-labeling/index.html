@@ -64,35 +64,33 @@
 <p><center><iframe src="/misc/embed_flash.html?url=%2Fmisc%2Fswf%2FLabeling.swf&amp;bgcolor=%23ffffff" width="318" height="110" class="flash"></iframe></center></p>
 <p>BitmapData について調べているとき <a href="http://d.hatena.ne.jp/flashrod/20061015#1160910969">第1回</a>と<a href="http://d.hatena.ne.jp/flashrod/20061117#1163771538">第2回</a> を読んで、すごく参考にさせていただきました。今回、そのお礼も兼ねて(?)、第3回にツッコミをいれてみます。</p>
 <p>flashrod さんはラベリングを自力で実装されてますが、floodFill を使えば一発です。ペイントツールでいうところの「バケツ」に相当するメソッドです。斜め方向に飛び地になったピクセルが塗られないことも確認しました。</p>
-<div class="highlight"><pre><span class="cm">/** ラベリング</span>
-<span class="cm"> * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)</span>
-<span class="cm"> * @return ラベリングデータ(整数の2次元配列)</span>
-<span class="cm"> */</span>
-<span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">labeling2</span><span class="p">(</span><span class="nx">src</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">)</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">dst</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">src</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="c1">// ソースの複製を作る</span>
-    <span class="kd">var</span> <span class="nx">lno</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">dst</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0xFFFFFF</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// 白色の場合</span>
-                <span class="nx">dst</span><span class="p">.</span><span class="nx">floodFill</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="o">++</span><span class="nx">lno</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">dst</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">/** ラベリング
+ * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)
+ * @return ラベリングデータ(整数の2次元配列)
+ */
+public static function labeling2(src:BitmapData):BitmapData {
+    var dst:BitmapData = src.clone(); // ソースの複製を作る
+    var lno:int = 0;
+    for (var x:int = 0; x &lt; dst.width; x++) {
+        for (var y:int = 0; y &lt; dst.height; y++) {
+            if (dst.getPixel(x, y) == 0xFFFFFF) { // 白色の場合
+                dst.floodFill(x, y, ++lno);
+            }
+        }
+    }
+    return dst;
+}</pre>
 <p>また、ラベルデータから画像を取り出す部分も、threshold を使えば一発でいけます。</p>
-<div class="highlight"><pre><span class="cm">/** ラベル値による画像の抜き出し</span>
-<span class="cm"> * @param lbd ラベリングデータ</span>
-<span class="cm"> * @param lno ラベル番号</span>
-<span class="cm"> * @return 指定のラベル番号だけ抽出したイメージ</span>
-<span class="cm"> */</span>
-<span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">extract2</span><span class="p">(</span><span class="nx">lbd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">lno</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">dst</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">lbd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">lbd</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
-    <span class="nx">dst</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">dst</span><span class="p">,</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="nx">lno</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">dst</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">/** ラベル値による画像の抜き出し
+ * @param lbd ラベリングデータ
+ * @param lno ラベル番号
+ * @return 指定のラベル番号だけ抽出したイメージ
+ */
+public static function extract2(lbd:BitmapData, lno:int):BitmapData {
+    var dst:BitmapData = new BitmapData(lbd.width, lbd.height);
+    dst.threshold(dst, dst.rect, new Point(), &quot;==&quot;, lno);
+    return dst;
+}</pre>
 <p>と、ただ改善案を出すだけだとつまらないので、速度比較してみました。</p>
 <p>まずはラベリング。20回の実行したときの必要時間です。</p>
 <table><tr><th>オリジナル (labeling)</th><td>9563ms</td></tr><tr><th>改善版 (labeling2)</th><td>62ms</td></tr></table>
@@ -104,73 +102,72 @@
 <p>というのは munegon さんの <a href="http://void.heteml.jp/blog/archives/2007/10/tyouzetsu.html">超絶技巧発表会の資料</a>の受け売りです。この資料は BitmapData やるなら必読でしょう。勉強会のまとめエントリなんかよりも、この発表資料をブックマークすべき。1000users 超えて３日連続はてブのトップに君臨すべき。</p>
 <p>(追記) その munegon さんが<strong>さらなる高速化</strong>のアプローチを紹介してくれました。→<a href="http://void.heteml.jp/blog/archives/2007/10/as3_labeling.html">void element blog: ActionScript 3.0 でラベリング (改)を勝手に添削</a>。getColorBoundsRect を使って、getPixel を<s>一切</s>ほとんど使わないコードに仕上がっています。匠の技だ…。毎度毎度ありがとうございます。大変参考になります。</p>
 <p>今回のデモのソースコードはこちら(66行)。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.geom.Point;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;318&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;110&quot;</span><span class="p">,</span> <span class="nx">frameRate</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Labeling</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;flex.gif&quot;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">FlexImage</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    [SWF(width=&quot;318&quot;, height=&quot;110&quot;, frameRate=&quot;2&quot;)]
+    public class Labeling extends Sprite {
+        [Embed(source=&quot;flex.gif&quot;)]
+        private var FlexImage:Class;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Labeling</span><span class="p">()</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">bmp</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FlexImage</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmp</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">;</span>
+        public function Labeling() {
+            var bmp:Bitmap = new FlexImage();
+            addChild(bmp);
+            var bmd:BitmapData = bmp.bitmapData;
 
-            <span class="c1">// ２値化</span>
-            <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="mh">0x000000</span><span class="p">);</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">);</span>
+            // ２値化
+            var bmd2:BitmapData = new BitmapData(bmd.width, bmd.height, false, 0x000000);
+            bmd2.threshold(bmd, bmd.rect, new Point(), &quot;&lt;&quot;, 0xffffffff, 0xffffffff);
 
-            <span class="c1">// ラベリング</span>
-            <span class="kd">var</span> <span class="nx">labeled</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">labeling2</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">bmp2</span><span class="o">:</span><span class="nx">Bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Bitmap</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">bmp2</span><span class="p">).</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+            // ラベリング
+            var labeled:BitmapData = labeling2(bmd2);
+            var bmp2:Bitmap = new Bitmap();
+            addChild(bmp2).x = bmd.width;
 
-            <span class="c1">// 描画</span>
-            <span class="kd">var</span> <span class="nx">lno</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">bmdtmp</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">labeled</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">bmp2</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">)</span> <span class="nx">bmp2</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
-                <span class="nx">bmp2</span><span class="p">.</span><span class="nx">bitmapData</span> <span class="o">=</span> <span class="nx">extract2</span><span class="p">(</span><span class="nx">labeled</span><span class="p">,</span> <span class="o">++</span><span class="nx">lno</span><span class="p">);</span>
+            // 描画
+            var lno:int = 0;
+            var bmdtmp:BitmapData = labeled.clone();
+            addEventListener(&quot;enterFrame&quot;, function(e:*):void {
+                if(bmp2.bitmapData) bmp2.bitmapData.dispose();
+                bmp2.bitmapData = extract2(labeled, ++lno);
 
-                <span class="c1">// ラベルが見つからなかったときは 0 に戻す</span>
-                <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">bmdtmp</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmp2</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">,</span> <span class="nx">bmp2</span><span class="p">.</span><span class="nx">bitmapData</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">))</span> <span class="p">{</span>
-                    <span class="nx">lno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+                // ラベルが見つからなかったときは 0 に戻す
+                if(!bmdtmp.threshold(bmp2.bitmapData, bmp2.bitmapData.rect, new Point(), &quot;==&quot;, 0xffffffff)) {
+                    lno = 0;
+                }
+            });
+        }
 
-        <span class="cm">/** ラベリング</span>
-<span class="cm">         * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)</span>
-<span class="cm">         * @return ラベリングデータ(整数の2次元配列)</span>
-<span class="cm">         */</span>
-        <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">labeling2</span><span class="p">(</span><span class="nx">src</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">)</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">dst</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">src</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="c1">// ソースの複製を作る</span>
-            <span class="kd">var</span> <span class="nx">lno</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="nx">dst</span><span class="p">.</span><span class="nx">getPixel</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0xFFFFFF</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// 白色の場合</span>
-                        <span class="nx">dst</span><span class="p">.</span><span class="nx">floodFill</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="o">++</span><span class="nx">lno</span><span class="p">);</span>
-                    <span class="p">}</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-            <span class="k">return</span> <span class="nx">dst</span><span class="p">;</span>
-        <span class="p">}</span>
+        /** ラベリング
+         * @param src ラベリング対象ビットマップデータ(モノクロ2値ビットマップ)
+         * @return ラベリングデータ(整数の2次元配列)
+         */
+        public static function labeling2(src:BitmapData):BitmapData {
+            var dst:BitmapData = src.clone(); // ソースの複製を作る
+            var lno:int = 0;
+            for (var x:int = 0; x &lt; dst.width; x++) {
+                for (var y:int = 0; y &lt; dst.height; y++) {
+                    if (dst.getPixel(x, y) == 0xFFFFFF) { // 白色の場合
+                        dst.floodFill(x, y, ++lno);
+                    }
+                }
+            }
+            return dst;
+        }
 
-        <span class="cm">/** ラベル値による画像の抜き出し</span>
-<span class="cm">         * @param lbd ラベリングデータ</span>
-<span class="cm">         * @param lno ラベル番号</span>
-<span class="cm">         * @return 指定のラベル番号だけ抽出したイメージ</span>
-<span class="cm">         */</span>
-        <span class="kr">public</span> <span class="kr">static</span> <span class="kd">function</span> <span class="nx">extract2</span><span class="p">(</span><span class="nx">lbd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">lno</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">dst</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BitmapData</span><span class="p">(</span><span class="nx">lbd</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">lbd</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="mh">0xff000000</span><span class="p">);</span>
-            <span class="nx">dst</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">lbd</span><span class="p">,</span> <span class="nx">lbd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="mh">0xff000000</span> <span class="o">+</span> <span class="nx">lno</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">);</span>
-            <span class="k">return</span> <span class="nx">dst</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        /** ラベル値による画像の抜き出し
+         * @param lbd ラベリングデータ
+         * @param lno ラベル番号
+         * @return 指定のラベル番号だけ抽出したイメージ
+         */
+        public static function extract2(lbd:BitmapData, lno:int):BitmapData {
+            var dst:BitmapData = new BitmapData(lbd.width, lbd.height, true, 0xff000000);
+            dst.threshold(lbd, lbd.rect, new Point(), &quot;==&quot;, 0xff000000 + lno, 0xffffffff);
+            return dst;
+        }
+    }
+}</pre>
 
 </div>
 

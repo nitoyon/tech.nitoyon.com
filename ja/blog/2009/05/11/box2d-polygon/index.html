@@ -64,13 +64,12 @@
 <ol><li>点を定義する順番に注意</li><li>凸包にせよ</li><li>頂点数は８個まで</li><li>多角形の中心を取得してる？</li></ol>
 <h1>基本</h1>
 <p><code>vertexCount</code> に頂点の数、<code>vertices</code> 配列に頂点の座標を設定する。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">shapeDef</span><span class="o">:</span><span class="nx">b2PolygonDef</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">b2PolygonDef</span><span class="p">();</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertexCount</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">);</span>
-<span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">);</span>
-</pre></div>
-<p><code>shapeDef</code> を作ったあとにどうすべきかは、<a href="2009-04-28-box2dflashas3_2_0_2">2009-04-28-box2dflashas3_2_0_2</a> をご覧あれ。</p>
+<pre class="javascript">var shapeDef:b2PolygonDef = new b2PolygonDef();
+shapeDef.vertexCount = 3;
+shapeDef.vertices[0].Set(0, 0);
+shapeDef.vertices[1].Set(50, 50);
+shapeDef.vertices[2].Set(50, -50);</pre>
+<p><code>shapeDef</code> を作ったあとにどうすべきかは、<a href="/2009-04-28-box2dflashas3_2_0_2">/2009-04-28-box2dflashas3_2_0_2</a> をご覧あれ。</p>
 <h1>はまりポイント１：点を定義する順番に注意</h1>
 <p>時計回りに座標をしないとダメ。</p>
 <p>反時計周りにすると、落ちてこなかったりする。</p>
@@ -88,46 +87,44 @@
 <p>図の左側がその例。一番下の頂点に全ての四角形の頂点が集中しているが、この頂点が衝突したときの計算量が増えて処理落ちしてしまう。</p>
 <p>右の例のように頂点を分散させる工夫が必要だ。</p>
 <p><a href="/ja/blog/2009/04/15/hokkaido/">北海道を落とすとどう跳ねるのか？</a> では特定の頂点から開始して、左回り・右回りに多角形に使う頂点を選んでいってる。少し複雑になってるが、上の図の右にある分解を実現している。</p>
-<div class="highlight"><pre><span class="c1">// points には x 座標、 y 座標が順番に入ってる</span>
-<span class="kd">var</span> <span class="nx">x0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">(),</span> <span class="nx">y0</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">y1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">(),</span> <span class="nx">x1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+<pre class="javascript">// points には x 座標、 y 座標が順番に入ってる
+var x0:Number = points.shift(), y0:Number = points.shift();
+var y1:Number = points.pop(), x1:Number = points.pop();
 
-<span class="c1">// 点がある限り続ける</span>
-<span class="k">while</span><span class="p">(</span><span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">){</span>
-    <span class="c1">// 今回の多角形の頂点数を決める。最大 8</span>
-    <span class="kd">var</span> <span class="nx">pointsLeft</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">points</span><span class="p">.</span><span class="nx">length</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
+// 点がある限り続ける
+while(points.length){
+    // 今回の多角形の頂点数を決める。最大 8
+    var pointsLeft:int = Math.min(points.length / 2 + 2, 8);
 
-    <span class="c1">// 1つ目と最後の頂点を設定する</span>
-    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
-    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">pointsLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
-    <span class="c1">// 残りの点を設定</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">pointsLeft</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
-            <span class="c1">// 偶数版目は時計回りの点を設定する</span>
-            <span class="nx">x0</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
-            <span class="nx">y0</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">shift</span><span class="p">();</span>
-            <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y0</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="c1">// 奇数版目は反時計回りの場所にある点を設定する</span>
-            <span class="nx">y1</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
-            <span class="nx">x1</span> <span class="o">=</span> <span class="nx">points</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
-            <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertices</span><span class="p">[</span><span class="nx">pointsLeft</span> <span class="o">-</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">i</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">].</span><span class="nx">Set</span><span class="p">(</span><span class="nx">x1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">,</span> <span class="nx">y1</span> <span class="o">/</span> <span class="nx">SCALE</span> <span class="o">*</span> <span class="nx">zoom</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    // 1つ目と最後の頂点を設定する
+    shapeDef.vertices[0].Set(x0 / SCALE * zoom, y0 / SCALE * zoom);
+    shapeDef.vertices[pointsLeft - 1].Set(x1 / SCALE * zoom, y1 / SCALE * zoom);
+    // 残りの点を設定
+    for(var i:int = 2; i &lt; pointsLeft; i++){
+        if (i % 2 == 0){
+            // 偶数版目は時計回りの点を設定する
+            x0 = points.shift();
+            y0 = points.shift();
+            shapeDef.vertices[i / 2].Set(x0 / SCALE * zoom, y0 / SCALE * zoom);
+        } else {
+            // 奇数版目は反時計回りの場所にある点を設定する
+            y1 = points.pop();
+            x1 = points.pop();
+            shapeDef.vertices[pointsLeft - Math.floor(i / 2) - 1].Set(x1 / SCALE * zoom, y1 / SCALE * zoom);
+        }
+    }
 
-    <span class="c1">// 点の数を設定して、shape を追加する</span>
-    <span class="nx">shapeDef</span><span class="p">.</span><span class="nx">vertexCount</span> <span class="o">=</span> <span class="nx">pointsLeft</span><span class="p">;</span>
-    <span class="nx">body</span><span class="p">.</span><span class="nx">CreateShape</span><span class="p">(</span><span class="nx">shapeDef</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+    // 点の数を設定して、shape を追加する
+    shapeDef.vertexCount = pointsLeft;
+    body.CreateShape(shapeDef);
+}</pre>
 <p>ただ、このように分解した結果、分解した多角形の隙間を小さな島がすり抜けてしまう現象が発生してしまった。図形のサイズが一定ではない場合には、<code>b2_maxPolygonVertices</code> を変更する方法を選択すべきだったのかもしれない。</p>
 <h1>はまりポイント４：多角形の中心を取得してる？</h1>
 <p><code>b2DebugDraw</code> を使っていると気づきにくいのだけど、物体の位置は物体の重心で表現される。そのため、多角形を表示する <code>Sprite</code> は <code>Sprite</code> の <code>(0, 0)</code> を物体の重心に合わせておくべきだ。そうしないと、物体がずれて表示されてしまう。</p>
 <p>重心はあらかじめ計算しておくこともできるが、複数の shape を組み合わせたり、物体を動的に作ったりする場合には面倒だ。Box2d が認識している重心を取得するのが確実だろう。</p>
 <p>この１文で完璧。</p>
-<div class="highlight"><pre><span class="c1">// SetMassFromShapes() を実行したあとに調べてね</span>
-<span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">b2Vec2</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">GetLocalCenter</span><span class="p">();</span>
-</pre></div>
+<pre class="javascript">// SetMassFromShapes() を実行したあとに調べてね
+var center:b2Vec2 = body.GetLocalCenter();</pre>
 <p><code>Sprite</code> の <code>(0, 0)</code> をこの座標に対応する位置にしておこう。</p>
 </section>
 

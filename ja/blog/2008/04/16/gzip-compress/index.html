@@ -75,19 +75,18 @@ RewriteRule ^errors\.js$ errors.js.gz</pre>
 <h1>AS3 だと</h1>
 <p>いまんとこ、全部 JS でやってるんだけど、AS3 でやるならどうするのがよいかも調査しておいた。</p>
 <p>ByteArray で writeObject したやつを compress しておくとよさげ。ファイルに書き出すために AIR を使った。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">bytes</span><span class="o">:</span><span class="nx">ByteArray</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ByteArray</span><span class="p">();</span>
-<span class="nx">bytes</span><span class="p">.</span><span class="nx">writeObject</span><span class="p">(</span><span class="nx">errors</span><span class="p">);</span>
-<span class="nx">bytes</span><span class="p">.</span><span class="nx">compress</span><span class="p">();</span>
+<pre class="javascript">var bytes:ByteArray = new ByteArray();
+bytes.writeObject(errors);
+bytes.compress();
 
-<span class="c1">// ファイルに出力</span>
-<span class="c1">// C:\Documents and Settings\username\Application Data\AppName\Local Store</span>
-<span class="kd">var</span> <span class="nx">fs</span><span class="o">:</span><span class="nx">FileStream</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileStream</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">file</span><span class="o">:</span><span class="nx">File</span> <span class="o">=</span> <span class="nx">File</span><span class="p">.</span><span class="nx">applicationStorageDirectory</span><span class="p">.</span><span class="nx">resolvePath</span><span class="p">(</span><span class="s2">&quot;out.bin&quot;</span><span class="p">);</span>
-<span class="nx">trace</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">nativePath</span><span class="p">);</span>
-<span class="nx">fs</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">);</span>
-<span class="nx">fs</span><span class="p">.</span><span class="nx">writeBytes</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span>
-<span class="nx">fs</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
-</pre></div>
+// ファイルに出力
+// C:\Documents and Settings\username\Application Data\AppName\Local Store
+var fs:FileStream = new FileStream();
+var file:File = File.applicationStorageDirectory.resolvePath(&quot;out.bin&quot;);
+trace(file.nativePath);
+fs.open(file, &quot;write&quot;);
+fs.writeBytes(bytes);
+fs.close();</pre>
 <p>読み出すときは、URLLoader 使って、ByteArray 化したあと、uncompress して readObject すれば復元できる。</p>
 <p>こちらは zlib 使ってるらしく、ファイルサイズは同じぐらいの130KBまで小さくなった。</p>
 <p>動的なデータで同じことやるなら、 AMF 使うのが素直だと思う。</p>

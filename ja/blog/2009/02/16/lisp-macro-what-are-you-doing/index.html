@@ -13,7 +13,7 @@
 	<meta property="og:title" content="Common Lisp のマクロが何をやってるか把握する"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2009/02/16/lisp-macro-what-are-you-doing/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="Common Lisp のマクロの背後で何が行われているのかがいまいち分からなかったので、少し詳しく見ていくことにした。On Lisp の7章 マクロ には、defmacro と macroexpand-1 の内部処理を Lisp でエミュレートしたコードが紹介されている。(defmacro our-expander (name) `(get ,name &#39;expander))(defmacro our-defmacro (name parms &amp;body body) (let ((g (gensym))) `(progn (setf (our-expander &amp;#39..."/>
+	<meta property="og:description" content="Common Lisp のマクロの背後で何が行われているのかがいまいち分からなかったので、少し詳しく見ていくことにした。On Lisp の7章 マクロ には、defmacro と macroexpand-1 の内部処理を Lisp でエミュレートしたコードが紹介されている。(defmacro our-expander (name) `(get ,name &#39;expander))(defmacro our-defmacro (name parms &amp;body body) (let ((g (gensym))) `(progn (setf (our-expander &#39;,name) ..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -62,52 +62,47 @@
 <section>
 <p>Common Lisp のマクロの背後で何が行われているのかがいまいち分からなかったので、少し詳しく見ていくことにした。</p>
 <p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274066371/nitoyoncom-22/ref=nosim">On Lisp</a> の<a href="http://user.ecc.u-tokyo.ac.jp/~tt076524/onlispjhtml/macros.html">7章 マクロ</a> には、<code>defmacro</code> と <code>macroexpand-1</code> の内部処理を Lisp でエミュレートしたコードが紹介されている。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="nb">defmacro</span> <span class="nv">our-expander</span> <span class="p">(</span><span class="nv">name</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="nb">get</span> <span class="o">,</span><span class="nv">name</span> <span class="ss">&#39;expander</span><span class="p">))</span>
+<pre class="lisp">(defmacro our-expander (name) `(get ,name 'expander))
 
-<span class="p">(</span><span class="nb">defmacro</span> <span class="nv">our-defmacro</span> <span class="p">(</span><span class="nv">name</span> <span class="nv">parms</span> <span class="k">&amp;body</span> <span class="nv">body</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">g</span> <span class="p">(</span><span class="nb">gensym</span><span class="p">)))</span>
-    <span class="o">`</span><span class="p">(</span><span class="k">progn</span>
-       <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="ss">&#39;,name</span><span class="p">)</span>
-             <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="o">,</span><span class="nv">g</span><span class="p">)</span>
-                 <span class="p">(</span><span class="k">block</span> <span class="o">,</span><span class="nv">name</span>
-                        <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="o">,</span><span class="nv">parms</span> <span class="p">(</span><span class="nb">cdr</span> <span class="o">,</span><span class="nv">g</span><span class="p">)</span>
-                          <span class="o">,@</span><span class="nv">body</span><span class="p">))))</span>
-       <span class="ss">&#39;,name</span><span class="p">)))</span>
+(defmacro our-defmacro (name parms &amp;body body)
+  (let ((g (gensym)))
+    `(progn
+       (setf (our-expander ',name)
+             #'(lambda (,g)
+                 (block ,name
+                        (destructuring-bind ,parms (cdr ,g)
+                          ,@body))))
+       ',name)))
 
-<span class="p">(</span><span class="nb">defun</span> <span class="nv">our-macroexpand-1</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nb">and</span> <span class="p">(</span><span class="nb">consp</span> <span class="nv">expr</span><span class="p">)</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">)))</span>
-      <span class="p">(</span><span class="nb">funcall</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">))</span> <span class="nv">expr</span><span class="p">)</span>
-      <span class="nv">expr</span><span class="p">))</span>
-</pre></div>
+(defun our-macroexpand-1 (expr)
+  (if (and (consp expr) (our-expander (car expr)))
+      (funcall (our-expander (car expr)) expr)
+      expr))</pre>
 <p>7章の冒頭に登場する <code>nil!</code> を <code>our-defmacro</code> を使って定義したとしよう。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="nv">our-defmacro</span> <span class="nv">nil!</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">(our-defmacro nil! (var) `(setq ,var nil))</pre>
 <p>このとき、いったいどういう処理が実施されてるんだろう。それ理解するのが今回の趣旨。</p>
 <h1>our-defmacro がすること</h1>
 <p>our-defmacro はマクロなので、<code>(our-defmacro nil! (var) `(setq ,var nil))</code> は次のように展開される。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="k">progn</span>
-  <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="ss">&#39;nil!</span><span class="p">)</span>
-        <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="ss">#:G3123</span><span class="p">)</span>
-            <span class="p">(</span><span class="k">block</span> <span class="nv">nil!</span>
-                   <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="ss">#:G3123</span><span class="p">)</span>
-                   <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">)))))</span>
-  <span class="ss">&#39;nil!</span><span class="p">)))</span>
-<span class="c1">; #:G3123 が gensym で定義されたシンボルだとしておく</span>
-</pre></div>
+<pre class="lisp">(progn
+  (setf (our-expander 'nil!)
+        #'(lambda (#:G3123)
+            (block nil!
+                   (destructuring-bind (var) (cdr #:G3123)
+                   `(setq ,var nil)))))
+  'nil!)))
+; #:G3123 が gensym で定義されたシンボルだとしておく</pre>
 <p><code>progn</code> では２つの式を順番に評価している。１つ目が <code>setf</code> で２つ目が <code>&#39;nil!</code> だ。</p>
 <p>２つ目の結果が <code>progn</code> の評価結果となるので、この式の戻り値はシンボル <code>nil!</code> となる。</p>
 <p>１つ目の <code>setf</code> のところを見ていこう。<code>our-expander</code> マクロが登場してるのでこれも展開してみる。</p>
-<div class="highlight"><pre>  <span class="p">(</span><span class="nb">setf</span> <span class="p">(</span><span class="nb">get</span> <span class="ss">&#39;nil!</span> <span class="ss">&#39;expander</span><span class="p">)</span> <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="ss">#:G3123</span><span class="p">)</span> <span class="p">(</span><span class="o">...</span><span class="p">))</span> <span class="p">)</span>
-</pre></div>
+<pre class="lisp">  (setf (get 'nil! 'expander) #'(lambda (#:G3123) (...)) )</pre>
 <p><code>nil!</code> シンボルの <code>expander</code> プロパティに lambda を設定している。この lambda は ANSI Common Lisp の仕様書で expansion function と定義されているものに該当するようだ。</p>
 <p>expansion function は「マクロを展開する処理」を実装した関数である。マクロ評価時に expansion function がどうやって呼ばれるかを見ていこう。</p>
 <h1>expansion function はどう呼ばれるか</h1>
 <p>expansion function を呼び出すのは <code>our-macroexpand-1</code> だ。こいつを見ていく。</p>
-<div class="highlight"><pre><span class="p">(</span><span class="nb">defun</span> <span class="nv">our-macroexpand-1</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nb">and</span> <span class="p">(</span><span class="nb">consp</span> <span class="nv">expr</span><span class="p">)</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">)))</span>
-      <span class="p">(</span><span class="nb">funcall</span> <span class="p">(</span><span class="nv">our-expander</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">expr</span><span class="p">))</span> <span class="nv">expr</span><span class="p">)</span>
-      <span class="nv">expr</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">(defun our-macroexpand-1 (expr)
+  (if (and (consp expr) (our-expander (car expr)))
+      (funcall (our-expander (car expr)) expr)
+      expr))</pre>
 <p>この関数は <code>(our-macro-expand &#39;(nil! x))</code> のように呼び出す。</p>
 <p>１行目の <code>if</code> では、引数のチェックをしている。</p>
 <ol><li><code>expr</code> が <code>cons</code> であるか？</li><li><code>car expr</code>（つまり <code>&#39;nil!</code>）に <code>expand</code> プロパティが定義されているか？</li></ol>
@@ -117,26 +112,21 @@
 <h1>expansion function の定義を見つつ、our-macroexpand-1 の結果を追う</h1>
 <p>引数が分かったところで、expansion function の動きを追っていく。</p>
 <p>expansion function を再掲しておく。この関数の引数が <code>&#39;(nil! x)</code> である。</p>
-<div class="highlight"><pre>  <span class="nf">#&#39;</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">expr</span><span class="p">)</span>
-      <span class="p">(</span><span class="k">block</span> <span class="nv">nil!</span>
-             <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">expr</span><span class="p">)</span>
-             <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">)))))</span>
-</pre></div>
+<pre class="lisp">  #'(lambda (expr)
+      (block nil!
+             (destructuring-bind (var) (cdr expr)
+             `(setq ,var nil)))))</pre>
 <p><code>(block nil! ...)</code> では <code>nil!</code> という名前のブロックを定義してる。この構文のおかげで、マクロの中で <code>return-from nil!</code> を実行できるわけだ。</p>
 <p>次の、<code>destructuring-bind</code> は <code>var</code> に引数の <code>cdr</code> を代入してる。ただの代入じゃなくて、構造化代入を使ってるが、詳しくは、On Lisp の <a href="http://user.ecc.u-tokyo.ac.jp/~tt076524/onlispjhtml/destructuring.html">18. 構造化代入</a> に書いてあるのでここでは触れない。</p>
 <p>ということで、ブロックの中を整理すると、次のような評価になる。</p>
-<div class="highlight"><pre>  <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nv">x</span><span class="p">)</span> <span class="o">`</span><span class="p">(</span><span class="k">setq</span> <span class="o">,</span><span class="nv">var</span> <span class="no">nil</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">  (destructuring-bind (var) (x) `(setq ,var nil))</pre>
 <p>シングルクォートで書き直すとこうなる。</p>
-<div class="highlight"><pre>  <span class="p">(</span><span class="nb">destructuring-bind</span> <span class="p">(</span><span class="nv">var</span><span class="p">)</span> <span class="p">(</span><span class="nv">x</span><span class="p">)</span> <span class="p">(</span><span class="nb">list</span> <span class="ss">&#39;setq</span> <span class="nv">var</span> <span class="ss">&#39;nil</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">  (destructuring-bind (var) (x) (list 'setq var 'nil))</pre>
 <p>さらに <code>let</code> で書き直すとこうなる。</p>
-<div class="highlight"><pre>  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">var</span> <span class="nv">x</span><span class="p">))</span>
-    <span class="p">(</span><span class="nb">list</span> <span class="ss">&#39;setq</span> <span class="nv">var</span> <span class="ss">&#39;nil</span><span class="p">))</span>
-</pre></div>
+<pre class="lisp">  (let ((var x))
+    (list 'setq var 'nil))</pre>
 <p>つまり、expansion function の評価結果は</p>
-<div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">x</span> <span class="no">nil</span><span class="p">)</span>
-</pre></div>
+<pre class="lisp">(setq x nil)</pre>
 <p>である。</p>
 <h1>おわりに</h1>
 <p>マクロの説明なのにマクロを使ってるのが少し気持ち悪いが、処理系内で何が起こってるかを説明するためにはこのような書き方になるんだと思う。</p>

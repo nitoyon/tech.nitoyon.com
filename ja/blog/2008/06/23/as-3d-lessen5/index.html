@@ -67,13 +67,12 @@
 <h1>ActionScript 3 で画像を歪ませる方法</h1>
 <p>ここからは完全に AS3 に限定したノウハウになる。</p>
 <p>答えは Graphics.beginBitmapFill() メソッドにある。</p>
-<div class="highlight"><pre><span class="kr">public</span> <span class="kd">function</span> <span class="nx">beginBitmapFill</span><span class="p">(</span>
-    <span class="nx">bitmap</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span>      <span class="c1">// 表示するビットマップ</span>
-    <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix</span> <span class="o">=</span> <span class="kc">null</span><span class="p">,</span>   <span class="c1">// 変形方法を Matrix で指定</span>
-    <span class="nx">repeat</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>  <span class="c1">// リピートするか</span>
-    <span class="nx">smooth</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">false</span>  <span class="c1">// スムース化するか</span>
-<span class="p">)</span><span class="o">:</span><span class="k">void</span>
-</pre></div>
+<pre class="javascript">public function beginBitmapFill(
+    bitmap:BitmapData,      // 表示するビットマップ
+    matrix:Matrix = null,   // 変形方法を Matrix で指定
+    repeat:Boolean = true,  // リピートするか
+    smooth:Boolean = false  // スムース化するか
+):void</pre>
 <p>第二引数の Matrix をうまく渡してやれば、望みの通りの形に歪ませて描画できる。</p>
 <p>計算方法がちょっと複雑なので、既成のライブラリを使うのも手だろう。いずれも内部では beginBitmapFill() を利用している。</p>
 <ul><li><a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a></li><li><a href="http://www.rubenswieringa.com/blog/distortimage">DistortImage</a></li></ul>
@@ -88,205 +87,204 @@
 <h1>まとめ</h1>
 <p>テクスチャを張る方法を紹介した。今回は立方体に画像を貼り付ける方法を紹介した。球面のようななめらかな面の場合は、球の表面をいくつもの三角形に分解して同じ方法を適用する。原理は全く同じ。</p>
 <p>ソースコードは以下に（198行）：</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">Event</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setInterval</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">TextField</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.utils.Dictionary;
+    import flash.utils.setInterval;
+    import flash.text.TextField;
+    import five3D.geom.Matrix3D;
+    import five3D.geom.Point3D;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">backgroundColor</span><span class="o">=</span><span class="s2">&quot;0x000000&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Study3d5</span> <span class="kr">extends</span> <span class="nx">Sprite</span><span class="p">{</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">canvas</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">cubes</span><span class="o">:</span><span class="nb">Array</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">rad</span><span class="o">:</span><span class="nb">Number</span><span class="p">;</span>
+    [SWF(backgroundColor=&quot;0x000000&quot;)]
+    public class Study3d5 extends Sprite{
+        private var canvas:Sprite;
+        private var cubes:Array;
+        private var rad:Number;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Study3d5</span><span class="p">(){</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">align</span> <span class="o">=</span> <span class="s2">&quot;TL&quot;</span><span class="p">;</span>
+        public function Study3d5(){
+            stage.scaleMode = &quot;noScale&quot;;
+            stage.align = &quot;TL&quot;;
 
-            <span class="nx">cubes</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">));</span>
+            cubes = [];
+            cubes.push(new Cube(0, 0, 0, 120));
 
-            <span class="nx">canvas</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+            canvas = new Sprite();
+            addChild(canvas);
+            canvas.x = 200;
+            canvas.y = 150;
 
-            <span class="kd">var</span> <span class="nx">textField</span><span class="o">:</span><span class="nx">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TextField</span><span class="p">();</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">textColor</span> <span class="o">=</span> <span class="mh">0xffffff</span><span class="p">;</span>
-            <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;click to start&quot;</span><span class="p">;</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
+            var textField:TextField = new TextField();
+            textField.textColor = 0xffffff;
+            textField.text = &quot;click to start&quot;;
+            addChild(textField);
 
-            <span class="nx">rad</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nx">Event</span><span class="p">)</span><span class="o">:</span><span class="k">void</span><span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">f</span><span class="p">){</span>
-                    <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;click to stop&quot;</span><span class="p">;</span>
-                    <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-                <span class="p">}</span><span class="k">else</span><span class="p">{</span>
-                    <span class="nx">textField</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;click to start&quot;</span><span class="p">;</span>
-                    <span class="nx">addChild</span><span class="p">(</span><span class="nx">textField</span><span class="p">);</span>
-                    <span class="nx">removeEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="nx">changeHandler</span><span class="p">);</span>
-                <span class="p">}</span>
-                <span class="nx">f</span> <span class="o">=</span> <span class="o">!</span><span class="nx">f</span><span class="p">;</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+            rad = 0;
+            var f:Boolean = true;
+            stage.addEventListener(&quot;click&quot;, function(event:Event):void{
+                if(f){
+                    textField.text = &quot;click to stop&quot;;
+                    addEventListener(&quot;enterFrame&quot;, changeHandler);
+                }else{
+                    textField.text = &quot;click to start&quot;;
+                    addChild(textField);
+                    removeEventListener(&quot;enterFrame&quot;, changeHandler);
+                }
+                f = !f;
+            });
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">changeHandler</span><span class="p">(</span><span class="nx">event</span><span class="o">:</span><span class="nb">Object</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+        private function changeHandler(event:Object):void {
+            canvas.graphics.clear();
 
-            <span class="c1">// 回転行列を作成</span>
-            <span class="kd">var</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Matrix3D</span><span class="p">();</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateX</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">6</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateY</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">3</span><span class="p">);</span>
-            <span class="nx">matrix</span><span class="p">.</span><span class="nx">rotateZ</span><span class="p">(</span><span class="nx">rad</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">);</span>
+            // 回転行列を作成
+            var matrix:Matrix3D = new Matrix3D();
+            matrix.rotateX(Math.PI / 6);
+            matrix.rotateY(rad / 180 * Math.PI * 3);
+            matrix.rotateZ(rad / 180 * Math.PI);
 
-            <span class="c1">// それぞれの立方体の中心のZ座標を取得する</span>
-            <span class="kd">var</span> <span class="nx">dic</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">c</span><span class="o">:</span><span class="nx">Cube</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-                <span class="kd">var</span> <span class="nx">center</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">center</span><span class="p">);</span>
-                <span class="nx">dic</span><span class="p">[</span><span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">center</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
-            <span class="p">}</span>
+            // それぞれの立方体の中心のZ座標を取得する
+            var dic:Dictionary = new Dictionary();
+            for each(var c:Cube in cubes){
+                var center:Point3D = matrix.transformPoint(c.center);
+                dic[c] = center.z;
+            }
 
-            <span class="c1">// Zソート (奥のものから順番に並べる)</span>
-            <span class="nx">cubes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nx">Cube</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nx">Cube</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-                <span class="k">return</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">dic</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
-            <span class="p">});</span>
+            // Zソート (奥のものから順番に並べる)
+            cubes.sort(function(a:Cube, b:Cube):Number {
+                return dic[b] - dic[a];
+            });
 
-            <span class="c1">// 奥から描画</span>
-            <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="nx">cubes</span><span class="p">){</span>
-                <span class="nx">c</span><span class="p">.</span><span class="nx">draw</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-            <span class="p">}</span>
+            // 奥から描画
+            for each(c in cubes){
+                c.draw(canvas.graphics, matrix, 200);
+            }
 
-           <span class="c1">// 角度更新</span>
-            <span class="nx">rad</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span>
-         <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+           // 角度更新
+            rad = (rad + 1) % 360;
+         }
+    }
+}
 
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="nx">Graphics</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">Dictionary</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point3D</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">five3D</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Matrix3D</span><span class="p">;</span>
+import flash.display.Graphics;
+import flash.geom.Point;
+import flash.utils.Dictionary;
+import five3D.geom.Point3D;
+import five3D.geom.Matrix3D;
 
-<span class="kr">class</span> <span class="nx">Cube</span> <span class="p">{</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;1.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img1</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;2.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img2</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;3.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img3</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;4.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img4</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;5.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img5</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
-    <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;6.jpg&quot;</span><span class="p">)]</span>
-    <span class="kr">private</span> <span class="kr">static</span> <span class="kd">var</span> <span class="nx">Img6</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+class Cube {
+    [Embed(source=&quot;1.jpg&quot;)]
+    private static var Img1:Class;
+    [Embed(source=&quot;2.jpg&quot;)]
+    private static var Img2:Class;
+    [Embed(source=&quot;3.jpg&quot;)]
+    private static var Img3:Class;
+    [Embed(source=&quot;4.jpg&quot;)]
+    private static var Img4:Class;
+    [Embed(source=&quot;5.jpg&quot;)]
+    private static var Img5:Class;
+    [Embed(source=&quot;6.jpg&quot;)]
+    private static var Img6:Class;
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">images</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
+    private var images:Array = [];
 
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">points</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kr">private</span> <span class="kd">var</span> <span class="nx">_center</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
+    private var points:Array = [];
+    private var _center:Point3D;
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">get</span> <span class="nx">center</span><span class="p">()</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">_center</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function get center():Point3D {
+        return _center;
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Cube</span><span class="p">(</span><span class="nx">x</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">z</span><span class="o">:</span><span class="nb">Number</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="nb">Number</span><span class="p">){</span>
-        <span class="nx">_center</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">);</span>
+    public function Cube(x:Number, y:Number, z:Number, len:Number){
+        _center = new Point3D(x, y, z);
 
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img1</span><span class="p">());</span>
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img2</span><span class="p">());</span>
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img3</span><span class="p">());</span>
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img4</span><span class="p">());</span>
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img5</span><span class="p">());</span>
-        <span class="nx">images</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Img6</span><span class="p">());</span>
+        images.push(new Img1());
+        images.push(new Img2());
+        images.push(new Img3());
+        images.push(new Img4());
+        images.push(new Img5());
+        images.push(new Img6());
 
-        <span class="kd">var</span> <span class="nx">diff</span><span class="o">:</span><span class="nb">Function</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="o">:</span><span class="nb">Boolean</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span><span class="p">{</span><span class="k">return</span> <span class="nx">f</span> <span class="o">?</span> <span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">:</span> <span class="o">-</span><span class="nx">len</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;};</span>
+        var diff:Function = function(f:Boolean):Number{return f ? len / 2 : -len / 2;};
 
-        <span class="c1">// 立方体の頂点８つを作成する</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>  <span class="nx">y</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">z</span> <span class="o">+</span> <span class="nx">diff</span><span class="p">(</span><span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">));</span>
-            <span class="nx">points</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">p</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 立方体の頂点８つを作成する
+        for(var i:int = 0; i &lt; 8; i++){
+            var p:Point3D = new Point3D(x + diff(i % 4 % 3 == 0),  y + diff(i % 4 &lt; 2), z + diff(i &lt; 4));
+            points.push(p);
+        }
+    }
 
-    <span class="kr">public</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">matrix</span><span class="o">:</span><span class="nx">Matrix3D</span><span class="p">,</span> <span class="nx">f</span><span class="o">:</span><span class="nb">Number</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">// 回転後の座標を計算</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="kd">var</span> <span class="nx">pt</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">matrix</span><span class="p">.</span><span class="nx">transformPoint</span><span class="p">(</span><span class="nx">points</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">pt</span><span class="p">);</span>
-        <span class="p">}</span>
+    public function draw(g:Graphics, matrix:Matrix3D, f:Number):void {
+        // 回転後の座標を計算
+        var p:Array = [];
+        for(var i:int = 0; i &lt; points.length; i++){
+            var pt:Point3D = matrix.transformPoint(points[i]);
+            p.push(pt);
+        }
 
-        <span class="c1">// 面の一覧</span>
-        <span class="kd">var</span> <span class="nx">planes</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">4</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">],</span>
-            <span class="p">[</span><span class="nx">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">images</span><span class="p">[</span><span class="mi">5</span><span class="p">].</span><span class="nx">bitmapData</span><span class="p">]</span>
-        <span class="p">];</span>
+        // 面の一覧
+        var planes:Array = [
+            [p[0], p[1], p[2], p[3], images[0].bitmapData],
+            [p[7], p[6], p[5], p[4], images[1].bitmapData],
+            [p[0], p[4], p[5], p[1], images[2].bitmapData],
+            [p[1], p[5], p[6], p[2], images[3].bitmapData],
+            [p[2], p[6], p[7], p[3], images[4].bitmapData],
+            [p[3], p[7], p[4], p[0], images[5].bitmapData]
+        ];
 
-        <span class="c1">// 面の中心のZ座標を求める</span>
-        <span class="kd">var</span> <span class="nx">z</span><span class="o">:</span><span class="nx">Dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dictionary</span><span class="p">();</span>
-        <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">planes</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-            <span class="nx">z</span><span class="p">[</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">1</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">2</span><span class="p">].</span><span class="nx">z</span> <span class="o">+</span> <span class="nx">planes</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">3</span><span class="p">].</span><span class="nx">z</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">;</span>
-        <span class="p">}</span>
+        // 面の中心のZ座標を求める
+        var z:Dictionary = new Dictionary();
+        for(i = 0; i &lt; planes.length; i++){
+            z[planes[i]] = (planes[i][0].z + planes[i][1].z + planes[i][2].z + planes[i][3].z) / 4;
+        }
 
-        <span class="c1">// Zソート (奥のものから順番に並べる)</span>
-        <span class="nx">planes</span><span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="o">:</span><span class="nb">Array</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="nb">Array</span><span class="p">)</span><span class="o">:</span><span class="nb">Number</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">z</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">-</span> <span class="nx">z</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
-        <span class="p">});</span>
+        // Zソート (奥のものから順番に並べる)
+        planes.sort(function(a:Array, b:Array):Number {
+            return z[b] - z[a];
+        });
 
-        <span class="c1">// 奥から順番に面を描画</span>
-        <span class="kd">var</span> <span class="nx">index</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="k">for</span> <span class="nx">each</span><span class="p">(</span><span class="kd">var</span> <span class="nx">plane</span><span class="o">:</span><span class="nb">Array</span> <span class="k">in</span> <span class="nx">planes</span><span class="p">){</span>
-            <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">plane</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        // 奥から順番に面を描画
+        var index:int = 0;
+        for each(var plane:Array in planes){
+            drawPlane(g, plane[4], plane[0], plane[1], plane[2], plane[3]);
+        }
+    }
 
-    <span class="kr">private</span> <span class="kd">function</span> <span class="nx">drawPlane</span><span class="p">(</span><span class="nx">g</span><span class="o">:</span><span class="nx">Graphics</span><span class="p">,</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p3</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p4</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-        <span class="c1">// 単位法線ベクトル</span>
-        <span class="kd">var</span> <span class="nx">v1</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">v2</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">p1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">n</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">v1</span><span class="p">,</span> <span class="nx">v2</span><span class="p">);</span>
-        <span class="nx">n</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    private function drawPlane(g:Graphics, bmd:BitmapData, p1:Point3D, p2:Point3D, p3:Point3D, p4:Point3D):void {
+        // 単位法線ベクトル
+        var v1:Point3D = p2.subtract(p1);
+        var v2:Point3D = p4.subtract(p1);
+        var n:Point3D = cross(v1, v2);
+        n.normalize(1);
 
-        <span class="c1">// 裏側の面は描画しない</span>
-        <span class="kd">var</span> <span class="nx">l</span><span class="o">:</span><span class="nx">Point3D</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-        <span class="kd">var</span> <span class="nx">product</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">product</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-            <span class="k">return</span><span class="p">;</span>
-        <span class="p">}</span>
+        // 裏側の面は描画しない
+        var l:Point3D = new Point3D(0, 0, -1);
+        var product:Number = n.dot(l);
+        if(product &lt; 0){
+            return;
+        }
 
-        <span class="c1">// 透視投影しつつ２次元座標に変換する</span>
-        <span class="kd">var</span> <span class="nx">p</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">pp1</span><span class="o">:</span><span class="nx">Point</span><span class="p">,</span> <span class="nx">pp2</span><span class="o">:</span><span class="nx">Point</span><span class="p">,</span> <span class="nx">pp3</span><span class="o">:</span><span class="nx">Point</span><span class="p">,</span> <span class="nx">pp4</span><span class="o">:</span><span class="nx">Point</span><span class="p">;</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">pp1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">pp2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p3</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">pp3</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
-        <span class="nx">p</span> <span class="o">=</span> <span class="nx">p4</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span> <span class="nx">p</span><span class="p">.</span><span class="nx">project</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">getPerspective</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span> <span class="nx">pp4</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>
+        // 透視投影しつつ２次元座標に変換する
+        var p:Point3D;
+        var pp1:Point, pp2:Point, pp3:Point, pp4:Point;
+        p = p1.clone(); p.project(p.getPerspective(500)); pp1 = new Point(p.x, p.y);
+        p = p2.clone(); p.project(p.getPerspective(500)); pp2 = new Point(p.x, p.y);
+        p = p3.clone(); p.project(p.getPerspective(500)); pp3 = new Point(p.x, p.y);
+        p = p4.clone(); p.project(p.getPerspective(500)); pp4 = new Point(p.x, p.y);
 
-        <span class="c1">// 変形してビットマップを表示</span>
-        <span class="nx">TransformUtil</span><span class="p">.</span><span class="nx">drawBitmapQuadrangle</span><span class="p">(</span><span class="nx">g</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">,</span> 
-            <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> 
-            <span class="nx">pp1</span><span class="p">,</span> <span class="nx">pp2</span><span class="p">,</span> <span class="nx">pp4</span><span class="p">,</span> <span class="nx">pp3</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+        // 変形してビットマップを表示
+        TransformUtil.drawBitmapQuadrangle(g, bmd, 
+            new Point(0, 0), new Point(100, 0), new Point(0, 100), new Point(100, 100), 
+            pp1, pp2, pp4, pp3);
+    }
+}
 
-<span class="c1">// 外積</span>
-<span class="kd">function</span> <span class="nx">cross</span><span class="p">(</span><span class="nx">p1</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">,</span> <span class="nx">p2</span><span class="o">:</span><span class="nx">Point3D</span><span class="p">)</span><span class="o">:</span><span class="nx">Point3D</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">new</span> <span class="nx">Point3D</span><span class="p">(</span><span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
-                       <span class="nx">p1</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">p1</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">p2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
+// 外積
+function cross(p1:Point3D, p2:Point3D):Point3D {
+    return new Point3D(p1.y * p2.z - p1.z * p2.y,
+                       p1.z * p2.x - p1.x * p2.z,
+                       p1.x * p2.y - p1.y * p2.x);
+}</pre>
 </section>
 
 </div>

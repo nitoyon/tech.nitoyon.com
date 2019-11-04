@@ -70,34 +70,31 @@
 <p>依存関係が設定されているので、shell プロジェクトをビルドするだけで、avmplus.exe ができあがる。もちろん、バッチビルドしてもいいけど。</p>
 <h1>お試し</h1>
 <p>プレゼンにもあったソースを試してみた。</p>
-<div class="highlight"><pre><span class="c1">// hoge.as : 正規表現で grep</span>
-<span class="kr">import</span> <span class="nx">avmplus</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">re</span> <span class="o">=</span> <span class="nb">RegExp</span><span class="p">(</span><span class="nx">System</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-<span class="kd">var</span> <span class="nx">line</span><span class="p">;</span>
-<span class="k">while</span> <span class="p">(</span><span class="nx">line</span> <span class="o">=</span> <span class="nx">System</span><span class="p">.</span><span class="nx">readLine</span><span class="p">())</span> 
-  <span class="k">if</span> <span class="p">(</span><span class="nx">line</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">re</span><span class="p">))</span>
-    <span class="nx">System</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">line</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">// hoge.as : 正規表現で grep
+import avmplus.*;
+var re = RegExp(System.argv[0]);
+var line;
+while (line = System.readLine()) 
+  if (line.match(re))
+    System.write(line + '\n');</pre>
 <p>プレゼン通りに asc_authoring.jar で ByteCode を生成して、avmplus.exe で実行できました。すばらしい。</p>
-<div class="highlight"><pre><span class="nv">$ </span>java -jar asc_authoring.jar -import global.abc hoge.as
+<pre class="sh">$ java -jar asc_authoring.jar -import global.abc hoge.as
 
-hoge.abc, <span class="m">220</span> bytes written
+hoge.abc, 220 bytes written
 
-<span class="nv">$ </span>avmplus.exe hoge.abc var &lt; hoge.as
-var <span class="nv">re</span> <span class="o">=</span> RegExp<span class="o">(</span>System.argv<span class="o">[</span>0<span class="o">])</span><span class="p">;</span>
-var line<span class="p">;</span>
-</pre></div>
+$ avmplus.exe hoge.abc var &lt; hoge.as
+var re = RegExp(System.argv[0]);
+var line;</pre>
 <p>で、この <strong>import avmplus.*</strong> って何？</p>
 <h1>avmplus パッケージの謎</h1>
 <p>avmplus パッケージは ActionScript の言語仕様ではなく、shell プロジェクトで定義されている。</p>
 <p>例えば、avmplus.System.write の実体は tamarin/shell/SystemClass.cpp の中で次のように定義されている。</p>
-<div class="highlight"><pre>  <span class="kt">void</span> <span class="n">SystemClass</span><span class="o">::</span><span class="n">write</span><span class="p">(</span><span class="n">Stringp</span> <span class="n">s</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">s</span><span class="p">)</span>
-      <span class="n">toplevel</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">throwArgumentError</span><span class="p">(</span><span class="n">kNullArgumentError</span><span class="p">,</span> <span class="s">&quot;string&quot;</span><span class="p">);</span>
-    <span class="n">core</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">console</span> <span class="o">&lt;&lt;</span> <span class="n">s</span><span class="p">;</span>
-  <span class="p">}</span>
-</pre></div>
+<pre class="cpp">  void SystemClass::write(Stringp s)
+  {
+    if (!s)
+      toplevel()-&gt;throwArgumentError(kNullArgumentError, &quot;string&quot;);
+    core()-&gt;console &lt;&lt; s;
+  }</pre>
 <p>つまり、ActionScript ByteCode な世界から呼び出すパッケージを C++ で実装できる、というわけ。</p>
 <p>shell プロジェクトは高々5,000行なので、解読も比較的簡単。自分オリジナルの avmplus.exe を作れちゃう！？</p>
 <p>avmplus.Win32.CreateWindow とか avmplus.Win32.COM.CreateObject(&quot;InternetExplorer.Application&quot;) とか、avmplus.exe 側で実装さえすればできちゃうわけですよ。楽しそう！</p>

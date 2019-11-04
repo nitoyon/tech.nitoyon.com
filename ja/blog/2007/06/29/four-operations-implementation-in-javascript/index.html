@@ -71,27 +71,25 @@
 <p>演算子は ==、!= およびビット演算子のみ使ってよいものとします。</p>
 <h2>補足</h2>
 <p>例えば、for 文で</p>
-<div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">for(var i = 0; i &lt; 10; i++){
+    // ...
+}</pre>
 <p>と書くためには、&lt; 演算子と ++ 演算子を自前で実装しなきゃならない。</p>
 <p>++ 演算子は次のように定義できる。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">increment</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">i</span> <span class="o">&amp;</span> <span class="nx">c</span><span class="p">){</span>
-            <span class="nx">i</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="nx">c</span><span class="p">;</span>
-            <span class="nx">c</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span><span class="p">{</span>
-            <span class="nx">i</span> <span class="o">|=</span> <span class="nx">c</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">i</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function increment(i){
+    var c = 1;
+    while(c){
+        if(i &amp; c){
+            i &amp;= ~c;
+            c &lt;&lt;= 1;
+        }
+        else{
+            i |= c;
+            break;
+        }
+    }
+    return i;
+}</pre>
 <p>一番右のビットから見ていって、1 である限りは 0 にしていく。0 ならそのビットを 1 して終わり。桁あふれなら終了、としている。</p>
 <p>例を書くと分かりやすいかもしれない。</p>
 <pre>   01001111
@@ -102,31 +100,29 @@
 <h1>加算</h1>
 <p>前置きが長くなったけど、まずは足し算から。</p>
 <p>すごく簡単にやるなら、さっきの increment を使って</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add_simple</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
-        <span class="nx">a</span> <span class="o">=</span> <span class="nx">increment</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>
-        <span class="nx">b</span> <span class="o">=</span> <span class="nx">decrement</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">a</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function add_simple(a, b){
+    while(b){
+        a = increment(a);
+        b = decrement(b);
+    }
+    return a;
+}</pre>
 <p>と書いてしまえば終わり。decrement は increment とほぼ同じコードで実装できる。</p>
 <p>ただ、この実装だと、b が -1 (0xffffffff) のときに42億回 while 文が回ってしまうのでダメすぎ、実用に耐えなさすぎ。</p>
 <p>ということで、改良。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">sum</span> <span class="o">=</span> <span class="nx">a</span><span class="p">;</span>
+<pre class="javascript">function add(a, b){
+    var sum = a;
 
-    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
-        <span class="kd">var</span> <span class="nx">carry</span> <span class="o">=</span> <span class="p">(</span><span class="nx">a</span> <span class="o">&amp;</span> <span class="nx">b</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">sum</span> <span class="o">=</span> <span class="nx">a</span> <span class="o">^</span> <span class="nx">b</span><span class="p">;</span>
+    while(b){
+        var carry = (a &amp; b) &lt;&lt; 1;
+        sum = a ^ b;
 
-        <span class="nx">a</span> <span class="o">=</span> <span class="nx">sum</span><span class="p">;</span>
-        <span class="nx">b</span> <span class="o">=</span> <span class="nx">carry</span><span class="p">;</span>
-    <span class="p">}</span>
+        a = sum;
+        b = carry;
+    }
 
-    <span class="k">return</span> <span class="nx">sum</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    return sum;
+}</pre>
 <p>a ^ b で各桁単独の足し算を取得しつつ、a &amp; b で繰り上げを計算。繰り上げがある場合は、繰り上げ部分を足して、それでも繰り上がればまた足して・・・の繰り返し。</p>
 <pre>a   01011010
 b +)01001001
@@ -152,35 +148,33 @@ b   00000000 &lt;- b が 0 なので終了</pre>
 <p>負の数でもうまく理由が分からない人は２の補数（後述）を勉強してね。</p>
 <h1>減算</h1>
 <p>これはだいぶ簡単。</p>
-<div class="highlight"><pre><span class="c1">// 正・負を入れ替える</span>
-<span class="kd">function</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">){</span>
-    <span class="k">return</span> <span class="nx">add</span><span class="p">(</span><span class="o">~</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-<span class="p">}</span>
+<pre class="javascript">// 正・負を入れ替える
+function reverse_sign(a){
+    return add(~a, 1);
+}
 
-<span class="kd">function</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="k">return</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
-<span class="p">}</span>
-</pre></div>
+function sub(a, b){
+    return add(a, reverse_sign(b));
+}</pre>
 <p>2の補数って知ってる？ で終わり。</p>
 <p>2の補数は慣れるまで分かりにくい概念だけど、こう考えてみるのはどうだろう。</p>
 <ul><li>10進数で12桁の電卓があります</li><li>でも、壊れていて下4桁しか表示できません</li><li>3 + 9999 は 10002 だけど、この電卓で表示したら 2</li><li>同じように 5 + 9999 = 4、9 + 9999 = 8</li><li>この壊れた電卓では 9999 は -1 と同じ！？</li><li>9999 = 10000 - 1</li><li>10000 を足そうが引こうが表示中の値は変わらない</li><li>3 + 9999 = 3 + (10000 - 1) = 3 - 1</li></ul>
 <h1>乗算</h1>
 <p>次は掛け算。桁あふれは無視してる。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">product</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<pre class="javascript">function mul(a, b){
+    var product = 0;
 
-    <span class="k">while</span><span class="p">(</span><span class="nx">b</span><span class="p">){</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">b</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">){</span>
-            <span class="nx">product</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">product</span><span class="p">,</span> <span class="nx">a</span><span class="p">);</span>
-        <span class="p">}</span>
+    while(b){
+        if(b &amp; 1){
+            product = add(product, a);
+        }
 
-        <span class="nx">a</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">b</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
+        a &lt;&lt;= 1;
+        b &gt;&gt;= 1;
+    }
 
-    <span class="k">return</span> <span class="nx">product</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    return product;
+}</pre>
 <p>筆算のやり方を思い出せば簡単。</p>
 <pre>     1010
    x)0101
@@ -193,68 +187,66 @@ b   00000000 &lt;- b が 0 なので終了</pre>
   0110010</pre>
 <p>b の i ビット目が 1 なら、a を i ビット左にシフトしたものを足す、というだけの実装。</p>
 <p>上の実装は負の値を無視してしまってるので、まじめにやるならこうなる。</p>
-<div class="highlight"><pre><span class="c1">// 正の数かどうか調べる</span>
-<span class="kd">function</span> <span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">){</span>
-    <span class="k">return</span> <span class="p">(</span><span class="nx">a</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">31</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
+<pre class="javascript">// 正の数かどうか調べる
+function is_positive(a){
+    return (a &gt;&gt;&gt; 31) == 0;
+}
 
-<span class="kd">function</span> <span class="nx">mul2</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">b</span><span class="p">)){</span>
-        <span class="k">return</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
-    <span class="p">}</span>
-    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">a</span><span class="p">)){</span>
-        <span class="k">return</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">mul</span><span class="p">(</span><span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">b</span><span class="p">));</span>
-    <span class="p">}</span>
-    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">b</span><span class="p">)){</span>
-        <span class="k">return</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">reverse_sign</span><span class="p">(</span><span class="nx">b</span><span class="p">)));</span>
-    <span class="p">}</span>
-    <span class="k">else</span><span class="p">{</span>
-        <span class="k">return</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+function mul2(a, b){
+    if(!is_positive(a) &amp;&amp; !is_positive(b)){
+        return mul(reverse_sign(a), reverse_sign(b));
+    }
+    else if(!is_positive(a)){
+        return reverse_sign(mul(reverse_sign(a), b));
+    }
+    else if(!is_positive(b)){
+        return reverse_sign(mul(a, reverse_sign(b)));
+    }
+    else{
+        return mul(a, b);
+    }
+}</pre>
 <p>is_positive 関数で int が 32bit だと仮定しているあたりがかっこ悪いけど、これが一番シンプルかと。</p>
 <h1>除算</h1>
 <p>長かった。いよいよ割り算。Google の電話面接で聞かれるだけあって複雑。</p>
 <p>0 での除算や正負は考えずに実装した。</p>
-<div class="highlight"><pre><span class="c1">// 比較演算子の代わり</span>
-<span class="kd">function</span> <span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">s</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">is_positive</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
+<pre class="javascript">// 比較演算子の代わり
+function cmp(a, b){
+    var s = sub(a, b);
+    return s == 0 ? 0 : is_positive(s) ? 1 : -1;
+}
 
-<span class="c1">// MSB = 最上位ビット(Most Significant Bit) を取得</span>
-<span class="kd">function</span> <span class="nx">msb</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
-        <span class="nx">i</span> <span class="o">&gt;&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="nx">ret</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">ret</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
-<span class="p">}</span>
+// MSB = 最上位ビット(Most Significant Bit) を取得
+function msb(i){
+    var ret = 0;
+    while(i){
+        i &gt;&gt;&gt;= 1;
+        ret = add(ret, 1);
+    }
+    return ret;
+}
 
-<span class="kd">function</span> <span class="nx">div</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">quotient</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+function div(a, b){
+    var quotient = 0;
 
-    <span class="k">if</span><span class="p">(</span><span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="p">}</span>
+    if(cmp(a, b) == -1){
+        return 0;
+    }
 
-    <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">msb</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">msb</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
-    <span class="k">while</span><span class="p">(</span><span class="nx">is_positive</span><span class="p">(</span><span class="nx">i</span><span class="p">)){</span>
-        <span class="nx">quotient</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+    var i = sub(msb(a), msb(b));
+    while(is_positive(i)){
+        quotient &lt;&lt;= 1;
 
-        <span class="k">if</span><span class="p">(</span><span class="nx">cmp</span><span class="p">(</span><span class="nx">a</span> <span class="o">&gt;&gt;</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
-            <span class="nx">a</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="o">&lt;&lt;</span> <span class="nx">i</span><span class="p">);</span>
-            <span class="nx">quotient</span> <span class="o">=</span> <span class="nx">add</span><span class="p">(</span><span class="nx">quotient</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-        <span class="p">}</span>
+        if(cmp(a &gt;&gt; i, b) != -1){
+            a = sub(a, b &lt;&lt; i);
+            quotient = add(quotient, 1);
+        }
 
-        <span class="nx">i</span> <span class="o">=</span> <span class="nx">sub</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-    <span class="p">}</span>
+        i = sub(i, 1);
+    }
 
-    <span class="k">return</span> <span class="nx">quotient</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+    return quotient;
+}</pre>
 <p>これも筆算をイメージして実装。でも複雑なので説明する体力なし。</p>
 <p>もっとスマートな実装はないものか...　もしくはもっとアクロバティックなの。</p>
 <p>すごい人達に期待。改良案や別の言語での実装をお待ちしています。</p>

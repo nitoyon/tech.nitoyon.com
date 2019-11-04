@@ -79,177 +79,175 @@
 <p>ガンマ補正の式において x<sub>m</sub> = x<sub>b</sub> - x<sub>w</sub> となります。また、x = x<sub>g</sub> - x<sub>b</sub> のときに x&#39;/x<sub>m</sub>=0.5 となることから、<img src="http://chart.apis.google.com/chart?cht=tx&amp;chf=bg,s,00000000&amp;chl=%5Cgamma" class="tex" alt="\gamma"> についての方程式を解くことができます。</p>
 <center><img src="http://chart.apis.google.com/chart?cht=tx&amp;chf=bg,s,00000000&amp;chl=%5Cgamma%3D%5Cfrac%7B%5Clog%5Cfrac%7Bx_g-x_b%7D%7Bx_w-x_b%7D%7D%7B%5Clog+0.5%7D" class="tex" alt="\gamma=\frac{\log\frac{x_g-x_b}{x_w-x_b}}{\log 0.5}"></center>
 <p>ということで、スライダの値を反映させる部分のソースコードはこうなってます。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">gamma</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">((</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">mapR</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapG</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapB</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">i</span> <span class="o">&gt;</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mh">0xff</span> <span class="o">:</span> <span class="mi">255</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">i</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="nx">gamma</span><span class="p">);</span>
-    <span class="nx">mapG</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">;</span>
-    <span class="nx">mapR</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="nx">bmd</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">bmdOrigin</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">mapR</span><span class="p">,</span> <span class="nx">mapG</span><span class="p">,</span> <span class="nx">mapB</span><span class="p">);</span>
-</pre></div>
+<pre class="javascript">var gamma:Number = Math.log((h2.x - h1.x) / (h3.x - h1.x)) / Math.log(0.5);
+var mapR:Array = [], mapG:Array = [], mapB:Array = [];
+for(var i:int = 0; i &lt; 0x100; i++) {
+    mapB[i] = i &lt; h1.x ? 0 : i &gt; h3.x ? 0xff : 255 * Math.pow((i - h1.x) / (h3.x - h1.x), 1 / gamma);
+    mapG[i] = mapB[i] &lt;&lt; 8;
+    mapR[i] = mapB[i] &lt;&lt; 16;
+}
+bmd.paletteMap(bmdOrigin, bmd.rect, new Point(), mapR, mapG, mapB);</pre>
 <p>全体のソースコードは158行です。凝ったことをしている割には、意外と短いと思いませんか？　ActionScript の表現力に感心してしまいます。</p>
 <p>明日は、ちょっと趣向を変えて、別のヒストグラムを取り上げます。</p>
 <p>ソースコード全体は以下に(158行)。</p>
-<div class="highlight"><pre><span class="kr">package</span> <span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">filters</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
+<pre class="javascript">package {
+    import flash.display.*;
+    import flash.filters.*;
+    import flash.geom.*;
 
-    <span class="p">[</span><span class="nx">SWF</span><span class="p">(</span><span class="nx">width</span><span class="o">=</span><span class="s2">&quot;256&quot;</span><span class="p">,</span> <span class="nx">height</span><span class="o">=</span><span class="s2">&quot;410&quot;</span><span class="p">)]</span>
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">Histogram3</span> <span class="kr">extends</span> <span class="nx">Sprite</span> <span class="p">{</span>
-        <span class="p">[</span><span class="nx">Embed</span><span class="p">(</span><span class="nx">source</span><span class="o">=</span><span class="s2">&quot;kunimi.jpg&quot;</span><span class="p">)]</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">SampleImage</span><span class="o">:</span><span class="nx">Class</span><span class="p">;</span>
+    [SWF(width=&quot;256&quot;, height=&quot;410&quot;)]
+    public class Histogram3 extends Sprite {
+        [Embed(source=&quot;kunimi.jpg&quot;)]
+        private var SampleImage:Class;
 
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">dragging</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2pos</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h1</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h2</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
-        <span class="kr">private</span> <span class="kd">var</span> <span class="nx">h3</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">;</span>
+        private var dragging:Sprite;
+        private var h2pos:Number = 0.5;
+        private var h1:Sprite;
+        private var h2:Sprite;
+        private var h3:Sprite;
 
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">Histogram3</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">scaleMode</span> <span class="o">=</span> <span class="s2">&quot;noScale&quot;</span><span class="p">;</span>
+        public function Histogram3() {
+            stage.scaleMode = &quot;noScale&quot;;
 
-            <span class="kd">var</span> <span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">Bitmap</span><span class="p">(</span><span class="nx">addChild</span><span class="p">(</span><span class="k">new</span> <span class="nx">SampleImage</span><span class="p">())).</span><span class="nx">bitmapData</span><span class="p">;</span>
+            var bmd:BitmapData = Bitmap(addChild(new SampleImage())).bitmapData;
 
-            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span>
-            <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
+            var s:Sprite = new Sprite();
+            addChild(s).y = bmd.height + 10;
+            createHistogram(bmd, s);
 
-            <span class="nx">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">s</span><span class="p">).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">140</span><span class="p">;</span>
-            <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
+            s = new Sprite();
+            addChild(s).y = bmd.height + 140;
+            createHistogram(bmd, s);
 
-            <span class="nx">addChild</span><span class="p">(</span><span class="nx">createSlider</span><span class="p">()).</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">+</span> <span class="mi">115</span><span class="p">;</span>
+            addChild(createSlider()).y = bmd.height + 115;
 
-            <span class="kd">var</span> <span class="nx">bmdOrigin</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-            <span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;enterFrame&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">var</span> <span class="nx">gamma</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">((</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
-                    <span class="kd">var</span> <span class="nx">mapR</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapG</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">mapB</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-                    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">i</span> <span class="o">&gt;</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">?</span> <span class="mh">0xff</span> <span class="o">:</span> <span class="mi">255</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">((</span><span class="nx">i</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="nx">gamma</span><span class="p">);</span>
-                        <span class="nx">mapG</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">;</span>
-                        <span class="nx">mapR</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mapB</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">;</span>
-                    <span class="p">}</span>
-                    <span class="nx">bmd</span><span class="p">.</span><span class="nx">paletteMap</span><span class="p">(</span><span class="nx">bmdOrigin</span><span class="p">,</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">mapR</span><span class="p">,</span> <span class="nx">mapG</span><span class="p">,</span> <span class="nx">mapB</span><span class="p">);</span>
+            var bmdOrigin:BitmapData = bmd.clone();
+            addEventListener(&quot;enterFrame&quot;, function(e:*):void {
+                if(dragging) {
+                    var gamma:Number = Math.log((h2.x - h1.x) / (h3.x - h1.x)) / Math.log(0.5);
+                    var mapR:Array = [], mapG:Array = [], mapB:Array = [];
+                    for(var i:int = 0; i &lt; 0x100; i++) {
+                        mapB[i] = i &lt; h1.x ? 0 : i &gt; h3.x ? 0xff : 255 * Math.pow((i - h1.x) / (h3.x - h1.x), 1 / gamma);
+                        mapG[i] = mapB[i] &lt;&lt; 8;
+                        mapR[i] = mapB[i] &lt;&lt; 16;
+                    }
+                    bmd.paletteMap(bmdOrigin, bmd.rect, new Point(), mapR, mapG, mapB);
 
-                    <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
-                    <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="p">,</span> <span class="nx">s</span><span class="p">);</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
-        <span class="p">}</span>
+                    s.graphics.clear();
+                    createHistogram(bmd, s);
+                }
+            });
+        }
 
-        <span class="c1">// ヒストグラムを作成する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createHistogram</span><span class="p">(</span><span class="nx">bmd</span><span class="o">:</span><span class="nx">BitmapData</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="c1">// グレースケール化</span>
-            <span class="kd">var</span> <span class="nx">cmf</span><span class="o">:</span><span class="nx">ColorMatrixFilter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ColorMatrixFilter</span><span class="p">(</span>
-                <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
-                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
-                 <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">bmd2</span><span class="o">:</span><span class="nx">BitmapData</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">applyFilter</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="nx">cmf</span><span class="p">);</span>
+        // ヒストグラムを作成する
+        private function createHistogram(bmd:BitmapData, s:Sprite):void {
+            // グレースケール化
+            var cmf:ColorMatrixFilter = new ColorMatrixFilter(
+                [1 / 3, 1 / 3, 1 / 3, 0, 0, 
+                 1 / 3, 1 / 3, 1 / 3, 0, 0, 
+                 1 / 3, 1 / 3, 1 / 3, 0, 0]
+            );
+            var bmd2:BitmapData = bmd.clone();
+            bmd2.applyFilter(bmd2, bmd2.rect, new Point(), cmf);
 
-            <span class="c1">// threshold でカウント</span>
-            <span class="kd">var</span> <span class="nx">values</span><span class="o">:</span><span class="nb">Array</span> <span class="o">=</span> <span class="p">[];</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">threshold</span><span class="p">(</span><span class="nx">bmd2</span><span class="p">,</span> <span class="nx">bmd2</span><span class="p">.</span><span class="nx">rect</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(),</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> 
-                    <span class="nx">i</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="nx">bmd2</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
+            // threshold でカウント
+            var values:Array = [];
+            for(var i:int = 0; i &lt; 0x100; i++) {
+                values[i] = bmd2.threshold(bmd2, bmd2.rect, new Point(), &quot;==&quot;, 
+                    i + (i &lt;&lt; 8) + (i &lt;&lt; 16), 0, 0xffffff, false);
+            }
+            bmd2.dispose();
 
-            <span class="c1">// 描画</span>
-            <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="kr">int</span> <span class="o">=</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">bmd</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="mi">50</span><span class="p">;</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-            <span class="k">for</span><span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mh">0x100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">moveTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
-                <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="nx">values</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">/</span> <span class="nx">max</span> <span class="o">*</span> <span class="mi">100</span><span class="p">));</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
+            // 描画
+            var max:int = bmd.width * bmd.height / 50;
+            s.graphics.lineStyle(1);
+            for(i = 0; i &lt; 0x100; i++) {
+                s.graphics.moveTo(i, 100);
+                s.graphics.lineTo(i, Math.max(0, 100 - values[i] / max * 100));
+            }
+        }
 
-        <span class="c1">// スライダーを作成する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createSlider</span><span class="p">()</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
-            <span class="c1">// スライド可能範囲描画</span>
-            <span class="kd">var</span> <span class="nx">slider</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">drawRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">buttonMode</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">useHandCursor</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        // スライダーを作成する
+        private function createSlider():Sprite {
+            // スライド可能範囲描画
+            var slider:Sprite = new Sprite();
+            slider.graphics.beginFill(0xffffff);
+            slider.graphics.drawRect(0, 0, 256, 10);
+            slider.graphics.endFill();
+            slider.graphics.lineStyle(1, 0);
+            slider.graphics.lineTo(255, 0);
+            slider.buttonMode = true;
+            slider.useHandCursor = true;
 
-            <span class="c1">// つまみ作成</span>
-            <span class="nx">h1</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x000000</span><span class="p">)));</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="nx">h2</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0x999999</span><span class="p">)));</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">128</span><span class="p">;</span>
-            <span class="nx">h3</span> <span class="o">=</span> <span class="nx">Sprite</span><span class="p">(</span><span class="nx">slider</span><span class="p">.</span><span class="nx">addChild</span><span class="p">(</span><span class="nx">createButton</span><span class="p">(</span><span class="mh">0xffffff</span><span class="p">)));</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+            // つまみ作成
+            h1 = Sprite(slider.addChild(createButton(0x000000))); h1.x = 0;
+            h2 = Sprite(slider.addChild(createButton(0x999999))); h2.x = 128;
+            h3 = Sprite(slider.addChild(createButton(0xffffff))); h3.x = 255;
 
-            <span class="c1">// mouseDown</span>
-            <span class="nx">slider</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseDown&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">localX</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nx">slider</span><span class="p">.</span><span class="nx">globalToLocal</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">mouseY</span><span class="p">)).</span><span class="nx">x</span><span class="p">;</span>
+            // mouseDown
+            slider.addEventListener(&quot;mouseDown&quot;, function(e:*):void {
+                var localX:Number = slider.globalToLocal(new Point(mouseX, mouseY)).x;
 
-                <span class="c1">// ドラッグするつまみを決定する</span>
-                <span class="kd">var</span> <span class="nx">d1</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">d2</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">d3</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">localX</span> <span class="o">-</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="kd">var</span> <span class="nx">max</span><span class="o">:</span><span class="nb">Number</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">d1</span><span class="p">,</span> <span class="nx">d2</span><span class="p">,</span> <span class="nx">d3</span><span class="p">);</span>
-                <span class="nx">dragging</span> <span class="o">=</span> <span class="p">(</span><span class="nx">max</span> <span class="o">==</span> <span class="nx">d1</span> <span class="o">?</span> <span class="nx">h1</span> <span class="o">:</span> <span class="nx">max</span> <span class="o">==</span> <span class="nx">d2</span> <span class="o">?</span> <span class="nx">h2</span> <span class="o">:</span> <span class="nx">h3</span><span class="p">);</span>
+                // ドラッグするつまみを決定する
+                var d1:Number = Math.abs(localX - h1.x);
+                var d2:Number = Math.abs(localX - h2.x);
+                var d3:Number = Math.abs(localX - h3.x);
+                var max:Number = Math.min(d1, d2, d3);
+                dragging = (max == d1 ? h1 : max == d2 ? h2 : h3);
 
-                <span class="c1">// 場所補正</span>
-                <span class="kd">var</span> <span class="nx">bounds</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="o">=</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">dragging</span><span class="p">);</span>
-                <span class="nx">dragging</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">localX</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">right</span><span class="p">),</span> <span class="nx">bounds</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-                <span class="nx">updateH2</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+                // 場所補正
+                var bounds:Rectangle = getDraggableBounds(dragging);
+                dragging.x = Math.max(Math.min(localX, bounds.right), bounds.x);
+                updateH2(null);
 
-                <span class="nx">dragging</span><span class="p">.</span><span class="nx">startDrag</span><span class="p">(</span><span class="kc">false</span><span class="p">,</span> <span class="nx">bounds</span><span class="p">);</span>
-            <span class="p">});</span>
+                dragging.startDrag(false, bounds);
+            });
 
-            <span class="c1">// mouseMove</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseMove&quot;</span><span class="p">,</span> <span class="nx">updateH2</span><span class="p">);</span>
+            // mouseMove
+            stage.addEventListener(&quot;mouseMove&quot;, updateH2);
 
-            <span class="c1">// mouseUp</span>
-            <span class="nx">stage</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;mouseUp&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">dragging</span><span class="p">.</span><span class="nx">stopDrag</span><span class="p">();</span>
-                    <span class="nx">dragging</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">});</span>
+            // mouseUp
+            stage.addEventListener(&quot;mouseUp&quot;, function(e:*):void {
+                if(dragging) {
+                    dragging.stopDrag();
+                    dragging = null;
+                }
+            });
 
-            <span class="k">return</span> <span class="nx">slider</span><span class="p">;</span>
-        <span class="p">}</span>
+            return slider;
+        }
 
-        <span class="c1">// つまみを描画する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">createButton</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="nx">Sprite</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sprite</span><span class="p">();</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineStyle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">lineTo</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mf">8.6</span><span class="p">);</span>
-            <span class="nx">s</span><span class="p">.</span><span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-            <span class="k">return</span> <span class="nx">s</span><span class="p">;</span>
-        <span class="p">}</span>
+        // つまみを描画する
+        private function createButton(color:int):Sprite {
+            var s:Sprite = new Sprite();
+            s.graphics.lineStyle(1, 0);
+            s.graphics.beginFill(color);
+            s.graphics.lineTo(5, 8.6);
+            s.graphics.lineTo(-5, 8.6);
+            s.graphics.endFill();
+            return s;
+        }
 
-        <span class="c1">// つまみの移動可能範囲を計算する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">getDraggableBounds</span><span class="p">(</span><span class="nx">s</span><span class="o">:</span><span class="nx">Sprite</span><span class="p">)</span><span class="o">:</span><span class="nx">Rectangle</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h1</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">s</span> <span class="o">==</span> <span class="nx">h3</span><span class="p">)</span> <span class="k">return</span> <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
-        <span class="p">}</span>
+        // つまみの移動可能範囲を計算する
+        private function getDraggableBounds(s:Sprite):Rectangle {
+            if(s == h1) return new Rectangle(0, 0, h3.x - 4, 0);
+            if(s == h2) return new Rectangle(h1.x + 2, 0, h3.x - h1.x - 4, 0);
+            if(s == h3) return new Rectangle(h1.x + 4, 0, 255 - h1.x - 4, 0);
+            return null;
+        }
 
-        <span class="c1">// 真ん中のつまみの位置を計算する</span>
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">updateH2</span><span class="p">(</span><span class="nx">e</span><span class="o">:*</span><span class="p">)</span><span class="o">:</span><span class="k">void</span> <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">&amp;&amp;</span> <span class="nx">dragging</span> <span class="o">!=</span> <span class="nx">h2</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">*</span> <span class="nx">h2pos</span> <span class="o">+</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-                <span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">dragging</span> <span class="o">==</span> <span class="nx">h2</span><span class="p">){</span>
-                <span class="nx">h2pos</span> <span class="o">=</span> <span class="p">(</span><span class="nx">h2</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nx">h3</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">h1</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        // 真ん中のつまみの位置を計算する
+        private function updateH2(e:*):void {
+            if(dragging &amp;&amp; dragging != h2) {
+                h2.x = (h3.x - h1.x) * h2pos + h1.x;
+                h2.x = Math.max(Math.min(h2.x, h3.x - 2), h1.x + 2);
+            }
+            else if(dragging == h2){
+                h2pos = (h2.x - h1.x) / (h3.x - h1.x);
+            }
+        }
+    }
+}</pre>
 </section>
 
 </div>

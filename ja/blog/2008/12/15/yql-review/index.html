@@ -13,7 +13,7 @@
 	<meta property="og:title" content="米 Yahoo! が SQL っぽく色んなデータを取ってこれるAPIを出した"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2008/12/15/yql-review/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="米 Yahoo! から Yahoo! Pipes みたいに自由度が高くて、またちょっと毛色が違うサービスが出てきた。題して、Yahoo! Query Language。YQL と呼ぶようだ。SQL 風の言語を REST で投げて、結果を XML や JSON で受け取ることができる。具体的にやってみないと分かりにくいので、とりあえず試してみた。RSS からデータ取得YQL を使って RSS から最新のタイトルを取ってきてみる。こんな YQL になるらしい。select title from rss where url=&#39;http://d.hatena.ne.jp/nitoyon/..."/>
+	<meta property="og:description" content="米 Yahoo! から Yahoo! Pipes みたいに自由度が高くて、またちょっと毛色が違うサービスが出てきた。題して、Yahoo! Query Language。YQL と呼ぶようだ。SQL 風の言語を REST で投げて、結果を XML や JSON で受け取ることができる。具体的にやってみないと分かりにくいので、とりあえず試してみた。RSS からデータ取得YQL を使って RSS から最新のタイトルを取ってきてみる。こんな YQL になるらしい。select title from rss where url=&#39;http://d.hatena.ne.jp/nitoyon/rss&#39;..."/>
 	<meta property="og:image" content="http://tech.nitoyon.com/apple-touch-icon-114x114.png"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -66,9 +66,8 @@
 <p>具体的にやってみないと分かりにくいので、とりあえず試してみた。</p>
 <h1>RSS からデータ取得</h1>
 <p>YQL を使って RSS から最新のタイトルを取ってきてみる。こんな YQL になるらしい。</p>
-<div class="highlight"><pre><span class="k">select</span> <span class="n">title</span> <span class="k">from</span> <span class="n">rss</span> 
-  <span class="k">where</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://d.hatena.ne.jp/nitoyon/rss&#39;</span>
-</pre></div>
+<pre class="sql">select title from rss 
+  where url='http://d.hatena.ne.jp/nitoyon/rss'</pre>
 <p>rss テーブルに対して select を発行している。</p>
 <p>実際にこの YQL を試すには <a href="http://developer.yahoo.com/yql/console/">YQL 用の console</a> を利用するとよい。（※要ログイン）</p>
 <p>console の左上に YQL を入力して、TEST ボタンを押すと…</p>
@@ -84,21 +83,19 @@
 <center><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034503.png" border="1"></center>
 <p><font color="red">url</font> をキーに、<font color="blue">title, description, link, author, pubDate</font> を取得できるとある。</p>
 <p>ためしに、title だけでなく URL も取得してみる。</p>
-<div class="highlight"><pre><span class="k">select</span> <span class="n">title</span><span class="p">,</span><span class="n">link</span> <span class="k">from</span> <span class="n">rss</span> 
-  <span class="k">where</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://d.hatena.ne.jp/nitoyon/rss&#39;</span>
-</pre></div>
+<pre class="sql">select title,link from rss 
+  where url='http://d.hatena.ne.jp/nitoyon/rss'</pre>
 <p>URL はこうなる。</p>
 <ul><li><a href="http://query.yahooapis.com/v1/public/yql?q=select%20title,link%20from%20rss%20%0A%20%20where%20url%3D&#39;http%3A%2F%2Fd.hatena.ne.jp%2Fnitoyon%2Frss&#39;&amp;format=xml">http://query.yahooapis.com/v1/public/yql?q=select%20title,link%20from%20rss%20%0A%20%20where%20url%3D&#39;http%3A%2F%2Fd.hatena.ne.jp%2Fnitoyon%2Frss&#39;&amp;format=xml</a></li></ul>
 <p>クリックしてみると、link の情報も取得できてることが分かってもらえるはず。URL 中の title,link を * に変えてみて情報が増えるのを見てもよいだろう。</p>
 <h1>html テーブルで XPath!!</h1>
 <p>ここまでだと、Yahoo! Pipes とあんまり変わらない感じだけど、html テーブルを使えば任意の HTML を引っ張ってこれる。しかも、条件に xpath を指定できる。</p>
 <p>たとえば <a href="http://headlines.yahoo.co.jp/hl">Yahoo!ニュース</a> からヘッドラインをとってきてみよう。</p>
-<div class="highlight"><pre><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">html</span>
-  <span class="k">where</span>
-    <span class="n">url</span><span class="o">=</span><span class="ss">&quot;http://headlines.yahoo.co.jp/hl&quot;</span>
-      <span class="k">and</span>
-    <span class="n">xpath</span><span class="o">=</span><span class="ss">&quot;//li[@class=&#39;yjMt&#39;]/a&quot;</span>
-</pre></div>
+<pre class="sql">select * from html
+  where
+    url=&quot;http://headlines.yahoo.co.jp/hl&quot;
+      and
+    xpath=&quot;//li[@class='yjMt']/a&quot;</pre>
 <p>全ての yjMt クラスの li タグから、その直下の a タグを列挙している。</p>
 <p>すると、こんな感じで a タグが格納された XML が返ってくる！</p>
 <center><a href="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D%22http%3A%2F%2Fheadlines.yahoo.co.jp%2Fhl%22%20and%20xpath%3D%22%2F%2Fli%5B%40class%3D'yjMt'%5D%2Fa%22&format=xml"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034500.png"></a></center>
@@ -108,25 +105,23 @@
 <p>あと、なぜか flickr がらみのテーブルが大量に用意されている。</p>
 <ul><li>flickr.location *</li><li>flickr.photos.exif *</li><li>flickr.photos.info *</li><li>flickr.photos.interestingness *</li><li>flickr.photos.recent *</li><li>flickr.photos.search *</li><li>flickr.places *</li></ul>
 <p>簡単なところで、flickr.photo.search というのを利用してみる。</p>
-<div class="highlight"><pre><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">flickr</span><span class="p">.</span><span class="n">photos</span><span class="p">.</span><span class="k">search</span>
-  <span class="k">where</span>
-    <span class="n">user_id</span><span class="o">=</span><span class="s1">&#39;8078344@N06&#39;</span>
-      <span class="k">and</span>
-    <span class="n">max_taken_date</span><span class="o">=</span><span class="s1">&#39;2008-05-01&#39;</span>
-</pre></div>
+<pre class="sql">select * from flickr.photos.search
+  where
+    user_id='8078344@N06'
+      and
+    max_taken_date='2008-05-01'</pre>
 <p>私が Flickr にアップロードした写真の中から、2008-05-01 以前に撮った写真を検索してる。</p>
 <center><a href="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20flickr.photos.search%20where%20user_id%3D'8078344%40N06'%20and%20max_taken_date%3D'2008-05-01'&format=xml"><img src="http://f.hatena.ne.jp/images/fotolife/n/nitoyon/20081215/20081215034459.png"></a></center>
 <p>おー、取れてる取れてる。</p>
 <h1>まとめ</h1>
 <p>利用できるデータは、紹介した以外にも、地理情報・天気情報とかがあるんだけど、米Yahoo!が提供するデータなので、日本国内の情報は含まれていない。</p>
 <p>YQL では基本的に select ぐらいしか実装されていないんだけど、サブクエリもサポートしていて結構複雑なこともできるようだ。Console のサンプル aggregate and filter multiple rss feed には次のような YQL が書いてある。</p>
-<div class="highlight"><pre><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">rss</span>
-  <span class="k">where</span>
-    <span class="n">url</span> <span class="k">in</span> <span class="p">(</span><span class="k">select</span> <span class="n">title</span> <span class="k">from</span> <span class="n">atom</span> <span class="k">where</span> <span class="n">url</span><span class="o">=</span><span class="ss">&quot;http://spreadsheets.google.com/feeds/list/pg_T0Mv3iBwIJoc82J1G8aQ/od6/public/basic&quot;</span><span class="p">)</span>
-      <span class="k">and</span>
-    <span class="n">description</span> <span class="k">like</span> <span class="ss">&quot;Wall Street&quot;</span>
-  <span class="k">LIMIT</span> <span class="mi">10</span> <span class="o">|</span> <span class="k">unique</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="ss">&quot;title&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="sql">select * from rss
+  where
+    url in (select title from atom where url=&quot;http://spreadsheets.google.com/feeds/list/pg_T0Mv3iBwIJoc82J1G8aQ/od6/public/basic&quot;)
+      and
+    description like &quot;Wall Street&quot;
+  LIMIT 10 | unique(field=&quot;title&quot;)</pre>
 <p>そのほかにも、OAuth なんかを使って private なデータも取得できるようだけど試してない。</p>
 <p>YQL の詳細は、<a href="http://developer.yahoo.com/yql/guide/index.html">Yahoo! Query Language (YQL) Guide - YDN</a> あたりを見るとよいだろう。</p>
 <p>まだまだ実験段階っぽい感じではありますが、将来的に楽しみなサービスであります。</p>

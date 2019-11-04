@@ -62,38 +62,36 @@
 <section>
 <p>ActionScript の関数を JavaScript から呼び出すときに、ExternalInterface.addCallback で関数を使うと便利なのですが、ここで公開された関数は apply, call, toString といったメソッドが定義されていません。</p>
 <p>実験した ActionScript はこんなの。要は draw 関数を ExternalInterface を使って公開してます。</p>
-<div class="highlight"><pre><span class="kr">package</span>
-<span class="p">{</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">display</span><span class="p">.</span><span class="o">*</span><span class="p">;</span>
-    <span class="kr">import</span> <span class="nx">flash</span><span class="p">.</span><span class="nx">external</span><span class="p">.</span><span class="nx">ExternalInterface</span><span class="p">;</span>
+<pre class="javascript">package
+{
+    import flash.display.*;
+    import flash.external.ExternalInterface;
 
-    <span class="kr">public</span> <span class="kr">class</span> <span class="nx">ExtTest</span> <span class="kr">extends</span> <span class="nx">Sprite</span>
-    <span class="p">{</span>
-        <span class="kr">public</span> <span class="kd">function</span> <span class="nx">ExtTest</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="nx">draw</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-            <span class="nx">ExternalInterface</span><span class="p">.</span><span class="nx">addCallback</span><span class="p">(</span><span class="s2">&quot;draw&quot;</span><span class="p">,</span> <span class="nx">draw</span><span class="p">);</span>
-        <span class="p">}</span>
+    public class ExtTest extends Sprite
+    {
+        public function ExtTest()
+        {
+            draw(0);
+            ExternalInterface.addCallback(&quot;draw&quot;, draw);
+        }
 
-        <span class="kr">private</span> <span class="kd">function</span> <span class="nx">draw</span><span class="p">(</span><span class="nx">color</span><span class="o">:</span><span class="kr">int</span><span class="p">)</span><span class="o">:</span><span class="k">void</span>
-        <span class="p">{</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">beginFill</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">drawCircle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">50</span><span class="p">);</span>
-            <span class="nx">graphics</span><span class="p">.</span><span class="nx">endFill</span><span class="p">();</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+        private function draw(color:int):void
+        {
+            graphics.beginFill(color);
+            graphics.drawCircle(0,0,50);
+            graphics.endFill();
+        }
+    }
+}</pre>
 <p>HTML は swfobject.js を使って楽チンに。</p>
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;swfobject.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script&gt;</span>
-<span class="nb">window</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-	<span class="kd">var</span> <span class="nx">so</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SWFObject</span><span class="p">(</span><span class="s2">&quot;ExtTest.swf&quot;</span><span class="p">,</span> <span class="s2">&quot;ExtTest&quot;</span><span class="p">,</span> <span class="s2">&quot;300&quot;</span><span class="p">,</span> <span class="s2">&quot;300&quot;</span><span class="p">,</span> <span class="s2">&quot;9&quot;</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">);</span>
-	<span class="nx">so</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">&quot;box&quot;</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="nt">&lt;/script&gt;</span>
-<span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;box&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-</pre></div>
+<pre class="html">&lt;script src=&quot;swfobject.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+window.onload = function(){
+	var so = new SWFObject(&quot;ExtTest.swf&quot;, &quot;ExtTest&quot;, &quot;300&quot;, &quot;300&quot;, &quot;9&quot;, &quot;white&quot;);
+	so.write(&quot;box&quot;);
+}
+&lt;/script&gt;
+&lt;div id=&quot;box&quot;&gt;&lt;/div&gt;</pre>
 <br />
 <p>準備ができたところで、FireBug のコンソールでいろいろ実験してました。</p>
 <pre># 関数は定義されている
@@ -114,22 +112,20 @@ $(&quot;ExtTest&quot;).draw.apply is not a function</pre>
 <p>toString と call はいいとして、apply がないのはちょっと不便です。</p>
 <br />
 <p>そこで、私は次のような実装ラッパー関数を作ってます。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">applySwf</span><span class="p">(</span><span class="nx">swf</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">args</span><span class="p">){</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">swf</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;function&quot;</span><span class="p">){</span>
-        <span class="k">switch</span><span class="p">(</span><span class="nx">args</span> <span class="o">?</span> <span class="nx">args</span><span class="p">.</span><span class="nx">length</span> <span class="o">:</span> <span class="mi">0</span><span class="p">){</span>
-            <span class="k">case</span> <span class="mi">0</span><span class="o">:</span> <span class="k">return</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">]();</span>
-            <span class="k">case</span> <span class="mi">1</span><span class="o">:</span> <span class="k">return</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-            <span class="k">case</span> <span class="mi">2</span><span class="o">:</span> <span class="k">return</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-            <span class="k">case</span> <span class="mi">3</span><span class="o">:</span> <span class="k">return</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
-            <span class="k">case</span> <span class="mi">4</span><span class="o">:</span> <span class="k">return</span> <span class="nx">swf</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
-            <span class="k">default</span><span class="o">:</span> <span class="k">throw</span> <span class="s2">&quot;argument too many&quot;</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="javascript">function applySwf(swf, method, args){
+    if(swf &amp;&amp; typeof swf[method] == &quot;function&quot;){
+        switch(args ? args.length : 0){
+            case 0: return swf[method]();
+            case 1: return swf[method](args[0]);
+            case 2: return swf[method](args[0], args[1]);
+            case 3: return swf[method](args[0], args[1], args[2]);
+            case 4: return swf[method](args[1], args[1], args[2], args[3]);
+            default: throw &quot;argument too many&quot;;
+        }
+    }
+}</pre>
 <p>ちょっとかっこ悪すぎな実装ですが、いちおう呼び出せます。</p>
-<div class="highlight"><pre><span class="nx">applySwf</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;ExtTest&quot;</span><span class="p">),</span> <span class="s2">&quot;draw&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0xff0000</span><span class="p">])</span>
-</pre></div>
+<pre class="javascript">applySwf($(&quot;ExtTest&quot;), &quot;draw&quot;, [0xff0000])</pre>
 <p>SWF をロードした直後に、$(&quot;ExtTest&quot;).call = function(){...} としてやってもできそうなのですが、SWF 側で ExternalInterface.addCallback するタイミングは実装依存なので難しそうです。</p>
 <h1>追記</h1>
 <p>上のへぼ実装版 applySwf 関数をかっこよくする方法が <a href="http://la.ma.la/blog/diary_200702152107.htm">最速インターフェース研究会 :: Functionコンストラクタを使ってJavaScriptネイティブじゃない関数をラッピングする方法</a> にて紹介されています。ma.la さん、ありがとうございます。 (2007/02/16 23:00)</p>

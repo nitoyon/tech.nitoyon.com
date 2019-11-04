@@ -13,7 +13,7 @@
 	<meta property="og:title" content="D3.js の d3.svg.line() を試してみた"/>
 	<meta property="og:url" content="http://tech.nitoyon.com/ja/blog/2013/10/29/d3js-svg-line/"/>
 	<meta property="og:type" content="article"/>
-	<meta property="og:description" content="１つ前の記事 D3.js の Data-Driven な DOM 操作がおもしろい のサンプルコードではシンプルにするために、座標計算の処理を泥臭く書いていた。たとえば circles.enter() .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })のような座標を計算する関数が何箇所かに散らばっていた。これ、d3.svg.line() を使ったらまとめられるし、便利な interpolate の機能も使えるよ、というのが今回のお話。d3.svg.line() の使い方たとえばvar line = d3.svg..."/>
+	<meta property="og:description" content="１つ前の記事 D3.js の Data-Driven な DOM 操作がおもしろい のサンプルコードではシンプルにするために、座標計算の処理を泥臭く書いていた。たとえば circles.enter() .attr(&#39;cx&#39;, function(d, i) { return i * 280 / n + 10; })のような座標を計算する関数が何箇所かに散らばっていた。これ、d3.svg.line() を使ったらまとめられるし、便利な interpolate の機能も使えるよ、というのが今回のお話。d3.svg.line() の使い方たとえばvar line = d3.svg.line() ..."/>
 	<meta property="og:image" content="http://farm4.staticflickr.com/3767/10434503954_f41fb09ca6_o.jpg"/>
 	<meta property="og:site_name" content="てっく煮ブログ"/>
 	<meta property="fb:admins" content="1297551349" />
@@ -64,7 +64,7 @@
 
 <p>たとえば</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">circles</span><span class="p">.</span><span class="nx">enter</span><span class="p">()</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">/</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cx</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">i</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">/</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
 </code></pre></div>
 <p>のような座標を計算する関数が何箇所かに散らばっていた。</p>
 
@@ -131,14 +131,14 @@
 
 <h2>HTML のソース</h2>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
-<span class="nt">&lt;svg</span> <span class="na">id=</span><span class="s">&quot;sample&quot;</span> <span class="na">width=</span><span class="s">&quot;300&quot;</span> <span class="na">height=</span><span class="s">&quot;300&quot;</span>
-  <span class="na">style=</span><span class="s">&quot;background: white; border: .3em solid #ccc;&quot;</span><span class="nt">&gt;&lt;/svg&gt;</span>
+<span class="nt">&lt;svg</span> <span class="na">id=</span><span class="s">"sample"</span> <span class="na">width=</span><span class="s">"300"</span> <span class="na">height=</span><span class="s">"300"</span>
+  <span class="na">style=</span><span class="s">"background: white; border: .3em solid #ccc;"</span><span class="nt">&gt;&lt;/svg&gt;</span>
 <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://d3js.org/d3.v3.min.js&quot;</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">&quot;random()&quot;</span><span class="nt">&gt;</span>random<span class="nt">&lt;/button&gt;</span>
-<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">&quot;push()&quot;</span><span class="nt">&gt;</span>push<span class="nt">&lt;/button&gt;</span>
-<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">&quot;pop()&quot;</span><span class="nt">&gt;</span>pop<span class="nt">&lt;/button&gt;</span>
-<span class="nt">&lt;select</span> <span class="na">id=</span><span class="s">&quot;line-interpolate&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"http://d3js.org/d3.v3.min.js"</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">"random()"</span><span class="nt">&gt;</span>random<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">"push()"</span><span class="nt">&gt;</span>push<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">"pop()"</span><span class="nt">&gt;</span>pop<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;select</span> <span class="na">id=</span><span class="s">"line-interpolate"</span><span class="nt">&gt;</span>
   <span class="nt">&lt;option&gt;</span>linear<span class="nt">&lt;/option&gt;</span>
   <span class="nt">&lt;option&gt;</span>linear-closed<span class="nt">&lt;/option&gt;</span>
   <span class="nt">&lt;option&gt;</span>step<span class="nt">&lt;/option&gt;</span>
@@ -153,27 +153,28 @@
   <span class="nt">&lt;option&gt;</span>cardinal-closed<span class="nt">&lt;/option&gt;</span>
   <span class="nt">&lt;option&gt;</span>monotone<span class="nt">&lt;/option&gt;</span>
 <span class="nt">&lt;/select&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;d3js-svg-line.js&quot;</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"d3js-svg-line.js"</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;&lt;/script&gt;</span>
+
 </code></pre></div>
 <h2>d3js-svg-line.js のソース</h2>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">svg</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;svg#sample&quot;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="s1">&#39;display&#39;</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">polyline</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span> <span class="s1">&#39;transparent&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">svg</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="dl">"</span><span class="s2">svg#sample</span><span class="dl">"</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">width</span><span class="dl">'</span><span class="p">,</span> <span class="mi">300</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">height</span><span class="dl">'</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">style</span><span class="p">(</span><span class="dl">'</span><span class="s1">display</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">block</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">polyline</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">path</span><span class="dl">'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">stroke</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">red</span><span class="dl">'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">stroke-width</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">1</span><span class="dl">'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">fill</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">transparent</span><span class="dl">'</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">values</span> <span class="o">=</span> <span class="p">[];</span>
 <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">values</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">());</span>
 <span class="p">}</span>
-<span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;#line-interpolate&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="nx">update</span><span class="p">);</span>
+<span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="dl">'</span><span class="s1">#line-interpolate</span><span class="dl">'</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">change</span><span class="dl">'</span><span class="p">,</span> <span class="nx">update</span><span class="p">);</span>
 
 <span class="kd">function</span> <span class="nx">update</span><span class="p">()</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">values</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
 
-  <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">&#39;#line-interpolate&#39;</span><span class="p">).</span><span class="nx">node</span><span class="p">();</span>
+  <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="dl">'</span><span class="s1">#line-interpolate</span><span class="dl">'</span><span class="p">).</span><span class="nx">node</span><span class="p">();</span>
   <span class="kd">var</span> <span class="nx">interpolate</span> <span class="o">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">options</span><span class="p">[</span><span class="nx">s</span><span class="p">.</span><span class="nx">selectedIndex</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
 
   <span class="kd">var</span> <span class="nx">line</span> <span class="o">=</span> <span class="nx">d3</span><span class="p">.</span><span class="nx">svg</span><span class="p">.</span><span class="nx">line</span><span class="p">()</span>
@@ -181,26 +182,26 @@
     <span class="p">.</span><span class="nx">y</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span> <span class="o">*</span> <span class="mi">280</span> <span class="o">+</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
     <span class="p">.</span><span class="nx">interpolate</span><span class="p">(</span><span class="nx">interpolate</span><span class="p">);</span>
 
-  <span class="kd">var</span> <span class="nx">circles</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="s1">&#39;circle&#39;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="nx">values</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">circles</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">(</span><span class="dl">'</span><span class="s1">circle</span><span class="dl">'</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="nx">values</span><span class="p">);</span>
   <span class="nx">circles</span><span class="p">.</span><span class="nx">enter</span><span class="p">()</span>
-    <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;circle&#39;</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">x</span><span class="p">()).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="dl">'</span><span class="s1">circle</span><span class="dl">'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cx</span><span class="dl">'</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">x</span><span class="p">()).</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cy</span><span class="dl">'</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">r</span><span class="dl">'</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
   <span class="nx">circles</span><span class="p">.</span><span class="nx">exit</span><span class="p">()</span>
     <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
     <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cy</span><span class="dl">'</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">r</span><span class="dl">'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
   <span class="nx">circles</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">fill</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">red</span><span class="dl">'</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
     <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">x</span><span class="p">())</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">y</span><span class="p">())</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">);</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cx</span><span class="dl">'</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">x</span><span class="p">())</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">cy</span><span class="dl">'</span><span class="p">,</span> <span class="nx">line</span><span class="p">.</span><span class="nx">y</span><span class="p">())</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">r</span><span class="dl">'</span><span class="p">,</span> <span class="mi">6</span><span class="p">);</span>
   <span class="nx">polyline</span>
     <span class="p">.</span><span class="nx">transition</span><span class="p">()</span>
     <span class="p">.</span><span class="nx">duration</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="nx">line</span><span class="p">(</span><span class="nx">values</span><span class="p">));</span>
+    <span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="dl">'</span><span class="s1">d</span><span class="dl">'</span><span class="p">,</span> <span class="nx">line</span><span class="p">(</span><span class="nx">values</span><span class="p">));</span>
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">random</span><span class="p">()</span> <span class="p">{</span>
