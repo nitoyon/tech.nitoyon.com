@@ -76,56 +76,56 @@
 <p>Environment: Git for Windows 1.8.3 and Windows 7 (64bit).</p>
 
 <p>Patch for <code>C:\Program Files (x86)\Git\libexec\git-core\git-difftool</code>.</p>
-<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gd">--- git-difftool    Sun Jun  2 11:28:06 2013</span>
-<span class="gi">+++ git-difftool    Tue Jul  9 00:42:02 2013</span>
-<span class="gu">@@ -283,7 +283,7 @@</span>
+<div class="highlight"><pre><code class="language-diff" data-lang="diff"><span class="gd">--- git-difftool    Sun Jun  2 11:28:06 2013
+</span><span class="gi">+++ git-difftool    Tue Jul  9 00:42:02 2013
+</span><span class="p">@@ -283,7 +283,7 @@</span>
             exit_cleanup($tmpdir, 1);
         }
         if ($symlinks) {
-<span class="gd">-           symlink(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or</span>
-<span class="gi">+           !system(&quot;git&quot;, &quot;mklink&quot;, &quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or</span>
-            exit_cleanup($tmpdir, 1);
+<span class="gd">-           symlink("$workdir/$file", "$rdir/$file") or
+</span><span class="gi">+           !system("git", "mklink", "$workdir/$file", "$rdir/$file") or
+</span>            exit_cleanup($tmpdir, 1);
         } else {
-            copy(&quot;$workdir/$file&quot;, &quot;$rdir/$file&quot;) or
-<span class="gu">@@ -448,7 +448,7 @@</span>
+            copy("$workdir/$file", "$rdir/$file") or
+<span class="p">@@ -448,7 +448,7 @@</span>
     my $indices_loaded = 0;
 
     for my $file (@worktree) {
-<span class="gd">-       next if $symlinks &amp;&amp; -l &quot;$b/$file&quot;;</span>
-<span class="gi">+       next if $symlinks;</span>
-        next if ! -f &quot;$b/$file&quot;;
+<span class="gd">-       next if $symlinks &amp;&amp; -l "$b/$file";
+</span><span class="gi">+       next if $symlinks;
+</span>        next if ! -f "$b/$file";
 
         if (!$indices_loaded) {
 </code></pre></div>
 <p>Save this patch to somewhere, and run GitBash as administrator.</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> <span class="nb">cd</span> /c/Program<span class="se">\ </span>Files<span class="se">\ \(</span>x86<span class="se">\)</span>/Git/libexec/git-core/
-<span class="gp">$</span> patch &lt; ~/git-difftool.patch
-<span class="go">patching file `git-difftool&#39;</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span><span class="w"> </span><span class="nb">cd</span> /c/Program<span class="se">\ </span>Files<span class="se">\ \(</span>x86<span class="se">\)</span>/Git/libexec/git-core/
+<span class="gp">$</span><span class="w"> </span>patch &lt; ~/git-difftool.patch
+<span class="go">patching file `git-difftool'
+</span></code></pre></div>
 <p>Create a file on <code>C:\Program Files (x86)\Git\libexec\git-core\git-mklink</code>:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="c">#!/bin/sh</span>
 
-cmd.exe /c <span class="s2">&quot;mklink \&quot;$2\&quot; \&quot;$1\&quot;&quot;</span> &gt; /dev/null
+cmd.exe /c <span class="s2">"mklink </span><span class="se">\"</span><span class="nv">$2</span><span class="se">\"</span><span class="s2"> </span><span class="se">\"</span><span class="nv">$1</span><span class="se">\"</span><span class="s2">"</span> <span class="o">&gt;</span> /dev/null
 </code></pre></div>
 <p>(This script is necessary for converting <code>/tmp/</code> directory to Windows path)</p>
 
 <h1>How to Use</h1>
 
 <p>First, configure difftool on <code>.gitconfig</code>. For example, set <a href="http://winmerge.org/">WinMerge</a> as difftool.</p>
-<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="k">[diff]</span>
-    <span class="na">tool</span> <span class="o">=</span> <span class="s">winmerge</span>
-<span class="k">[difftool winmerge]</span>
-    <span class="na">path</span> <span class="o">=</span> <span class="s">C:/Program Files (x86)/WinMerge/winmergeu.exe</span>
-<span class="s">    cmd = \&quot;C:/Program Files (x86)/WinMerge/winmergeu.exe\&quot; -r -u \&quot;$LOCAL\&quot; \&quot;$REMOTE\&quot;</span>
+<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="nn">[diff]</span>
+    <span class="py">tool</span> <span class="p">=</span> <span class="s">winmerge</span>
+<span class="nn">[difftool winmerge]</span>
+    <span class="py">path</span> <span class="p">=</span> <span class="s">C:/Program Files (x86)/WinMerge/winmergeu.exe</span>
+    <span class="py">cmd</span> <span class="p">=</span> <span class="se">\"</span><span class="s">C:/Program Files (x86)/WinMerge/winmergeu.exe</span><span class="se">\"</span> <span class="s">-r -u </span><span class="se">\"</span><span class="s">$LOCAL</span><span class="se">\"</span> <span class="se">\"</span><span class="s">$REMOTE</span><span class="se">\"</span>
 </code></pre></div>
 <p>Run GitBash as an administrator, and enter following command.</p>
-<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span> git difftool -d --symlinks <span class="o">[</span>&lt;commit&gt; <span class="o">[</span>&lt;commit&gt;<span class="o">]]</span>
+<div class="highlight"><pre><code class="language-console" data-lang="console"><span class="gp">$</span><span class="w"> </span>git difftool <span class="nt">-d</span> <span class="nt">--symlinks</span> <span class="o">[</span>&lt;commit&gt; <span class="o">[</span>&lt;commit&gt;]]
 </code></pre></div>
 <p>(On Windows, administrator privileges is required to create symbolic links)</p>
 
 <p>If you want, create an alias on <code>.gitconfig</code>.</p>
-<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="k">[alias]</span>
-    <span class="na">d</span> <span class="o">=</span> <span class="s">difftool -d --symlinks</span>
+<div class="highlight"><pre><code class="language-ini" data-lang="ini"><span class="nn">[alias]</span>
+    <span class="py">d</span> <span class="p">=</span> <span class="s">difftool -d --symlinks</span>
 </code></pre></div>
 <p>Enjoy.</p>
 

@@ -68,39 +68,39 @@
 <p>I wrote a perl script which adds a comment and modify status of bug in Bugzilla. This script is useful if you want to fix a bug automatically with a commit log.</p>
 <div class="highlight"><pre><code class="language-perl" data-lang="perl"><span class="c1">#!/usr/bin/perl -I/path/to/bugzilla -I/path/to/bugzilla/lib</span>
 
-<span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
-<span class="k">use</span> <span class="n">Bugzilla</span><span class="p">;</span>
-<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">User</span><span class="p">;</span>
-<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">Status</span><span class="p">;</span>
-<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="n">Bug</span><span class="p">;</span>
-<span class="k">use</span> <span class="n">utf8</span><span class="p">;</span>
+<span class="k">use</span> <span class="nv">strict</span><span class="p">;</span>
+<span class="k">use</span> <span class="nv">Bugzilla</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="nv">User</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="nv">Status</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Bugzilla::</span><span class="nv">Bug</span><span class="p">;</span>
+<span class="k">use</span> <span class="nv">utf8</span><span class="p">;</span>
 
-<span class="o">&amp;</span><span class="n">update_bug</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;ほげほげ&quot;</span><span class="p">);</span>
+<span class="o">&amp;</span><span class="nv">update_bug</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">"</span><span class="s2">ほげほげ</span><span class="p">");</span>
 
 <span class="c1"># API document: http://www.bugzilla.org/docs/4.2/en/html/api/</span>
 <span class="k">sub </span><span class="nf">update_bug</span> <span class="p">{</span>
     <span class="k">my</span> <span class="p">(</span><span class="nv">$bug_id</span><span class="p">,</span> <span class="nv">$text</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
 
     <span class="c1"># open bug</span>
-    <span class="k">my</span> <span class="nv">$bug</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="n">Bug</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="nv">$bug_id</span><span class="p">);</span>
-    <span class="nb">die</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">error</span> <span class="k">if</span> <span class="nb">defined</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">error</span><span class="p">;</span>
+    <span class="k">my</span> <span class="nv">$bug</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="nv">Bug</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="nv">$bug_id</span><span class="p">);</span>
+    <span class="nb">die</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="nv">error</span> <span class="k">if</span> <span class="nb">defined</span> <span class="nv">$bug</span><span class="o">-&gt;</span><span class="nv">error</span><span class="p">;</span>
 
     <span class="c1"># get user</span>
-    <span class="k">my</span> <span class="nv">$user</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="n">User</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="n">name</span> <span class="o">=&gt;</span> <span class="s">&#39;admin@example.com&#39;</span><span class="p">});</span>
-    <span class="nb">die</span> <span class="s">&#39;user not found!!!!&#39;</span> <span class="k">unless</span> <span class="nb">defined</span> <span class="nv">$user</span><span class="p">;</span>
+    <span class="k">my</span> <span class="nv">$user</span> <span class="o">=</span> <span class="nn">Bugzilla::</span><span class="nv">User</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="nv">name</span> <span class="o">=&gt;</span> <span class="p">'</span><span class="s1">admin@example.com</span><span class="p">'});</span>
+    <span class="nb">die</span> <span class="p">'</span><span class="s1">user not found!!!!</span><span class="p">'</span> <span class="k">unless</span> <span class="nb">defined</span> <span class="nv">$user</span><span class="p">;</span>
 
     <span class="c1"># login</span>
-    <span class="n">Bugzilla</span><span class="o">-&gt;</span><span class="n">set_user</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+    <span class="nv">Bugzilla</span><span class="o">-&gt;</span><span class="nv">set_user</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
 
     <span class="c1"># comment to the bug</span>
-    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">add_comment</span><span class="p">(</span><span class="nv">$text</span><span class="p">);</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="nv">add_comment</span><span class="p">(</span><span class="nv">$text</span><span class="p">);</span>
 
     <span class="c1"># FIXED</span>
-    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">set_bug_status</span><span class="p">(</span><span class="nn">Bugzilla::</span><span class="n">Status</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="n">name</span> <span class="o">=&gt;</span> <span class="s">&#39;RESOLVED&#39;</span><span class="p">}),</span>
-                         <span class="p">{</span><span class="n">resolution</span> <span class="o">=&gt;</span> <span class="s">&#39;FIXED&#39;</span><span class="p">});</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="nv">set_bug_status</span><span class="p">(</span><span class="nn">Bugzilla::</span><span class="nv">Status</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">({</span><span class="nv">name</span> <span class="o">=&gt;</span> <span class="p">'</span><span class="s1">RESOLVED</span><span class="p">'}),</span>
+                         <span class="p">{</span><span class="nv">resolution</span> <span class="o">=&gt;</span> <span class="p">'</span><span class="s1">FIXED</span><span class="p">'});</span>
 
     <span class="c1"># save to database</span>
-    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="n">update</span><span class="p">();</span>
+    <span class="nv">$bug</span><span class="o">-&gt;</span><span class="nv">update</span><span class="p">();</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Tested on Bugzilla 4.2.5.</p>
