@@ -1,5 +1,5 @@
 source "https://rubygems.org"
 
-gem "jekyll", '~>2.5.0'
-gem "compass"
+gem "jekyll", "~> 3.8.6"
 gem "hparser"
+gem "redcarpet"
