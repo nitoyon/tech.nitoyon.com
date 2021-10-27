@@ -1,0 +1,71 @@
+---
+layout: post
+title: はじめてゲームプログラミング作品 BREAK THE WAY を作った
+lang: ja
+tags: release
+thumbnail: http://tech.nitoyon.com/ja/blog/2021/10/28/break-the-wai/title.jpg
+alternate:
+  lang: en_US
+  url: /en/blog/2021/10/28/break-the-way/
+---
+話題からは少し乗り遅れてしまった感はありますが、Switch 用ソフトの [ナビつき! つくってわかる はじめてゲームプログラミング](https://amzn.to/3mf47cM) で遊んでみたついでに、1つゲームを作ってみました。
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/%E3%81%AF%E3%81%98%E3%82%81%E3%81%A6%E3%82%B2%E3%83%BC%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0?src=hash&amp;ref_src=twsrc%5Etfw">#はじめてゲームプログラミング</a> で上スクロールのアスレチックゲームを作ってみた。後半は来た道の破壊ゲームになるよ。<br>G 005 9TG 3PF<a href="https://twitter.com/hashtag/GameBuilderGarage?src=hash&amp;ref_src=twsrc%5Etfw">#GameBuilderGarage</a> <a href="https://twitter.com/hashtag/%E3%81%AF%E3%81%98%E3%83%97%E3%83%AD?src=hash&amp;ref_src=twsrc%5Etfw">#はじプロ</a> <a href="https://t.co/EGDBWP6zZf">pic.twitter.com/EGDBWP6zZf</a></p>&mdash; nitoyon (にとよん) (@nitoyon) <a href="https://twitter.com/nitoyon/status/1441797051986038786?ref_src=twsrc%5Etfw">September 25, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+* ゲーム ID: *G 005 9TG 3PF*
+* タイトル: *BREAK THE WAY*
+
+# ゲームについて
+
+この手のゲームに慣れていないうちの子どもにテストプレイしてもらいながら難易度を調整したので、だいぶ簡単だと思います。
+
+1 つのゲームで 3 種類のミニゲームの要素を組み込んでみました。
+
+ゲーム名の *BREAK THE WAY* は「道を切り開く」と「道をぶっこわす」のダブルミーニングになっています。
+
+# 実況してもらえた
+
+ツイートなどで少しだけ宣伝したら、YouTube で実況してくれた人がいたので埋め込んでおきます。
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/tzQp02Upe0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lMR-aY1Q1x0?start=183" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/u6ZdK6AotKc?start=1899" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+反応を動画でもらえる時代。いい時代ですね。
+
+# はじめてゲームプログラミング 雑感
+
+1 つゲームを完成させたので、はじめてゲームプログラミングについて感じたことを、だらだらと書いておきます。
+
+## ナビつきレッスン
+
+「ナビつきレッスン」をやれば、一通りのゲームの作り方が分かるのはさすがだと思いました。
+
+いろんな人が言ってることの繰り返しになりますが、「ナビつきレッスン」の中では「何か変更したら確かめる」という手順が徹底されています。
+プログラムを変更したら即座に反映される楽しさや、ときには失敗を経験して修正しながら先に進めていく開発フローを体験できます。
+開発のベストプラクティスを体感しながら、先に進めていけるのが素晴らしいですね。
+
+レッスンで出てくるゲームをアレンジするだけでも、ちょっとしたゲームになりますね。
+
+ただ、レッスンの中で説明もなく出てくる「れんけつ」の連結面を選ぶところなどは、XYZ 座標系の理解が必要だし、さらには回転してたりするとローカル座標系・ワールド座標系の理解も必要となるし、ある程度の数学的知識は必要だろうとは思います。まぁ、分からなくても、適当にパラメーターをいじりつつ、希望通りの挙動になるまでトライアンドエラーしてれば、そのうち分かるようになるかもしれないから、あえてぼかしてるのかなーという気はします。
+
+あと、レーシングゲームの勝利判定のロジックはだいぶややこしかった...。
+
+## ノードンガレージ
+
+ループとか条件分岐とか変数がないのに、それでも意外となんとかなるもんなんだなーと思った。
+(変数については、カウンターノードンというのがあるにはあるが、増減とリセットしかできなくて代入できないので変数とはいいがたい...)
+
+あとは、ドット絵のエディターが貧弱でつらいところ。
+外部データのインポートは難しいにしても、せめて矩形選択しての移動はできるようになってほしい。
+1ドットずつ、ちまちまと移動させていくのは悲しい作業であった。
+
+## 作品公開
+
+Nintendo Switch Online に入ってたら作品を一般公開できるのですが、他の人の良作を知る方法がほしくなります。
+自分からアンテナ張ってる人にしか届けられない現状...。
+
+ランキングがほしいなぁー...。
+とはいえ、世間で人気なのは既存ゲームの再現系のグレーなものが多いので、やはりランキングを作ってしまうと削除対応をしなきゃいけなくなるから仕方がないのかなぁ...とは思います。
