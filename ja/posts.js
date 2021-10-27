@@ -5,11 +5,11 @@ var Site = {
 };
 
 Site.archives.posts = [
+	{url: "/ja/blog/2021/10/28/break-the-way/", title: "はじめてゲームプログラミング作品 BREAK THE WAY を作った"},
 	{url: "/ja/blog/2021/10/19/calc-card/", title: "小学一年生向けの「けいさんカード」アプリを作った話"},
 	{url: "/ja/blog/2016/01/18/space-travel-animated-gif/", title: "Go 言語で宇宙旅行風のアニメーション GIF を作った"},
 	{url: "/ja/blog/2016/01/07/go-animated-gif-gen/", title: "Go 言語でアニメーション GIF を作成する"},
-	{url: "/ja/blog/2015/12/31/go-image-gen/", title: "Go 言語でソースコードから画像生成する"},
-	{url: "/ja/blog/2015/11/20/try-vscode/", title: "Visual Studio Code は JavaScript 開発が超絶便利になる可能性を秘めている！"}
+	{url: "/ja/blog/2015/12/31/go-image-gen/", title: "Go 言語でソースコードから画像生成する"}
 ];
 
 Site.archives.months = [
