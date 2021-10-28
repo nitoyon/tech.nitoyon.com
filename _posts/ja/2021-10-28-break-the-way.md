@@ -27,11 +27,11 @@ alternate:
 
 ツイートなどで少しだけ宣伝したら、YouTube で実況してくれた人がいたので埋め込んでおきます。
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tzQp02Upe0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube tzQp02Upe0E %}
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/lMR-aY1Q1x0?start=183" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube lMR-aY1Q1x0?start=183 %}
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/u6ZdK6AotKc?start=1899" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube u6ZdK6AotKc?start=1899 %}
 
 反応を動画でもらえる時代。いい時代ですね。
 

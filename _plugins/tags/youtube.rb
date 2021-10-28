@@ -28,7 +28,7 @@ module Jekyll
     end
 
     def render(context)
-      %(<iframe class="youtube" width="480" height="360" src="http://www.youtube.com/embed/#{@id}" frameborder="0" allowfullscreen></iframe>)
+      %(<div class="youtube"><iframe width="560" height="315" src="http://www.youtube.com/embed/#{@id}"frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>)
     end
   end
 end

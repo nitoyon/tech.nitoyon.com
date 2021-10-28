@@ -22,4 +22,4 @@ You can enjoy 3 types of game in this game.
 
 If you don't have a game, you can watch the following video.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tzQp02Upe0E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube tzQp02Upe0E %}
