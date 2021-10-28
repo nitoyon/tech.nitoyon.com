@@ -3,7 +3,7 @@ layout: post
 title: はじめてゲームプログラミング作品 BREAK THE WAY を作った
 lang: ja
 tags: release
-thumbnail: http://tech.nitoyon.com/ja/blog/2021/10/28/break-the-wai/title.jpg
+thumbnail: http://tech.nitoyon.com/ja/blog/2021/10/28/break-the-way/title.jpg
 alternate:
   lang: en_US
   url: /en/blog/2021/10/28/break-the-way/
