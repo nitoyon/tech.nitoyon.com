@@ -2,6 +2,7 @@
 layout: post
 title: "Made a game 'BREAK THE WAY' on Game Builder Garage"
 lang: en
+tags: game-builder-garage
 thumbnail: http://tech.nitoyon.com/ja/blog/2021/10/28/break-the-way/title.jpg
 alternate:
   lang: ja_JP

@@ -2,7 +2,7 @@
 layout: post
 title: はじめてゲームプログラミングでゲーム「BREAK THE WAY」を作った
 lang: ja
-tags: release
+tags: release game-builder-garage
 thumbnail: http://tech.nitoyon.com/ja/blog/2021/10/28/break-the-way/title.jpg
 alternate:
   lang: en_US
