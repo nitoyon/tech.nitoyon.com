@@ -5,15 +5,16 @@ var Site = {
 };
 
 Site.archives.posts = [
+	{url: "/ja/blog/2021/11/10/game-builder-garage-glossary/", title: "はじめてゲームプログラミングで出てくる用語の日英対訳表"},
 	{url: "/ja/blog/2021/10/28/break-the-way/", title: "はじめてゲームプログラミングでゲーム「BREAK THE WAY」を作った"},
 	{url: "/ja/blog/2021/10/19/calc-card/", title: "小学一年生向けの「けいさんカード」アプリを作った話"},
 	{url: "/ja/blog/2016/01/18/space-travel-animated-gif/", title: "Go 言語で宇宙旅行風のアニメーション GIF を作った"},
-	{url: "/ja/blog/2016/01/07/go-animated-gif-gen/", title: "Go 言語でアニメーション GIF を作成する"},
-	{url: "/ja/blog/2015/12/31/go-image-gen/", title: "Go 言語でソースコードから画像生成する"}
+	{url: "/ja/blog/2016/01/07/go-animated-gif-gen/", title: "Go 言語でアニメーション GIF を作成する"}
 ];
 
 Site.archives.months = [
-  "202110"
+  "202111"
+, "202110"
 , "201601"
 , "201512"
 , "201511"
